@@ -39,10 +39,18 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api')
+  const pathname = request.nextUrl.pathname
+  const isAuthRoute = pathname.startsWith('/login')
+  const isApiRoute = pathname.startsWith('/api')
+  const isCorsiRoute = pathname.startsWith('/corsi')
+  const isRootRoute = pathname === '/'
 
-  if (!user && !isAuthRoute && !isApiRoute && request.nextUrl.pathname !== '/') {
+  // Rotte pubbliche accessibili a tutti gli studenti: Landing ('/'), Corsi ('/corsi'), Login ('/login') e API
+  const isPublicRoute = isRootRoute || isCorsiRoute || isAuthRoute || isApiRoute
+
+  // Se l'utente non è autenticato come membro del team e cerca di accedere a rotte riservate (/lavori, /posta, /chat, /files...),
+  // viene reindirizzato a /login
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
