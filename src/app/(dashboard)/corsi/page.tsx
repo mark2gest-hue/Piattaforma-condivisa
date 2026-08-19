@@ -335,10 +335,22 @@ export default function CorsiPage() {
     }
   }
 
+  const isLessonUnlocked = (index: number) => {
+    if (!activeStudent || lessons.every((l) => l.completed)) return true
+    if (index === 0) return true
+    return lessons[index - 1].completed
+  }
+
   const toggleLessonCompleted = (lessonId: number) => {
-    setLessons(
-      lessons.map((l) => (l.id === lessonId ? { ...l, completed: !l.completed } : l))
-    )
+    const updatedLessons = lessons.map((l) => (l.id === lessonId ? { ...l, completed: !l.completed } : l))
+    setLessons(updatedLessons)
+
+    // Se completata, passa automaticamente alla lezione successiva
+    const currentIndex = lessons.findIndex((l) => l.id === lessonId)
+    if (currentIndex >= 0 && currentIndex < lessons.length - 1) {
+      const nextLesson = updatedLessons[currentIndex + 1]
+      setActiveLesson(nextLesson)
+    }
   }
 
   const filteredRegistrations = registrations.filter(
@@ -570,46 +582,68 @@ export default function CorsiPage() {
                 </div>
 
                 <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
-                  {lessons.map((lesson) => (
-                    <div
-                      key={lesson.id}
-                      onClick={() => setActiveLesson(lesson)}
-                      className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                        activeLesson.id === lesson.id
-                          ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 font-bold'
-                          : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 truncate pr-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            toggleLessonCompleted(lesson.id)
-                          }}
-                          className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
-                            lesson.completed
-                              ? 'bg-emerald-500 border-emerald-600 text-white'
-                              : 'border-slate-300 dark:border-slate-600'
-                          }`}
-                        >
-                          {lesson.completed && <CheckCircle2 className="h-3.5 w-3.5" />}
-                        </button>
+                  {lessons.map((lesson, idx) => {
+                    const isUnlocked = isLessonUnlocked(idx)
+                    return (
+                      <div
+                        key={lesson.id}
+                        onClick={() => {
+                          if (isUnlocked) {
+                            setActiveLesson(lesson)
+                          } else {
+                            alert(`Devi prima completare la "${lessons[idx - 1].title}" per sbloccare questo modulo!`)
+                          }
+                        }}
+                        className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+                          !isUnlocked
+                            ? 'opacity-60 bg-slate-100/50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 cursor-not-allowed'
+                            : activeLesson.id === lesson.id
+                            ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 font-bold cursor-pointer'
+                            : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 truncate pr-2">
+                          {isUnlocked ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleLessonCompleted(lesson.id)
+                              }}
+                              className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
+                                lesson.completed
+                                  ? 'bg-emerald-500 border-emerald-600 text-white'
+                                  : 'border-slate-300 dark:border-slate-600'
+                              }`}
+                            >
+                              {lesson.completed && <CheckCircle2 className="h-3.5 w-3.5" />}
+                            </button>
+                          ) : (
+                            <div className="h-5 w-5 rounded-full border border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-400">
+                              <Lock className="h-3 w-3" />
+                            </div>
+                          )}
 
-                        <span className={`text-xs truncate ${activeLesson.id === lesson.id ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
-                          {lesson.title}
-                        </span>
-                      </div>
+                          <span className={`text-xs truncate ${!isUnlocked ? 'text-slate-400 dark:text-slate-500' : activeLesson.id === lesson.id ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
+                            {lesson.title}
+                          </span>
+                        </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        {activeLesson.id === lesson.id && (
-                          <Badge variant="purple" className="text-[9px] px-1.5 py-0">IN RIPRODUZIONE</Badge>
-                        )}
-                        <span className="text-[11px] text-slate-400 font-mono">
-                          {lesson.duration}
-                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {!isUnlocked ? (
+                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 gap-1 bg-slate-200 dark:bg-slate-800 text-slate-500">
+                              <Lock className="h-2.5 w-2.5" />
+                              <span>BLOCCATA</span>
+                            </Badge>
+                          ) : activeLesson.id === lesson.id ? (
+                            <Badge variant="purple" className="text-[9px] px-1.5 py-0">IN RIPRODUZIONE</Badge>
+                          ) : null}
+                          <span className="text-[11px] text-slate-400 font-mono">
+                            {lesson.duration}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>
