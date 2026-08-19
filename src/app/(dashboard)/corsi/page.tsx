@@ -101,7 +101,7 @@ export default function CorsiPage() {
       duration: '20 Video • 5 Moduli',
       lessonsCount: 20,
       studentsCount: 42,
-      price: '€ 290',
+      price: '€ 69 (Gratuito con Codice)',
       status: 'active',
     },
     {

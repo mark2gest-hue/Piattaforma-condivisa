@@ -311,7 +311,10 @@ export default function LandingPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Badge variant="purple" className="text-[10px] uppercase">Livello Principiante / Intermedio</Badge>
-                  <span className="text-2xl font-black text-white font-mono">€ 290</span>
+                  <div className="text-right">
+                    <span className="text-2xl font-black text-white font-mono">€ 69</span>
+                    <span className="block text-[10px] text-emerald-400 font-semibold">Gratuito con Codice Studente</span>
+                  </div>
                 </div>
 
                 <h3 className="text-2xl font-extrabold text-white leading-tight">
