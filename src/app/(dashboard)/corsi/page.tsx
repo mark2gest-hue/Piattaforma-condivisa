@@ -35,6 +35,7 @@ import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound } from '@/lib/notifications'
 import { sendSharedEmail } from '../posta/actions'
 import { enrollStudentAction } from '@/app/actions/student'
+import { generateSocialContentAction } from '@/app/actions/marketing'
 
 interface CourseItem {
   id: string
@@ -343,7 +344,38 @@ function CorsiInnerContent() {
   const [chatInput, setChatInput] = useState('')
   const [isAiThinking, setIsAiThinking] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'catalog' | 'students' | 'login'>('player')
+  const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'catalog' | 'students' | 'marketing' | 'login'>('player')
+
+  // Social Content Creator
+  const [selectedSocialLessonId, setSelectedSocialLessonId] = useState<number>(1)
+  const [selectedSocialPlatform, setSelectedSocialPlatform] = useState<'linkedin' | 'instagram' | 'tiktok'>('linkedin')
+  const [selectedSocialTone, setSelectedSocialTone] = useState<'educational' | 'marketing' | 'engaging'>('educational')
+  const [generatedSocialCopy, setGeneratedSocialCopy] = useState<string>('')
+  const [isGeneratingSocial, setIsGeneratingSocial] = useState<boolean>(false)
+
+  const handleGenerateSocialCopy = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsGeneratingSocial(true)
+    setGeneratedSocialCopy('')
+
+    try {
+      const res = await generateSocialContentAction({
+        lessonId: selectedSocialLessonId,
+        platform: selectedSocialPlatform,
+        tone: selectedSocialTone,
+      })
+
+      if (res.success && res.text) {
+        setGeneratedSocialCopy(res.text)
+      } else {
+        alert(`Errore generazione: ${res.error}`)
+      }
+    } catch (err: any) {
+      alert(`Errore di rete: ${err.message}`)
+    } finally {
+      setIsGeneratingSocial(false)
+    }
+  }
 
   // Modal Nuova Iscrizione Studente
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
@@ -669,6 +701,20 @@ function CorsiInnerContent() {
           >
             <Users className="h-4 w-4" />
             <span>Registro Codici & Studenti ({registrations.length})</span>
+          </button>
+        )}
+
+        {!activeStudent && (
+          <button
+            onClick={() => setActiveTab('marketing')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
+              activeTab === 'marketing'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>Social Creator @AI</span>
           </button>
         )}
       </div>
@@ -1132,6 +1178,124 @@ function CorsiInnerContent() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: MARKETING / SOCIAL CREATOR */}
+      {activeTab === 'marketing' && !activeStudent && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              AI Social Content Builder
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Genera post per i social media basandoti sui 20 moduli reali del corso AI Start per promuovere la piattaforma.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Form parametri di generazione */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Parametri di Generazione</h4>
+              
+              <form onSubmit={handleGenerateSocialCopy} className="space-y-4 text-xs">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Seleziona la Lezione del Corso</label>
+                  <select
+                    value={selectedSocialLessonId}
+                    onChange={(e) => setSelectedSocialLessonId(Number(e.target.value))}
+                    className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  >
+                    {lessons.map((lesson) => (
+                      <option key={lesson.id} value={lesson.id}>
+                        {lesson.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Piattaforma Social</label>
+                  <select
+                    value={selectedSocialPlatform}
+                    onChange={(e) => setSelectedSocialPlatform(e.target.value as any)}
+                    className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  >
+                    <option value="linkedin">LinkedIn (Post Professionale)</option>
+                    <option value="instagram">Instagram (Carosello / Copy Slide)</option>
+                    <option value="tiktok">TikTok / Reel (Video Script)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Tono del Messaggio</label>
+                  <select
+                    value={selectedSocialTone}
+                    onChange={(e) => setSelectedSocialTone(e.target.value as any)}
+                    className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  >
+                    <option value="educational">Educativo / Formativo</option>
+                    <option value="marketing">Persuasivo / Orientato alle vendite</option>
+                    <option value="engaging">Entusiasta / Coinvolgente</option>
+                  </select>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isGeneratingSocial}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2 h-11 rounded-xl shadow-xs"
+                >
+                  {isGeneratingSocial ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      <span>Generazione in corso...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 text-white" />
+                      <span>Genera Post con @AI</span>
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
+
+            {/* Output area */}
+            <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col min-h-[300px]">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Copy Social Generato</h4>
+                {generatedSocialCopy && (
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedSocialCopy)
+                      alert('Copy copiato negli appunti!')
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-8 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 gap-1.5"
+                  >
+                    Copia Copy
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex-1 flex flex-col justify-center">
+                {generatedSocialCopy ? (
+                  <pre className="text-xs font-sans text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed max-w-full overflow-x-auto select-all">
+                    {generatedSocialCopy}
+                  </pre>
+                ) : (
+                  <div className="text-center space-y-2 text-slate-400 py-12">
+                    <Sparkles className="h-8 w-8 mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
+                    <p className="text-[11px] font-mono">
+                      Seleziona i parametri e clicca "Genera" per creare il tuo post social con l'Intelligenza Artificiale.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
