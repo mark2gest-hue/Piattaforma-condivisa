@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -13,47 +14,81 @@ import {
   Layers,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-export const navItems = [
-  {
-    title: 'Lavori',
-    subtitle: 'Kanban & Attività',
-    href: '/lavori',
-    icon: KanbanSquare,
-    badge: null,
-  },
-  {
-    title: 'Posta Condivisa',
-    subtitle: 'Email del Dominio',
-    href: '/posta',
-    icon: Mail,
-    badge: '3',
-  },
-  {
-    title: 'Chat',
-    subtitle: 'Messaggi Team',
-    href: '/chat',
-    icon: MessageSquare,
-    badge: null,
-  },
-  {
-    title: 'File',
-    subtitle: 'Documenti & Risorse',
-    href: '/files',
-    icon: FolderOpen,
-    badge: null,
-  },
-  {
-    title: 'Videocall',
-    subtitle: 'Stanza WebRTC',
-    href: '/videocall',
-    icon: Video,
-    badge: 'Live',
-  },
-]
+import { createClient } from '@/lib/supabase/client'
 
 export function Sidebar() {
   const pathname = usePathname()
+  const [unreadEmailCount, setUnreadEmailCount] = useState<number>(0)
+  const supabase = createClient()
+
+  useEffect(() => {
+    fetchUnreadEmails()
+
+    // Realtime subscription per aggiornare il badge quando arrivano o vengono lette email
+    const channel = supabase
+      .channel('sidebar:emails')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'emails' },
+        () => {
+          fetchUnreadEmails()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  const fetchUnreadEmails = async () => {
+    const { count, error } = await supabase
+      .from('emails')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'received')
+
+    if (!error && count !== null) {
+      setUnreadEmailCount(count)
+    }
+  }
+
+  const navItems = [
+    {
+      title: 'Lavori',
+      subtitle: 'Kanban & Attività',
+      href: '/lavori',
+      icon: KanbanSquare,
+      badge: null,
+    },
+    {
+      title: 'Posta Condivisa',
+      subtitle: 'Email del Dominio',
+      href: '/posta',
+      icon: Mail,
+      badge: unreadEmailCount > 0 ? String(unreadEmailCount) : null,
+    },
+    {
+      title: 'Chat',
+      subtitle: 'Messaggi Team',
+      href: '/chat',
+      icon: MessageSquare,
+      badge: null,
+    },
+    {
+      title: 'File',
+      subtitle: 'Documenti & Risorse',
+      href: '/files',
+      icon: FolderOpen,
+      badge: null,
+    },
+    {
+      title: 'Videocall',
+      subtitle: 'Stanza WebRTC',
+      href: '/videocall',
+      icon: Video,
+      badge: 'Live',
+    },
+  ]
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30 bg-slate-900 text-slate-100 border-r border-slate-800">
@@ -118,7 +153,7 @@ export function Sidebar() {
                         ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse'
                         : isActive
                         ? 'bg-white text-blue-600'
-                        : 'bg-slate-800 text-slate-300'
+                        : 'bg-blue-600 text-white'
                     )}
                   >
                     {item.badge}
