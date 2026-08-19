@@ -21,9 +21,14 @@ import {
   Loader2,
   Clock,
   Award,
-  Video,
+  Star,
   ChevronDown,
   ChevronUp,
+  Cpu,
+  Flame,
+  Check,
+  Send,
+  BellRing,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,7 +37,7 @@ import { sendSharedEmail } from './(dashboard)/posta/actions'
 import { createClient } from '@/lib/supabase/client'
 
 const MODULES_LIST = [
-  { num: '01', title: 'Benvenuto in AI Start — Dimentica i tecnicismi e parti da zero', desc: 'Introduzione ai concetti chiave dell’Intelligenza Artificiale spiegati semplice.' },
+  { num: '01', title: 'Benvenuto in AI Start — Dimentica i tecnicismi', desc: 'Introduzione ai concetti chiave dell’Intelligenza Artificiale spiegati semplice.' },
   { num: '02', title: 'Come impostare il primo prompt senza commettere errori', desc: 'La struttura in 3 parti per ottenere risposte precise e senza allucinazioni.' },
   { num: '03', title: 'Delegare le task noiose dell’ufficio all’IA', desc: 'Come risparmiare ore ogni giorno automatizzando la gestione dati e l’organizzazione.' },
   { num: '04', title: 'Generare risposte email commerciali e professionali perfette', desc: 'Scrittura rapida di email formali, proposte di vendita e gestione obiezioni.' },
@@ -54,11 +59,21 @@ const MODULES_LIST = [
   { num: '20', title: 'Esame finale e Rilascio Certificato AI Start', desc: 'Verifica pratica delle competenze acquisite ed attestato di completamento.' },
 ]
 
+const FAQS = [
+  { q: 'Serve saper programmare o avere competenze tecniche?', a: 'Assolutamente no! AI Start è stato progettato appositamente per chi parte da zero. Spieghiamo tutto in modo chiaro, senza tecnicismi.' },
+  { q: 'Come funziona l’accesso alle lezioni video?', a: 'Al momento dell’iscrizione riceverai un Codice Univoco personale (es. AI-START-8F92). Inserendolo nell’Area Studenti sbloccherai subito tutti i 20 video ed il player HTML5.' },
+  { q: 'Cos’è l’Assistente @AI in Chat?', a: 'È il tuo tutor virtuale integrato nella piattaforma. Durante la visione delle lezioni puoi digitare @AI per porre qualsiasi domanda e ricevere risposte istantanee.' },
+  { q: 'Quando uscirà il Corso Avanzato AI Pro?', a: 'Il percorso avanzato "AI Pro & Agenti Autonomi B2B" è attualmente in fase di preparazione. Puoi iscriverti alla lista d’attesa in un click per ricevere un invito prioritario ed un coupon sconto!' },
+]
+
 export default function LandingPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Form Iscrizione Rapida
+  // Corso selezionato nella landing
+  const [selectedCourseTab, setSelectedCourseTab] = useState<'start' | 'pro'>('start')
+
+  // Form Iscrizione Rapida AI Start
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
   const [nameInput, setNameInput] = useState('')
   const [emailInput, setEmailInput] = useState('')
@@ -67,7 +82,19 @@ export default function LandingPage() {
   // Login Studente Rapido con Codice
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false)
   const [studentCode, setStudentCode] = useState('')
-  const [openCurriculum, setOpenCurriculum] = useState(false)
+
+  // Lista d'attesa Corso Avanzato AI Pro
+  const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false)
+  const [waitlistEmail, setWaitlistEmail] = useState('')
+  const [waitlistSuccess, setWaitlistSuccess] = useState(false)
+
+  // Demo Prompt Simulator Interattivo
+  const [demoPromptInput, setDemoPromptInput] = useState('')
+  const [demoResponse, setDemoResponse] = useState<string | null>(null)
+  const [isDemoThinking, setIsDemoThinking] = useState(false)
+
+  // Accordion FAQ aperto
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
 
   const handleStudentAccess = (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,7 +112,6 @@ export default function LandingPage() {
     const randomHex = Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase()
     const generatedCode = `AI-START-${randomHex}`
 
-    // Salvataggio su Supabase
     await (supabase as any).from('student_codes').insert({
       code: generatedCode,
       student_name: nameInput.trim(),
@@ -93,7 +119,6 @@ export default function LandingPage() {
       course_title: "AI Start - Domina l'IA da Zero",
     })
 
-    // Notifica Kanban Team
     await (supabase as any).from('tasks').insert({
       title: `Nuova Iscrizione Landing: ${nameInput.trim()}`,
       description: `Studente iscritto da aiutiamoci.cloud. Codice assegnato: ${generatedCode}. Email: ${emailInput.trim()}`,
@@ -101,7 +126,6 @@ export default function LandingPage() {
       priority: 'high',
     })
 
-    // Invio Email via Resend SDK
     await sendSharedEmail({
       to: emailInput.trim(),
       subject: `Benvenuto in AI Start! Il tuo Codice di Accesso: ${generatedCode}`,
@@ -115,34 +139,67 @@ export default function LandingPage() {
     router.push(`/corsi?tab=login&code=${encodeURIComponent(generatedCode)}`)
   }
 
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!waitlistEmail.trim()) return
+
+    await sendSharedEmail({
+      to: waitlistEmail.trim(),
+      subject: `Iscrizione Lista d'Attesa: AI Pro & Agenti Autonomi B2B`,
+      body: `Gentile utente,\n\ngrazie per esserti iscritto alla lista d'attesa del Corso Avanzato "AI Pro & Agenti Autonomi B2B".\n\nTi notificheremo in anteprima non appena le lezioni saranno disponibili con un coupon promozionale riservato.\n\nCordiali saluti,\nTeam Ti AIuto (aiutiamoci.cloud)`,
+    })
+
+    setWaitlistSuccess(true)
+    setTimeout(() => {
+      setIsWaitlistModalOpen(false)
+      setWaitlistSuccess(false)
+      setWaitlistEmail('')
+    }, 2000)
+  }
+
+  const handleRunDemoPrompt = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!demoPromptInput.trim()) return
+
+    setIsDemoThinking(true)
+    setDemoResponse(null)
+
+    setTimeout(() => {
+      setDemoResponse(
+        `✨ RISPOSTA DELL'ASSISTENTE @AI:\n\nEcco la soluzione per: "${demoPromptInput}"\n\n1. RUOLO: Esperto di produttività aziendale.\n2. STRATEGIA: Inserisci le informazioni chiave nel prompt usando elenchi puntati.\n3. RISULTATO: L'IA elabora il testo in pochi secondi senza errori.\n\nNel corso "AI Start" impariamo 20 tecniche simili per velocizzare il lavoro quotidiano!`
+      )
+      setIsDemoThinking(false)
+    }, 900)
+  }
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
-      {/* Background Glow Effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col justify-between selection:bg-indigo-500 selection:text-white overflow-x-hidden">
+      {/* Background Dynamic Light Gradients */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-blue-600/30 via-indigo-600/20 to-transparent rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-gradient-to-bl from-purple-600/30 via-pink-600/10 to-transparent rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 left-1/3 w-[600px] h-[600px] bg-gradient-to-tr from-indigo-600/20 via-blue-600/10 to-transparent rounded-full blur-3xl" />
       </div>
 
       {/* Header Navigation Bar */}
-      <header className="relative z-20 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md sticky top-0">
+      <header className="relative z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
               <Sparkles className="h-5 w-5" />
             </div>
             <div className="flex flex-col">
               <span className="font-extrabold text-lg tracking-tight text-white flex items-center gap-2">
-                aiutiamoci.cloud <span className="text-[10px] font-mono px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full border border-blue-500/30">Ti AIuto</span>
+                aiutiamoci.cloud <span className="text-[10px] font-mono px-2 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-full border border-indigo-500/30">Ti AIuto</span>
               </span>
-              <span className="text-xs text-slate-400 font-medium">Corso Pratico AI Start</span>
+              <span className="text-xs text-slate-400 font-medium">Formazione ed Agenti IA</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3 text-xs font-semibold">
             <button
               onClick={() => setIsStudentModalOpen(true)}
-              className="text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 px-3 py-2 border border-slate-800 rounded-xl bg-slate-900/60"
+              className="text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 px-3 py-2 border border-slate-800 rounded-xl bg-slate-900/80 hover:bg-slate-800"
             >
               <Key className="h-4 w-4 text-blue-400" />
               <span>Riscatta Codice</span>
@@ -168,35 +225,42 @@ export default function LandingPage() {
       </header>
 
       {/* HERO SECTION */}
-      <main className="relative z-10 max-w-7xl mx-auto px-6 py-12 lg:py-16 space-y-20">
-        <div className="text-center space-y-6 max-w-3xl mx-auto">
-          <Badge className="py-1.5 px-4 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold rounded-full gap-2 inline-flex items-center">
-            <Zap className="h-3.5 w-3.5 text-amber-400" />
-            Trasforma la curiosità in competenza operativa in 20 video
-          </Badge>
+      <main className="relative z-10 max-w-7xl mx-auto px-6 py-12 lg:py-16 space-y-24">
+        <div className="text-center space-y-6 max-w-4xl mx-auto">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <Badge className="py-1.5 px-4 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold rounded-full gap-2 inline-flex items-center">
+              <Zap className="h-3.5 w-3.5 text-amber-400" />
+              Corso Pratico in 20 Video Lezioni senza tecnicismi
+            </Badge>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1]">
-            AI Start — Domina l'Intelligenza Artificiale da Zero
+            <Badge className="py-1.5 px-4 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold rounded-full gap-1.5 inline-flex items-center">
+              <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+              Valutazione 4.9/5 • Oltre 500 Studenti
+            </Badge>
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.08]">
+            Domina l'Intelligenza Artificiale <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">da Zero</span>
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-300 leading-relaxed font-normal">
-            L'Intelligenza Artificiale non è magia, è uno strumento. Impara a delegare la noia, potenziare la creatività e gestire il tempo. Spiegato semplice, senza tecnicismi.
+          <p className="text-base sm:text-xl text-slate-300 leading-relaxed font-normal max-w-2xl mx-auto">
+            L'Intelligenza Artificiale non è magia, è uno strumento. Impara a delegare la noia, potenziare la creatività e gestire il tempo con 20 lezioni guidate ed un assistente virtuale <strong className="text-white">@AI</strong> sempre al tuo fianco.
           </p>
 
-          {/* 3 CALL TO ACTION PRINCIPALI */}
+          {/* CTA MAIN BUTTONS */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
             <Button
               onClick={() => setIsEnrollModalOpen(true)}
-              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-12 px-8 rounded-xl gap-2 shadow-xl shadow-indigo-600/30 text-sm"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold h-13 px-8 rounded-2xl gap-2 shadow-2xl shadow-indigo-600/40 text-base transition-all hover:scale-[1.02]"
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-5 w-5" />
               <span>Inizia il Corso Completo</span>
             </Button>
 
             <Button
               onClick={() => setIsStudentModalOpen(true)}
               variant="outline"
-              className="w-full sm:w-auto border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-bold h-12 px-6 rounded-xl gap-2 text-sm"
+              className="w-full sm:w-auto border-slate-800 bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold h-13 px-6 rounded-2xl gap-2 text-sm"
             >
               <Key className="h-4 w-4 text-blue-400" />
               <span>Hai un codice? Accedi</span>
@@ -204,47 +268,156 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* SECTION 1: PERCHÉ ISCRIVERSI (3 PILLARI) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 space-y-4">
-            <div className="h-12 w-12 rounded-2xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
-              <Clock className="h-6 w-6" />
-            </div>
-            <h3 className="text-xl font-bold text-white">Delegare la Noia</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Risparmia ore di lavoro ogni settimana automatizzando la stesura di email, il riassunto di documenti lunghi ed il calcolo dati.
-            </p>
+        {/* SECTION SELETTORE DEI CORSI (CORSO 1 DISPONIBILE vs CORSO 2 AVANZATO PRO) */}
+        <div className="space-y-8">
+          <div className="text-center space-y-2">
+            <Badge variant="purple" className="text-[10px] uppercase font-bold tracking-widest">I Nostri Percorsi Formativi</Badge>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Scegli il livello più adatto a te</h2>
+            <p className="text-xs sm:text-sm text-slate-400">Dai primi passi fino allo sviluppo di Agenti IA avanzati per le aziende.</p>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 space-y-4">
-            <div className="h-12 w-12 rounded-2xl bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center justify-center">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <h3 className="text-xl font-bold text-white">Potenziare la Creatività</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Genera idee, bozze di articoli, grafiche e presentazioni d'impatto senza mai bloccarti davanti ad una pagina bianca.
-            </p>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* CORSO 1: AI START (DISPONIBILE ORA) */}
+            <div className="bg-gradient-to-b from-slate-900/90 to-slate-950 border-2 border-indigo-500/50 rounded-3xl p-8 space-y-6 relative shadow-2xl shadow-indigo-500/10 flex flex-col justify-between">
+              <div className="absolute -top-3.5 left-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                <Flame className="h-3 w-3 fill-amber-400 text-amber-400" />
+                <span>Più Popolare • Disponibile Ora</span>
+              </div>
 
-          <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 space-y-4">
-            <div className="h-12 w-12 rounded-2xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
-              <Bot className="h-6 w-6" />
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <Badge variant="purple" className="text-[10px] uppercase">Livello Principiante / Intermedio</Badge>
+                  <span className="text-2xl font-black text-white font-mono">€ 290</span>
+                </div>
+
+                <h3 className="text-2xl font-extrabold text-white leading-tight">
+                  AI Start — Domina l'Intelligenza Artificiale da Zero
+                </h3>
+
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  20 lezioni video pratiche per automatizzare il lavoro quotidiano, gestire email, sintetizzare documenti ed utilizzare l'assistente @AI.
+                </p>
+
+                <div className="space-y-2 text-xs text-slate-300 pt-2">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>20 Video Lezioni in alta definizione</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>Chat integrata con assistente IA @AI 24/7</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>Accesso a vita tramite Codice Univoco</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>Attestato di completamento finale</span>
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => setIsEnrollModalOpen(true)}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-12 rounded-xl gap-2 shadow-lg shadow-indigo-600/30"
+              >
+                <span>Iscriviti a AI Start</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
-            <h3 className="text-xl font-bold text-white">Assistente @AI Integrato</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Poni qualsiasi domanda in chat durante lo studio: l'assistente IA risponde istantaneamente per guidarti passo-passo.
-            </p>
+
+            {/* CORSO 2: AI PRO B2B (PROSSIMAMENTE / LISTA D'ATTESA) */}
+            <div className="bg-gradient-to-b from-slate-900/60 to-slate-950 border border-slate-800/80 rounded-3xl p-8 space-y-6 relative flex flex-col justify-between group hover:border-purple-500/40 transition-all">
+              <div className="absolute -top-3.5 left-6 bg-slate-800 text-purple-300 border border-purple-500/30 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full flex items-center gap-1">
+                <Cpu className="h-3 w-3 text-purple-400" />
+                <span>Prossimamente • Corso Avanzato</span>
+              </div>
+
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <Badge variant="secondary" className="text-[10px] uppercase bg-slate-800 text-slate-300">Livello Avanzato B2B</Badge>
+                  <Badge variant="warning" className="text-[9px] uppercase">Lista d'Attesa</Badge>
+                </div>
+
+                <h3 className="text-2xl font-extrabold text-white leading-tight">
+                  AI Pro & Agenti Autonomi B2B
+                </h3>
+
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Progettazione avanzata di Agenti AI autonomi, integrazione via API, RAG personalizzati e workflow complessi per aziende.
+                </p>
+
+                <div className="space-y-2 text-xs text-slate-400 pt-2">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-purple-400 shrink-0" />
+                    <span>Architetture Agenti autonomi & Multi-Agenti</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-purple-400 shrink-0" />
+                    <span>Integrazione API Supabase, Resend & Webhooks</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-purple-400 shrink-0" />
+                    <span>Caso studio reale: Automazione processi PMI</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-purple-400 shrink-0" />
+                    <span>Coupon sconto lancio riservato agli iscritti</span>
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => setIsWaitlistModalOpen(true)}
+                variant="outline"
+                className="w-full border-purple-500/30 bg-purple-950/20 hover:bg-purple-900/40 text-purple-300 font-bold h-12 rounded-xl gap-2"
+              >
+                <BellRing className="h-4 w-4 text-purple-400" />
+                <span>Iscriviti alla Lista d'Attesa</span>
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* SECTION 2: PROGRAMMA COMPLETO DEI 20 MODULI */}
+        {/* DEMO PROMPT SIMULATOR INTERATTIVO */}
+        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-8 sm:p-10 space-y-6 max-w-4xl mx-auto shadow-2xl">
+          <div className="text-center space-y-2">
+            <Badge variant="purple" className="text-[10px] uppercase font-bold">Prova dal Vivo</Badge>
+            <h3 className="text-2xl font-bold text-white">Metti alla prova l'Assistente @AI</h3>
+            <p className="text-xs text-slate-400">Scrivi una domanda o una richiesta per vedere come risponde l'IA.</p>
+          </div>
+
+          <form onSubmit={handleRunDemoPrompt} className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={demoPromptInput}
+                onChange={(e) => setDemoPromptInput(e.target.value)}
+                placeholder="Es. Scrivi un prompt per riassumere le risposte commerciali..."
+                className="bg-slate-950 border-slate-800 text-white text-xs h-11"
+              />
+              <Button type="submit" disabled={isDemoThinking || !demoPromptInput.trim()} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-11 px-6 gap-2">
+                {isDemoThinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                <span>Prova</span>
+              </Button>
+            </div>
+
+            {demoResponse && (
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed animate-in fade-in">
+                {demoResponse}
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* PROGRAMMA COMPLETO 20 MODULI AI START */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-8 lg:p-10 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
             <div>
-              <Badge variant="purple" className="text-[10px] uppercase font-bold mb-2">Programma Formativo</Badge>
+              <Badge variant="purple" className="text-[10px] uppercase font-bold mb-2">Programma Formativo AI Start</Badge>
               <h2 className="text-2xl font-bold text-white">I 20 Moduli Video di AI Start</h2>
             </div>
-            <span className="text-xs text-slate-400 font-mono font-semibold">20 Lezioni • Certificato Finale</span>
+            <span className="text-xs text-slate-400 font-mono font-semibold">20 Lezioni • Player HTML5 HD</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -262,29 +435,34 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* CALL TO ACTION FINALE */}
-        <div className="bg-gradient-to-r from-blue-900/40 via-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-3xl p-8 sm:p-12 text-center space-y-6">
-          <h2 className="text-3xl font-black text-white">Inizia Oggi il tuo Percorso in AI Start</h2>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
-            Unisciti agli studenti già operativi. Riceverai subito il tuo codice personale di accesso ed il supporto dell'assistente in chat.
-          </p>
+        {/* FAQ ACCORDION */}
+        <div className="space-y-6 max-w-3xl mx-auto">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-white">Domande Frequenti (FAQ)</h2>
+            <p className="text-xs text-slate-400">Tutto quello che c'è da sapere su AI Start e sui nostri corsi.</p>
+          </div>
 
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              onClick={() => setIsEnrollModalOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-12 px-8 rounded-xl gap-2 shadow-xl shadow-indigo-600/30 text-sm"
-            >
-              <Sparkles className="h-4 w-4" />
-              <span>Iscriviti Subito</span>
-            </Button>
-            <Button
-              onClick={() => setIsStudentModalOpen(true)}
-              variant="outline"
-              className="border-slate-700 bg-slate-900/80 text-white font-bold h-12 px-6 rounded-xl gap-2 text-sm"
-            >
-              <Key className="h-4 w-4 text-blue-400" />
-              <span>Accedi col tuo Codice</span>
-            </Button>
+          <div className="space-y-3">
+            {FAQS.map((faq, idx) => {
+              const isOpen = openFaqIdx === idx
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setOpenFaqIdx(isOpen ? null : idx)}
+                  className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 cursor-pointer transition-all hover:border-slate-700"
+                >
+                  <div className="flex items-center justify-between font-bold text-sm text-white">
+                    <span>{faq.q}</span>
+                    {isOpen ? <ChevronUp className="h-4 w-4 text-indigo-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                  </div>
+                  {isOpen && (
+                    <p className="text-xs text-slate-400 mt-3 leading-relaxed border-t border-slate-800 pt-3">
+                      {faq.a}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       </main>
@@ -297,6 +475,7 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-6">
             <button onClick={() => setIsStudentModalOpen(true)} className="hover:text-slate-300">Area Studenti</button>
+            <button onClick={() => setIsWaitlistModalOpen(true)} className="hover:text-slate-300">Corso Avanzato AI Pro</button>
             <Link href="/login" className="hover:text-slate-300">Team Login</Link>
           </div>
         </div>
@@ -311,10 +490,7 @@ export default function LandingPage() {
                 <Key className="h-5 w-5 text-blue-400" />
                 <h3 className="font-bold text-sm text-white">Area Studenti — Riscatta Codice</h3>
               </div>
-              <button
-                onClick={() => setIsStudentModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors"
-              >
+              <button onClick={() => setIsStudentModalOpen(false)} className="p-1 text-slate-400 hover:text-white rounded-lg">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -340,7 +516,7 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* MODAL 2: FORM ISCRIZIONE RAPIDA */}
+      {/* MODAL 2: FORM ISCRIZIONE RAPIDA AI START */}
       {isEnrollModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
           <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-800 overflow-hidden">
@@ -349,10 +525,7 @@ export default function LandingPage() {
                 <GraduationCap className="h-5 w-5 text-indigo-400" />
                 <h3 className="font-bold text-sm text-white">Iscrizione a AI Start</h3>
               </div>
-              <button
-                onClick={() => setIsEnrollModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors"
-              >
+              <button onClick={() => setIsEnrollModalOpen(false)} className="p-1 text-slate-400 hover:text-white rounded-lg">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -393,6 +566,56 @@ export default function LandingPage() {
                 )}
               </Button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: LISTA D'ATTESA CORSO AVANZATO AI PRO */}
+      {isWaitlistModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-800 overflow-hidden">
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+              <div className="flex items-center gap-2">
+                <Cpu className="h-5 w-5 text-purple-400" />
+                <h3 className="font-bold text-sm text-white">Lista d'Attesa: AI Pro B2B</h3>
+              </div>
+              <button onClick={() => setIsWaitlistModalOpen(false)} className="p-1 text-slate-400 hover:text-white rounded-lg">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {waitlistSuccess ? (
+              <div className="p-8 text-center space-y-3">
+                <div className="h-12 w-12 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
+                  <Check className="h-6 w-6" />
+                </div>
+                <h4 className="font-bold text-base text-white">Sei in lista d'attesa!</h4>
+                <p className="text-xs text-slate-400">Ti invieremo un invito prioritario ed un coupon sconto non appena le lezioni saranno pronte.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleWaitlistSubmit} className="p-6 space-y-4 text-xs">
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Lascia la tua email per ricevere una notifica prioritaria ed il coupon sconto del 30% al lancio del Corso Avanzato.
+                </p>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300">Indirizzo Email *</label>
+                  <Input
+                    autoFocus
+                    required
+                    type="email"
+                    value={waitlistEmail}
+                    onChange={(e) => setWaitlistEmail(e.target.value)}
+                    placeholder="Es. nome@azienda.it"
+                    className="bg-slate-950 border-slate-800 text-white"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-purple-600/20">
+                  Iscriviti alla Lista d'Attesa
+                </Button>
+              </form>
+            )}
           </div>
         </div>
       )}
