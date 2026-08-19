@@ -12,6 +12,8 @@ import {
   Sparkles,
   Users,
   Layers,
+  Calendar as CalendarIcon,
+  Bot,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -24,7 +26,6 @@ export function Sidebar() {
   useEffect(() => {
     fetchUnreadEmails()
 
-    // Realtime subscription per aggiornare il badge quando arrivano o vengono lette email
     const channel = supabase
       .channel('sidebar:emails')
       .on(
@@ -61,6 +62,13 @@ export function Sidebar() {
       badge: null,
     },
     {
+      title: 'Calendario',
+      subtitle: 'Scadenze & Eventi',
+      href: '/calendario',
+      icon: CalendarIcon,
+      badge: null,
+    },
+    {
       title: 'Posta Condivisa',
       subtitle: 'Email del Dominio',
       href: '/posta',
@@ -87,6 +95,13 @@ export function Sidebar() {
       href: '/videocall',
       icon: Video,
       badge: 'Live',
+    },
+    {
+      title: 'Agenti AI',
+      subtitle: 'Assistenti & Automazioni',
+      href: '/agenti',
+      icon: Bot,
+      badge: 'AI',
     },
   ]
 
@@ -151,6 +166,8 @@ export function Sidebar() {
                       'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase',
                       item.badge === 'Live'
                         ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse'
+                        : item.badge === 'AI'
+                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold'
                         : isActive
                         ? 'bg-white text-blue-600'
                         : 'bg-blue-600 text-white'
