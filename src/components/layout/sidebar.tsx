@@ -14,6 +14,7 @@ import {
   Layers,
   Calendar as CalendarIcon,
   Bot,
+  GraduationCap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -59,6 +60,13 @@ export function Sidebar() {
       subtitle: 'Kanban & Attività',
       href: '/lavori',
       icon: KanbanSquare,
+      badge: null,
+    },
+    {
+      title: 'Corsi & Studenti',
+      subtitle: 'Catalogo & Iscritti',
+      href: '/corsi',
+      icon: GraduationCap,
       badge: null,
     },
     {
