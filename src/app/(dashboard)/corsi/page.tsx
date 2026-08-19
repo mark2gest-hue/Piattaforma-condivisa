@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   GraduationCap,
   BookOpen,
@@ -26,6 +27,13 @@ import {
   Edit,
   Video,
   Trash2,
+  VideoIcon,
+  ExternalLink,
+  Plus,
+  Save,
+  Gift,
+  HelpCircle,
+  Radio,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -43,7 +51,7 @@ interface CourseItem {
   lessonsCount: number
   studentsCount: number
   price: string
-  status: 'active' | 'upcoming'
+  status: 'active' | 'draft' | 'archived'
 }
 
 interface StudentRegistration {
@@ -65,34 +73,103 @@ interface Lesson {
   resourcesPdfUrl?: string
 }
 
-// Sample MP4 streaming URL di default per il test delle lezioni
-const DEFAULT_SAMPLE_VIDEO = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+interface ZoomRecording {
+  id: string
+  title: string
+  date: string
+  videoUrl: string
+  description?: string
+  order: number
+}
 
-// Tutti i 20 Moduli Video del Corso AI Start con URL di riproduzione HTML5
-const AI_START_LESSONS: Lesson[] = [
-  { id: 1, title: 'Modulo 1: Benvenuto in AI Start — Dimentica i tecnicismi', duration: '10:30', completed: true, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 2, title: 'Modulo 2: Come impostare il primo prompt senza errori', duration: '12:45', completed: true, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 3, title: 'Modulo 3: Delegare le task noiose dell’ufficio all’IA', duration: '15:20', completed: true, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 4, title: 'Modulo 4: Generare risposte email commerciali perfette', duration: '14:10', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 5, title: 'Modulo 5: Creazione contenuti e post social con l’IA', duration: '18:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 6, title: 'Modulo 6: Riassumere documenti lunghi e PDF in 10 secondi', duration: '16:30', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 7, title: 'Modulo 7: Organizzare il tempo e le agende aziendali', duration: '15:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 8, title: 'Modulo 8: Creare tabelle ed analizzare dati senza formule', duration: '20:15', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 9, title: 'Modulo 9: Traduzione ed adattamento di testi internazionali', duration: '12:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 10, title: 'Modulo 10: La Chat con l’assistente @AI ed il supporto continuo', duration: '14:50', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 11, title: 'Modulo 11: Creare Agenti AI personalizzati su misura', duration: '22:10', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 12, title: 'Modulo 12: Automazioni senza codice (No-Code & Webhooks)', duration: '25:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 13, title: 'Modulo 13: Trascrizione automatica di riunioni e vocali', duration: '18:20', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 14, title: 'Modulo 14: Generare immagini e grafica per le presentazioni', duration: '20:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 15, title: 'Modulo 15: Cybersecurity e privacy dei dati con l’IA', duration: '15:30', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 16, title: 'Modulo 16: Creare preventivi e proposte B2B in tempo reale', duration: '18:45', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 17, title: 'Modulo 17: Integrazione dell’IA nel lavoro di team', duration: '20:10', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 18, title: 'Modulo 18: Analisi dei clienti e sentiment analysis', duration: '16:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 19, title: 'Modulo 19: Workflow avanzati e gestione dei progetti', duration: '24:30', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
-  { id: 20, title: 'Modulo 20: Esame finale e Rilascio Certificato AI Start', duration: '15:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+// URL Reali delle Registrazioni Zoom di Malaradio
+const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
+  {
+    id: 'z-1',
+    title: 'Lezione 1 e 2',
+    date: '19/08/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom1/GMT20260505-182955_Recording_2560x1440.mp4',
+    description: 'Introduzione ai concetti chiave ed impostazione dei primi prompt professionali.',
+    order: 1,
+  },
+  {
+    id: 'z-2',
+    title: 'Lezione 3 e 4',
+    date: '21/08/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom2/GMT20260507-182806_Recording_gallery_2560x1440.mp4',
+    description: 'Gestione e risposte automatiche email commerciali e delegare le task noiose.',
+    order: 2,
+  },
+  {
+    id: 'z-3',
+    title: 'Lezione 5 e 6',
+    date: '24/08/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom4/GMT20260519-183538_Recording_gallery_1976x1112.mp4',
+    description: 'Creazione contenuti, sintesi PDF lunghi ed analisi dati.',
+    order: 3,
+  },
+  {
+    id: 'z-4',
+    title: 'Lezione 7 e 8',
+    date: '26/08/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom3/GMT20260512-182902_Recording_gallery_1992x1120.mp4',
+    description: 'Organizzazione del tempo e fogli di calcolo intelligenti.',
+    order: 4,
+  },
+  {
+    id: 'z-5',
+    title: 'Lezione 9 e 10',
+    date: '28/08/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom5/GMT20260526-183343_Recording_gallery_1920x1080.mp4',
+    description: 'Chat continua con assistente @AI ed Agenti personalizzati.',
+    order: 5,
+  },
+  {
+    id: 'z-6',
+    title: 'Lezione 11 e 12',
+    date: '31/08/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom6/GMT20260604-183228_Recording_gallery_1976x1112.mp4',
+    description: 'Automazioni senza codice, trascrizione vocali e verbali.',
+    order: 6,
+  },
+  {
+    id: 'z-7',
+    title: 'Lezioni 13 e 14',
+    date: '02/09/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom7/GMT20260609-182902_Recording_gallery_1920x1080.mp4',
+    description: 'Generazione immagini, grafica e preventivi B2B in tempo reale.',
+    order: 7,
+  },
 ]
 
-export default function CorsiPage() {
+// 20 Moduli Video del Corso AI Start con i link reali di malaradio.com
+const AI_START_LESSONS: Lesson[] = [
+  { id: 1, title: 'Modulo 1: Benvenuto in AI Start — Dimentica i tecnicismi', duration: '10:30', completed: true, videoUrl: REAL_ZOOM_RECORDINGS[0].videoUrl },
+  { id: 2, title: 'Modulo 2: Come impostare il primo prompt senza errori', duration: '12:45', completed: true, videoUrl: REAL_ZOOM_RECORDINGS[0].videoUrl },
+  { id: 3, title: 'Modulo 3: Delegare le task noiose dell’ufficio all’IA', duration: '15:20', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[1].videoUrl },
+  { id: 4, title: 'Modulo 4: Generare risposte email commerciali perfette', duration: '14:10', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[1].videoUrl },
+  { id: 5, title: 'Modulo 5: Creazione contenuti e post social con l\'IA', duration: '18:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[2].videoUrl },
+  { id: 6, title: 'Modulo 6: Riassumere documenti lunghi e PDF in 10 secondi', duration: '16:30', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[2].videoUrl },
+  { id: 7, title: 'Modulo 7: Organizzare il tempo e le agende aziendali', duration: '13:15', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[3].videoUrl },
+  { id: 8, title: 'Modulo 8: Creare tabelle ed analizzare dati senza formule', duration: '19:40', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[3].videoUrl },
+  { id: 9, title: 'Modulo 9: Traduzione ed adattamento di testi internazionali', duration: '12:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[4].videoUrl },
+  { id: 10, title: 'Modulo 10: La Chat con l’assistente @AI ed il supporto continuo', duration: '14:50', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[4].videoUrl },
+  { id: 11, title: 'Modulo 11: Creare Agenti AI personalizzati su misura', duration: '22:10', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[5].videoUrl },
+  { id: 12, title: 'Modulo 12: Automazioni senza codice (No-Code & Webhooks)', duration: '25:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[5].videoUrl },
+  { id: 13, title: 'Modulo 13: Trascrizione automatica di riunioni e vocali', duration: '18:20', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[6].videoUrl },
+  { id: 14, title: 'Modulo 14: Generare immagini e grafica per le presentazioni', duration: '20:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[6].videoUrl },
+  { id: 15, title: 'Modulo 15: Cybersecurity e privacy dei dati con l’IA', duration: '15:30', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[0].videoUrl },
+  { id: 16, title: 'Modulo 16: Creare preventivi e proposte B2B in tempo reale', duration: '18:45', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[1].videoUrl },
+  { id: 17, title: 'Modulo 17: Integrazione dell’IA nel lavoro di team', duration: '20:10', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[2].videoUrl },
+  { id: 18, title: 'Modulo 18: Analisi dei clienti e sentiment analysis', duration: '16:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[3].videoUrl },
+  { id: 19, title: 'Modulo 19: Workflow avanzati e gestione dei progetti', duration: '24:30', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[4].videoUrl },
+  { id: 20, title: 'Modulo 20: Esame finale e Rilascio Certificato AI Start', duration: '15:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[5].videoUrl },
+]
+
+function CorsiInnerContent() {
+  const searchParams = useSearchParams()
+  const supabase = createClient()
+
   const [courses] = useState<CourseItem[]>([
     {
       id: 'c-1',
@@ -109,22 +186,11 @@ export default function CorsiPage() {
       id: 'c-2',
       title: 'Consulenza B2B & Strategie di Digital Transformation',
       category: 'consulting',
-      description: 'Percorso pratico per la digitalizzazione delle PMI, gestione processi ed ottimizzazione cloud.',
-      duration: '8 Ore • 4 Moduli',
+      description: 'Audit processi, integrazione agenti AI personalizzati e formazione staff aziendale.',
+      duration: 'Percorso Personalizzato',
       lessonsCount: 12,
-      studentsCount: 15,
-      price: '€ 350',
-      status: 'active',
-    },
-    {
-      id: 'c-3',
-      title: 'Sviluppo Full-Stack Next.js 15 & Supabase Cloud',
-      category: 'dev',
-      description: 'Architetture moderne con Server Components, Realtime WebSockets, RLS e deployment su Vercel.',
-      duration: '16 Ore • 8 Moduli',
-      lessonsCount: 24,
-      studentsCount: 18,
-      price: '€ 590',
+      studentsCount: 8,
+      price: 'Su Misura',
       status: 'active',
     },
   ])
@@ -132,6 +198,18 @@ export default function CorsiPage() {
   // Lezioni attive
   const [lessons, setLessons] = useState<Lesson[]>(AI_START_LESSONS)
   const [activeLesson, setActiveLesson] = useState<Lesson>(lessons[0])
+
+  // Registrazioni Zoom Live
+  const [zoomRecordings, setZoomRecordings] = useState<ZoomRecording[]>(REAL_ZOOM_RECORDINGS)
+  const [activeZoomVideo, setActiveZoomVideo] = useState<ZoomRecording | null>(null)
+  const [isAddZoomModalOpen, setIsAddZoomModalOpen] = useState(false)
+
+  // Form Aggiungi Registrazione Zoom
+  const [zoomTitleInput, setZoomTitleInput] = useState('')
+  const [zoomDateInput, setZoomDateInput] = useState('')
+  const [zoomUrlInput, setZoomUrlInput] = useState('')
+  const [zoomDescInput, setZoomDescInput] = useState('')
+  const [zoomOrderInput, setZoomOrderInput] = useState<number>(zoomRecordings.length + 1)
 
   // Modal per inserire/modificare URL video custom della lezione
   const [isEditVideoModalOpen, setIsEditVideoModalOpen] = useState(false)
@@ -142,7 +220,7 @@ export default function CorsiPage() {
   const [activeStudent, setActiveStudent] = useState<{ name: string; code: string } | null>(null)
   const [codeError, setCodeError] = useState('')
 
-  // Registrazioni Studenti Esistenti e Nuovi
+  // Registrazioni Studenti
   const [registrations, setRegistrations] = useState<StudentRegistration[]>([
     {
       id: 'r-1',
@@ -184,7 +262,7 @@ export default function CorsiPage() {
   const [chatInput, setChatInput] = useState('')
   const [isAiThinking, setIsAiThinking] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<'player' | 'catalog' | 'students' | 'login'>('player')
+  const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'catalog' | 'students' | 'login'>('player')
   const [searchQuery, setSearchQuery] = useState('')
 
   // Modal Nuova Iscrizione Studente
@@ -194,15 +272,44 @@ export default function CorsiPage() {
   const [studentEmail, setStudentEmail] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
 
-  const supabase = createClient()
+  // Auto-verifica Codice da URL ?code=AI-START-XXXX
+  useEffect(() => {
+    const urlCode = searchParams?.get('code')
+    if (urlCode) {
+      verifyAndSetCode(urlCode)
+    }
+  }, [searchParams])
 
-  // Generatore Codice Univoco (es. AI-START-77B4)
+  const verifyAndSetCode = async (codeStr: string) => {
+    const cleanCode = codeStr.trim().toUpperCase()
+    setStudentCodeInput(cleanCode)
+
+    const { data: dbStudent } = await (supabase as any)
+      .from('student_codes')
+      .select('*')
+      .eq('code', cleanCode)
+      .single()
+
+    if (dbStudent) {
+      setActiveStudent({ name: dbStudent.student_name, code: dbStudent.code })
+      setActiveTab('player')
+    } else {
+      const found = registrations.find((r) => r.code === cleanCode)
+      if (found) {
+        setActiveStudent({ name: found.studentName, code: found.code })
+        setActiveTab('player')
+      } else if (cleanCode === 'DEMO2026' || cleanCode.startsWith('AI-START-')) {
+        setActiveStudent({ name: 'Studente Autenticato', code: cleanCode })
+        setActiveTab('player')
+      }
+    }
+  }
+
   const generateUniqueCode = () => {
     const randomHex = Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase()
     return `AI-START-${randomHex}`
   }
 
-  // Verifica Codice Studente
   const handleVerifyStudentCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setCodeError('')
@@ -210,35 +317,7 @@ export default function CorsiPage() {
     const codeClean = studentCodeInput.trim().toUpperCase()
     if (!codeClean) return
 
-    // 1. Controlla prima nel database Supabase student_codes
-    const { data: dbStudent } = await (supabase as any)
-      .from('student_codes')
-      .select('*')
-      .eq('code', codeClean)
-      .single()
-
-    if (dbStudent) {
-      setActiveStudent({ name: dbStudent.student_name, code: dbStudent.code })
-      setActiveTab('player')
-      playNotificationSound('chat')
-      alert(`Benvenuto ${dbStudent.student_name}! Accesso sbloccato a tutte le 20 lezioni video di AI Start.`)
-      return
-    }
-
-    // 2. Controlla nel registro locale o codici demo
-    const found = registrations.find((r) => r.code === codeClean)
-    if (found) {
-      setActiveStudent({ name: found.studentName, code: found.code })
-      setActiveTab('player')
-      playNotificationSound('chat')
-      alert(`Benvenuto ${found.studentName}! Accesso sbloccato a tutte le 20 lezioni video di AI Start.`)
-    } else if (codeClean === 'DEMO2026' || codeClean.startsWith('AI-START-')) {
-      setActiveStudent({ name: 'Studente Autenticato', code: codeClean })
-      setActiveTab('player')
-      playNotificationSound('chat')
-    } else {
-      setCodeError('Codice non valido. Verifica il codice inviato via mail o richiedilo al supporto.')
-    }
+    await verifyAndSetCode(codeClean)
   }
 
   const handleEnrollStudent = async (e: React.FormEvent) => {
@@ -267,23 +346,21 @@ export default function CorsiPage() {
       course_title: selectedCourseTitle,
     })
 
-    const { data: userData } = await supabase.auth.getUser()
     await (supabase as any).from('tasks').insert({
       title: `Accoglienza Studente: ${studentName.trim()} (${generatedCode})`,
       description: `Iscrizione al corso "${selectedCourseTitle}". Codice univoco assegnato: ${generatedCode}.`,
       status: 'todo',
       priority: 'high',
-      created_by: userData.user?.id || null,
     })
 
     await sendSharedEmail({
       to: studentEmail.trim(),
-      subject: `Il tuo Codice di Accesso per: ${selectedCourseTitle}`,
-      body: `Gentile ${studentName.trim()},\n\nconfermiamo la tua iscrizione al corso "${selectedCourseTitle}".\n\nEcco il tuo CODICE DI ACCESSO UNIVOCO per accedere alle 20 lezioni video:\n👉 CODICE: ${generatedCode}\n\nInserisci questo codice nella piattaforma per sbloccare tutti i moduli.\n\nCordiali saluti,\nTeam Aiutiamoci Cloud`,
+      subject: `Il tuo Codice di Accesso al Corso AI Start: ${generatedCode}`,
+      body: `Gentile ${studentName.trim()},\n\nEcco il tuo CODICE DI ACCESSO UNIVOCO per accedere alle 20 lezioni video ed al supporto @AI:\n👉 CODICE: ${generatedCode}\n\nAccedi inserendolo nell'Area Studenti di aiutiamoci.cloud.\n\nCordiali saluti,\nTeam Ti AIuto`,
     })
 
     playNotificationSound('chat')
-    alert(`Studente ${studentName} iscritto! Codice generato: ${generatedCode}. Inviata l'email con il codice via Resend!`)
+    alert(`Studente ${studentName} iscritto! Codice generato: ${generatedCode}. Inviata mail via Resend!`)
 
     setIsRegistering(false)
     setIsEnrollModalOpen(false)
@@ -298,20 +375,25 @@ export default function CorsiPage() {
     setRegistrations(registrations.filter((r) => r.id !== studentId))
   }
 
-  const [customTitleInput, setCustomTitleInput] = useState('')
-
-  const handleSaveCustomVideoUrl = (e: React.FormEvent) => {
+  const handleSaveZoomRecording = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!zoomTitleInput.trim() || !zoomUrlInput.trim()) return
 
-    const newTitle = customTitleInput.trim() || activeLesson.title
-    const newUrl = customVideoUrlInput.trim() || activeLesson.videoUrl
+    const newZoom: ZoomRecording = {
+      id: `z-${Date.now()}`,
+      title: zoomTitleInput.trim(),
+      date: zoomDateInput.trim() || new Date().toLocaleDateString('it-IT'),
+      videoUrl: zoomUrlInput.trim(),
+      description: zoomDescInput.trim(),
+      order: zoomOrderInput || zoomRecordings.length + 1,
+    }
 
-    const updated = lessons.map((l) => (l.id === activeLesson.id ? { ...l, title: newTitle, videoUrl: newUrl } : l))
-    setLessons(updated)
-    setActiveLesson({ ...activeLesson, title: newTitle, videoUrl: newUrl })
-
-    alert(`Lezione "${newTitle}" aggiornata con successo!`)
-    setIsEditVideoModalOpen(false)
+    setZoomRecordings([newZoom, ...zoomRecordings])
+    setIsAddZoomModalOpen(false)
+    setZoomTitleInput('')
+    setZoomUrlInput('')
+    setZoomDescInput('')
+    alert(`Registrazione Zoom "${newZoom.title}" aggiunta con successo!`)
   }
 
   const handleSendStudentChat = (e: React.FormEvent) => {
@@ -323,7 +405,7 @@ export default function CorsiPage() {
 
     const userMsg = {
       id: `m-${Date.now()}`,
-      sender: activeStudent ? `${activeStudent.name}` : 'Tu (Studente)',
+      sender: activeStudent ? `${activeStudent.name} (Studente)` : 'Marco (Studente)',
       isAi: false,
       text: userText,
       time: now,
@@ -332,15 +414,14 @@ export default function CorsiPage() {
     setChatMessages((prev) => [...prev, userMsg])
     setChatInput('')
 
-    if (userText.toLowerCase().includes('@ai') || userText.toLowerCase().includes('ai') || userText.includes('?')) {
+    if (userText.includes('@AI') || userText.includes('@ai') || userText.length > 5) {
       setIsAiThinking(true)
-
       setTimeout(() => {
         const aiMsg = {
-          id: `m-${Date.now() + 1}`,
+          id: `m-ai-${Date.now()}`,
           sender: 'Assistente @AI Ti AIuto',
           isAi: true,
-          text: `Ottima domanda su "${userText.replace(/@ai/i, '').trim() || 'AI Start'}"! Nel corso spieghiamo che l’IA funziona al meglio quando le fornisci un ruolo chiaro ed esempi specifici. Clicca sui 20 video in playlist per riprodurli!`,
+          text: `Ho ricevuto la tua richiesta! Nel percorso AI Start affrontiamo esattamente questo tema. Se hai dubbi su uno specifico dei 20 moduli video, fammelo sapere!`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
         setChatMessages((prev) => [...prev, aiMsg])
@@ -360,21 +441,12 @@ export default function CorsiPage() {
     const updatedLessons = lessons.map((l) => (l.id === lessonId ? { ...l, completed: !l.completed } : l))
     setLessons(updatedLessons)
 
-    // Se completata, passa automaticamente alla lezione successiva
     const currentIndex = lessons.findIndex((l) => l.id === lessonId)
     if (currentIndex >= 0 && currentIndex < lessons.length - 1) {
       const nextLesson = updatedLessons[currentIndex + 1]
       setActiveLesson(nextLesson)
     }
   }
-
-  const filteredRegistrations = registrations.filter(
-    (r) =>
-      r.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.studentEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.courseTitle.toLowerCase().includes(searchQuery.toLowerCase())
-  )
 
   return (
     <div className="space-y-6">
@@ -386,16 +458,26 @@ export default function CorsiPage() {
             Portale Corsi Formativi & Studenti (aiutiamoci.cloud)
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            20 Lezioni Video AI Start, player streaming HTML5, codice studente e supporto @AI.
+            20 Lezioni Video AI Start, Registrazioni Zoom Live, risorse PDF e supporto @AI.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {activeStudent ? (
-            <Badge variant="success" className="py-1 px-3 flex items-center gap-1 text-xs">
-              <Unlock className="h-3.5 w-3.5" />
-              <span>Studente: <strong>{activeStudent.name}</strong> ({activeStudent.code})</span>
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="success" className="py-1 px-3 flex items-center gap-1 text-xs">
+                <Unlock className="h-3.5 w-3.5" />
+                <span>Studente: <strong>{activeStudent.name}</strong> ({activeStudent.code})</span>
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveStudent(null)}
+                className="text-xs text-slate-400 hover:text-white h-8"
+              >
+                Esci
+              </Button>
+            </div>
           ) : (
             <Button
               variant="outline"
@@ -430,22 +512,32 @@ export default function CorsiPage() {
           }`}
         >
           <PlayCircle className="h-4 w-4" />
-          <span>Player 20 Video Lezioni & Chat @AI</span>
+          <span>Player 20 Video Lezioni</span>
         </button>
 
-        {!activeStudent && (
-          <button
-            onClick={() => setActiveTab('login')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
-              activeTab === 'login'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Key className="h-4 w-4" />
-            <span>Riscatta Codice Studente</span>
-          </button>
-        )}
+        <button
+          onClick={() => setActiveTab('zoom')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
+            activeTab === 'zoom'
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <VideoIcon className="h-4 w-4" />
+          <span>Registrazioni Zoom ({zoomRecordings.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('bonus')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
+            activeTab === 'bonus'
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Gift className="h-4 w-4" />
+          <span>Risorse & Manuali</span>
+        </button>
 
         {!activeStudent && (
           <button
@@ -483,27 +575,22 @@ export default function CorsiPage() {
             <Key className="h-8 w-8" />
           </div>
 
-          <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Sblocca i 20 Video di AI Start
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Inserisci il Codice Univoco di Accesso che hai ricevuto al momento dell'iscrizione (es. AI-START-8F92).
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Accedi come Studente</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Inserisci il tuo Codice Accesso Univoco per sbloccare le 20 lezioni video ed il supporto @AI.
             </p>
           </div>
 
-          <form onSubmit={handleVerifyStudentCode} className="space-y-4 text-xs text-left">
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700 dark:text-slate-300">Codice Univoco Studente *</label>
-              <Input
-                autoFocus
-                required
-                value={studentCodeInput}
-                onChange={(e) => setStudentCodeInput(e.target.value)}
-                placeholder="Es. AI-START-8F92 oppure DEMO2026"
-                className="text-center font-mono uppercase tracking-widest font-bold text-sm h-11 dark:bg-slate-800 dark:border-slate-700"
-              />
-            </div>
+          <form onSubmit={handleVerifyStudentCode} className="space-y-4">
+            <Input
+              autoFocus
+              required
+              value={studentCodeInput}
+              onChange={(e) => setStudentCodeInput(e.target.value)}
+              placeholder="Es. AI-START-8F92 oppure DEMO2026"
+              className="text-center font-mono uppercase tracking-widest font-bold text-sm h-11 dark:bg-slate-800 dark:border-slate-700"
+            />
 
             {codeError && (
               <p className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">
@@ -524,31 +611,21 @@ export default function CorsiPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left / Center: Video Player & Lezione Attiva */}
           <div className="lg:col-span-8 space-y-4">
-            {/* RIPRODUTTORE VIDEO NATIVO HTML5 / IFRAME */}
             <div className="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden relative aspect-video flex items-center justify-center group">
-              {activeLesson.videoUrl?.includes('youtube') || activeLesson.videoUrl?.includes('vimeo') ? (
-                <iframe
-                  src={activeLesson.videoUrl}
-                  className="w-full h-full rounded-2xl border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <video
-                  key={activeLesson.id}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  controlsList="nodownload"
-                  onEnded={() => {
-                    if (!activeLesson.completed) toggleLessonCompleted(activeLesson.id)
-                  }}
-                  src={activeLesson.videoUrl || DEFAULT_SAMPLE_VIDEO}
-                  className="w-full h-full object-cover rounded-2xl"
-                >
-                  Il tuo browser non supporta il riproduttore video.
-                </video>
-              )}
+              <video
+                key={activeLesson.id}
+                controls
+                playsInline
+                preload="metadata"
+                controlsList="nodownload"
+                onEnded={() => {
+                  if (!activeLesson.completed) toggleLessonCompleted(activeLesson.id)
+                }}
+                src={activeLesson.videoUrl || REAL_ZOOM_RECORDINGS[0].videoUrl}
+                className="w-full h-full object-cover rounded-2xl"
+              >
+                Il tuo browser non supporta il riproduttore video.
+              </video>
             </div>
 
             {/* Dettaglio Lezione e Playlist */}
@@ -681,141 +758,219 @@ export default function CorsiPage() {
                   <p className="text-[10px] text-slate-400">Scrivi @AI per risposte automatiche sui 20 moduli</p>
                 </div>
               </div>
+              <Badge variant="success" className="text-[9px] uppercase">Online 24/7</Badge>
             </div>
 
-            {/* Messages Stream */}
-            <div className="p-4 flex-1 overflow-y-auto space-y-3 text-xs">
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
               {chatMessages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`p-3 rounded-xl space-y-1 ${
+                  className={`p-3 rounded-xl max-w-[88%] space-y-1 ${
                     msg.isAi
-                      ? 'bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-slate-800 dark:text-slate-200'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white'
+                      ? 'bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-slate-900 dark:text-slate-100 ml-0'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 ml-auto'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[11px] text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                      {msg.isAi && <Sparkles className="h-3 w-3 text-purple-500" />}
+                  <div className="flex items-center justify-between font-bold text-[11px] text-indigo-600 dark:text-indigo-400">
+                    <span className="flex items-center gap-1">
+                      {msg.isAi && <Sparkles className="h-3 w-3 text-amber-500" />}
                       {msg.sender}
                     </span>
-                    <span className="text-[9px] text-slate-400">{msg.time}</span>
+                    <span className="text-[9px] font-normal text-slate-400">{msg.time}</span>
                   </div>
                   <p className="leading-relaxed">{msg.text}</p>
                 </div>
               ))}
 
               {isAiThinking && (
-                <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-300 text-xs flex items-center gap-2">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>@AI sta consultando i 20 moduli...</span>
+                <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                  <span className="text-slate-400 font-mono text-[11px]">Assistente @AI sta elaborando...</span>
                 </div>
               )}
             </div>
 
-            {/* Input Chat Studenti */}
-            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
-              <form onSubmit={handleSendStudentChat} className="flex gap-2">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Scrivi una domanda o digita @AI..."
-                  className="flex-1 text-xs px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <Button type="submit" size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white h-8 px-3">
-                  <Send className="h-3.5 w-3.5" />
-                </Button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 2: CATALOGO CORSI */}
-      {activeTab === 'catalog' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => (
-            <div
-              key={course.id}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 flex flex-col justify-between hover:border-indigo-500/50 transition-all group"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Badge
-                    variant={
-                      course.category === 'ai'
-                        ? 'purple'
-                        : course.category === 'consulting'
-                        ? 'info'
-                        : 'success'
-                    }
-                    className="text-[10px] uppercase font-bold"
-                  >
-                    {course.category === 'ai' ? 'IA & Agenti' : course.category === 'consulting' ? 'Consulenza B2B' : 'Sviluppo Cloud'}
-                  </Badge>
-
-                  <span className="font-extrabold text-sm text-indigo-600 dark:text-indigo-400 font-mono">
-                    {course.price}
-                  </span>
-                </div>
-
-                <h3 className="font-bold text-base text-slate-900 dark:text-white leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  {course.title}
-                </h3>
-
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {course.description}
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3 mt-4">
-                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
-                  <span>{course.duration}</span>
-                  <span>{course.studentsCount} Studenti Iscritti</span>
-                </div>
-
-                <Button
-                  onClick={() => {
-                    setSelectedCourseTitle(course.title)
-                    setIsEnrollModalOpen(true)
-                  }}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs gap-1.5 h-9"
-                >
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  Iscrivi Studente a Questo Corso
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* TAB 3: REGISTRO STUDENTI & CODICI REPLIT */}
-      {activeTab === 'students' && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 px-2">
-              Studenti Registrati & Codici Univoci: <strong className="text-slate-900 dark:text-white ml-1">{registrations.length}</strong>
-            </div>
-
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cerca studente, codice o email..."
-                className="w-full h-8 pl-9 pr-3 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            <form onSubmit={handleSendStudentChat} className="p-3 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+              <Input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Scrivi una domanda o digita @AI..."
+                className="text-xs h-10 dark:bg-slate-800 dark:border-slate-700"
               />
+              <Button type="submit" size="icon" className="h-10 w-10 shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: REGISTRAZIONI ZOOM LIVE */}
+      {activeTab === 'zoom' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <VideoIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                Registrazioni Zoom Live
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Sessioni live registrate disponibili per i corsisti. Incolla il link diretto alla registrazione.
+              </p>
             </div>
+
+            {!activeStudent && (
+              <Button
+                onClick={() => setIsAddZoomModalOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Aggiungi Registrazione</span>
+              </Button>
+            )}
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+          {/* RIPRODUTTORE VIDEO ZOOM ATTIVO */}
+          {activeZoomVideo && (
+            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 shadow-2xl space-y-3">
+              <div className="flex items-center justify-between text-white border-b border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <PlayCircle className="h-5 w-5 text-indigo-400" />
+                  <span className="font-bold text-sm">Riproduzione Live: {activeZoomVideo.title} ({activeZoomVideo.date})</span>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => setActiveZoomVideo(null)} className="text-xs text-slate-400 hover:text-white">
+                  Chiudi Player
+                </Button>
+              </div>
+
+              <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
+                <video
+                  key={activeZoomVideo.id}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  src={activeZoomVideo.videoUrl}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* LISTA SCHEDE REGISTRAZIONI ZOOM */}
+          <div className="space-y-3">
+            {zoomRecordings.map((rec) => (
+              <div
+                key={rec.id}
+                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-indigo-500/50 transition-all"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <PlayCircle className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>{rec.title}</span>
+                      <span className="text-[10px] font-mono font-normal text-slate-400">({rec.date})</span>
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate max-w-xl">
+                      {rec.videoUrl}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={() => setActiveZoomVideo(rec)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4 rounded-xl gap-1.5 shadow-xs"
+                  >
+                    <PlayCircle className="h-4 w-4" />
+                    <span>Guarda Video</span>
+                  </Button>
+
+                  <a href={rec.videoUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm" className="text-xs h-9 gap-1.5 border-slate-200 dark:border-slate-800">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>Apri Link</span>
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: RISORSE BONUS & MANUALI */}
+      {activeTab === 'bonus' && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Gift className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              Risorse Bonus, PDF & Manuali
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Documenti integrativi, template di prompt pronti all'uso e guide in formato PDF.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="flex items-center gap-3">
+                <FileText className="h-6 w-6 text-indigo-600" />
+                <div>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">Cheatsheet Prompting in 3 Parti</h4>
+                  <p className="text-xs text-slate-400">Guida PDF tascabile per la stesura dei prompt.</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" className="w-full text-xs gap-2">
+                <Download className="h-3.5 w-3.5" />
+                <span>Scarica PDF (1.2 MB)</span>
+              </Button>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="flex items-center gap-3">
+                <FileText className="h-6 w-6 text-indigo-600" />
+                <div>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">Template Email Commerciali AI</h4>
+                  <p className="text-xs text-slate-400">50 Modelli di email formali e risposte ad obiezioni.</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" className="w-full text-xs gap-2">
+                <Download className="h-3.5 w-3.5" />
+                <span>Scarica PDF (2.4 MB)</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: REGISTRO STUDENTI & CODICI */}
+      {activeTab === 'students' && !activeStudent && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Registro Codici & Studenti Iscritti</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Elenco dei codici univoci generati e degli studenti accreditati.
+              </p>
+            </div>
+
+            <Button
+              onClick={() => setIsEnrollModalOpen(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span>Iscrivi Nuovi Studente</span>
+            </Button>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase">
+                  <tr>
                     <th className="py-3 px-4">Codice Accesso</th>
                     <th className="py-3 px-4">Nome Studente</th>
                     <th className="py-3 px-4">Email</th>
@@ -824,9 +979,9 @@ export default function CorsiPage() {
                     <th className="py-3 px-4 text-right">Azioni</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-300">
-                  {filteredRegistrations.map((reg) => (
-                    <tr key={reg.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                  {registrations.map((reg) => (
+                    <tr key={reg.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="py-3.5 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
                         {reg.code}
                       </td>
@@ -889,130 +1044,72 @@ export default function CorsiPage() {
         </div>
       )}
 
-      {/* Modal Modifica Link Video Custom Lezione */}
-      {isEditVideoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 text-left">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+      {/* Modal Aggiungi Registrazione Zoom (identico al form in screenshot) */}
+      {isAddZoomModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2">
-                <Video className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Imposta Link Video per "{activeLesson.title}"</h3>
+                <VideoIcon className="h-5 w-5 text-indigo-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Aggiungi Registrazione Zoom</h3>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsEditVideoModalOpen(false)}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <button onClick={() => setIsAddZoomModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            <form onSubmit={handleSaveCustomVideoUrl} className="p-5 space-y-4 text-xs">
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo Lezione</label>
-                <Input
-                  autoFocus
-                  value={customTitleInput}
-                  onChange={(e) => setCustomTitleInput(e.target.value)}
-                  placeholder={`Titolo attuale: ${activeLesson.title}`}
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700 font-semibold"
-                />
+            <form onSubmit={handleSaveZoomRecording} className="p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo *</label>
+                  <Input
+                    required
+                    value={zoomTitleInput}
+                    onChange={(e) => setZoomTitleInput(e.target.value)}
+                    placeholder="Es. Lezione 1 e 2"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Data registrazione</label>
+                  <Input
+                    value={zoomDateInput}
+                    onChange={(e) => setZoomDateInput(e.target.value)}
+                    placeholder="Es. 19/08/2026"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">URL del Video (MP4, Supabase Storage, YouTube o Vimeo)</label>
-                <Input
-                  value={customVideoUrlInput}
-                  onChange={(e) => setCustomVideoUrlInput(e.target.value)}
-                  placeholder="Es. https://.../modulo1.mp4 oppure https://www.youtube.com/embed/..."
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700 font-mono"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <Button type="button" variant="outline" onClick={() => setIsEditVideoModalOpen(false)}>
-                  Annulla
-                </Button>
-                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold gap-1.5">
-                  Salva Modifiche Lezione
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Iscrizione Studente con Generazione Codice */}
-      {isEnrollModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 text-left">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-              <div className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuova Iscrizione & Generazione Codice</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsEnrollModalOpen(false)}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <form onSubmit={handleEnrollStudent} className="p-5 space-y-4 text-xs">
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Seleziona Corso Formativo</label>
-                <select
-                  value={selectedCourseTitle}
-                  onChange={(e) => setSelectedCourseTitle(e.target.value)}
-                  className="w-full h-9 rounded-md border border-slate-200 dark:border-slate-700 bg-background dark:bg-slate-800 px-3 text-xs"
-                >
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.title}>{c.title} ({c.price})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Nome e Cognome Studente *</label>
-                <Input
-                  autoFocus
-                  required
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  placeholder="Es. Mario Rossi"
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Indirizzo Email Studente *</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Link registrazione *</label>
                 <Input
                   required
-                  type="email"
-                  value={studentEmail}
-                  onChange={(e) => setStudentEmail(e.target.value)}
-                  placeholder="Es. mario.rossi@azienda.it"
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                  value={zoomUrlInput}
+                  onChange={(e) => setZoomUrlInput(e.target.value)}
+                  placeholder="https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom1/..."
+                  className="font-mono text-[11px] dark:bg-slate-800 dark:border-slate-700"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <Button type="button" variant="outline" onClick={() => setIsEnrollModalOpen(false)}>
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione</label>
+                <textarea
+                  value={zoomDescInput}
+                  onChange={(e) => setZoomDescInput(e.target.value)}
+                  placeholder="Descrizione sintetica degli argomenti trattati nella registrazione..."
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsAddZoomModalOpen(false)}>
                   Annulla
                 </Button>
-                <Button type="submit" disabled={isRegistering} className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold gap-1.5">
-                  {isRegistering ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Generazione Codice...
-                    </>
-                  ) : (
-                    'Genera Codice ed Invia Mail'
-                  )}
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2">
+                  <Save className="h-4 w-4" />
+                  Salva Registrazione
                 </Button>
               </div>
             </form>
@@ -1020,5 +1117,13 @@ export default function CorsiPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function CorsiPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center font-mono text-xs">Caricamento Portale Corsi...</div>}>
+      <CorsiInnerContent />
+    </Suspense>
   )
 }
