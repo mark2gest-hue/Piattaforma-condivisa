@@ -25,6 +25,7 @@ import {
   RefreshCw,
   Edit,
   Video,
+  Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -275,6 +276,13 @@ export default function CorsiPage() {
     setStudentEmail('')
   }
 
+  const handleDeleteStudent = async (studentId: string, name: string, code: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare lo studente "${name}" (Codice: ${code}) dal sistema?`)) return
+
+    await supabase.from('student_codes').delete().eq('code', code)
+    setRegistrations(registrations.filter((r) => r.id !== studentId))
+  }
+
   const [customTitleInput, setCustomTitleInput] = useState('')
 
   const handleSaveCustomVideoUrl = (e: React.FormEvent) => {
@@ -429,7 +437,7 @@ export default function CorsiPage() {
           }`}
         >
           <Users className="h-4 w-4" />
-          <span>Codici & Iscritti Replit ({registrations.length})</span>
+          <span>Registro Codici & Studenti ({registrations.length})</span>
         </button>
       </div>
 
@@ -782,7 +790,7 @@ export default function CorsiPage() {
                           {reg.status === 'in_progress' ? 'In Corso' : reg.status === 'completed' ? 'Completato' : 'Iscritto'}
                         </Badge>
                       </td>
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="py-3.5 px-4 text-right flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -798,6 +806,15 @@ export default function CorsiPage() {
                         >
                           <Mail className="h-3.5 w-3.5" />
                           Invia Codice Mail
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteStudent(reg.id, reg.studentName, reg.code)}
+                          className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                          title="Elimina Studente e Codice"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </td>
                     </tr>
