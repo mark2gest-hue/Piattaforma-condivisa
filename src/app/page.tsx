@@ -35,6 +35,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { sendSharedEmail } from './(dashboard)/posta/actions'
 import { createClient } from '@/lib/supabase/client'
+import { enrollStudentAction } from '@/app/actions/student'
 
 const MODULES_LIST = [
   { num: '01', title: '1. Benvenuti nel Futuro', category: 'Modulo 1 – Fondamenta', desc: 'Introduzione ai concetti chiave ed alla rivoluzione dell’Intelligenza Artificiale.' },
@@ -106,28 +107,20 @@ export default function LandingPage() {
     if (!nameInput.trim() || !emailInput.trim()) return
     setIsRegistering(true)
 
-    const randomHex = Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase()
-    const generatedCode = `AI-START-${randomHex}`
-
-    await (supabase as any).from('student_codes').insert({
-      code: generatedCode,
-      student_name: nameInput.trim(),
-      student_email: emailInput.trim(),
-      course_title: "AI Start - Domina l'IA da Zero",
+    const result = await enrollStudentAction({
+      studentName: nameInput.trim(),
+      studentEmail: emailInput.trim(),
+      courseTitle: "AI Start - Domina l'IA da Zero",
+      source: 'landing',
     })
 
-    await (supabase as any).from('tasks').insert({
-      title: `Nuova Iscrizione Landing: ${nameInput.trim()}`,
-      description: `Studente iscritto da aiutiamoci.cloud. Codice assegnato: ${generatedCode}. Email: ${emailInput.trim()}`,
-      status: 'todo',
-      priority: 'high',
-    })
+    if (!result.success) {
+      alert(`Errore durante l'iscrizione: ${result.error}`)
+      setIsRegistering(false)
+      return
+    }
 
-    await sendSharedEmail({
-      to: emailInput.trim(),
-      subject: `Benvenuto in AI Start! Il tuo Codice di Accesso: ${generatedCode}`,
-      body: `Gentile ${nameInput.trim()},\n\ngrazie per esserti iscritto a "AI Start - Domina l'Intelligenza Artificiale da Zero"!\n\nEcco il tuo CODICE DI ACCESSO UNIVOCO per accedere alle 20 lezioni video ed alla Chat con l'assistente @AI:\n👉 CODICE: ${generatedCode}\n\nAccedi alla piattaforma inserendo questo codice nell'Area Studenti.\n\nCordiali saluti,\nTeam Ti AIuto (aiutiamoci.cloud)`,
-    })
+    const generatedCode = result.code || ''
 
     alert(`Iscrizione completata con successo! Il tuo Codice di Accesso è: ${generatedCode}. Ti abbiamo inviato una mail di conferma.`)
     setIsRegistering(false)

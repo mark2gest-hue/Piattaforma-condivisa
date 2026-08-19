@@ -34,6 +34,7 @@ import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound } from '@/lib/notifications'
 import { sendSharedEmail } from '../posta/actions'
+import { enrollStudentAction } from '@/app/actions/student'
 
 interface CourseItem {
   id: string
@@ -363,11 +364,9 @@ function CorsiInnerContent() {
     const cleanCode = codeStr.trim().toUpperCase()
     setStudentCodeInput(cleanCode)
 
-    const { data: dbStudent } = await (supabase as any)
-      .from('student_codes')
-      .select('*')
-      .eq('code', cleanCode)
-      .single()
+    // Usa RPC sicura per la verifica (nessun SELECT pubblico)
+    const { data } = await (supabase as any).rpc('verify_student_code', { input_code: cleanCode })
+    const dbStudent = data && (data as any[]).length > 0 ? (data as any[])[0] : null
 
     if (dbStudent) {
       setActiveStudent({ name: dbStudent.student_name, code: dbStudent.code })
@@ -404,7 +403,22 @@ function CorsiInnerContent() {
     if (!studentName.trim() || !studentEmail.trim()) return
 
     setIsRegistering(true)
-    const generatedCode = generateUniqueCode()
+
+    // Esegui iscrizione sicura lato server tramite Server Action (supera RLS)
+    const result = await enrollStudentAction({
+      studentName: studentName.trim(),
+      studentEmail: studentEmail.trim(),
+      courseTitle: selectedCourseTitle,
+      source: 'dashboard',
+    })
+
+    if (!result.success) {
+      alert(`Errore durante l'iscrizione: ${result.error}`)
+      setIsRegistering(false)
+      return
+    }
+
+    const generatedCode = result.code || ''
 
     const newReg: StudentRegistration = {
       id: `reg-${Date.now()}`,
@@ -418,28 +432,8 @@ function CorsiInnerContent() {
 
     setRegistrations([newReg, ...registrations])
 
-    await (supabase as any).from('student_codes').insert({
-      code: generatedCode,
-      student_name: studentName.trim(),
-      student_email: studentEmail.trim(),
-      course_title: selectedCourseTitle,
-    })
-
-    await (supabase as any).from('tasks').insert({
-      title: `Accoglienza Studente: ${studentName.trim()} (${generatedCode})`,
-      description: `Iscrizione al corso "${selectedCourseTitle}". Codice univoco assegnato: ${generatedCode}.`,
-      status: 'todo',
-      priority: 'high',
-    })
-
-    await sendSharedEmail({
-      to: studentEmail.trim(),
-      subject: `Il tuo Codice di Accesso al Corso AI Start: ${generatedCode}`,
-      body: `Gentile ${studentName.trim()},\n\nEcco il tuo CODICE DI ACCESSO UNIVOCO per accedere alle 20 lezioni video ed al supporto @AI:\n👉 CODICE: ${generatedCode}\n\nAccedi inserendolo nell'Area Studenti di aiutiamoci.cloud.\n\nCordiali saluti,\nTeam Ti AIuto`,
-    })
-
     playNotificationSound('chat')
-    alert(`Studente ${studentName} iscritto! Codice generato: ${generatedCode}. Inviata mail via Resend!`)
+    alert(`Studente ${studentName} iscritto con successo! Codice generato: ${generatedCode}. Inviata mail via Resend!`)
 
     setIsRegistering(false)
     setIsEnrollModalOpen(false)

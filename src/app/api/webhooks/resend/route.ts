@@ -1,10 +1,70 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import crypto from 'crypto'
 
 // Webhook endpoint server-to-server con privilegi admin per inserimento email in entrata
 export async function POST(request: Request) {
   try {
-    const payload = await request.json()
+    const svixId = request.headers.get('svix-id') || ''
+    const svixTimestamp = request.headers.get('svix-timestamp') || ''
+    const svixSignatureHeader = request.headers.get('svix-signature') || ''
+
+    const webhookSecret = process.env.RESEND_WEBHOOK_SECRET || ''
+
+    const rawBody = await request.text()
+
+    if (webhookSecret) {
+      if (!svixId || !svixTimestamp || !svixSignatureHeader) {
+        return NextResponse.json(
+          { error: 'Firma mancante. Richiesta non autorizzata.' },
+          { status: 401 }
+        )
+      }
+
+      // 1. Verifica la tolleranza del timestamp (5 minuti) per prevenire replay attacks
+      const timestampMs = parseInt(svixTimestamp, 10) * 1000
+      const toleranceMs = 5 * 60 * 1000
+      const now = Date.now()
+      if (isNaN(timestampMs) || Math.abs(now - timestampMs) > toleranceMs) {
+        return NextResponse.json(
+          { error: 'Timestamp non valido o scaduto.' },
+          { status: 401 }
+        )
+      }
+
+      // 2. Calcola HMAC-SHA256 sul payload concitato
+      const secretPart = webhookSecret.startsWith('whsec_')
+        ? webhookSecret.substring(6)
+        : webhookSecret
+      const secretKey = Buffer.from(secretPart, 'base64')
+      const signedContent = `${svixId}.${svixTimestamp}.${rawBody}`
+      const computedSignature = crypto
+        .createHmac('sha256', secretKey)
+        .update(signedContent)
+        .digest('base64')
+
+      // 3. Confronta le firme
+      const signatures = svixSignatureHeader.split(' ')
+      let isValid = false
+      for (const sig of signatures) {
+        const [version, signatureValue] = sig.split(',')
+        if (version === 'v1' && signatureValue === computedSignature) {
+          isValid = true
+          break
+        }
+      }
+
+      if (!isValid) {
+        return NextResponse.json(
+          { error: 'Firma webhook non valida.' },
+          { status: 401 }
+        )
+      }
+    } else {
+      console.warn('[Resend Webhook] RESEND_WEBHOOK_SECRET non configurato in .env. Webhook accettato senza firma.')
+    }
+
+    const payload = JSON.parse(rawBody)
 
     // Resend Inbound Email Event payload
     const { from, to, subject, html, text, message_id } = payload?.data || payload
