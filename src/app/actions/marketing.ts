@@ -171,7 +171,7 @@ export async function getBufferProfilesAction() {
     // 2. Recupera i canali dell'organizzazione
     const channelsQuery = {
       query: `
-        query GetChannels($orgId: String!) {
+        query GetChannels($orgId: OrganizationId!) {
           channels(input: { organizationId: $orgId }) {
             id
             name
