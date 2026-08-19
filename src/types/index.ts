@@ -1,0 +1,25 @@
+import { Database } from './database.types'
+
+export type Profile = Database['public']['Tables']['profiles']['Row']
+export type Project = Database['public']['Tables']['projects']['Row']
+export type Task = Database['public']['Tables']['tasks']['Row']
+export type Message = Database['public']['Tables']['messages']['Row']
+export type Email = Database['public']['Tables']['emails']['Row']
+export type FileItem = Database['public']['Tables']['files']['Row']
+
+export interface TaskWithAssignee extends Task {
+  assignee?: Profile | null
+  project?: Project | null
+}
+
+export interface MessageWithSender extends Message {
+  sender?: Profile | null
+}
+
+export type NavItem = {
+  title: string
+  href: string
+  icon: string
+  badge?: number
+  description: string
+}

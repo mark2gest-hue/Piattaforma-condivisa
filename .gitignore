@@ -1,0 +1,26 @@
+# dependencies
+/node_modules
+/.pnpm
+/.yarn
+
+# Next.js build output
+/.next/
+/out/
+
+# Production & secret env files
+.env
+.env*.local
+.env.production
+.env.staging
+
+# IDE & OS files
+.DS_Store
+*.pem
+.idea/
+.vscode/
+
+# Logs & Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
