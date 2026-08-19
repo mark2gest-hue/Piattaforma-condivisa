@@ -82,12 +82,12 @@ interface ZoomRecording {
   order: number
 }
 
-// URL Reali delle Registrazioni Zoom di Malaradio
+// Elenco Completo Reale delle Registrazioni Zoom di Malaradio.com (Zoom 1 - 10 + Bonus 1 & 2)
 const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   {
     id: 'z-1',
     title: 'Lezione 1 e 2',
-    date: '19/08/2026',
+    date: '05/05/2026',
     videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom1/GMT20260505-182955_Recording_2560x1440.mp4',
     description: 'Introduzione ai concetti chiave ed impostazione dei primi prompt professionali.',
     order: 1,
@@ -95,7 +95,7 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   {
     id: 'z-2',
     title: 'Lezione 3 e 4',
-    date: '21/08/2026',
+    date: '07/05/2026',
     videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom2/GMT20260507-182806_Recording_gallery_2560x1440.mp4',
     description: 'Gestione e risposte automatiche email commerciali e delegare le task noiose.',
     order: 2,
@@ -103,7 +103,7 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   {
     id: 'z-3',
     title: 'Lezione 5 e 6',
-    date: '24/08/2026',
+    date: '19/05/2026',
     videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom4/GMT20260519-183538_Recording_gallery_1976x1112.mp4',
     description: 'Creazione contenuti, sintesi PDF lunghi ed analisi dati.',
     order: 3,
@@ -111,7 +111,7 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   {
     id: 'z-4',
     title: 'Lezione 7 e 8',
-    date: '26/08/2026',
+    date: '12/05/2026',
     videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom3/GMT20260512-182902_Recording_gallery_1992x1120.mp4',
     description: 'Organizzazione del tempo e fogli di calcolo intelligenti.',
     order: 4,
@@ -119,7 +119,7 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   {
     id: 'z-5',
     title: 'Lezione 9 e 10',
-    date: '28/08/2026',
+    date: '26/05/2026',
     videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom5/GMT20260526-183343_Recording_gallery_1920x1080.mp4',
     description: 'Chat continua con assistente @AI ed Agenti personalizzati.',
     order: 5,
@@ -127,7 +127,7 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   {
     id: 'z-6',
     title: 'Lezione 11 e 12',
-    date: '31/08/2026',
+    date: '04/06/2026',
     videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom6/GMT20260604-183228_Recording_gallery_1976x1112.mp4',
     description: 'Automazioni senza codice, trascrizione vocali e verbali.',
     order: 6,
@@ -135,14 +135,54 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   {
     id: 'z-7',
     title: 'Lezioni 13 e 14',
-    date: '02/09/2026',
+    date: '09/06/2026',
     videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom7/GMT20260609-182902_Recording_gallery_1920x1080.mp4',
     description: 'Generazione immagini, grafica e preventivi B2B in tempo reale.',
     order: 7,
   },
+  {
+    id: 'z-8',
+    title: 'Lezione 15 e 16',
+    date: '16/06/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom8/GMT20260616-182736_Recording_gallery_1920x1112.mp4',
+    description: 'Cybersecurity, privacy dati aziendali ed integrazione workflow team.',
+    order: 8,
+  },
+  {
+    id: 'z-9',
+    title: 'Lezioni 17 e 18',
+    date: '23/06/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom9/GMT20260623-183430_Recording_gallery_1920x1080.mp4',
+    description: 'Analisi dei clienti, sentiment analysis ed automazione offerte.',
+    order: 9,
+  },
+  {
+    id: 'z-10',
+    title: 'Lezione 19 e 20',
+    date: '02/07/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom10/GMT20260702-180514_Recording_gallery_1992x1120.mp4',
+    description: 'Workflow avanzati e preparazione esame finale.',
+    order: 10,
+  },
+  {
+    id: 'z-11',
+    title: 'Bonus',
+    date: '07/07/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/ZoomFinale/GMT20260707-183529_Recording_1920x1120.mp4',
+    description: 'Sessione finale Q&A e strategie pratiche sul campo.',
+    order: 11,
+  },
+  {
+    id: 'z-12',
+    title: 'Bonus 2',
+    date: '16/07/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/RegistrazioniZoom/GMT20260716-172248_Recording_gallery_1920x1120.mp4',
+    description: 'Approfondimento agenti avanzati e risorse extra.',
+    order: 12,
+  },
 ]
 
-// 20 Moduli Video del Corso AI Start con i link reali di malaradio.com
+// Mappatura precisa dei 20 Moduli Video del Corso AI Start con gli URL MP4 di malaradio.com
 const AI_START_LESSONS: Lesson[] = [
   { id: 1, title: 'Modulo 1: Benvenuto in AI Start — Dimentica i tecnicismi', duration: '10:30', completed: true, videoUrl: REAL_ZOOM_RECORDINGS[0].videoUrl },
   { id: 2, title: 'Modulo 2: Come impostare il primo prompt senza errori', duration: '12:45', completed: true, videoUrl: REAL_ZOOM_RECORDINGS[0].videoUrl },
@@ -158,12 +198,12 @@ const AI_START_LESSONS: Lesson[] = [
   { id: 12, title: 'Modulo 12: Automazioni senza codice (No-Code & Webhooks)', duration: '25:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[5].videoUrl },
   { id: 13, title: 'Modulo 13: Trascrizione automatica di riunioni e vocali', duration: '18:20', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[6].videoUrl },
   { id: 14, title: 'Modulo 14: Generare immagini e grafica per le presentazioni', duration: '20:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[6].videoUrl },
-  { id: 15, title: 'Modulo 15: Cybersecurity e privacy dei dati con l’IA', duration: '15:30', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[0].videoUrl },
-  { id: 16, title: 'Modulo 16: Creare preventivi e proposte B2B in tempo reale', duration: '18:45', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[1].videoUrl },
-  { id: 17, title: 'Modulo 17: Integrazione dell’IA nel lavoro di team', duration: '20:10', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[2].videoUrl },
-  { id: 18, title: 'Modulo 18: Analisi dei clienti e sentiment analysis', duration: '16:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[3].videoUrl },
-  { id: 19, title: 'Modulo 19: Workflow avanzati e gestione dei progetti', duration: '24:30', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[4].videoUrl },
-  { id: 20, title: 'Modulo 20: Esame finale e Rilascio Certificato AI Start', duration: '15:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[5].videoUrl },
+  { id: 15, title: 'Modulo 15: Cybersecurity e privacy dei dati con l’IA', duration: '15:30', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[7].videoUrl },
+  { id: 16, title: 'Modulo 16: Creare preventivi e proposte B2B in tempo reale', duration: '18:45', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[7].videoUrl },
+  { id: 17, title: 'Modulo 17: Integrazione dell’IA nel lavoro di team', duration: '20:10', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[8].videoUrl },
+  { id: 18, title: 'Modulo 18: Analisi dei clienti e sentiment analysis', duration: '16:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[8].videoUrl },
+  { id: 19, title: 'Modulo 19: Workflow avanzati e gestione dei progetti', duration: '24:30', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[9].videoUrl },
+  { id: 20, title: 'Modulo 20: Esame finale e Rilascio Certificato AI Start', duration: '15:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[9].videoUrl },
 ]
 
 function CorsiInnerContent() {
@@ -396,6 +436,11 @@ function CorsiInnerContent() {
     alert(`Registrazione Zoom "${newZoom.title}" aggiunta con successo!`)
   }
 
+  const handleDeleteZoom = (id: string, title: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare la registrazione "${title}"?`)) return
+    setZoomRecordings(zoomRecordings.filter((z) => z.id !== id))
+  }
+
   const handleSendStudentChat = (e: React.FormEvent) => {
     e.preventDefault()
     if (!chatInput.trim()) return
@@ -458,7 +503,7 @@ function CorsiInnerContent() {
             Portale Corsi Formativi & Studenti (aiutiamoci.cloud)
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            20 Lezioni Video AI Start, Registrazioni Zoom Live, risorse PDF e supporto @AI.
+            20 Lezioni Video AI Start, Registrazioni Zoom Live (12 Sessioni MP4), risorse PDF e supporto @AI.
           </p>
         </div>
 
@@ -812,7 +857,7 @@ function CorsiInnerContent() {
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <VideoIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                Registrazioni Zoom Live
+                Registrazioni Zoom Live ({zoomRecordings.length})
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Sessioni live registrate disponibili per i corsisti. Incolla il link diretto alla registrazione.
@@ -894,6 +939,18 @@ function CorsiInnerContent() {
                       <span>Apri Link</span>
                     </Button>
                   </a>
+
+                  {!activeStudent && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteZoom(rec.id, rec.title)}
+                      className="h-9 w-9 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                      title="Elimina Registrazione"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
@@ -1044,7 +1101,7 @@ function CorsiInnerContent() {
         </div>
       )}
 
-      {/* Modal Aggiungi Registrazione Zoom (identico al form in screenshot) */}
+      {/* Modal Aggiungi Registrazione Zoom */}
       {isAddZoomModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -1066,7 +1123,7 @@ function CorsiInnerContent() {
                     required
                     value={zoomTitleInput}
                     onChange={(e) => setZoomTitleInput(e.target.value)}
-                    placeholder="Es. Lezione 1 e 2"
+                    placeholder="Es. Lezione 15 e 16"
                     className="dark:bg-slate-800 dark:border-slate-700"
                   />
                 </div>
@@ -1075,7 +1132,7 @@ function CorsiInnerContent() {
                   <Input
                     value={zoomDateInput}
                     onChange={(e) => setZoomDateInput(e.target.value)}
-                    placeholder="Es. 19/08/2026"
+                    placeholder="Es. 16/06/2026"
                     className="dark:bg-slate-800 dark:border-slate-700"
                   />
                 </div>
@@ -1087,7 +1144,7 @@ function CorsiInnerContent() {
                   required
                   value={zoomUrlInput}
                   onChange={(e) => setZoomUrlInput(e.target.value)}
-                  placeholder="https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom1/..."
+                  placeholder="https://www.malaradio.com/CorsoAI/RegistrazioniZoom/Zoom8/..."
                   className="font-mono text-[11px] dark:bg-slate-800 dark:border-slate-700"
                 />
               </div>
