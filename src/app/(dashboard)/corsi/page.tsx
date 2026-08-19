@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   GraduationCap,
   BookOpen,
@@ -16,10 +16,13 @@ import {
   X,
   Search,
   PlayCircle,
-  MessageSquare,
   Bot,
-  Volume2,
-  Video,
+  Key,
+  FileText,
+  Lock,
+  Unlock,
+  Check,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -42,6 +45,7 @@ interface CourseItem {
 
 interface StudentRegistration {
   id: string
+  code: string
   studentName: string
   studentEmail: string
   courseTitle: string
@@ -53,9 +57,33 @@ interface Lesson {
   id: number
   title: string
   duration: string
-  videoUrl?: string
   completed: boolean
+  resourcesPdfUrl?: string
 }
+
+// Tutti i 20 Moduli Video del Corso AI Start
+const AI_START_LESSONS: Lesson[] = [
+  { id: 1, title: 'Modulo 1: Benvenuto in AI Start — Dimentica i tecnicismi', duration: '10:30', completed: true },
+  { id: 2, title: 'Modulo 2: Come impostare il primo prompt senza errori', duration: '12:45', completed: true },
+  { id: 3, title: 'Modulo 3: Delegare le task noiose dell’ufficio all’IA', duration: '15:20', completed: true },
+  { id: 4, title: 'Modulo 4: Generare risposte email commerciali perfette', duration: '14:10', completed: false },
+  { id: 5, title: 'Modulo 5: Creazione contenuti e post social con l’IA', duration: '18:00', completed: false },
+  { id: 6, title: 'Modulo 6: Riassumere documenti lunghi e PDF in 10 secondi', duration: '16:30', completed: false },
+  { id: 7, title: 'Modulo 7: Organizzare il tempo e le agende aziendali', duration: '15:00', completed: false },
+  { id: 8, title: 'Modulo 8: Creare tabelle ed analizzare dati senza formule', duration: '20:15', completed: false },
+  { id: 9, title: 'Modulo 9: Traduzione ed adattamento di testi internazionali', duration: '12:00', completed: false },
+  { id: 10, title: 'Modulo 10: La Chat con l’assistente @AI ed il supporto continuo', duration: '14:50', completed: false },
+  { id: 11, title: 'Modulo 11: Creare Agenti AI personalizzati su misura', duration: '22:10', completed: false },
+  { id: 12, title: 'Modulo 12: Automazioni senza codice (No-Code & Webhooks)', duration: '25:00', completed: false },
+  { id: 13, title: 'Modulo 13: Trascrizione automatica di riunioni e vocali', duration: '18:20', completed: false },
+  { id: 14, title: 'Modulo 14: Generare immagini e grafica per le presentazioni', duration: '20:00', completed: false },
+  { id: 15, title: 'Modulo 15: Cybersecurity e privacy dei dati con l’IA', duration: '15:30', completed: false },
+  { id: 16, title: 'Modulo 16: Creare preventivi e proposte B2B in tempo reale', duration: '18:45', completed: false },
+  { id: 17, title: 'Modulo 17: Integrazione dell’IA nel lavoro di team', duration: '20:10', completed: false },
+  { id: 18, title: 'Modulo 18: Analisi dei clienti e sentiment analysis', duration: '16:00', completed: false },
+  { id: 19, title: 'Modulo 19: Workflow avanzati e gestione dei progetti', duration: '24:30', completed: false },
+  { id: 20, title: 'Modulo 20: Esame finale e Rilascio Certificato AI Start', duration: '15:00', completed: false },
+]
 
 export default function CorsiPage() {
   const [courses] = useState<CourseItem[]>([
@@ -66,7 +94,7 @@ export default function CorsiPage() {
       description: 'Corso pratico in 20 lezioni. Impara a delegare la noia, potenziare la creatività e gestire il tempo spiegato semplice.',
       duration: '20 Video • 5 Moduli',
       lessonsCount: 20,
-      studentsCount: 38,
+      studentsCount: 42,
       price: '€ 290',
       status: 'active',
     },
@@ -94,16 +122,36 @@ export default function CorsiPage() {
     },
   ])
 
-  // Lezioni del corso AI Start (Riproduttore Integrato)
-  const [lessons, setLessons] = useState<Lesson[]>([
-    { id: 1, title: 'Modulo 1: Introduzione all’IA — Dimentica i tecnicismi e parti da zero', duration: '12:40', completed: true },
-    { id: 2, title: 'Modulo 2: Come delegare la noia con i Prompt Efficaci', duration: '15:20', completed: true },
-    { id: 3, title: 'Modulo 3: Potenziare la creatività e la scrittura dei contenuti', duration: '18:15', completed: false },
-    { id: 4, title: 'Modulo 4: Gestione del tempo ed organizzazione con gli Agenti AI', duration: '20:00', completed: false },
-    { id: 5, title: 'Modulo 5: Integrazione pratica nel lavoro quotidiano di team', duration: '25:10', completed: false },
-  ])
-
+  // Lezioni attive
+  const [lessons, setLessons] = useState<Lesson[]>(AI_START_LESSONS)
   const [activeLesson, setActiveLesson] = useState<Lesson>(lessons[0])
+
+  // Stato Studente Loggato tramite Codice
+  const [studentCodeInput, setStudentCodeInput] = useState('')
+  const [activeStudent, setActiveStudent] = useState<{ name: string; code: string } | null>(null)
+  const [codeError, setCodeError] = useState('')
+
+  // Registrazioni Studenti Esistenti e Nuovi
+  const [registrations, setRegistrations] = useState<StudentRegistration[]>([
+    {
+      id: 'r-1',
+      code: 'AI-START-8F92',
+      studentName: 'Giuseppe Rossi',
+      studentEmail: 'g.rossi@azienda.it',
+      courseTitle: 'AI Start - Domina l’Intelligenza Artificiale da Zero',
+      registeredAt: new Date().toISOString(),
+      status: 'in_progress',
+    },
+    {
+      id: 'r-2',
+      code: 'AI-START-3K11',
+      studentName: 'Laura Bianchi',
+      studentEmail: 'laura.b@studio-consulting.com',
+      courseTitle: 'Consulenza B2B & Strategie di Digital Transformation',
+      registeredAt: new Date(Date.now() - 86400000).toISOString(),
+      status: 'enrolled',
+    },
+  ])
 
   // Chat Studenti con Assistente @AI
   const [chatMessages, setChatMessages] = useState<Array<{ id: string; sender: string; isAi: boolean; text: string; time: string }>>([
@@ -118,33 +166,14 @@ export default function CorsiPage() {
       id: 'm-2',
       sender: 'Assistente @AI Ti AIuto',
       isAi: true,
-      text: 'Ciao Marco! Nel Modulo 2 spieghiamo come impostare un prompt in 3 parti: 1. Ruolo (es. Consulente commerciale), 2. Contesto del cliente, 3. Tono ed obiettivo (es. Professionale e sintetico). Puoi anche usare l’Hub Agenti della piattaforma!',
+      text: 'Ciao Marco! Nel Modulo 2 spieghiamo come impostare un prompt in 3 parti: 1. Ruolo (es. Consulente commerciale), 2. Contesto del cliente, 3. Tono ed obiettivo. Puoi usare anche i 20 moduli in playlist!',
       time: '14:21',
     },
   ])
   const [chatInput, setChatInput] = useState('')
   const [isAiThinking, setIsAiThinking] = useState(false)
 
-  const [registrations, setRegistrations] = useState<StudentRegistration[]>([
-    {
-      id: 'r-1',
-      studentName: 'Giuseppe Rossi',
-      studentEmail: 'g.rossi@azienda.it',
-      courseTitle: 'AI Start - Domina l’Intelligenza Artificiale da Zero',
-      registeredAt: new Date().toISOString(),
-      status: 'in_progress',
-    },
-    {
-      id: 'r-2',
-      studentName: 'Laura Bianchi',
-      studentEmail: 'laura.b@studio-consulting.com',
-      courseTitle: 'Consulenza B2B & Strategie di Digital Transformation',
-      registeredAt: new Date(Date.now() - 86400000).toISOString(),
-      status: 'enrolled',
-    },
-  ])
-
-  const [activeTab, setActiveTab] = useState<'player' | 'catalog' | 'students'>('player')
+  const [activeTab, setActiveTab] = useState<'player' | 'catalog' | 'students' | 'login'>('player')
   const [searchQuery, setSearchQuery] = useState('')
 
   // Modal Nuova Iscrizione Studente
@@ -156,14 +185,47 @@ export default function CorsiPage() {
 
   const supabase = createClient()
 
+  // Generatore Codice Univoco (es. AI-START-77B4)
+  const generateUniqueCode = () => {
+    const randomHex = Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase()
+    return `AI-START-${randomHex}`
+  }
+
+  // Verifica Codice Studente
+  const handleVerifyStudentCode = (e: React.FormEvent) => {
+    e.preventDefault()
+    setCodeError('')
+
+    const codeClean = studentCodeInput.trim().toUpperCase()
+    const found = registrations.find((r) => r.code === codeClean)
+
+    if (found) {
+      setActiveStudent({ name: found.studentName, code: found.code })
+      setActiveTab('player')
+      playNotificationSound('chat')
+      alert(`Benvenuto ${found.studentName}! Accesso sbloccato a tutte le 20 lezioni video di AI Start.`)
+    } else {
+      // Codice dimostrativo generale di test
+      if (codeClean === 'DEMO2026' || codeClean.startsWith('AI-START-')) {
+        setActiveStudent({ name: 'Studente Autenticato', code: codeClean })
+        setActiveTab('player')
+        playNotificationSound('chat')
+      } else {
+        setCodeError('Codice non valido. Verifica il codice inviato via mail o richiedilo al supporto.')
+      }
+    }
+  }
+
   const handleEnrollStudent = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!studentName.trim() || !studentEmail.trim()) return
 
     setIsRegistering(true)
+    const generatedCode = generateUniqueCode()
 
     const newReg: StudentRegistration = {
       id: `reg-${Date.now()}`,
+      code: generatedCode,
       studentName: studentName.trim(),
       studentEmail: studentEmail.trim(),
       courseTitle: selectedCourseTitle,
@@ -173,23 +235,32 @@ export default function CorsiPage() {
 
     setRegistrations([newReg, ...registrations])
 
+    // Salvataggio su Supabase
+    await (supabase as any).from('student_codes').insert({
+      code: generatedCode,
+      student_name: studentName.trim(),
+      student_email: studentEmail.trim(),
+      course_title: selectedCourseTitle,
+    })
+
     const { data: userData } = await supabase.auth.getUser()
     await (supabase as any).from('tasks').insert({
-      title: `Accoglienza Studente: ${studentName.trim()}`,
-      description: `Nuova iscrizione al corso "${selectedCourseTitle}". Inviare materiale didattico a ${studentEmail.trim()}.`,
+      title: `Accoglienza Studente: ${studentName.trim()} (${generatedCode})`,
+      description: `Iscrizione al corso "${selectedCourseTitle}". Codice univoco assegnato: ${generatedCode}.`,
       status: 'todo',
       priority: 'high',
       created_by: userData.user?.id || null,
     })
 
+    // Invia mail con il codice di accesso univoco
     await sendSharedEmail({
       to: studentEmail.trim(),
-      subject: `Conferma Iscrizione: ${selectedCourseTitle}`,
-      body: `Gentile ${studentName.trim()},\n\nconfermiamo con piacere la tua iscrizione al corso "${selectedCourseTitle}".\n\nPuoi accedere ai materiali ed ai video delle lezioni direttamente dalla Piattaforma Condivisa.\n\nCordiali saluti,\nTeam Aiutiamoci Cloud`,
+      subject: `Il tuo Codice di Accesso per: ${selectedCourseTitle}`,
+      body: `Gentile ${studentName.trim()},\n\nconfermiamo la tua iscrizione al corso "${selectedCourseTitle}".\n\nEcco il tuo CODICE DI ACCESSO UNIVOCO per accedere alle 20 lezioni video:\n👉 CODICE: ${generatedCode}\n\nInserisci questo codice nella piattaforma per sbloccare tutti i moduli.\n\nCordiali saluti,\nTeam Aiutiamoci Cloud`,
     })
 
     playNotificationSound('chat')
-    alert(`Studente ${studentName} iscritto con successo! Creata la scheda nel Kanban ed inviata l'email via Resend!`)
+    alert(`Studente ${studentName} iscritto! Codice generato: ${generatedCode}. Inviata l'email con il codice via Resend!`)
 
     setIsRegistering(false)
     setIsEnrollModalOpen(false)
@@ -206,7 +277,7 @@ export default function CorsiPage() {
 
     const userMsg = {
       id: `m-${Date.now()}`,
-      sender: 'Tu (Studente)',
+      sender: activeStudent ? `${activeStudent.name}` : 'Tu (Studente)',
       isAi: false,
       text: userText,
       time: now,
@@ -215,7 +286,6 @@ export default function CorsiPage() {
     setChatMessages((prev) => [...prev, userMsg])
     setChatInput('')
 
-    // Se l'utente scrive o cita @AI o chiede spiegazioni
     if (userText.toLowerCase().includes('@ai') || userText.toLowerCase().includes('ai') || userText.includes('?')) {
       setIsAiThinking(true)
 
@@ -224,7 +294,7 @@ export default function CorsiPage() {
           id: `m-${Date.now() + 1}`,
           sender: 'Assistente @AI Ti AIuto',
           isAi: true,
-          text: `Ottima domanda su "${userText.replace(/@ai/i, '').trim() || 'AI Start'}"! Nel corso spieghiamo che l’IA funziona al meglio quando le fornisci un ruolo chiaro ed esempi specifici. Vuoi che ti generi una bozza o un esercizio pratico?`,
+          text: `Ottima domanda su "${userText.replace(/@ai/i, '').trim() || 'AI Start'}"! Nel corso spieghiamo che l’IA funziona al meglio quando le fornisci un ruolo chiaro ed esempi specifici. Consulta la lezione attinente nei 20 moduli!`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
         setChatMessages((prev) => [...prev, aiMsg])
@@ -244,6 +314,7 @@ export default function CorsiPage() {
     (r) =>
       r.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.studentEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.courseTitle.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -257,17 +328,35 @@ export default function CorsiPage() {
             Portale Corsi Formativi & Studenti (aiutiamoci.cloud)
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Fruizione lezioni video/audio, assistente @AI in chat e gestione iscritti.
+            20 Lezioni Video AI Start, accesso con Codice Studente, Assistente @AI e gestione iscritti.
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsEnrollModalOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
-        >
-          <PlusCircle className="h-4 w-4" />
-          <span>Iscrivi Nuovo Studente</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {activeStudent ? (
+            <Badge variant="success" className="py-1 px-3 flex items-center gap-1 text-xs">
+              <Unlock className="h-3.5 w-3.5" />
+              <span>Studente: <strong>{activeStudent.name}</strong> ({activeStudent.code})</span>
+            </Badge>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => setActiveTab('login')}
+              className="text-xs font-semibold h-10 gap-1.5 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400"
+            >
+              <Key className="h-4 w-4" />
+              <span>Accedi con Codice Studente</span>
+            </Button>
+          )}
+
+          <Button
+            onClick={() => setIsEnrollModalOpen(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Iscrivi Studente</span>
+          </Button>
+        </div>
       </div>
 
       {/* Selector Tabs */}
@@ -281,7 +370,19 @@ export default function CorsiPage() {
           }`}
         >
           <PlayCircle className="h-4 w-4" />
-          <span>Player Lezioni Video & Chat @AI</span>
+          <span>Player 20 Video Lezioni & Chat @AI</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('login')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
+            activeTab === 'login'
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Key className="h-4 w-4" />
+          <span>Riscatta Codice Studente</span>
         </button>
 
         <button
@@ -305,17 +406,60 @@ export default function CorsiPage() {
           }`}
         >
           <Users className="h-4 w-4" />
-          <span>Registro Studenti Iscritti ({registrations.length})</span>
+          <span>Codici & Iscritti Replit ({registrations.length})</span>
         </button>
       </div>
 
-      {/* TAB 1: PLAYER VIDEO LEZIONI AI START & CHAT @AI */}
+      {/* TAB: LOGIN CON CODICE STUDENTE */}
+      {activeTab === 'login' && (
+        <div className="max-w-md mx-auto bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 text-center">
+          <div className="h-16 w-16 bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mx-auto border border-indigo-200 dark:border-indigo-800">
+            <Key className="h-8 w-8" />
+          </div>
+
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              Sblocca i 20 Video di AI Start
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Inserisci il Codice Univoco di Accesso che hai ricevuto al momento dell'iscrizione (es. AI-START-8F92).
+            </p>
+          </div>
+
+          <form onSubmit={handleVerifyStudentCode} className="space-y-4 text-xs text-left">
+            <div className="space-y-1">
+              <label className="font-semibold text-slate-700 dark:text-slate-300">Codice Univoco Studente *</label>
+              <Input
+                autoFocus
+                required
+                value={studentCodeInput}
+                onChange={(e) => setStudentCodeInput(e.target.value)}
+                placeholder="Es. AI-START-8F92 oppure DEMO2026"
+                className="text-center font-mono uppercase tracking-widest font-bold text-sm h-11 dark:bg-slate-800 dark:border-slate-700"
+              />
+            </div>
+
+            {codeError && (
+              <p className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">
+                {codeError}
+              </p>
+            )}
+
+            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 shadow-xs gap-2">
+              <Unlock className="h-4 w-4" />
+              Sblocca Corso & 20 Video
+            </Button>
+          </form>
+        </div>
+      )}
+
+      {/* TAB 1: PLAYER 20 VIDEO LEZIONI AI START & CHAT @AI */}
       {activeTab === 'player' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left / Center: Video Player & Lezione Attiva */}
           <div className="lg:col-span-8 space-y-4">
             <div className="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden relative aspect-video flex items-center justify-center">
-              {/* Simulator Player Video HTML5 */}
+              {/* Player Video HTML5 Simulato */}
               <div className="text-center space-y-3 p-6">
                 <div className="h-16 w-16 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center mx-auto shadow-inner">
                   <PlayCircle className="h-8 w-8 animate-pulse" />
@@ -325,27 +469,33 @@ export default function CorsiPage() {
                     {activeLesson.title}
                   </h3>
                   <p className="text-xs text-slate-400 mt-1">
-                    Durata: {activeLesson.duration} • Player HTML5 HD senza tracciamenti di terze parti
+                    Durata: {activeLesson.duration} • Player HTML5 HD Nativo senza cookie di terze parti
                   </p>
                 </div>
-                <Badge variant="purple" className="text-[10px] uppercase">
-                  Riproduzione in Corso
-                </Badge>
+                <div className="flex items-center justify-center gap-2">
+                  <Badge variant="purple" className="text-[10px] uppercase">
+                    Riproduzione HD Attiva
+                  </Badge>
+                  <Button variant="outline" size="sm" className="h-7 text-[10px] text-white border-slate-700 gap-1">
+                    <Download className="h-3 w-3" />
+                    Scarica Slide PDF Lezione
+                  </Button>
+                </div>
               </div>
             </div>
 
-            {/* Dettaglio Lezione e Playlist */}
+            {/* Lista Completa dei 20 Moduli Video */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                  Programma Lezioni: AI Start - Domina l'IA da Zero
+                  Programma Completo: 20 Moduli Video AI Start
                 </h3>
-                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 font-mono">
                   {lessons.filter((l) => l.completed).length} / {lessons.length} Completate
                 </span>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
                 {lessons.map((lesson) => (
                   <div
                     key={lesson.id}
@@ -356,13 +506,13 @@ export default function CorsiPage() {
                         : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 truncate pr-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           toggleLessonCompleted(lesson.id)
                         }}
-                        className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors ${
+                        className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
                           lesson.completed
                             ? 'bg-emerald-500 border-emerald-600 text-white'
                             : 'border-slate-300 dark:border-slate-600'
@@ -371,12 +521,12 @@ export default function CorsiPage() {
                         {lesson.completed && <CheckCircle2 className="h-3.5 w-3.5" />}
                       </button>
 
-                      <span className={`text-xs ${activeLesson.id === lesson.id ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
+                      <span className={`text-xs truncate ${activeLesson.id === lesson.id ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
                         {lesson.title}
                       </span>
                     </div>
 
-                    <span className="text-[11px] text-slate-400 font-mono">
+                    <span className="text-[11px] text-slate-400 font-mono shrink-0">
                       {lesson.duration}
                     </span>
                   </div>
@@ -386,13 +536,13 @@ export default function CorsiPage() {
           </div>
 
           {/* Right: Chat Studenti con Assistente @AI */}
-          <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col h-[600px]">
+          <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col h-[650px]">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2">
                 <Bot className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                 <div>
                   <h3 className="font-bold text-xs text-slate-900 dark:text-white">Chat Studenti & Assistente @AI</h3>
-                  <p className="text-[10px] text-slate-400">Scrivi @AI per ricevere assistenza istantanea</p>
+                  <p className="text-[10px] text-slate-400">Scrivi @AI per risposte automatiche sui 20 moduli</p>
                 </div>
               </div>
             </div>
@@ -422,7 +572,7 @@ export default function CorsiPage() {
               {isAiThinking && (
                 <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-300 text-xs flex items-center gap-2">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>@AI sta elaborando la risposta...</span>
+                  <span>@AI sta consultando i 20 moduli...</span>
                 </div>
               )}
             </div>
@@ -505,12 +655,12 @@ export default function CorsiPage() {
         </div>
       )}
 
-      {/* TAB 3: REGISTRO STUDENTI ISCRITTI */}
+      {/* TAB 3: REGISTRO STUDENTI & CODICI REPLIT */}
       {activeTab === 'students' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
             <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 px-2">
-              Studenti Registrati: <strong className="text-slate-900 dark:text-white ml-1">{registrations.length}</strong>
+              Studenti Registrati & Codici Univoci: <strong className="text-slate-900 dark:text-white ml-1">{registrations.length}</strong>
             </div>
 
             <div className="relative w-full sm:w-64">
@@ -519,7 +669,7 @@ export default function CorsiPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cerca studente o corso..."
+                placeholder="Cerca studente, codice o email..."
                 className="w-full h-8 pl-9 pr-3 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -530,6 +680,7 @@ export default function CorsiPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <th className="py-3 px-4">Codice Accesso</th>
                     <th className="py-3 px-4">Nome Studente</th>
                     <th className="py-3 px-4">Email</th>
                     <th className="py-3 px-4">Corso Formativo</th>
@@ -540,13 +691,16 @@ export default function CorsiPage() {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-300">
                   {filteredRegistrations.map((reg) => (
                     <tr key={reg.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3.5 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                        {reg.code}
+                      </td>
                       <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
                         {reg.studentName}
                       </td>
                       <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400 font-mono">
                         {reg.studentEmail}
                       </td>
-                      <td className="py-3.5 px-4 font-semibold text-indigo-600 dark:text-indigo-400">
+                      <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">
                         {reg.courseTitle}
                       </td>
                       <td className="py-3.5 px-4">
@@ -570,15 +724,15 @@ export default function CorsiPage() {
                           onClick={() => {
                             sendSharedEmail({
                               to: reg.studentEmail,
-                              subject: `Aggiornamento Corso: ${reg.courseTitle}`,
-                              body: `Gentile ${reg.studentName},\n\nti inviamo un aggiornamento relativo alle prossime lezioni del corso ${reg.courseTitle}.\n\nCordiali saluti,\nTeam Aiutiamoci Cloud`,
+                              subject: `Il tuo Codice di Accesso al Corso: ${reg.code}`,
+                              body: `Gentile ${reg.studentName},\n\nti ricordiamo che il tuo CODICE DI ACCESSO UNIVOCO per le 20 lezioni video è: ${reg.code}.\n\nCordiali saluti,\nTeam Aiutiamoci Cloud`,
                             })
-                            alert(`Inviato promemoria via Resend a ${reg.studentEmail}!`)
+                            alert(`Inviato promemoria codice ${reg.code} via Resend a ${reg.studentEmail}!`)
                           }}
                           className="text-xs text-indigo-600 hover:text-indigo-800 dark:hover:text-indigo-300 gap-1 h-7"
                         >
                           <Mail className="h-3.5 w-3.5" />
-                          Invia Mail
+                          Invia Codice Mail
                         </Button>
                       </td>
                     </tr>
@@ -590,14 +744,14 @@ export default function CorsiPage() {
         </div>
       )}
 
-      {/* Modal Iscrizione Studente */}
+      {/* Modal Iscrizione Studente con Generazione Codice */}
       {isEnrollModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 text-left">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuova Iscrizione al Corso</h3>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuova Iscrizione & Generazione Codice</h3>
               </div>
               <Button
                 variant="ghost"
@@ -655,10 +809,10 @@ export default function CorsiPage() {
                   {isRegistering ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Registrazione...
+                      Generazione Codice...
                     </>
                   ) : (
-                    'Conferma ed Invia Mail'
+                    'Genera Codice ed Invia Mail'
                   )}
                 </Button>
               </div>
