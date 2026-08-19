@@ -70,9 +70,6 @@ export default function LandingPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Corso selezionato nella landing
-  const [selectedCourseTab, setSelectedCourseTab] = useState<'start' | 'pro'>('start')
-
   // Form Iscrizione Rapida AI Start
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
   const [nameInput, setNameInput] = useState('')
@@ -268,6 +265,24 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* HERO SHOWCASE IMAGE BANNER WITH OVERLAY */}
+        <div className="relative max-w-5xl mx-auto rounded-3xl border border-slate-800 shadow-2xl shadow-indigo-500/20 overflow-hidden group">
+          <img
+            src="/images/ai_start_course_banner.jpg"
+            alt="AI Start Platform Showcase"
+            className="w-full h-[320px] sm:h-[450px] object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8 sm:p-12">
+            <div className="space-y-2 max-w-xl text-left">
+              <Badge className="bg-indigo-600 text-white border-0 text-[10px] uppercase font-bold">Interfaccia Studente & Player HD</Badge>
+              <h3 className="text-xl sm:text-2xl font-black text-white">Player Video HTML5 & Assistente @AI in tempo reale</h3>
+              <p className="text-xs text-slate-300 leading-relaxed hidden sm:block">
+                Fruisci delle lezioni con audio e video in streaming senza cookie di terze parti e poni domande all'IA durante lo studio.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* SECTION SELETTORE DEI CORSI (CORSO 1 DISPONIBILE vs CORSO 2 AVANZATO PRO) */}
         <div className="space-y-8">
           <div className="text-center space-y-2">
@@ -278,13 +293,22 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {/* CORSO 1: AI START (DISPONIBILE ORA) */}
-            <div className="bg-gradient-to-b from-slate-900/90 to-slate-950 border-2 border-indigo-500/50 rounded-3xl p-8 space-y-6 relative shadow-2xl shadow-indigo-500/10 flex flex-col justify-between">
-              <div className="absolute -top-3.5 left-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+            <div className="bg-gradient-to-b from-slate-900/90 to-slate-950 border-2 border-indigo-500/50 rounded-3xl p-6 sm:p-8 space-y-6 relative shadow-2xl shadow-indigo-500/10 flex flex-col justify-between overflow-hidden">
+              <div className="absolute -top-3.5 left-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow-md flex items-center gap-1 z-10">
                 <Flame className="h-3 w-3 fill-amber-400 text-amber-400" />
                 <span>Più Popolare • Disponibile Ora</span>
               </div>
 
-              <div className="space-y-4 pt-2">
+              {/* Banner Immagine Corso 1 */}
+              <div className="rounded-2xl overflow-hidden border border-slate-800 relative mt-2">
+                <img
+                  src="/images/ai_start_course_banner.jpg"
+                  alt="AI Start Banner"
+                  className="w-full h-44 object-cover"
+                />
+              </div>
+
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Badge variant="purple" className="text-[10px] uppercase">Livello Principiante / Intermedio</Badge>
                   <span className="text-2xl font-black text-white font-mono">€ 290</span>
@@ -328,13 +352,22 @@ export default function LandingPage() {
             </div>
 
             {/* CORSO 2: AI PRO B2B (PROSSIMAMENTE / LISTA D'ATTESA) */}
-            <div className="bg-gradient-to-b from-slate-900/60 to-slate-950 border border-slate-800/80 rounded-3xl p-8 space-y-6 relative flex flex-col justify-between group hover:border-purple-500/40 transition-all">
-              <div className="absolute -top-3.5 left-6 bg-slate-800 text-purple-300 border border-purple-500/30 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full flex items-center gap-1">
+            <div className="bg-gradient-to-b from-slate-900/60 to-slate-950 border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6 relative flex flex-col justify-between group hover:border-purple-500/40 transition-all overflow-hidden">
+              <div className="absolute -top-3.5 left-6 bg-slate-800 text-purple-300 border border-purple-500/30 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full flex items-center gap-1 z-10">
                 <Cpu className="h-3 w-3 text-purple-400" />
                 <span>Prossimamente • Corso Avanzato</span>
               </div>
 
-              <div className="space-y-4 pt-2">
+              {/* Banner Immagine Corso 2 */}
+              <div className="rounded-2xl overflow-hidden border border-slate-800 relative mt-2">
+                <img
+                  src="/images/ai_pro_b2b_course_banner.jpg"
+                  alt="AI Pro B2B Banner"
+                  className="w-full h-44 object-cover"
+                />
+              </div>
+
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary" className="text-[10px] uppercase bg-slate-800 text-slate-300">Livello Avanzato B2B</Badge>
                   <Badge variant="warning" className="text-[9px] uppercase">Lista d'Attesa</Badge>
