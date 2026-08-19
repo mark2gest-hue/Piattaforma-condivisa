@@ -16,9 +16,11 @@ export default function VideocallPage() {
   const [callObject, setCallObject] = useState<DailyCall | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const dailyRoomUrl = `https://${process.env.NEXT_PUBLIC_DAILY_DOMAIN || 'teamhub.daily.co'}/${
-    process.env.NEXT_PUBLIC_DAILY_ROOM_NAME || 'team-stanza-principale'
-  }`
+  const rawRoomName = process.env.NEXT_PUBLIC_DAILY_ROOM_NAME || 'team-stanza-principale'
+  const domain = process.env.NEXT_PUBLIC_DAILY_DOMAIN || 'teamhub.daily.co'
+  const dailyRoomUrl = rawRoomName.startsWith('http')
+    ? rawRoomName
+    : `https://${domain.replace(/^https?:\/\//, '')}/${rawRoomName}`
 
   const joinCall = useCallback(() => {
     if (!containerRef.current) return
