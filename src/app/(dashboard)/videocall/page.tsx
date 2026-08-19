@@ -3,36 +3,51 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Video,
-  PhoneOff,
   ShieldCheck,
   Share2,
   ExternalLink,
   AlertCircle,
   Loader2,
+  Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import DailyIframe, { DailyCall } from '@daily-co/daily-js'
 
+type Provider = 'jitsi' | 'daily'
+
 export default function VideocallPage() {
+  const [provider, setProvider] = useState<Provider>('jitsi')
   const [inCall, setInCall] = useState(false)
   const [joining, setJoining] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [callObject, setCallObject] = useState<DailyCall | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // Config Daily.co
   const rawRoomName = process.env.NEXT_PUBLIC_DAILY_ROOM_NAME || 'team-stanza-principale'
   const domain = process.env.NEXT_PUBLIC_DAILY_DOMAIN || 'teamhub.daily.co'
   const dailyRoomUrl = rawRoomName.startsWith('http')
     ? rawRoomName
     : `https://${domain.replace(/^https?:\/\//, '')}/${rawRoomName}`
 
+  // Config Jitsi Meet (Open Source 100% Gratis senza carta)
+  const jitsiRoomName = `teamhub-${rawRoomName.replace(/[^a-zA-Z0-9]/g, '')}`
+  const jitsiRoomUrl = `https://meet.jit.si/${jitsiRoomName}#config.prejoinPageEnabled=false`
+
   const joinCall = useCallback(() => {
     if (!containerRef.current) return
     setJoining(true)
     setErrorMessage(null)
 
-    // Se esiste un frame precedente, puliscilo
+    if (provider === 'jitsi') {
+      // Connessione Jitsi Meet istantanea senza carta
+      setInCall(true)
+      setJoining(false)
+      return
+    }
+
+    // Connessione Daily.co
     if (callObject) {
       callObject.destroy()
     }
@@ -64,7 +79,7 @@ export default function VideocallPage() {
 
       newCallObject.on('error', (e) => {
         console.error('Errore Daily.co:', e)
-        setErrorMessage(`Impossibile connettersi alla stanza (${e.errorMsg || 'Verifica la stanza su Daily.co'})`)
+        setErrorMessage(`Daily.co richiede la carta a garanzia nella dashboard. Puoi passare a Jitsi Meet gratis in alto.`)
         setJoining(false)
         setInCall(false)
       })
@@ -73,24 +88,12 @@ export default function VideocallPage() {
       newCallObject.join({ url: dailyRoomUrl })
     } catch (err: any) {
       console.error('Errore creazione frame:', err)
-      setErrorMessage('Errore durante l’inizializzazione del componente videocall.')
+      setErrorMessage('Errore durante l’inizializzazione della chiamata.')
       setJoining(false)
     }
-  }, [dailyRoomUrl, callObject])
+  }, [provider, dailyRoomUrl, callObject])
 
-  const leaveCall = useCallback(() => {
-    if (callObject) {
-      callObject.leave()
-    }
-  }, [callObject])
-
-  useEffect(() => {
-    return () => {
-      if (callObject) {
-        callObject.destroy()
-      }
-    }
-  }, [callObject])
+  const currentActiveUrl = provider === 'jitsi' ? jitsiRoomUrl : dailyRoomUrl
 
   return (
     <div className="space-y-6 flex flex-col h-[calc(100vh-8rem)]">
@@ -102,23 +105,43 @@ export default function VideocallPage() {
             Stanza Videocall WebRTC
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Riunioni istantanee ad alta definizione basate su Daily.co SDK.
+            Riunioni istantanee ad alta definizione con microfono, telecamera e condivisione schermo.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant="purple" className="py-1 px-3 flex items-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Crittografia E2E
-          </Badge>
+          {/* Selector tra Jitsi (No Carta) e Daily */}
+          <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex items-center gap-1 border border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => { setProvider('jitsi'); setInCall(false); setErrorMessage(null); }}
+              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                provider === 'jitsi'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              Jitsi (100% Gratis / No Carta)
+            </button>
+            <button
+              onClick={() => { setProvider('daily'); setInCall(false); setErrorMessage(null); }}
+              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                provider === 'daily'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              Daily.co
+            </button>
+          </div>
+
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.open(dailyRoomUrl, '_blank')}
+            onClick={() => window.open(currentActiveUrl, '_blank')}
             className="text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 gap-1.5 shadow-xs border-slate-200 dark:border-slate-700"
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            Apri in nuova scheda
+            Nuova scheda
           </Button>
         </div>
       </div>
@@ -126,10 +149,19 @@ export default function VideocallPage() {
       {/* Main Room Viewport */}
       <div className="flex-1 bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden relative flex flex-col min-h-[450px]">
         
-        {/* Iframe Container - Sempre presente nel DOM per permettere l'aggancio di Daily */}
+        {/* Jitsi Iframe (attivo quando provider === 'jitsi' ed inCall === true) */}
+        {provider === 'jitsi' && inCall && (
+          <iframe
+            src={jitsiRoomUrl}
+            allow="camera; microphone; display-capture; autoplay; clipboard-write"
+            className="w-full h-full border-0 absolute inset-0 z-0"
+          />
+        )}
+
+        {/* Daily Container */}
         <div 
           ref={containerRef} 
-          className="w-full h-full absolute inset-0 z-0"
+          className={`w-full h-full absolute inset-0 z-0 ${provider === 'daily' ? 'block' : 'hidden'}`}
         />
 
         {/* Join Screen (Idle State Overlay) */}
@@ -145,7 +177,7 @@ export default function VideocallPage() {
                   Pronto per entrare nella videocall?
                 </h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Stanza collegata a: <strong className="text-slate-200 font-mono">{dailyRoomUrl}</strong>
+                  Infrastruttura: <Badge variant="purple" className="font-mono text-[10px] ml-1">{provider === 'jitsi' ? 'Jitsi Meet (Gratis)' : 'Daily.co'}</Badge>
                 </p>
               </div>
 
@@ -176,7 +208,7 @@ export default function VideocallPage() {
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() => window.open(dailyRoomUrl, '_blank')}
+                  onClick={() => window.open(currentActiveUrl, '_blank')}
                   className="w-full sm:w-auto bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 h-11"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
