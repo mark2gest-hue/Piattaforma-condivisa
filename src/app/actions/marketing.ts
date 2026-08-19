@@ -128,14 +128,89 @@ export async function getBufferProfilesAction() {
       return { success: false, error: 'Token non configurato nelle impostazioni di ambiente.' }
     }
 
-    const res = await fetch(`https://api.bufferapp.com/1/profiles.json?access_token=${token}`)
-    if (!res.ok) {
-      const errText = await res.text()
-      return { success: false, error: `Buffer API Error: ${errText}` }
+    // 1. Recupera l'organizzazione del proprietario
+    const orgQuery = {
+      query: `
+        query GetOrganizations {
+          account {
+            organizations {
+              id
+              name
+            }
+          }
+        }
+      `
     }
 
-    const data = await res.json()
-    return { success: true, profiles: data }
+    const orgRes = await fetch('https://api.buffer.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(orgQuery)
+    })
+
+    if (!orgRes.ok) {
+      const errText = await orgRes.text()
+      return { success: false, error: `Buffer Org Error: ${errText}` }
+    }
+
+    const orgData = await orgRes.json()
+    if (orgData.errors) {
+      return { success: false, error: orgData.errors[0]?.message || 'Errore recupero organizzazione Buffer' }
+    }
+
+    const organizations = orgData.data?.account?.organizations || []
+    if (organizations.length === 0) {
+      return { success: false, error: 'Nessuna organizzazione trovata sull\'account Buffer.' }
+    }
+
+    const orgId = organizations[0].id
+
+    // 2. Recupera i canali dell'organizzazione
+    const channelsQuery = {
+      query: `
+        query GetChannels($orgId: String!) {
+          channels(input: { organizationId: $orgId }) {
+            id
+            name
+            service
+          }
+        }
+      `,
+      variables: { orgId }
+    }
+
+    const channelsRes = await fetch('https://api.buffer.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(channelsQuery)
+    })
+
+    if (!channelsRes.ok) {
+      const errText = await channelsRes.text()
+      return { success: false, error: `Buffer Channels Error: ${errText}` }
+    }
+
+    const channelsData = await channelsRes.json()
+    if (channelsData.errors) {
+      return { success: false, error: channelsData.errors[0]?.message || 'Errore recupero canali Buffer' }
+    }
+
+    const channels = channelsData.data?.channels || []
+
+    // Adattiamo la risposta per essere compatibile con l'interfaccia esistente
+    const formattedProfiles = channels.map((c: any) => ({
+      id: c.id,
+      service: c.service,
+      formatted_username: c.name
+    }))
+
+    return { success: true, profiles: formattedProfiles }
   } catch (err: any) {
     return { success: false, error: err.message || 'Errore di connessione a Buffer' }
   }
@@ -156,33 +231,64 @@ export async function publishToBufferAction(formData: {
       return { success: false, error: 'Seleziona almeno un canale social.' }
     }
 
-    const bodyParams = new URLSearchParams()
-    bodyParams.append('text', formData.text)
-    bodyParams.append('shorten', 'false')
-    if (formData.now) {
-      bodyParams.append('now', 'true')
+    const results = []
+    for (const channelId of formData.profileIds) {
+      const createPostMutation = {
+        query: `
+          mutation CreatePost($input: CreatePostInput!) {
+            createPost(input: $input) {
+              ... on PostActionSuccess {
+                post {
+                  id
+                }
+              }
+              ... on MutationError {
+                message
+              }
+            }
+          }
+        `,
+        variables: {
+          input: {
+            text: formData.text,
+            channelId: channelId,
+            schedulingType: "automatic",
+            mode: formData.now ? "shareNow" : "addToQueue"
+          }
+        }
+      }
+
+      const res = await fetch('https://api.buffer.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(createPostMutation)
+      })
+
+      if (!res.ok) {
+        const errText = await res.text()
+        return { success: false, error: `Buffer GraphQL API Error: ${errText}` }
+      }
+
+      const resJson = await res.json()
+      if (resJson.errors) {
+        return { success: false, error: resJson.errors[0]?.message || 'Errore durante la creazione del post.' }
+      }
+
+      const createPostResult = resJson.data?.createPost
+      if (createPostResult?.message) {
+        return { success: false, error: createPostResult.message }
+      }
+
+      results.push(createPostResult?.post?.id)
     }
-    formData.profileIds.forEach((id) => {
-      bodyParams.append('profile_ids[]', id)
-    })
 
-    const res = await fetch(`https://api.bufferapp.com/1/updates/create.json?access_token=${token}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: bodyParams.toString(),
-    })
-
-    if (!res.ok) {
-      const errText = await res.text()
-      return { success: false, error: `Buffer Publish Error: ${errText}` }
-    }
-
-    const result = await res.json()
-    return { success: true, result }
+    return { success: true, results }
   } catch (err: any) {
     return { success: false, error: err.message || 'Errore durante la pubblicazione.' }
   }
 }
+
 
