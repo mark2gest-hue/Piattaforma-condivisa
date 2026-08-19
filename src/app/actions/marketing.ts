@@ -125,7 +125,7 @@ export async function getBufferProfilesAction() {
   try {
     const token = process.env.BUFFER_ACCESS_TOKEN || ''
     if (!token) {
-      return { success: false, error: 'Token non configurato in .env.local.' }
+      return { success: false, error: 'Token non configurato nelle impostazioni di ambiente.' }
     }
 
     const res = await fetch(`https://api.bufferapp.com/1/profiles.json?access_token=${token}`)
