@@ -13,6 +13,7 @@ import {
   X,
   Loader2,
   Sparkles,
+  Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -124,6 +125,17 @@ export default function CalendarioPage() {
     setIsEventModalOpen(false)
     setEventTitle('')
     setEventDesc('')
+  }
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm('Sei sicuro di voler eliminare questo evento dal calendario?')) return
+
+    if (eventId.startsWith('task-')) {
+      const taskId = eventId.replace('task-', '')
+      await supabase.from('tasks').delete().eq('id', taskId)
+    }
+
+    setEvents(events.filter((e) => e.id !== eventId))
   }
 
   const getCategoryBadge = (cat: string) => {
@@ -334,9 +346,20 @@ export default function CalendarioPage() {
                     key={ev.id}
                     className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-2 text-xs"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-900 dark:text-white">{ev.title}</span>
-                      {getCategoryBadge(ev.category)}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-slate-900 dark:text-white truncate">{ev.title}</span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {getCategoryBadge(ev.category)}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteEvent(ev.id)}
+                          className="h-6 w-6 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                          title="Elimina Evento"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
 
                     {ev.description && (
