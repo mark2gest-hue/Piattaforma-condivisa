@@ -433,29 +433,33 @@ export default function CorsiPage() {
           <span>Player 20 Video Lezioni & Chat @AI</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab('login')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
-            activeTab === 'login'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Key className="h-4 w-4" />
-          <span>Riscatta Codice Studente</span>
-        </button>
+        {!activeStudent && (
+          <button
+            onClick={() => setActiveTab('login')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
+              activeTab === 'login'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Key className="h-4 w-4" />
+            <span>Riscatta Codice Studente</span>
+          </button>
+        )}
 
-        <button
-          onClick={() => setActiveTab('catalog')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
-            activeTab === 'catalog'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <BookOpen className="h-4 w-4" />
-          <span>Catalogo Corsi ({courses.length})</span>
-        </button>
+        {!activeStudent && (
+          <button
+            onClick={() => setActiveTab('catalog')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
+              activeTab === 'catalog'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <BookOpen className="h-4 w-4" />
+            <span>Catalogo Corsi ({courses.length})</span>
+          </button>
+        )}
 
         {!activeStudent && (
           <button
@@ -533,7 +537,8 @@ export default function CorsiPage() {
                 <video
                   key={activeLesson.id}
                   controls
-                  autoPlay
+                  playsInline
+                  preload="metadata"
                   controlsList="nodownload"
                   onEnded={() => {
                     if (!activeLesson.completed) toggleLessonCompleted(activeLesson.id)
