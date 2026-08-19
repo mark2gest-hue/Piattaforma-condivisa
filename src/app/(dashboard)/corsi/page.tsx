@@ -504,6 +504,9 @@ export default function CorsiPage() {
                   controls
                   autoPlay
                   controlsList="nodownload"
+                  onEnded={() => {
+                    if (!activeLesson.completed) toggleLessonCompleted(activeLesson.id)
+                  }}
                   src={activeLesson.videoUrl || DEFAULT_SAMPLE_VIDEO}
                   className="w-full h-full object-cover rounded-2xl"
                 >
