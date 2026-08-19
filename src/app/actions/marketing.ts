@@ -120,3 +120,69 @@ Requisiti:
     return { success: false, error: error.message || 'Errore interno' }
   }
 }
+
+export async function getBufferProfilesAction() {
+  try {
+    const token = process.env.BUFFER_ACCESS_TOKEN || ''
+    if (!token) {
+      return { success: false, error: 'Token non configurato in .env.local.' }
+    }
+
+    const res = await fetch(`https://api.bufferapp.com/1/profiles.json?access_token=${token}`)
+    if (!res.ok) {
+      const errText = await res.text()
+      return { success: false, error: `Buffer API Error: ${errText}` }
+    }
+
+    const data = await res.json()
+    return { success: true, profiles: data }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Errore di connessione a Buffer' }
+  }
+}
+
+export async function publishToBufferAction(formData: {
+  text: string
+  profileIds: string[]
+  now: boolean
+}) {
+  try {
+    const token = process.env.BUFFER_ACCESS_TOKEN || ''
+    if (!token) {
+      return { success: false, error: 'Token Buffer non configurato.' }
+    }
+
+    if (!formData.profileIds || formData.profileIds.length === 0) {
+      return { success: false, error: 'Seleziona almeno un canale social.' }
+    }
+
+    const bodyParams = new URLSearchParams()
+    bodyParams.append('text', formData.text)
+    bodyParams.append('shorten', 'false')
+    if (formData.now) {
+      bodyParams.append('now', 'true')
+    }
+    formData.profileIds.forEach((id) => {
+      bodyParams.append('profile_ids[]', id)
+    })
+
+    const res = await fetch(`https://api.bufferapp.com/1/updates/create.json?access_token=${token}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: bodyParams.toString(),
+    })
+
+    if (!res.ok) {
+      const errText = await res.text()
+      return { success: false, error: `Buffer Publish Error: ${errText}` }
+    }
+
+    const result = await res.json()
+    return { success: true, result }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Errore durante la pubblicazione.' }
+  }
+}
+
