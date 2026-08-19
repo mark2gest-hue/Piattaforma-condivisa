@@ -203,26 +203,41 @@ export default function CorsiPage() {
   }
 
   // Verifica Codice Studente
-  const handleVerifyStudentCode = (e: React.FormEvent) => {
+  const handleVerifyStudentCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setCodeError('')
 
     const codeClean = studentCodeInput.trim().toUpperCase()
-    const found = registrations.find((r) => r.code === codeClean)
+    if (!codeClean) return
 
+    // 1. Controlla prima nel database Supabase student_codes
+    const { data: dbStudent } = await (supabase as any)
+      .from('student_codes')
+      .select('*')
+      .eq('code', codeClean)
+      .single()
+
+    if (dbStudent) {
+      setActiveStudent({ name: dbStudent.student_name, code: dbStudent.code })
+      setActiveTab('player')
+      playNotificationSound('chat')
+      alert(`Benvenuto ${dbStudent.student_name}! Accesso sbloccato a tutte le 20 lezioni video di AI Start.`)
+      return
+    }
+
+    // 2. Controlla nel registro locale o codici demo
+    const found = registrations.find((r) => r.code === codeClean)
     if (found) {
       setActiveStudent({ name: found.studentName, code: found.code })
       setActiveTab('player')
       playNotificationSound('chat')
       alert(`Benvenuto ${found.studentName}! Accesso sbloccato a tutte le 20 lezioni video di AI Start.`)
+    } else if (codeClean === 'DEMO2026' || codeClean.startsWith('AI-START-')) {
+      setActiveStudent({ name: 'Studente Autenticato', code: codeClean })
+      setActiveTab('player')
+      playNotificationSound('chat')
     } else {
-      if (codeClean === 'DEMO2026' || codeClean.startsWith('AI-START-')) {
-        setActiveStudent({ name: 'Studente Autenticato', code: codeClean })
-        setActiveTab('player')
-        playNotificationSound('chat')
-      } else {
-        setCodeError('Codice non valido. Verifica il codice inviato via mail o richiedilo al supporto.')
-      }
+      setCodeError('Codice non valido. Verifica il codice inviato via mail o richiedilo al supporto.')
     }
   }
 
@@ -544,18 +559,20 @@ export default function CorsiPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setCustomVideoUrlInput(activeLesson.videoUrl || '')
-                      setIsEditVideoModalOpen(true)
-                    }}
-                    className="h-8 text-xs gap-1.5 border-slate-200 dark:border-slate-700"
-                  >
-                    <Edit className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                    <span>Modifica Titolo & Video Link</span>
-                  </Button>
+                  {!activeStudent && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setCustomVideoUrlInput(activeLesson.videoUrl || '')
+                        setIsEditVideoModalOpen(true)
+                      }}
+                      className="h-8 text-xs gap-1.5 border-slate-200 dark:border-slate-700"
+                    >
+                      <Edit className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                      <span>Modifica Titolo & Video Link</span>
+                    </Button>
+                  )}
 
                   <Button
                     size="sm"
