@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Message, Profile } from '@/types/index'
+import { requestNotificationPermission, sendDesktopNotification } from '@/lib/notifications'
 
 type MessageWithSender = Message & { sender?: Profile }
 
@@ -42,6 +43,7 @@ export default function TeamChatPage() {
   useEffect(() => {
     const initChat = async () => {
       setLoading(true)
+      requestNotificationPermission()
       
       // Get current logged in user
       const { data: { user } } = await supabase.auth.getUser()
@@ -72,7 +74,6 @@ export default function TeamChatPage() {
         },
         (payload) => {
           const newMessage = payload.new as Message
-          // Find the sender profile from our pre-fetched team members
           const senderProfile = teamMembers.find(p => p.id === newMessage.sender_id)
           
           const messageWithSender: MessageWithSender = {
@@ -81,6 +82,15 @@ export default function TeamChatPage() {
           }
           
           setMessages((prev) => [...prev, messageWithSender])
+
+          // Riproduce il suono e mostra notifica desktop se il messaggio è inviato da un altro membro del team
+          if (currentUser && newMessage.sender_id !== currentUser.id) {
+            sendDesktopNotification(
+              `Messaggio da ${senderProfile?.full_name || 'Team'} in #${activeChannel}`,
+              { body: newMessage.content },
+              'chat'
+            )
+          }
         }
       )
       .subscribe()

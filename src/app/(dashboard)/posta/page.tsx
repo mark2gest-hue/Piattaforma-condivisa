@@ -15,6 +15,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Email, Profile } from '@/types/index'
+import { requestNotificationPermission, sendDesktopNotification } from '@/lib/notifications'
 import { sendSharedEmail } from './actions'
 
 type EmailWithSender = Email & { senderProfile?: Profile }
@@ -40,6 +41,14 @@ export default function PostaCondivisaPage() {
         (payload) => {
           const newEmail = payload.new as Email
           setEmails((prev) => [newEmail, ...prev])
+
+          if (newEmail.direction === 'inbound') {
+            sendDesktopNotification(
+              `Nuova Email da ${newEmail.from_address}`,
+              { body: newEmail.subject },
+              'email'
+            )
+          }
         }
       )
       .subscribe()
