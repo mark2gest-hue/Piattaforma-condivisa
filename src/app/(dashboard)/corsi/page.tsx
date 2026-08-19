@@ -34,6 +34,8 @@ import {
   Gift,
   HelpCircle,
   Radio,
+  FolderPlus,
+  FilePlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -80,6 +82,16 @@ interface ZoomRecording {
   videoUrl: string
   description?: string
   order: number
+}
+
+interface CourseResource {
+  id: string
+  title: string
+  category: string
+  description: string
+  fileUrl: string
+  fileSize?: string
+  createdAt: string
 }
 
 // Elenco Completo Reale delle Registrazioni Zoom di Malaradio.com (Zoom 1 - 10 + Bonus 1 & 2)
@@ -243,6 +255,43 @@ function CorsiInnerContent() {
   const [zoomRecordings, setZoomRecordings] = useState<ZoomRecording[]>(REAL_ZOOM_RECORDINGS)
   const [activeZoomVideo, setActiveZoomVideo] = useState<ZoomRecording | null>(null)
   const [isAddZoomModalOpen, setIsAddZoomModalOpen] = useState(false)
+
+  // Risorse Bonus, PDF & Manuali
+  const [resources, setResources] = useState<CourseResource[]>([
+    {
+      id: 'res-1',
+      title: 'Cheatsheet Prompting in 3 Parti',
+      category: 'Cheatsheet',
+      description: 'Guida PDF tascabile per la stesura dei prompt.',
+      fileUrl: 'https://www.malaradio.com/CorsoAI/Risorse/Cheatsheet_Prompting.pdf',
+      fileSize: '1.2 MB',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'res-2',
+      title: 'Template Email Commerciali AI',
+      category: 'Template',
+      description: '50 Modelli di email formali e risposte ad obiezioni.',
+      fileUrl: 'https://www.malaradio.com/CorsoAI/Risorse/Template_Email_Commerciali.pdf',
+      fileSize: '2.4 MB',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'res-3',
+      title: 'Manuale Operativo Agenti AI B2B',
+      category: 'Manuali',
+      description: 'Documentazione completa sull’integrazione degli agenti aziendali.',
+      fileUrl: 'https://www.malaradio.com/CorsoAI/Risorse/Manuale_Agenti_AI.pdf',
+      fileSize: '4.8 MB',
+      createdAt: new Date().toISOString(),
+    },
+  ])
+  const [isAddResourceModalOpen, setIsAddResourceModalOpen] = useState(false)
+  const [resTitleInput, setResTitleInput] = useState('')
+  const [resCategoryInput, setResCategoryInput] = useState('Manuali')
+  const [resDescInput, setResDescInput] = useState('')
+  const [resUrlInput, setResUrlInput] = useState('')
+  const [resSizeInput, setResSizeInput] = useState('1.5 MB')
 
   // Form Aggiungi Registrazione Zoom
   const [zoomTitleInput, setZoomTitleInput] = useState('')
@@ -441,6 +490,33 @@ function CorsiInnerContent() {
     setZoomRecordings(zoomRecordings.filter((z) => z.id !== id))
   }
 
+  const handleSaveResource = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resTitleInput.trim() || !resUrlInput.trim()) return
+
+    const newRes: CourseResource = {
+      id: `res-${Date.now()}`,
+      title: resTitleInput.trim(),
+      category: resCategoryInput,
+      description: resDescInput.trim(),
+      fileUrl: resUrlInput.trim(),
+      fileSize: resSizeInput.trim() || '1.5 MB',
+      createdAt: new Date().toISOString(),
+    }
+
+    setResources([newRes, ...resources])
+    setIsAddResourceModalOpen(false)
+    setResTitleInput('')
+    setResUrlInput('')
+    setResDescInput('')
+    alert(`Risorsa/Manuale "${newRes.title}" aggiunta con successo!`)
+  }
+
+  const handleDeleteResource = (id: string, title: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare la risorsa "${title}"?`)) return
+    setResources(resources.filter((r) => r.id !== id))
+  }
+
   const handleSendStudentChat = (e: React.FormEvent) => {
     e.preventDefault()
     if (!chatInput.trim()) return
@@ -581,7 +657,7 @@ function CorsiInnerContent() {
           }`}
         >
           <Gift className="h-4 w-4" />
-          <span>Risorse & Manuali</span>
+          <span>Risorse & Manuali ({resources.length})</span>
         </button>
 
         {!activeStudent && (
@@ -961,44 +1037,67 @@ function CorsiInnerContent() {
       {/* TAB 3: RISORSE BONUS & MANUALI */}
       {activeTab === 'bonus' && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Gift className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              Risorse Bonus, PDF & Manuali
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Documenti integrativi, template di prompt pronti all'uso e guide in formato PDF.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Gift className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                Risorse Bonus, PDF & Manuali ({resources.length})
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Documenti integrativi, template di prompt pronti all'uso e guide in formato PDF per gli studenti.
+              </p>
+            </div>
+
+            {!activeStudent && (
+              <Button
+                onClick={() => setIsAddResourceModalOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ Carica Nuova Risorsa</span>
+              </Button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
-              <div className="flex items-center gap-3">
-                <FileText className="h-6 w-6 text-indigo-600" />
-                <div>
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">Cheatsheet Prompting in 3 Parti</h4>
-                  <p className="text-xs text-slate-400">Guida PDF tascabile per la stesura dei prompt.</p>
+            {resources.map((res) => (
+              <div key={res.id} className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between hover:border-indigo-500/50 transition-all">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="purple" className="text-[9px] uppercase">{res.category}</Badge>
+                    <span className="text-[10px] text-slate-400 font-mono">{res.fileSize || 'PDF'}</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <FileText className="h-6 w-6 text-indigo-600 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">{res.title}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{res.description}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <Button variant="outline" size="sm" className="w-full text-xs gap-2">
-                <Download className="h-3.5 w-3.5" />
-                <span>Scarica PDF (1.2 MB)</span>
-              </Button>
-            </div>
 
-            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
-              <div className="flex items-center gap-3">
-                <FileText className="h-6 w-6 text-indigo-600" />
-                <div>
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">Template Email Commerciali AI</h4>
-                  <p className="text-xs text-slate-400">50 Modelli di email formali e risposte ad obiezioni.</p>
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <a href={res.fileUrl} target="_blank" rel="noopener noreferrer" className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full text-xs gap-2 border-slate-200 dark:border-slate-700">
+                      <Download className="h-3.5 w-3.5 text-indigo-600" />
+                      <span>Scarica Documento ({res.fileSize || 'PDF'})</span>
+                    </Button>
+                  </a>
+
+                  {!activeStudent && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteResource(res.id, res.title)}
+                      className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                      title="Elimina Risorsa"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="w-full text-xs gap-2">
-                <Download className="h-3.5 w-3.5" />
-                <span>Scarica PDF (2.4 MB)</span>
-              </Button>
-            </div>
+            ))}
           </div>
         </div>
       )}
@@ -1167,6 +1266,93 @@ function CorsiInnerContent() {
                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2">
                   <Save className="h-4 w-4" />
                   Salva Registrazione
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Aggiungi Risorsa / Manuale PDF */}
+      {isAddResourceModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <Gift className="h-5 w-5 text-indigo-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Aggiungi Nuova Risorsa o Manuale</h3>
+              </div>
+              <button onClick={() => setIsAddResourceModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveResource} className="p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo Documento *</label>
+                  <Input
+                    required
+                    value={resTitleInput}
+                    onChange={(e) => setResTitleInput(e.target.value)}
+                    placeholder="Es. Manuale Prompting Avanzato"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Categoria</label>
+                  <select
+                    value={resCategoryInput}
+                    onChange={(e) => setResCategoryInput(e.target.value)}
+                    className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  >
+                    <option value="Manuali">Manuali</option>
+                    <option value="Cheatsheet">Cheatsheet</option>
+                    <option value="Template">Template</option>
+                    <option value="Risorse Bonus">Risorse Bonus</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Link URL del File PDF / Documento *</label>
+                <Input
+                  required
+                  value={resUrlInput}
+                  onChange={(e) => setResUrlInput(e.target.value)}
+                  placeholder="https://www.malaradio.com/CorsoAI/Risorse/Manuale.pdf"
+                  className="font-mono text-[11px] dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Dimensione indicativa</label>
+                  <Input
+                    value={resSizeInput}
+                    onChange={(e) => setResSizeInput(e.target.value)}
+                    placeholder="Es. 2.5 MB"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione</label>
+                  <Input
+                    value={resDescInput}
+                    onChange={(e) => setResDescInput(e.target.value)}
+                    placeholder="Sintetica descrizione del contenuto..."
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsAddResourceModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2">
+                  <Save className="h-4 w-4" />
+                  Salva Risorsa
                 </Button>
               </div>
             </form>
