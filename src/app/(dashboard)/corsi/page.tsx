@@ -275,17 +275,20 @@ export default function CorsiPage() {
     setStudentEmail('')
   }
 
+  const [customTitleInput, setCustomTitleInput] = useState('')
+
   const handleSaveCustomVideoUrl = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!customVideoUrlInput.trim()) return
 
-    const updated = lessons.map((l) => (l.id === activeLesson.id ? { ...l, videoUrl: customVideoUrlInput.trim() } : l))
+    const newTitle = customTitleInput.trim() || activeLesson.title
+    const newUrl = customVideoUrlInput.trim() || activeLesson.videoUrl
+
+    const updated = lessons.map((l) => (l.id === activeLesson.id ? { ...l, title: newTitle, videoUrl: newUrl } : l))
     setLessons(updated)
-    setActiveLesson({ ...activeLesson, videoUrl: customVideoUrlInput.trim() })
+    setActiveLesson({ ...activeLesson, title: newTitle, videoUrl: newUrl })
 
-    alert(`URL Video aggiornato con successo per "${activeLesson.title}"!`)
+    alert(`Lezione "${newTitle}" aggiornata con successo!`)
     setIsEditVideoModalOpen(false)
-    setCustomVideoUrlInput('')
   }
 
   const handleSendStudentChat = (e: React.FormEvent) => {
@@ -524,7 +527,7 @@ export default function CorsiPage() {
                     className="h-8 text-xs gap-1.5 border-slate-200 dark:border-slate-700"
                   >
                     <Edit className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                    <span>Incolla Link Video Custom</span>
+                    <span>Modifica Titolo & Video Link</span>
                   </Button>
 
                   <Button
@@ -827,10 +830,19 @@ export default function CorsiPage() {
 
             <form onSubmit={handleSaveCustomVideoUrl} className="p-5 space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">URL del Video (MP4, Supabase Storage, YouTube o Vimeo) *</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo Lezione</label>
                 <Input
                   autoFocus
-                  required
+                  value={customTitleInput}
+                  onChange={(e) => setCustomTitleInput(e.target.value)}
+                  placeholder={`Titolo attuale: ${activeLesson.title}`}
+                  className="text-xs dark:bg-slate-800 dark:border-slate-700 font-semibold"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">URL del Video (MP4, Supabase Storage, YouTube o Vimeo)</label>
+                <Input
                   value={customVideoUrlInput}
                   onChange={(e) => setCustomVideoUrlInput(e.target.value)}
                   placeholder="Es. https://.../modulo1.mp4 oppure https://www.youtube.com/embed/..."
@@ -843,7 +855,7 @@ export default function CorsiPage() {
                   Annulla
                 </Button>
                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold gap-1.5">
-                  Salva URL Video
+                  Salva Modifiche Lezione
                 </Button>
               </div>
             </form>
