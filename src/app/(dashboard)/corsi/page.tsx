@@ -9,33 +9,24 @@ import {
   CheckCircle2,
   PlusCircle,
   Sparkles,
-  Award,
   Download,
   Mail,
   Send,
   Loader2,
   X,
-  Search,
   PlayCircle,
   Bot,
   Key,
   FileText,
   Lock,
   Unlock,
-  Check,
-  RefreshCw,
   Edit,
-  Video,
   Trash2,
   VideoIcon,
   ExternalLink,
   Plus,
   Save,
   Gift,
-  HelpCircle,
-  Radio,
-  FolderPlus,
-  FilePlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -352,7 +343,6 @@ function CorsiInnerContent() {
   const [isAiThinking, setIsAiThinking] = useState(false)
 
   const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'catalog' | 'students' | 'login'>('player')
-  const [searchQuery, setSearchQuery] = useState('')
 
   // Modal Nuova Iscrizione Studente
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
@@ -1102,6 +1092,56 @@ function CorsiInnerContent() {
         </div>
       )}
 
+      {/* TAB: CATALOGO CORSI */}
+      {activeTab === 'catalog' && !activeStudent && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              Catalogo Corsi Formativi ({courses.length})
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Elenco dei percorsi formativi attivi e prossimamente disponibili.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {courses.map((course) => (
+              <div key={course.id} className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 hover:border-indigo-500/50 transition-all">
+                <div className="flex items-center justify-between">
+                  <Badge
+                    variant={course.status === 'active' ? 'success' : 'secondary'}
+                    className="text-[9px] uppercase"
+                  >
+                    {course.status === 'active' ? 'Attivo' : course.status === 'draft' ? 'Bozza' : 'Archiviato'}
+                  </Badge>
+                  <span className="text-xs font-mono text-slate-400">{course.duration}</span>
+                </div>
+
+                <div>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">{course.title}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{course.description}</p>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-4 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <PlayCircle className="h-3.5 w-3.5 text-indigo-600" />
+                      {course.lessonsCount} Lezioni
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="h-3.5 w-3.5 text-indigo-600" />
+                      {course.studentsCount} Studenti
+                    </span>
+                  </div>
+                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{course.price}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* TAB 4: REGISTRO STUDENTI & CODICI */}
       {activeTab === 'students' && !activeStudent && (
         <div className="space-y-6">
@@ -1353,6 +1393,137 @@ function CorsiInnerContent() {
                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2">
                   <Save className="h-4 w-4" />
                   Salva Risorsa
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Iscrizione Studente */}
+      {isEnrollModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <PlusCircle className="h-5 w-5 text-indigo-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Iscrivi Nuovo Studente</h3>
+              </div>
+              <button onClick={() => setIsEnrollModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEnrollStudent} className="p-6 space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Nome e Cognome *</label>
+                <Input
+                  required
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  placeholder="Es. Giuseppe Rossi"
+                  className="dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Email *</label>
+                <Input
+                  required
+                  type="email"
+                  value={studentEmail}
+                  onChange={(e) => setStudentEmail(e.target.value)}
+                  placeholder="Es. g.rossi@azienda.it"
+                  className="font-mono dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Corso</label>
+                <select
+                  value={selectedCourseTitle}
+                  onChange={(e) => setSelectedCourseTitle(e.target.value)}
+                  className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                >
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.title}>{c.title}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsEnrollModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isRegistering}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2"
+                >
+                  {isRegistering ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  {isRegistering ? 'Registrazione...' : 'Iscrivi & Genera Codice'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Modifica Titolo & Video Link */}
+      {isEditVideoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <Edit className="h-5 w-5 text-indigo-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Modifica Video Link — Lezione {activeLesson.id}</h3>
+              </div>
+              <button onClick={() => setIsEditVideoModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (!customVideoUrlInput.trim()) return
+                const updatedLessons = lessons.map((l) =>
+                  l.id === activeLesson.id ? { ...l, videoUrl: customVideoUrlInput.trim() } : l
+                )
+                setLessons(updatedLessons)
+                setActiveLesson({ ...activeLesson, videoUrl: customVideoUrlInput.trim() })
+                setIsEditVideoModalOpen(false)
+                alert(`Video link della Lezione ${activeLesson.id} aggiornato!`)
+              }}
+              className="p-6 space-y-4 text-xs"
+            >
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo Lezione</label>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">{activeLesson.title}</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">URL Video (MP4 o embed) *</label>
+                <Input
+                  required
+                  value={customVideoUrlInput}
+                  onChange={(e) => setCustomVideoUrlInput(e.target.value)}
+                  placeholder="https://www.malaradio.com/CorsoAI/..."
+                  className="font-mono text-[11px] dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditVideoModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2">
+                  <Save className="h-4 w-4" />
+                  Salva Video Link
                 </Button>
               </div>
             </form>
