@@ -258,6 +258,9 @@ CREATE POLICY "Senders can update own messages" ON public.messages FOR UPDATE TO
 DROP POLICY IF EXISTS "Team members full access to shared emails" ON public.emails;
 CREATE POLICY "Team members full access to shared emails" ON public.emails FOR ALL TO authenticated USING (public.is_team_member()) WITH CHECK (public.is_team_member());
 
+DROP POLICY IF EXISTS "Allow inbound webhook insertion for emails" ON public.emails;
+CREATE POLICY "Allow inbound webhook insertion for emails" ON public.emails FOR INSERT TO anon, authenticated WITH CHECK (direction = 'inbound');
+
 -- Policies per FILES
 DROP POLICY IF EXISTS "Team members full access to files metadata" ON public.files;
 CREATE POLICY "Team members full access to files metadata" ON public.files FOR ALL TO authenticated USING (public.is_team_member()) WITH CHECK (public.is_team_member());
