@@ -23,6 +23,8 @@ import {
   Unlock,
   Check,
   RefreshCw,
+  Edit,
+  Video,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -58,31 +60,35 @@ interface Lesson {
   title: string
   duration: string
   completed: boolean
+  videoUrl?: string
   resourcesPdfUrl?: string
 }
 
-// Tutti i 20 Moduli Video del Corso AI Start
+// Sample MP4 streaming URL di default per il test delle lezioni
+const DEFAULT_SAMPLE_VIDEO = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+
+// Tutti i 20 Moduli Video del Corso AI Start con URL di riproduzione HTML5
 const AI_START_LESSONS: Lesson[] = [
-  { id: 1, title: 'Modulo 1: Benvenuto in AI Start — Dimentica i tecnicismi', duration: '10:30', completed: true },
-  { id: 2, title: 'Modulo 2: Come impostare il primo prompt senza errori', duration: '12:45', completed: true },
-  { id: 3, title: 'Modulo 3: Delegare le task noiose dell’ufficio all’IA', duration: '15:20', completed: true },
-  { id: 4, title: 'Modulo 4: Generare risposte email commerciali perfette', duration: '14:10', completed: false },
-  { id: 5, title: 'Modulo 5: Creazione contenuti e post social con l’IA', duration: '18:00', completed: false },
-  { id: 6, title: 'Modulo 6: Riassumere documenti lunghi e PDF in 10 secondi', duration: '16:30', completed: false },
-  { id: 7, title: 'Modulo 7: Organizzare il tempo e le agende aziendali', duration: '15:00', completed: false },
-  { id: 8, title: 'Modulo 8: Creare tabelle ed analizzare dati senza formule', duration: '20:15', completed: false },
-  { id: 9, title: 'Modulo 9: Traduzione ed adattamento di testi internazionali', duration: '12:00', completed: false },
-  { id: 10, title: 'Modulo 10: La Chat con l’assistente @AI ed il supporto continuo', duration: '14:50', completed: false },
-  { id: 11, title: 'Modulo 11: Creare Agenti AI personalizzati su misura', duration: '22:10', completed: false },
-  { id: 12, title: 'Modulo 12: Automazioni senza codice (No-Code & Webhooks)', duration: '25:00', completed: false },
-  { id: 13, title: 'Modulo 13: Trascrizione automatica di riunioni e vocali', duration: '18:20', completed: false },
-  { id: 14, title: 'Modulo 14: Generare immagini e grafica per le presentazioni', duration: '20:00', completed: false },
-  { id: 15, title: 'Modulo 15: Cybersecurity e privacy dei dati con l’IA', duration: '15:30', completed: false },
-  { id: 16, title: 'Modulo 16: Creare preventivi e proposte B2B in tempo reale', duration: '18:45', completed: false },
-  { id: 17, title: 'Modulo 17: Integrazione dell’IA nel lavoro di team', duration: '20:10', completed: false },
-  { id: 18, title: 'Modulo 18: Analisi dei clienti e sentiment analysis', duration: '16:00', completed: false },
-  { id: 19, title: 'Modulo 19: Workflow avanzati e gestione dei progetti', duration: '24:30', completed: false },
-  { id: 20, title: 'Modulo 20: Esame finale e Rilascio Certificato AI Start', duration: '15:00', completed: false },
+  { id: 1, title: 'Modulo 1: Benvenuto in AI Start — Dimentica i tecnicismi', duration: '10:30', completed: true, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 2, title: 'Modulo 2: Come impostare il primo prompt senza errori', duration: '12:45', completed: true, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 3, title: 'Modulo 3: Delegare le task noiose dell’ufficio all’IA', duration: '15:20', completed: true, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 4, title: 'Modulo 4: Generare risposte email commerciali perfette', duration: '14:10', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 5, title: 'Modulo 5: Creazione contenuti e post social con l’IA', duration: '18:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 6, title: 'Modulo 6: Riassumere documenti lunghi e PDF in 10 secondi', duration: '16:30', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 7, title: 'Modulo 7: Organizzare il tempo e le agende aziendali', duration: '15:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 8, title: 'Modulo 8: Creare tabelle ed analizzare dati senza formule', duration: '20:15', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 9, title: 'Modulo 9: Traduzione ed adattamento di testi internazionali', duration: '12:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 10, title: 'Modulo 10: La Chat con l’assistente @AI ed il supporto continuo', duration: '14:50', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 11, title: 'Modulo 11: Creare Agenti AI personalizzati su misura', duration: '22:10', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 12, title: 'Modulo 12: Automazioni senza codice (No-Code & Webhooks)', duration: '25:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 13, title: 'Modulo 13: Trascrizione automatica di riunioni e vocali', duration: '18:20', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 14, title: 'Modulo 14: Generare immagini e grafica per le presentazioni', duration: '20:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 15, title: 'Modulo 15: Cybersecurity e privacy dei dati con l’IA', duration: '15:30', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 16, title: 'Modulo 16: Creare preventivi e proposte B2B in tempo reale', duration: '18:45', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 17, title: 'Modulo 17: Integrazione dell’IA nel lavoro di team', duration: '20:10', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 18, title: 'Modulo 18: Analisi dei clienti e sentiment analysis', duration: '16:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 19, title: 'Modulo 19: Workflow avanzati e gestione dei progetti', duration: '24:30', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
+  { id: 20, title: 'Modulo 20: Esame finale e Rilascio Certificato AI Start', duration: '15:00', completed: false, videoUrl: DEFAULT_SAMPLE_VIDEO },
 ]
 
 export default function CorsiPage() {
@@ -126,6 +132,10 @@ export default function CorsiPage() {
   const [lessons, setLessons] = useState<Lesson[]>(AI_START_LESSONS)
   const [activeLesson, setActiveLesson] = useState<Lesson>(lessons[0])
 
+  // Modal per inserire/modificare URL video custom della lezione
+  const [isEditVideoModalOpen, setIsEditVideoModalOpen] = useState(false)
+  const [customVideoUrlInput, setCustomVideoUrlInput] = useState('')
+
   // Stato Studente Loggato tramite Codice
   const [studentCodeInput, setStudentCodeInput] = useState('')
   const [activeStudent, setActiveStudent] = useState<{ name: string; code: string } | null>(null)
@@ -166,7 +176,7 @@ export default function CorsiPage() {
       id: 'm-2',
       sender: 'Assistente @AI Ti AIuto',
       isAi: true,
-      text: 'Ciao Marco! Nel Modulo 2 spieghiamo come impostare un prompt in 3 parti: 1. Ruolo (es. Consulente commerciale), 2. Contesto del cliente, 3. Tono ed obiettivo. Puoi usare anche i 20 moduli in playlist!',
+      text: 'Ciao Marco! Nel Modulo 2 spieghiamo come impostare un prompt in 3 parti: 1. Ruolo (es. Consulente commerciale), 2. Contesto del cliente, 3. Tono ed obiettivo. Clicca sui 20 video in playlist per riprodurli!',
       time: '14:21',
     },
   ])
@@ -205,7 +215,6 @@ export default function CorsiPage() {
       playNotificationSound('chat')
       alert(`Benvenuto ${found.studentName}! Accesso sbloccato a tutte le 20 lezioni video di AI Start.`)
     } else {
-      // Codice dimostrativo generale di test
       if (codeClean === 'DEMO2026' || codeClean.startsWith('AI-START-')) {
         setActiveStudent({ name: 'Studente Autenticato', code: codeClean })
         setActiveTab('player')
@@ -235,7 +244,6 @@ export default function CorsiPage() {
 
     setRegistrations([newReg, ...registrations])
 
-    // Salvataggio su Supabase
     await (supabase as any).from('student_codes').insert({
       code: generatedCode,
       student_name: studentName.trim(),
@@ -252,7 +260,6 @@ export default function CorsiPage() {
       created_by: userData.user?.id || null,
     })
 
-    // Invia mail con il codice di accesso univoco
     await sendSharedEmail({
       to: studentEmail.trim(),
       subject: `Il tuo Codice di Accesso per: ${selectedCourseTitle}`,
@@ -266,6 +273,19 @@ export default function CorsiPage() {
     setIsEnrollModalOpen(false)
     setStudentName('')
     setStudentEmail('')
+  }
+
+  const handleSaveCustomVideoUrl = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!customVideoUrlInput.trim()) return
+
+    const updated = lessons.map((l) => (l.id === activeLesson.id ? { ...l, videoUrl: customVideoUrlInput.trim() } : l))
+    setLessons(updated)
+    setActiveLesson({ ...activeLesson, videoUrl: customVideoUrlInput.trim() })
+
+    alert(`URL Video aggiornato con successo per "${activeLesson.title}"!`)
+    setIsEditVideoModalOpen(false)
+    setCustomVideoUrlInput('')
   }
 
   const handleSendStudentChat = (e: React.FormEvent) => {
@@ -294,7 +314,7 @@ export default function CorsiPage() {
           id: `m-${Date.now() + 1}`,
           sender: 'Assistente @AI Ti AIuto',
           isAi: true,
-          text: `Ottima domanda su "${userText.replace(/@ai/i, '').trim() || 'AI Start'}"! Nel corso spieghiamo che l’IA funziona al meglio quando le fornisci un ruolo chiaro ed esempi specifici. Consulta la lezione attinente nei 20 moduli!`,
+          text: `Ottima domanda su "${userText.replace(/@ai/i, '').trim() || 'AI Start'}"! Nel corso spieghiamo che l’IA funziona al meglio quando le fornisci un ruolo chiaro ed esempi specifici. Clicca sui 20 video in playlist per riprodurli!`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
         setChatMessages((prev) => [...prev, aiMsg])
@@ -328,7 +348,7 @@ export default function CorsiPage() {
             Portale Corsi Formativi & Studenti (aiutiamoci.cloud)
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            20 Lezioni Video AI Start, accesso con Codice Studente, Assistente @AI e gestione iscritti.
+            20 Lezioni Video AI Start, player streaming HTML5, codice studente e supporto @AI.
           </p>
         </div>
 
@@ -458,79 +478,121 @@ export default function CorsiPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left / Center: Video Player & Lezione Attiva */}
           <div className="lg:col-span-8 space-y-4">
-            <div className="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden relative aspect-video flex items-center justify-center">
-              {/* Player Video HTML5 Simulato */}
-              <div className="text-center space-y-3 p-6">
-                <div className="h-16 w-16 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center mx-auto shadow-inner">
-                  <PlayCircle className="h-8 w-8 animate-pulse" />
-                </div>
+            {/* RIPRODUTTORE VIDEO NATIVO HTML5 / IFRAME */}
+            <div className="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden relative aspect-video flex items-center justify-center group">
+              {activeLesson.videoUrl?.includes('youtube') || activeLesson.videoUrl?.includes('vimeo') ? (
+                <iframe
+                  src={activeLesson.videoUrl}
+                  className="w-full h-full rounded-2xl border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  key={activeLesson.id}
+                  controls
+                  autoPlay
+                  controlsList="nodownload"
+                  src={activeLesson.videoUrl || DEFAULT_SAMPLE_VIDEO}
+                  className="w-full h-full object-cover rounded-2xl"
+                >
+                  Il tuo browser non supporta il riproduttore video.
+                </video>
+              )}
+            </div>
+
+            {/* Dettaglio Lezione e Playlist */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
-                  <h3 className="font-bold text-base text-white">
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">
                     {activeLesson.title}
                   </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Durata: {activeLesson.duration} • Player HTML5 HD Nativo senza cookie di terze parti
+                  <p className="text-xs text-slate-400 mt-0.5 font-mono">
+                    Durata: {activeLesson.duration} • Lezione {activeLesson.id} di 20
                   </p>
                 </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Badge variant="purple" className="text-[10px] uppercase">
-                    Riproduzione HD Attiva
-                  </Badge>
-                  <Button variant="outline" size="sm" className="h-7 text-[10px] text-white border-slate-700 gap-1">
-                    <Download className="h-3 w-3" />
-                    Scarica Slide PDF Lezione
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setCustomVideoUrlInput(activeLesson.videoUrl || '')
+                      setIsEditVideoModalOpen(true)
+                    }}
+                    className="h-8 text-xs gap-1.5 border-slate-200 dark:border-slate-700"
+                  >
+                    <Edit className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>Incolla Link Video Custom</span>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    onClick={() => toggleLessonCompleted(activeLesson.id)}
+                    className={`h-8 text-xs gap-1.5 ${
+                      activeLesson.completed
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    }`}
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>{activeLesson.completed ? 'Completata ✓' : 'Segna Completata'}</span>
                   </Button>
                 </div>
               </div>
-            </div>
 
-            {/* Lista Completa dei 20 Moduli Video */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                  Programma Completo: 20 Moduli Video AI Start
-                </h3>
-                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 font-mono">
-                  {lessons.filter((l) => l.completed).length} / {lessons.length} Completate
-                </span>
-              </div>
+              {/* Lista dei 20 Moduli */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
+                  <span>Playlist 20 Moduli AI Start</span>
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                    {lessons.filter((l) => l.completed).length} / {lessons.length} Completate
+                  </span>
+                </div>
 
-              <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-                {lessons.map((lesson) => (
-                  <div
-                    key={lesson.id}
-                    onClick={() => setActiveLesson(lesson)}
-                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                      activeLesson.id === lesson.id
-                        ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 font-bold'
-                        : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 truncate pr-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleLessonCompleted(lesson.id)
-                        }}
-                        className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
-                          lesson.completed
-                            ? 'bg-emerald-500 border-emerald-600 text-white'
-                            : 'border-slate-300 dark:border-slate-600'
-                        }`}
-                      >
-                        {lesson.completed && <CheckCircle2 className="h-3.5 w-3.5" />}
-                      </button>
+                <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                  {lessons.map((lesson) => (
+                    <div
+                      key={lesson.id}
+                      onClick={() => setActiveLesson(lesson)}
+                      className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                        activeLesson.id === lesson.id
+                          ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 font-bold'
+                          : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 truncate pr-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleLessonCompleted(lesson.id)
+                          }}
+                          className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
+                            lesson.completed
+                              ? 'bg-emerald-500 border-emerald-600 text-white'
+                              : 'border-slate-300 dark:border-slate-600'
+                          }`}
+                        >
+                          {lesson.completed && <CheckCircle2 className="h-3.5 w-3.5" />}
+                        </button>
 
-                      <span className={`text-xs truncate ${activeLesson.id === lesson.id ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
-                        {lesson.title}
-                      </span>
+                        <span className={`text-xs truncate ${activeLesson.id === lesson.id ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
+                          {lesson.title}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {activeLesson.id === lesson.id && (
+                          <Badge variant="purple" className="text-[9px] px-1.5 py-0">IN RIPRODUZIONE</Badge>
+                        )}
+                        <span className="text-[11px] text-slate-400 font-mono">
+                          {lesson.duration}
+                        </span>
+                      </div>
                     </div>
-
-                    <span className="text-[11px] text-slate-400 font-mono shrink-0">
-                      {lesson.duration}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -740,6 +802,51 @@ export default function CorsiPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Modifica Link Video Custom Lezione */}
+      {isEditVideoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 text-left">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <Video className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Imposta Link Video per "{activeLesson.title}"</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsEditVideoModalOpen(false)}
+                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleSaveCustomVideoUrl} className="p-5 space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">URL del Video (MP4, Supabase Storage, YouTube o Vimeo) *</label>
+                <Input
+                  autoFocus
+                  required
+                  value={customVideoUrlInput}
+                  onChange={(e) => setCustomVideoUrlInput(e.target.value)}
+                  placeholder="Es. https://.../modulo1.mp4 oppure https://www.youtube.com/embed/..."
+                  className="text-xs dark:bg-slate-800 dark:border-slate-700 font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <Button type="button" variant="outline" onClick={() => setIsEditVideoModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold gap-1.5">
+                  Salva URL Video
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
