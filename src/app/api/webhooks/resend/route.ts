@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
-// Webhook endpoint per la ricezione delle email di dominio inoltrate da Resend
+// Webhook endpoint server-to-server con privilegi admin per inserimento email in entrata
 export async function POST(request: Request) {
   try {
     const payload = await request.json()
@@ -16,15 +16,19 @@ export async function POST(request: Request) {
       )
     }
 
-    const supabase = await createClient()
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
-    const { data, error } = await (supabase as any).from('emails').insert({
+    // Inizializza il client Supabase Admin con Service Role Key per superare le RLS
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+
+    const { data, error } = await (supabaseAdmin as any).from('emails').insert({
       direction: 'inbound',
-      from_address: from,
-      to_address: Array.isArray(to) ? to : [to],
+      from_address: typeof from === 'string' ? from : from?.email || String(from),
+      to_address: Array.isArray(to) ? to : [typeof to === 'string' ? to : to?.email || String(to)],
       subject: subject,
       body_html: html || null,
-      body_text: text || null,
+      body_text: text || text || html || '',
       status: 'received',
       message_id: message_id || null,
     })
