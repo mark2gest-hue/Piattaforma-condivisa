@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   MessageSquare,
-  Send,
-  Hash,
-  Paperclip,
   Users,
+  Send,
+  Paperclip,
+  Hash,
+  Sparkles,
   Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -20,36 +21,45 @@ import { requestNotificationPermission, sendDesktopNotification } from '@/lib/no
 type MessageWithSender = Message & { sender?: Profile }
 
 const CHANNELS = [
-  { id: 'generale', name: 'generale', desc: 'Comunicazioni generali e allineamenti', icon: Hash },
-  { id: 'progetti', name: 'progetti', desc: 'Discussioni sui progetti in corso', icon: Hash },
+  { id: 'ch-1', name: 'generale', desc: 'Comunicazioni generali e allineamenti', icon: Hash },
+  { id: 'ch-2', name: 'progetti', desc: 'Discussioni su task e deliverable', icon: Hash },
 ]
 
-export default function TeamChatPage() {
+export default function ChatPage() {
   const [activeChannel, setActiveChannel] = useState('generale')
   const [messages, setMessages] = useState<MessageWithSender[]>([])
   const [inputMessage, setInputMessage] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [currentUser, setCurrentUser] = useState<any>(null)
   const [teamMembers, setTeamMembers] = useState<Profile[]>([])
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [currentUser, setCurrentUser] = useState<Profile | null>(null)
+  const [loading, setLoading] = useState(true)
 
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
   }, [messages])
 
+  // Fetch initial user, team members, and messages for channel
   useEffect(() => {
     const initChat = async () => {
       setLoading(true)
       requestNotificationPermission()
       
-      // Get current logged in user
       const { data: { user } } = await supabase.auth.getUser()
-      setCurrentUser(user)
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+        if (profile) setCurrentUser(profile)
+      }
 
-      // Get all team members to map sender_ids in realtime events
       const { data: profiles } = await supabase.from('profiles').select('*')
       if (profiles) setTeamMembers(profiles)
 
@@ -83,7 +93,6 @@ export default function TeamChatPage() {
           
           setMessages((prev) => [...prev, messageWithSender])
 
-          // Riproduce il suono e mostra notifica desktop se il messaggio è inviato da un altro membro del team
           if (currentUser && newMessage.sender_id !== currentUser.id) {
             sendDesktopNotification(
               `Messaggio da ${senderProfile?.full_name || 'Team'} in #${activeChannel}`,
@@ -98,7 +107,7 @@ export default function TeamChatPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [activeChannel, teamMembers])
+  }, [activeChannel, teamMembers, currentUser])
 
   const fetchMessages = async (channelName: string) => {
     const { data, error } = await supabase
@@ -117,7 +126,7 @@ export default function TeamChatPage() {
     if (!inputMessage.trim() || !currentUser) return
 
     const messageContent = inputMessage.trim()
-    setInputMessage('') // optimistic clear
+    setInputMessage('')
 
     const { error } = await (supabase as any).from('messages').insert({
       channel: activeChannel,
@@ -128,7 +137,6 @@ export default function TeamChatPage() {
 
     if (error) {
       console.error('Error sending message:', error)
-      // Potresti voler gestire l'errore ripristinando il messaggio nell'input
     }
   }
 
@@ -139,11 +147,11 @@ export default function TeamChatPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <MessageSquare className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <MessageSquare className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             Chat di Team Realtime
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Comunicazione istantanea sincronizzata via Supabase Realtime per i membri del team.
           </p>
         </div>
@@ -154,11 +162,11 @@ export default function TeamChatPage() {
       </div>
 
       {/* Main Chat Interface */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden flex-1">
         {/* Left: Channels & Team List */}
-        <div className="md:col-span-4 lg:col-span-3 border-r border-slate-200 bg-slate-50/50 p-4 space-y-6 flex flex-col justify-between">
+        <div className="md:col-span-4 lg:col-span-3 border-r border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 p-4 space-y-6 flex flex-col justify-between">
           <div className="space-y-4">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 px-2">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2">
               Canali Tematici
             </div>
             <div className="space-y-1">
@@ -171,8 +179,8 @@ export default function TeamChatPage() {
                     onClick={() => setActiveChannel(ch.name)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors text-left ${
                       isActive
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-700 hover:bg-slate-200/60'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
                     }`}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
@@ -184,17 +192,17 @@ export default function TeamChatPage() {
           </div>
 
           {/* Team Members */}
-          <div className="pt-4 border-t border-slate-200 space-y-3">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 px-2 flex items-center justify-between">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 flex items-center justify-between">
               <span>Team</span>
               <Users className="h-3.5 w-3.5" />
             </div>
             <div className="space-y-2 text-xs">
               {teamMembers.map((member) => (
-                <div key={member.id} className="flex items-center justify-between px-2 py-1.5 bg-white rounded-lg border border-slate-200/60 shadow-sm">
+                <div key={member.id} className="flex items-center justify-between px-2 py-1.5 bg-white dark:bg-slate-800/80 rounded-lg border border-slate-200/60 dark:border-slate-700/60 shadow-xs">
                   <div className="flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${member.is_active ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                    <span className="font-semibold text-slate-800 truncate max-w-[100px]">{member.full_name}</span>
+                    <span className={`h-2 w-2 rounded-full ${member.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">{member.full_name}</span>
                   </div>
                   <Badge
                     variant={member.role === 'dev' ? 'purple' : member.role === 'admin' ? 'destructive' : 'info'}
@@ -212,15 +220,15 @@ export default function TeamChatPage() {
         </div>
 
         {/* Right: Message Stream */}
-        <div className="md:col-span-8 lg:col-span-9 flex flex-col justify-between bg-slate-50/20 relative">
+        <div className="md:col-span-8 lg:col-span-9 flex flex-col justify-between bg-slate-50/20 dark:bg-slate-950/40 relative">
           {/* Channel Header */}
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white/80 backdrop-blur z-10 sticky top-0">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur z-10 sticky top-0">
             <div>
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
-                <Hash className="h-4 w-4 text-blue-600" />
+              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Hash className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 {currentChannelObj.name}
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">{currentChannelObj.desc}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{currentChannelObj.desc}</p>
             </div>
           </div>
 
@@ -238,19 +246,19 @@ export default function TeamChatPage() {
                     <Avatar
                       fallback={msg.sender?.full_name || '?'}
                       src={msg.sender?.avatar_url || undefined}
-                      className="h-8 w-8 bg-blue-100 text-blue-800 font-semibold text-xs shrink-0 mt-1 border border-blue-200"
+                      className="h-8 w-8 bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 font-semibold text-xs shrink-0 mt-1 border border-blue-200 dark:border-blue-800"
                     />
                     <div className={`flex flex-col flex-1 space-y-1 ${isMe ? 'items-end' : 'items-start'}`}>
                       <div className={`flex items-center gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
-                        <span className="text-xs font-bold text-slate-900">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">
                           {isMe ? 'Tu' : msg.sender?.full_name || 'Utente Sconosciuto'}
                         </span>
                         <span className="text-[10px] text-slate-400">{formatDate(msg.created_at)}</span>
                       </div>
-                      <div className={`text-sm p-3 rounded-2xl shadow-sm leading-relaxed max-w-[85%] ${
+                      <div className={`text-sm p-3 rounded-2xl shadow-xs leading-relaxed max-w-[85%] ${
                         isMe 
-                          ? 'bg-blue-600 text-white rounded-tr-sm' 
-                          : 'bg-white text-slate-800 border border-slate-200/80 rounded-tl-sm'
+                          ? 'bg-blue-600 text-white rounded-tr-xs' 
+                          : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 rounded-tl-xs'
                       }`}>
                         {msg.content}
                       </div>
@@ -267,12 +275,12 @@ export default function TeamChatPage() {
           </div>
 
           {/* Input Bar */}
-          <div className="p-4 bg-white border-t border-slate-200">
+          <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
             <form
               onSubmit={handleSendMessage}
-              className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 shadow-inner"
+              className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner"
             >
-              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600 shrink-0">
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0">
                 <Paperclip className="h-4 w-4" />
               </Button>
               <input
@@ -280,17 +288,17 @@ export default function TeamChatPage() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder={`Scrivi un messaggio in #${activeChannel}...`}
-                className="flex-1 text-sm focus:outline-none bg-transparent px-2 placeholder:text-slate-400"
+                className="flex-1 text-sm focus:outline-none bg-transparent px-2 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 disabled={!currentUser}
               />
               <Button
                 type="submit"
                 size="sm"
                 disabled={!inputMessage.trim() || !currentUser}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-9 px-4 gap-1.5 shadow-sm rounded-lg shrink-0"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-9 px-4 gap-1.5 shadow-xs rounded-lg shrink-0"
               >
                 <Send className="h-3.5 w-3.5" />
-                Invia
+                <span>Invia</span>
               </Button>
             </form>
           </div>
