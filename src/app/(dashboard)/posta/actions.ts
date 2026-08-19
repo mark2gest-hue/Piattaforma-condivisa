@@ -3,7 +3,7 @@
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key_for_build')
 const SHARED_DOMAIN = process.env.SHARED_EMAIL_DOMAIN || 'team.domain.com'
 
 export async function sendSharedEmail(formData: {
