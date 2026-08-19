@@ -380,13 +380,15 @@ export default function CorsiPage() {
             </Button>
           )}
 
-          <Button
-            onClick={() => setIsEnrollModalOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span>Iscrivi Studente</span>
-          </Button>
+          {!activeStudent && (
+            <Button
+              onClick={() => setIsEnrollModalOpen(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span>Iscrivi Studente</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -428,17 +430,19 @@ export default function CorsiPage() {
           <span>Catalogo Corsi ({courses.length})</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab('students')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
-            activeTab === 'students'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Users className="h-4 w-4" />
-          <span>Registro Codici & Studenti ({registrations.length})</span>
-        </button>
+        {!activeStudent && (
+          <button
+            onClick={() => setActiveTab('students')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
+              activeTab === 'students'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            <span>Registro Codici & Studenti ({registrations.length})</span>
+          </button>
+        )}
       </div>
 
       {/* TAB: LOGIN CON CODICE STUDENTE */}
