@@ -1483,17 +1483,22 @@ function CorsiInnerContent() {
 
               {/* Dettaglio Lezione e Playlist */}
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <div>
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="purple" className="text-[10px] uppercase font-mono px-2 py-0.5">
+                        Modulo {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id} di {selectedCourseId === 'ai-start' ? lessons.length : lessonsPro.length}
+                      </Badge>
+                      <span className="text-xs text-slate-400 font-mono">
+                        {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).duration}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-base text-slate-900 dark:text-white">
                       {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).title}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5 font-mono">
-                      Durata: {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).duration} • Modulo {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id} di {selectedCourseId === 'ai-start' ? lessons.length : lessonsPro.length}
-                    </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {!activeStudent && (
                       <Button
                         size="sm"
@@ -1503,10 +1508,10 @@ function CorsiInnerContent() {
                           setCustomVideoUrlInput(curr.videoUrl || '')
                           setIsEditVideoModalOpen(true)
                         }}
-                        className="h-8 text-xs gap-1.5 border-slate-200 dark:border-slate-700"
+                        className="h-8 text-xs gap-1.5 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                       >
-                        <Edit className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                        <span>Modifica Titolo & Video Link</span>
+                        <Edit className="h-3.5 w-3.5 text-indigo-500" />
+                        <span>Modifica Video</span>
                       </Button>
                     )}
 
@@ -1518,11 +1523,11 @@ function CorsiInnerContent() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 text-xs gap-1.5 border-purple-400/50 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold hover:bg-purple-100 shadow-xs"
+                        className="h-8 text-xs gap-1.5 border-purple-400/40 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold hover:bg-purple-100 dark:hover:bg-purple-900/40"
                         title={`Apri la Dispensa PDF del Modulo ${(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id}`}
                       >
                         <FileText className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                        <span>Dispensa PDF (Modulo {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id})</span>
+                        <span>Dispensa PDF</span>
                       </Button>
                     </a>
 
@@ -1530,10 +1535,10 @@ function CorsiInnerContent() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleOpenQuizForLesson(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro)}
-                      className="h-8 text-xs gap-1.5 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40"
+                      className="h-8 text-xs gap-1.5 border-indigo-400/40 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
                     >
-                      <HelpCircle className="h-3.5 w-3.5 text-purple-600" />
-                      <span>Quiz @AI Lezione</span>
+                      <HelpCircle className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                      <span>Quiz @AI</span>
                     </Button>
 
                     <Button
@@ -1542,7 +1547,7 @@ function CorsiInnerContent() {
                         const curr = selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro
                         toggleLessonCompleted(curr.id)
                       }}
-                      className={`h-8 text-xs gap-1.5 ${
+                      className={`h-8 text-xs gap-1.5 font-bold shadow-xs transition-all ${
                         (selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).completed
                           ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                           : 'bg-indigo-600 hover:bg-indigo-700 text-white'
