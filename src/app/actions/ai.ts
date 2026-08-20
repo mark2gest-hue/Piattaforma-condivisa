@@ -243,3 +243,86 @@ Linee guida:
     return { success: false, error: err.message || 'Errore sintesi documento' }
   }
 }
+
+// 5. Quiz di Autovalutazione Lezione AI
+export interface QuizQuestion {
+  question: string
+  options: string[]
+  correctIndex: number
+  explanation: string
+}
+
+export async function generateLessonQuizAction(lessonId: number, lessonTitle: string) {
+  try {
+    const systemInstruction = `Sei un docente esperto di Intelligenza Artificiale per il corso "AI Start".
+Genera un quiz di autovalutazione rapido e formativo di 3 domande a risposta multipla per la lezione indicata.
+
+DEVI RESTITUIRE ESCLUSIVAMENTE UN ARRAY JSON VALIDO con 3 oggetti aventi questa struttura:
+[
+  {
+    "question": "Testo della domanda chiara e pratica",
+    "options": ["Opzione A", "Opzione B", "Opzione C", "Opzione D"],
+    "correctIndex": 0,
+    "explanation": "Spiegazione sintetica e formativa del perché questa risposta è corretta."
+  }
+]`
+
+    const userPrompt = `Lezione ${lessonId}: "${lessonTitle}". Crea 3 domande a risposta multipla su questo argomento.`
+
+    const rawResponse = await callGemini(systemInstruction, userPrompt)
+
+    if (rawResponse) {
+      try {
+        const cleaned = rawResponse.replace(/```json/gi, '').replace(/```/g, '').trim()
+        const parsed = JSON.parse(cleaned)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return { success: true, quiz: parsed as QuizQuestion[] }
+        }
+      } catch (e) {
+        console.warn('Errore parsing quiz JSON da Gemini:', e)
+      }
+    }
+
+    // Fallback di qualità
+    const fallbackQuiz: QuizQuestion[] = [
+      {
+        question: `Qual è il vantaggio principale spiegato nella Lezione "${lessonTitle}"?`,
+        options: [
+          'Automatizzare i compiti ripetitivi per risparmiare tempo',
+          'Sostituire completamente l\'attività umana senza controllo',
+          'Utilizzare solo software a pagamento senza impostare prompt',
+          'Ignorare la verifica dei dati e delle fonti',
+        ],
+        correctIndex: 0,
+        explanation: 'L\'obiettivo dell\'IA è potenziare l\'efficienza umana liberando tempo prezioso dai compiti a basso valore.',
+      },
+      {
+        question: 'Come si ottengono i migliori risultati da un modello linguistico (LLM)?',
+        options: [
+          'Scrivendo prompt generici di una sola parola',
+          'Fornendo Ruolo, Contesto, Contenuto e Formato desiderato',
+          'Evitando di correggere o reiterare le risposte',
+          'Non specificando il pubblico di destinazione',
+        ],
+        correctIndex: 1,
+        explanation: 'La chiarezza del contesto e del ruolo guida il modello verso risposte molto più accurate e pertinenti.',
+      },
+      {
+        question: 'Cosa bisogna fare se l\'IA genera una risposta con informazioni incerte?',
+        options: [
+          'Pubblicarla subito senza leggere',
+          'Verificare le fonti e applicare l\'iterazione per affinare il risultato',
+          'Riavviare il computer',
+          'Cancellare l\'account',
+        ],
+        correctIndex: 1,
+        explanation: 'La verifica delle allucinazioni e l\'iterazione critica sono competenze fondamentali per ogni professionista AI.',
+      },
+    ]
+
+    return { success: true, quiz: fallbackQuiz }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Errore generazione quiz' }
+  }
+}
+

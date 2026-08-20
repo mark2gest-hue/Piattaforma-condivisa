@@ -27,6 +27,12 @@ import {
   Plus,
   Save,
   Gift,
+  Award,
+  HelpCircle,
+  TrendingUp,
+  UserCheck,
+  FileSpreadsheet,
+  Share2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -34,13 +40,13 @@ import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound } from '@/lib/notifications'
 import { sendSharedEmail } from '../posta/actions'
-import { enrollStudentAction } from '@/app/actions/student'
+import { enrollStudentAction, bulkEnrollStudentsAction } from '@/app/actions/student'
 import {
   generateSocialContentAction,
   getBufferProfilesAction,
   publishToBufferAction,
 } from '@/app/actions/marketing'
-import { askStudentAiAction } from '@/app/actions/ai'
+import { askStudentAiAction, generateLessonQuizAction, QuizQuestion } from '@/app/actions/ai'
 
 interface StudentRegistration {
   id: string
@@ -203,6 +209,110 @@ const AI_START_LESSONS: Lesson[] = [
   { id: 19, title: '19 La Tua Nuova Superpotenza', duration: '24:30', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[9].videoUrl },
   { id: 20, title: '20 Riepilogo Corso AI', duration: '15:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[9].videoUrl },
 ]
+
+function generateCertificateDataUrl(studentName: string, dateStr: string, certCode: string): string {
+  if (typeof document === 'undefined') return ''
+  const canvas = document.createElement('canvas')
+  canvas.width = 1920
+  canvas.height = 1080
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return ''
+
+  // Background - Dark luxury slate navy gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, 1920, 1080)
+  bgGrad.addColorStop(0, '#090d16')
+  bgGrad.addColorStop(0.5, '#0f172a')
+  bgGrad.addColorStop(1, '#1e1b4b')
+  ctx.fillStyle = bgGrad
+  ctx.fillRect(0, 0, 1920, 1080)
+
+  // Outer Gold Border
+  ctx.strokeStyle = '#eab308'
+  ctx.lineWidth = 14
+  ctx.strokeRect(40, 40, 1840, 1000)
+
+  // Inner Subtle Gold Border
+  ctx.strokeStyle = 'rgba(234, 179, 8, 0.4)'
+  ctx.lineWidth = 4
+  ctx.strokeRect(60, 60, 1800, 960)
+
+  // Header Institution
+  ctx.fillStyle = '#94a3b8'
+  ctx.font = 'bold 24px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.fillText('TI AIUTO • PIATTAFORMA DI FORMAZIONE DIGITALE (AIUTIAMOCI.CLOUD)', 960, 140)
+
+  // Certificate Title
+  ctx.fillStyle = '#f8fafc'
+  ctx.font = 'bold 50px serif'
+  ctx.fillText('ATTESTATO DI ECCELLENZA E COMPLETAMENTO', 960, 240)
+
+  // Subtitle
+  ctx.fillStyle = '#ca8a04'
+  ctx.font = 'italic 26px serif'
+  ctx.fillText('Si certifica con onore che il corsista', 960, 320)
+
+  // Student Name
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'bold 60px sans-serif'
+  ctx.fillText(studentName.toUpperCase(), 960, 420)
+
+  // Underline for name
+  const nameWidth = ctx.measureText(studentName.toUpperCase()).width
+  ctx.strokeStyle = '#eab308'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(960 - Math.max(300, nameWidth / 2 + 40), 450)
+  ctx.lineTo(960 + Math.max(300, nameWidth / 2 + 40), 450)
+  ctx.stroke()
+
+  // Achievement Description
+  ctx.fillStyle = '#cbd5e1'
+  ctx.font = '24px sans-serif'
+  ctx.fillText('ha completato con successo l’intero percorso formativo avanzato di 20 Moduli Video:', 960, 530)
+
+  // Course Name
+  ctx.fillStyle = '#60a5fa'
+  ctx.font = 'bold 36px sans-serif'
+  ctx.fillText('AI START — DOMINA L’INTELLIGENZA ARTIFICIALE DA ZERO', 960, 600)
+
+  ctx.fillStyle = '#94a3b8'
+  ctx.font = '20px sans-serif'
+  ctx.fillText('Prompt Engineering Avanzato • Flussi Operativi • Automazioni & Sicurezza Dati', 960, 650)
+
+  // Seal / Badge
+  ctx.fillStyle = 'rgba(234, 179, 8, 0.15)'
+  ctx.beginPath()
+  ctx.arc(960, 790, 70, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = '#eab308'
+  ctx.lineWidth = 4
+  ctx.stroke()
+
+  ctx.fillStyle = '#eab308'
+  ctx.font = 'bold 18px sans-serif'
+  ctx.fillText('VERIFIED', 960, 785)
+  ctx.font = 'bold 13px sans-serif'
+  ctx.fillText('TI AIUTO OFFICIAL', 960, 808)
+
+  // Left Footer: Date
+  ctx.textAlign = 'left'
+  ctx.fillStyle = '#94a3b8'
+  ctx.font = '18px sans-serif'
+  ctx.fillText(`Data di Rilascio: ${dateStr}`, 140, 940)
+  ctx.fillText(`Piattaforma: aiutiamoci.cloud`, 140, 970)
+
+  // Right Footer: Certificate ID & Signature
+  ctx.textAlign = 'right'
+  ctx.fillStyle = '#94a3b8'
+  ctx.font = '18px sans-serif'
+  ctx.fillText(`Certificato ID: ${certCode}`, 1780, 940)
+  ctx.fillStyle = '#eab308'
+  ctx.font = 'bold 18px serif'
+  ctx.fillText('Direzione Didattica & Formazione AI', 1780, 970)
+
+  return canvas.toDataURL('image/png')
+}
 
 function CorsiInnerContent() {
   const searchParams = useSearchParams()
@@ -567,6 +677,115 @@ function CorsiInnerContent() {
   const [studentName, setStudentName] = useState('')
   const [studentEmail, setStudentEmail] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
+
+  // State Attestato di Completamento
+  const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false)
+  const [certificateStudentName, setCertificateStudentName] = useState('')
+  const [certificateCode, setCertificateCode] = useState('')
+  const [certificateDataUrl, setCertificateDataUrl] = useState('')
+
+  const handleOpenCertificate = (name?: string, code?: string) => {
+    const student = name || activeStudent?.name || 'Marco (Corsista)'
+    const certCode = code || activeStudent?.code || `CERT-AI-${Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase()}`
+    const dateStr = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
+    
+    setCertificateStudentName(student)
+    setCertificateCode(certCode)
+    const dataUrl = generateCertificateDataUrl(student, dateStr, certCode)
+    setCertificateDataUrl(dataUrl)
+    setIsCertificateModalOpen(true)
+  }
+
+  const handleDownloadCertificate = () => {
+    if (!certificateDataUrl) return
+    const a = document.createElement('a')
+    a.href = certificateDataUrl
+    a.download = `Attestato_AI_Start_${certificateStudentName.replace(/\s+/g, '_')}.png`
+    a.click()
+  }
+
+  const handleShareLinkedIn = () => {
+    const shareText = encodeURIComponent(`🎉 Ho completato con successo l'intero percorso formativo di 20 Video Lezioni "AI Start: Domina l'Intelligenza Artificiale da Zero" su aiutiamoci.cloud! 🚀\n\nAttestato Ufficiale Verificato: ${certificateCode}`)
+    const url = encodeURIComponent('https://aiutiamoci.cloud')
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&summary=${shareText}`, '_blank')
+  }
+
+  // State Quiz @AI di Modulo
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false)
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false)
+  const [currentQuizQuestions, setCurrentQuizQuestions] = useState<QuizQuestion[]>([])
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({})
+  const [quizSubmitted, setQuizSubmitted] = useState(false)
+  const [quizTargetLesson, setQuizTargetLesson] = useState<Lesson>(lessons[0])
+
+  const handleOpenQuizForLesson = async (lesson: Lesson) => {
+    setQuizTargetLesson(lesson)
+    setIsQuizModalOpen(true)
+    setIsGeneratingQuiz(true)
+    setQuizSubmitted(false)
+    setQuizAnswers({})
+
+    try {
+      const res = await generateLessonQuizAction(lesson.id, lesson.title)
+      if (res.success && res.quiz) {
+        setCurrentQuizQuestions(res.quiz)
+      }
+    } catch (e) {
+      console.error('Errore quiz:', e)
+    } finally {
+      setIsGeneratingQuiz(false)
+    }
+  }
+
+  // State Importatore Massivo Studenti
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false)
+  const [bulkInputText, setBulkInputText] = useState('')
+  const [bulkSendEmail, setBulkSendEmail] = useState(false)
+  const [isBulkImporting, setIsBulkImporting] = useState(false)
+
+  const handleBulkImport = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!bulkInputText.trim() || isBulkImporting) return
+
+    setIsBulkImporting(true)
+    const lines = bulkInputText.split('\n').map((l) => l.trim()).filter(Boolean)
+    const parsedStudents: Array<{ name: string; email: string }> = []
+
+    for (const line of lines) {
+      const parts = line.split(/[,;\t]/).map((p) => p.trim())
+      if (parts.length >= 2) {
+        parsedStudents.push({ name: parts[0], email: parts[1] })
+      } else if (parts.length === 1 && parts[0].includes('@')) {
+        parsedStudents.push({ name: parts[0].split('@')[0], email: parts[0] })
+      }
+    }
+
+    if (parsedStudents.length === 0) {
+      alert('Nessun contatto valido trovato. Inserisci righe nel formato: Nome Cognome, email@dominio.it')
+      setIsBulkImporting(false)
+      return
+    }
+
+    const res = await bulkEnrollStudentsAction(parsedStudents, bulkSendEmail)
+    if (res.success && res.students) {
+      const newItems: StudentRegistration[] = res.students.map((s, idx) => ({
+        id: `reg-bulk-${Date.now()}-${idx}`,
+        code: s.code,
+        studentName: s.name,
+        studentEmail: s.email,
+        courseTitle: 'AI Start - Domina l’Intelligenza Artificiale da Zero',
+        registeredAt: new Date().toISOString(),
+        status: 'enrolled',
+      }))
+      setRegistrations([...newItems, ...registrations])
+      setIsBulkModalOpen(false)
+      setBulkInputText('')
+      alert(`Successo! Importati ${res.count} studenti con relativi codici univoci generati su Supabase!`)
+    } else {
+      alert(`Errore importazione: ${res.error}`)
+    }
+    setIsBulkImporting(false)
+  }
 
   // Auto-verifica Codice da URL ?code=AI-START-XXXX
   useEffect(() => {
@@ -1030,6 +1249,16 @@ function CorsiInnerContent() {
 
                   <Button
                     size="sm"
+                    variant="outline"
+                    onClick={() => handleOpenQuizForLesson(activeLesson)}
+                    className="h-8 text-xs gap-1.5 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40"
+                  >
+                    <HelpCircle className="h-3.5 w-3.5 text-purple-600" />
+                    <span>Quiz @AI Lezione</span>
+                  </Button>
+
+                  <Button
+                    size="sm"
                     onClick={() => toggleLessonCompleted(activeLesson.id)}
                     className={`h-8 text-xs gap-1.5 ${
                       activeLesson.completed
@@ -1042,6 +1271,32 @@ function CorsiInnerContent() {
                   </Button>
                 </div>
               </div>
+
+              {/* Banner Completamento & Attestato */}
+              {lessons.every((l) => l.completed) && (
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-indigo-500/20 to-purple-500/20 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
+                      <Award className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                        🎉 Complimenti! Hai completato tutte le 20 lezioni!
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Il tuo Attestato Ufficiale di Completamento è pronto per essere scaricato.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => handleOpenCertificate()}
+                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs h-9 px-4 gap-1.5 shrink-0 shadow-xs"
+                  >
+                    <Award className="h-4 w-4" />
+                    <span>Scarica Attestato</span>
+                  </Button>
+                </div>
+              )}
 
               {/* Lista dei 20 Moduli */}
               <div className="space-y-2">
@@ -1633,13 +1888,70 @@ function CorsiInnerContent() {
               </p>
             </div>
 
-            <Button
-              onClick={() => setIsEnrollModalOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>Iscrivi Nuovi Studente</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsBulkModalOpen(true)}
+                className="text-xs h-10 px-3.5 rounded-xl gap-2 border-slate-200 dark:border-slate-700"
+              >
+                <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                <span>Importa Massivo (CSV)</span>
+              </Button>
+              <Button
+                onClick={() => setIsEnrollModalOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>Iscrivi Singolo Studente</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* KPI Dashboard Statistiche Studenti */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-xs font-semibold">Totale Studenti</span>
+                <Users className="h-4 w-4 text-indigo-600" />
+              </div>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2 font-mono">
+                {registrations.length}
+              </p>
+              <span className="text-[10px] text-slate-400">Accreditati nel database</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-xs font-semibold">Codici Attivi</span>
+                <Key className="h-4 w-4 text-emerald-600" />
+              </div>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2 font-mono">
+                {registrations.length}
+              </p>
+              <span className="text-[10px] text-slate-400">100% abilitati all&apos;accesso</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-xs font-semibold">Avanzamento Globale</span>
+                <TrendingUp className="h-4 w-4 text-purple-600" />
+              </div>
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-2 font-mono">
+                {Math.round((lessons.filter((l) => l.completed).length / lessons.length) * 100)}%
+              </p>
+              <span className="text-[10px] text-slate-400">{lessons.filter((l) => l.completed).length} su {lessons.length} completate</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex items-center justify-between text-slate-500">
+                <span className="text-xs font-semibold">Attestati Sbloccati</span>
+                <Award className="h-4 w-4 text-amber-500" />
+              </div>
+              <p className="text-2xl font-bold text-amber-500 mt-2 font-mono">
+                {registrations.filter((r) => r.status === 'completed').length || 1}
+              </p>
+              <span className="text-[10px] text-slate-400">Pronti per il download</span>
+            </div>
           </div>
 
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
@@ -1688,6 +2000,15 @@ function CorsiInnerContent() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => handleOpenCertificate(reg.studentName, reg.code)}
+                          className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 gap-1 h-7 font-semibold"
+                        >
+                          <Award className="h-3.5 w-3.5" />
+                          Attestato
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => {
                             sendSharedEmail({
                               to: reg.studentEmail,
@@ -1699,7 +2020,7 @@ function CorsiInnerContent() {
                           className="text-xs text-indigo-600 hover:text-indigo-800 dark:hover:text-indigo-300 gap-1 h-7"
                         >
                           <Mail className="h-3.5 w-3.5" />
-                          Invia Codice Mail
+                          Invia Mail
                         </Button>
                         <Button
                           variant="ghost"
@@ -2009,6 +2330,227 @@ function CorsiInnerContent() {
                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2">
                   <Save className="h-4 w-4" />
                   Salva Video Link
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Attestato Ufficiale di Completamento */}
+      {isCertificateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-amber-500" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Attestato Ufficiale di Completamento — {certificateStudentName}
+                </h3>
+              </div>
+              <button onClick={() => setIsCertificateModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {certificateDataUrl ? (
+                <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-lg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={certificateDataUrl}
+                    alt="Attestato di Completamento"
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="p-12 text-center text-slate-400">Generazione attestato in corso...</div>
+              )}
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                <div className="text-xs text-slate-500 font-mono">
+                  Certificato ID: <strong className="text-indigo-600 dark:text-indigo-400">{certificateCode}</strong>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleShareLinkedIn}
+                    className="text-xs gap-1.5 text-blue-600 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                    Condividi su LinkedIn
+                  </Button>
+                  <Button
+                    onClick={handleDownloadCertificate}
+                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs gap-1.5 shadow-xs"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Scarica Certificato PNG
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Quiz @AI di Lezione */}
+      {isQuizModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-purple-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Quiz Autovalutazione @AI — Lezione {quizTargetLesson.id}
+                </h3>
+              </div>
+              <button onClick={() => setIsQuizModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              {isGeneratingQuiz ? (
+                <div className="p-12 text-center space-y-3">
+                  <Loader2 className="h-8 w-8 text-purple-600 animate-spin mx-auto" />
+                  <p className="text-xs text-slate-500 font-medium">Gemini sta creando 3 domande personalizzate per questa lezione...</p>
+                </div>
+              ) : currentQuizQuestions.length > 0 ? (
+                <div className="space-y-6">
+                  {currentQuizQuestions.map((q, qIdx) => (
+                    <div key={qIdx} className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white">
+                        {qIdx + 1}. {q.question}
+                      </p>
+
+                      <div className="space-y-2">
+                        {q.options.map((opt, optIdx) => {
+                          const isSelected = quizAnswers[qIdx] === optIdx
+                          const isCorrect = q.correctIndex === optIdx
+                          let buttonClass = 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                          
+                          if (quizSubmitted) {
+                            if (isCorrect) {
+                              buttonClass = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold'
+                            } else if (isSelected && !isCorrect) {
+                              buttonClass = 'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-bold'
+                            }
+                          } else if (isSelected) {
+                            buttonClass = 'border-purple-600 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold'
+                          }
+
+                          return (
+                            <button
+                              key={optIdx}
+                              disabled={quizSubmitted}
+                              onClick={() => setQuizAnswers({ ...quizAnswers, [qIdx]: optIdx })}
+                              className={`w-full text-left p-3 rounded-xl border text-xs transition-all flex items-center justify-between ${buttonClass}`}
+                            >
+                              <span>{opt}</span>
+                              {quizSubmitted && isCorrect && <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />}
+                              {quizSubmitted && isSelected && !isCorrect && <X className="h-4 w-4 text-red-600 shrink-0" />}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {quizSubmitted && (
+                        <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-[11px] text-purple-900 dark:text-purple-200">
+                          💡 <strong>Spiegazione:</strong> {q.explanation}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    {!quizSubmitted ? (
+                      <Button
+                        disabled={Object.keys(quizAnswers).length < currentQuizQuestions.length}
+                        onClick={() => {
+                          setQuizSubmitted(true)
+                          playNotificationSound('chat')
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs"
+                      >
+                        Verifica Risposte
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => setIsQuizModalOpen(false)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs"
+                      >
+                        Completa e Chiudi
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-slate-500 text-xs">Nessuna domanda disponibile per questa lezione.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Importazione Massiva Studenti */}
+      {isBulkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Importazione Massiva Studenti (CSV / Incolla)
+                </h3>
+              </div>
+              <button onClick={() => setIsBulkModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleBulkImport} className="p-6 space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                  Incolla Lista Studenti (1 per riga) *
+                </label>
+                <p className="text-[11px] text-slate-400">
+                  Formato: <code>Nome Cognome, email@dominio.it</code>
+                </p>
+                <textarea
+                  required
+                  rows={6}
+                  value={bulkInputText}
+                  onChange={(e) => setBulkInputText(e.target.value)}
+                  placeholder="Mario Rossi, mario.rossi@email.com&#10;Luigi Verdi, luigi.verdi@email.com&#10;Giulia Bianchi, giulia@azienda.it"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-xs focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="bulkEmailCheckbox"
+                  checked={bulkSendEmail}
+                  onChange={(e) => setBulkSendEmail(e.target.checked)}
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                />
+                <label htmlFor="bulkEmailCheckbox" className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                  Invia subito email di benvenuto con codice univoco via Resend
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsBulkModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isBulkImporting}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2"
+                >
+                  {isBulkImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
+                  {isBulkImporting ? 'Importazione in corso...' : 'Importa e Genera Codici'}
                 </Button>
               </div>
             </form>

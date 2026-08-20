@@ -6,8 +6,27 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Team Hub | Corsi, Consulenze & Agenti AI',
-  description: 'Piattaforma collaborativa unificata per il team.',
+  metadataBase: new URL('https://aiutiamoci.cloud'),
+  title: 'Ti AIuto | Piattaforma Lavoro Condivisa & Formazione AI',
+  description: 'Il portale formativo e collaborativo per professionisti e aziende. 20 Video Lezioni AI Start, registrazione sessioni Zoom, assistenza tutor @AI e automazioni aziendali.',
+  keywords: ['Intelligenza Artificiale', 'Corso AI Start', 'Formazione AI', 'Prompt Engineering', 'Automazioni AI', 'Ti AIuto', 'aiutiamoci.cloud'],
+  authors: [{ name: 'Team Ti AIuto', url: 'https://aiutiamoci.cloud' }],
+  openGraph: {
+    title: 'Ti AIuto | Piattaforma Lavoro Condivisa & Corso AI Start',
+    description: 'Impara a dominare l’Intelligenza Artificiale da zero con 20 lezioni pratiche, prompt testati e strumenti di automazione per il tuo lavoro.',
+    url: 'https://aiutiamoci.cloud',
+    siteName: 'Ti AIuto Platform',
+    locale: 'it_IT',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ti AIuto | Corso AI Start & Piattaforma Condivisa',
+    description: 'Il percorso formativo completo in 20 moduli per integrare l’IA nel tuo lavoro quotidiano.',
+  },
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
