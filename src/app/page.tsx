@@ -219,10 +219,14 @@ export default function LandingPage() {
               Corso Pratico in 20 Video Lezioni senza tecnicismi
             </Badge>
 
-            <Badge className="py-1.5 px-4 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold rounded-full gap-1.5 inline-flex items-center">
-              <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-              Valutazione 4.9/5 • Oltre 500 Studenti
-            </Badge>
+            <button
+              type="button"
+              onClick={() => setIsWaitlistModalOpen(true)}
+              className="py-1.5 px-4 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 text-xs font-bold rounded-full gap-1.5 inline-flex items-center transition-all cursor-pointer hover:scale-105 shadow-xs"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+              <span>🚀 Prossimo Lancio: <strong className="text-white underline decoration-purple-400">AI Pro</strong> (Agenti & Automazioni) • Entra in Lista</span>
+            </button>
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.08]">
