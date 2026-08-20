@@ -198,28 +198,28 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   },
 ]
 
-// Mappatura precisa dei 20 Moduli Video del Corso AI Start con gli URL MP4 reali
+// Mappatura precisa dei 20 Moduli Video del Corso AI Start con gli URL MP4 reali e le rispettive Dispense PDF
 const AI_START_LESSONS: Lesson[] = [
-  { id: 1, title: '1 Benvenuti nel Futuro', duration: '10:30', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%201%20Benvenuti%20nel%20futuro_1080p_caption.mp4' },
-  { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '12:45', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%202%20Breve%20Storia%20Evoluzione%20Lampo_1080p_caption.mp4' },
-  { id: 3, title: '3 Sconfiggere il Foglio Bianco', duration: '15:20', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%203%20Sconfiggere%20il%20Foglio%20Bianco_1080p_caption.mp4' },
-  { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '14:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20Ai%20-%20Lezione%204%20Il%20Linguaggio%20della%20Chiarezza%20Prompt_1080p_caption.mp4' },
-  { id: 5, title: '5 La Formula Segreta RCCF', duration: '18:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%205%20La%20Formula%20Segreta%20RCCF_1080p_caption.mp4' },
-  { id: 6, title: '6 Iterazione', duration: '16:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%206%20Iterazione_1080p_caption.mp4' },
-  { id: 7, title: '7 ChatGPT, Claude, Gemini, Perplexity', duration: '13:15', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%207%20ChatGPT%20Claude%20Gemini%20Perplexity_1080p_caption.mp4' },
-  { id: 8, title: '8 Scrivere senza Sforzo', duration: '19:40', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%208%20Scrivere%20senza%20Sforzo_1080p_caption.mp4' },
-  { id: 9, title: '9 Dipingere con le Parole', duration: '12:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%209%20Dipingere%20con%20le%20Parole_1080p_caption.mp4' },
-  { id: 10, title: '10 Anatomia di un Prompt Visivo', duration: '14:50', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2010%20Anatomia%20di%20un%20Prompt%20Visivo_1080p_caption.mp4' },
-  { id: 11, title: '11 Presentazioni in 5 Minuti', duration: '22:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2011%20Presentazioni%20in%205%20Minuti_1080p_caption.mp4' },
-  { id: 12, title: '12 Analisi Dati per Excel', duration: '25:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_12_Analisi_Dati_per_Excell_1080p_caption_with_captions.mp4' },
-  { id: 13, title: '13 L\'Agenda Intelligente', duration: '18:20', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2013%20L%20Agenda%20Intelligente_1080p_caption.mp4' },
-  { id: 14, title: '14 Studiare e Imparare ELI5', duration: '20:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2014%20Studiare%20e%20Imparare%20ELI5_1080p_caption.mp4' },
-  { id: 15, title: '15 Allucinazioni: Quando l\'IA mente', duration: '15:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_15_Allucinazioni_Quando_IA_mente_1080p_caption_with_captions.mp4' },
-  { id: 16, title: '16 Privacy e Sicurezza', duration: '18:45', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2016%20Privacy%20e%20Sicurezza_1080p_caption.mp4' },
-  { id: 17, title: '17 Il Lavoro che Cambia', duration: '20:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2017%20Il%20Lavoro%20che%20Cambia_1080p_caption.mp4' },
-  { id: 18, title: '18 Creare il proprio Workflow', duration: '16:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2018%20Creare%20il%20proprio%20Workflow_1080p_caption.mp4' },
-  { id: 19, title: '19 La Tua Nuova Superpotenza', duration: '24:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2019%20La%20Tua%20Nuova%20Superpotenza_1080p_caption.mp4' },
-  { id: 20, title: '20 Riepilogo Corso AI', duration: '15:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_20_Riepilogo_corso_AI_principianti_1080p_caption_with_captions.mp4' },
+  { id: 1, title: '1 Benvenuti nel Futuro', duration: '10:30', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%201%20Benvenuti%20nel%20futuro_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/ET7TTVJ7RW#QSaWgz8wLPay' },
+  { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '12:45', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%202%20Breve%20Storia%20Evoluzione%20Lampo_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/9KVC7PNW74#pzsb1mevkrdG' },
+  { id: 3, title: '3 Sconfiggere il Foglio Bianco', duration: '15:20', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%203%20Sconfiggere%20il%20Foglio%20Bianco_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/PGCQEQEP2W#2fJfIEEX3haf' },
+  { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '14:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20Ai%20-%20Lezione%204%20Il%20Linguaggio%20della%20Chiarezza%20Prompt_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0WRQ83PPM0#Q2bU6vrD5eDq' },
+  { id: 5, title: '5 La Formula Segreta RCCF', duration: '18:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%205%20La%20Formula%20Segreta%20RCCF_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/ZXS9JPAN68#GfKQLK6zsh1T' },
+  { id: 6, title: '6 Iterazione', duration: '16:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%206%20Iterazione_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/4CNHYJAWX4#1zSh8fQrPQvq' },
+  { id: 7, title: '7 ChatGPT, Claude, Gemini, Perplexity', duration: '13:15', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%207%20ChatGPT%20Claude%20Gemini%20Perplexity_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/8EM9ZMNFZG#SWc1jc68JYPG' },
+  { id: 8, title: '8 Scrivere senza Sforzo', duration: '19:40', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%208%20Scrivere%20senza%20Sforzo_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/PN74SW8ZM4#oMcaEJevPyho' },
+  { id: 9, title: '9 Dipingere con le Parole', duration: '12:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%209%20Dipingere%20con%20le%20Parole_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/93EQ8FY9XW#OHV89RBcMuRh' },
+  { id: 10, title: '10 Anatomia di un Prompt Visivo', duration: '14:50', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2010%20Anatomia%20di%20un%20Prompt%20Visivo_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/N6MEE8SXBM#PuslYkHr62IZ' },
+  { id: 11, title: '11 Presentazioni in 5 Minuti', duration: '22:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2011%20Presentazioni%20in%205%20Minuti_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/171W4G7GEG#zOCUP4ZnDI2v' },
+  { id: 12, title: '12 Analisi Dati per Excel', duration: '25:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_12_Analisi_Dati_per_Excell_1080p_caption_with_captions.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0FGPGN9KFW#TsftLTJHOfVw' },
+  { id: 13, title: '13 L\'Agenda Intelligente', duration: '18:20', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2013%20L%20Agenda%20Intelligente_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/DY3BRC26QR#Up7qb2PZt2nS' },
+  { id: 14, title: '14 Studiare e Imparare ELI5', duration: '20:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2014%20Studiare%20e%20Imparare%20ELI5_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/W1YSH3C2EG#j7Zgqap4gFJk' },
+  { id: 15, title: '15 Allucinazioni: Quando l\'IA mente', duration: '15:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_15_Allucinazioni_Quando_IA_mente_1080p_caption_with_captions.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/3VNSBFA294#mY5efYQx1wbc' },
+  { id: 16, title: '16 Privacy e Sicurezza', duration: '18:45', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2016%20Privacy%20e%20Sicurezza_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/GXPHM2GHRM#2JXZB2yOSHXa' },
+  { id: 17, title: '17 Il Lavoro che Cambia', duration: '20:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2017%20Il%20Lavoro%20che%20Cambia_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/3HHGTCJPXG#JKj5qDgQWl7S' },
+  { id: 18, title: '18 Creare il proprio Workflow', duration: '16:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2018%20Creare%20il%20proprio%20Workflow_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/ESKYPPGA4W#UamcfXDH60f3' },
+  { id: 19, title: '19 La Tua Nuova Superpotenza', duration: '24:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2019%20La%20Tua%20Nuova%20Superpotenza_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/FXCXFGWRKC#h811Yab3Dslp' },
+  { id: 20, title: '20 Riepilogo Corso AI', duration: '15:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_20_Riepilogo_corso_AI_principianti_1080p_caption_with_captions.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0GVJ5F1D5C#as9OjF8kGN3Y' },
 ]
 
 // 10 Moduli del Secondo Corso: AI Pro (Automazioni & Agenti)
@@ -1511,18 +1511,18 @@ function CorsiInnerContent() {
                     )}
 
                     <a
-                      href="https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY"
+                      href={(selectedCourseId === 'ai-start' ? activeLesson.resourcesPdfUrl : null) || 'https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY'}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 text-xs gap-1.5 border-purple-300 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold hover:bg-purple-100"
-                        title="Apri le 20 Dispense PDF su Proton Drive"
+                        className="h-8 text-xs gap-1.5 border-purple-400/50 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold hover:bg-purple-100 shadow-xs"
+                        title={`Apri la Dispensa PDF del Modulo ${(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id}`}
                       >
                         <FileText className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                        <span>Dispensa PDF (Proton)</span>
+                        <span>Dispensa PDF (Modulo {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id})</span>
                       </Button>
                     </a>
 
@@ -1606,17 +1606,17 @@ function CorsiInnerContent() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <a
-                          href="https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY"
+                          href={activeLesson.resourcesPdfUrl || 'https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY'}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-[11px] h-7 px-3 rounded-lg border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 gap-1 bg-white dark:bg-slate-900"
+                            className="text-[11px] h-7 px-3 rounded-lg border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 gap-1 bg-white dark:bg-slate-900 font-semibold"
                           >
                             <FileText className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
-                            <span>Dispensa PDF (Proton Drive)</span>
+                            <span>Dispensa PDF (Modulo {activeLesson.id})</span>
                           </Button>
                         </a>
 
@@ -1726,6 +1726,18 @@ function CorsiInnerContent() {
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
+                            {lesson.resourcesPdfUrl && isUnlocked && (
+                              <a
+                                href={lesson.resourcesPdfUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                title={`Scarica Dispensa PDF (Modulo ${lesson.id})`}
+                                className="p-1 rounded-md text-slate-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/50 transition-colors"
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                              </a>
+                            )}
                             {!isUnlocked ? (
                               <Badge variant="secondary" className="text-[9px] px-1.5 py-0 gap-1 bg-slate-200 dark:bg-slate-800 text-slate-500">
                                 <Lock className="h-2.5 w-2.5" />
