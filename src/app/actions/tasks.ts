@@ -165,3 +165,33 @@ export async function deleteTaskAction(taskId: string) {
     return { success: false, error: error.message }
   }
 }
+
+export async function createProjectAction(title: string, description?: string) {
+  try {
+    const supabase = createAdminClient()
+    const cleanTitle = title.trim()
+    if (!cleanTitle) {
+      return { success: false, error: 'Il nome del progetto è obbligatorio' }
+    }
+
+    const { data, error } = await (supabase as any)
+      .from('projects')
+      .insert({
+        title: cleanTitle,
+        description: description?.trim() || null,
+        status: 'active',
+        category: 'internal',
+      })
+      .select('*')
+      .single()
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, project: data }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+

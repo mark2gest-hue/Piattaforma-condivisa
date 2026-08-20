@@ -22,18 +22,31 @@ import { createClient } from '@/lib/supabase/client'
 export function Sidebar() {
   const pathname = usePathname()
   const [unreadEmailCount, setUnreadEmailCount] = useState<number>(0)
+  const [sidebarProjects, setSidebarProjects] = useState<Array<{ id: string; title: string; status: string }>>([
+    { id: '1', title: 'Corsi Formativi', status: 'Attivo' },
+    { id: '2', title: 'Consulenze B2B', status: 'In corso' },
+    { id: '3', title: 'Agenti AI Dev', status: 'Sprint' },
+  ])
   const supabase = createClient()
 
   useEffect(() => {
     fetchUnreadEmails()
+    fetchProjects()
 
     const channel = supabase
-      .channel('sidebar:emails')
+      .channel('sidebar:changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'emails' },
         () => {
           fetchUnreadEmails()
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projects' },
+        () => {
+          fetchProjects()
         }
       )
       .subscribe()
@@ -42,6 +55,17 @@ export function Sidebar() {
       supabase.removeChannel(channel)
     }
   }, [])
+
+  const fetchProjects = async () => {
+    const { data } = await supabase.from('projects').select('id, title, status').order('created_at', { ascending: true })
+    if (data && data.length > 0) {
+      setSidebarProjects(data.map((p: any) => ({
+        id: p.id,
+        title: p.title.replace(/^[^\w\s]*\s*/, ''),
+        status: p.status === 'active' ? 'Attivo' : p.status,
+      })))
+    }
+  }
 
   const fetchUnreadEmails = async () => {
     const { count, error } = await supabase
@@ -196,27 +220,15 @@ export function Sidebar() {
             <Layers className="h-3.5 w-3.5 text-slate-400" />
           </div>
           <div className="space-y-1 text-xs">
-            <div className="flex items-center justify-between py-1 px-2 rounded bg-slate-800/40 text-slate-300">
-              <span className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-indigo-400" />
-                Corsi Formativi
-              </span>
-              <span className="text-[10px] text-slate-400 font-mono">Attivi</span>
-            </div>
-            <div className="flex items-center justify-between py-1 px-2 rounded bg-slate-800/40 text-slate-300">
-              <span className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                Consulenze B2B
-              </span>
-              <span className="text-[10px] text-slate-400 font-mono">In corso</span>
-            </div>
-            <div className="flex items-center justify-between py-1 px-2 rounded bg-slate-800/40 text-slate-300">
-              <span className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-amber-400" />
-                Agenti AI Dev
-              </span>
-              <span className="text-[10px] text-slate-400 font-mono">Sprint</span>
-            </div>
+            {sidebarProjects.map((p, idx) => (
+              <div key={p.id || idx} className="flex items-center justify-between py-1 px-2 rounded bg-slate-800/40 text-slate-300">
+                <span className="flex items-center gap-2 truncate">
+                  <span className={`h-2 w-2 rounded-full ${idx % 3 === 0 ? 'bg-indigo-400' : idx % 3 === 1 ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                  <span className="truncate">{p.title}</span>
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono flex-shrink-0 ml-1">{p.status || 'Attivo'}</span>
+              </div>
+            ))}
           </div>
         </div>
 

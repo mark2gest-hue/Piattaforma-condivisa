@@ -53,6 +53,7 @@ import {
   updateTaskStatusAction,
   updateTaskDetailsAction,
   deleteTaskAction,
+  createProjectAction,
 } from '@/app/actions/tasks'
 
 const COLUMNS: { id: TaskStatus; title: string; color: string; badgeVariant: 'secondary' | 'warning' | 'success' }[] = [
@@ -224,6 +225,8 @@ export default function KanbanBoardPage() {
   const [taskPriority, setTaskPriority] = useState<TaskPriority>('medium')
   const [taskDueDate, setTaskDueDate] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAddingNewProject, setIsAddingNewProject] = useState(false)
+  const [newProjectTitleInput, setNewProjectTitleInput] = useState('')
 
   const supabase = createClient()
 
@@ -629,9 +632,48 @@ export default function KanbanBoardPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Progetto Collegato</label>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Ambito / Progetto Collegato</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingNewProject(!isAddingNewProject)}
+                    className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
+                  >
+                    {isAddingNewProject ? 'Annulla' : '+ Nuovo Ambito/Progetto'}
+                  </button>
+                </div>
+
+                {isAddingNewProject ? (
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <Input
+                      autoFocus
+                      value={newProjectTitleInput}
+                      onChange={(e) => setNewProjectTitleInput(e.target.value)}
+                      placeholder="Nome nuovo ambito (es. 📈 Trading Bot DEX)"
+                      className="text-xs dark:bg-slate-800 dark:border-slate-700 h-9"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={async () => {
+                        if (!newProjectTitleInput.trim()) return
+                        const res = await createProjectAction(newProjectTitleInput.trim())
+                        if (res.success && res.project) {
+                          setProjects([...projects, res.project])
+                          setTaskProjectId(res.project.id)
+                          setIsAddingNewProject(false)
+                          setNewProjectTitleInput('')
+                        } else {
+                          alert(`Errore: ${res.error}`)
+                        }
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-9 px-3"
+                    >
+                      Aggiungi
+                    </Button>
+                  </div>
+                ) : (
                   <select
                     value={taskProjectId}
                     onChange={(e) => setTaskProjectId(e.target.value)}
@@ -644,17 +686,17 @@ export default function KanbanBoardPage() {
                       </option>
                     ))}
                   </select>
-                </div>
+                )}
+              </div>
 
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Data di Scadenza</label>
-                  <Input
-                    type="date"
-                    value={taskDueDate}
-                    onChange={(e) => setTaskDueDate(e.target.value)}
-                    className="text-xs dark:bg-slate-800 dark:border-slate-700 h-9"
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Data di Scadenza</label>
+                <Input
+                  type="date"
+                  value={taskDueDate}
+                  onChange={(e) => setTaskDueDate(e.target.value)}
+                  className="text-xs dark:bg-slate-800 dark:border-slate-700 h-9"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
