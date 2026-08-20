@@ -15,6 +15,7 @@ import {
   Calendar as CalendarIcon,
   Bot,
   GraduationCap,
+  Network,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -127,6 +128,13 @@ export function Sidebar() {
       href: '/videocall',
       icon: Video,
       badge: 'Live',
+    },
+    {
+      title: 'Secondo Cervello',
+      subtitle: 'Prompt & Knowledge Hub',
+      href: '/cervello',
+      icon: Network,
+      badge: 'Vault',
     },
     {
       title: 'Agenti AI',

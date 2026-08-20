@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
   GraduationCap,
@@ -47,7 +48,7 @@ import {
   getBufferProfilesAction,
   publishToBufferAction,
 } from '@/app/actions/marketing'
-import { askStudentAiAction, generateLessonQuizAction, QuizQuestion } from '@/app/actions/ai'
+import { askStudentAiAction, generateLessonQuizAction, QuizQuestion, LESSON_SUMMARIES } from '@/app/actions/ai'
 
 interface StudentRegistration {
   id: string
@@ -1509,6 +1510,73 @@ function CorsiInnerContent() {
                     </Button>
                   </div>
                 </div>
+
+                {/* SCHEDA DIDATTICA INTERATTIVA: SINTESI, PUNTI CHIAVE & ESERCIZIO DI QUESTO MODULO */}
+                {selectedCourseId === 'ai-start' && LESSON_SUMMARIES[activeLesson.id] && (
+                  <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                        <h4 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                          Dispensa & Punti Chiave • Modulo {activeLesson.id}
+                        </h4>
+                      </div>
+                      <Link
+                        href="/cervello"
+                        className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                      >
+                        <span>Vedi nel Secondo Cervello</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                      {LESSON_SUMMARIES[activeLesson.id].summary}
+                    </p>
+
+                    <div className="space-y-2 pt-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                        🔑 Concetti Chiave della Lezione:
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {LESSON_SUMMARIES[activeLesson.id].takeaways.map((takeaway, tIdx) => (
+                          <div
+                            key={tIdx}
+                            className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                            <span className="leading-snug">{takeaway}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="space-y-0.5">
+                        <span className="font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
+                          <Sparkles className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                          Esercizio Pratico Consigliato:
+                        </span>
+                        <p className="text-slate-600 dark:text-slate-400 text-[11px]">
+                          {LESSON_SUMMARIES[activeLesson.id].exercise}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          const inputEl = document.querySelector('input[placeholder*="Scrivi una domanda"]') as HTMLInputElement
+                          if (inputEl) {
+                            inputEl.value = `Ho una domanda sull'esercizio della Lezione ${activeLesson.id}: "${LESSON_SUMMARIES[activeLesson.id].exercise}"`
+                            inputEl.focus()
+                          }
+                        }}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] h-7 px-3 rounded-lg shrink-0 gap-1"
+                      >
+                        <span>Chiedi a @AI</span>
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Banner Completamento & Attestato */}
                 {(selectedCourseId === 'ai-start' ? lessons : lessonsPro).every((l) => l.completed) && (

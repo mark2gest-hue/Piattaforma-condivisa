@@ -39,7 +39,7 @@ async function callGemini(systemInstruction: string, userPrompt: string): Promis
 }
 
 // Database di Conoscenza Dettagliato dei 20 Moduli AI Start
-const LESSON_SUMMARIES: Record<number, { title: string; summary: string; takeaways: string[]; exercise: string }> = {
+export const LESSON_SUMMARIES: Record<number, { title: string; summary: string; takeaways: string[]; exercise: string }> = {
   1: {
     title: '1. Benvenuti nel Futuro',
     summary: 'Introduzione alla rivoluzione dell\'Intelligenza Artificiale Generativa: perché i modelli linguistici (LLM) stanno trasformando ogni settore lavorativo e come passare da spettatore a utilizzatore consapevole.',
