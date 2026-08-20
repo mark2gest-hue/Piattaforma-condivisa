@@ -366,6 +366,38 @@ function CorsiInnerContent() {
   const [bufferError, setBufferError] = useState<string>('')
   const [publishSuccessMessage, setPublishSuccessMessage] = useState<string>('')
 
+  // Caricamento persistente da localStorage all'avvio
+  useEffect(() => {
+    try {
+      const savedRes = localStorage.getItem('ti_aiuto_course_resources')
+      if (savedRes !== null) {
+        const parsed = JSON.parse(savedRes)
+        if (Array.isArray(parsed)) {
+          setResources(parsed)
+        }
+      }
+
+      const savedZoom = localStorage.getItem('ti_aiuto_zoom_recordings')
+      if (savedZoom !== null) {
+        const parsed = JSON.parse(savedZoom)
+        if (Array.isArray(parsed)) {
+          setZoomRecordings(parsed)
+        }
+      }
+
+      const savedLessons = localStorage.getItem('ti_aiuto_lessons_custom')
+      if (savedLessons !== null) {
+        const parsed = JSON.parse(savedLessons)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setLessons(parsed)
+          setActiveLesson((prev) => parsed.find((l: any) => l.id === prev.id) || parsed[0])
+        }
+      }
+    } catch (e) {
+      console.error('Errore lettura da localStorage:', e)
+    }
+  }, [])
+
   // Caricamento profili Buffer all'attivazione della tab marketing
   useEffect(() => {
     if (activeTab === 'marketing') {
@@ -2040,6 +2072,9 @@ function CorsiInnerContent() {
                 )
                 setLessons(updatedLessons)
                 setActiveLesson({ ...activeLesson, videoUrl: customVideoUrlInput.trim() })
+                try {
+                  localStorage.setItem('ti_aiuto_lessons_custom', JSON.stringify(updatedLessons))
+                } catch (e) {}
                 setIsEditVideoModalOpen(false)
                 alert(`Video link della Lezione ${activeLesson.id} aggiornato!`)
               }}
