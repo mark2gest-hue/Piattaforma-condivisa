@@ -284,6 +284,7 @@ function CorsiInnerContent() {
     },
   ])
   const [isAddResourceModalOpen, setIsAddResourceModalOpen] = useState(false)
+  const [editingResourceId, setEditingResourceId] = useState<string | null>(null)
   const [resTitleInput, setResTitleInput] = useState('')
   const [resCategoryInput, setResCategoryInput] = useState('Manuali')
   const [resDescInput, setResDescInput] = useState('')
@@ -310,21 +311,21 @@ function CorsiInnerContent() {
   const [registrations, setRegistrations] = useState<StudentRegistration[]>([
     {
       id: 'r-1',
-      code: 'AI-START-8F92',
-      studentName: 'Giuseppe Rossi',
-      studentEmail: 'g.rossi@azienda.it',
-      courseTitle: 'AI Start - Domina l’Intelligenza Artificiale da Zero',
-      registeredAt: new Date().toISOString(),
+      code: 'STUD-9842',
+      studentName: 'Marco Rossi',
+      studentEmail: 'marco.rossi@example.com',
+      courseTitle: 'AI Start - Intelligenza Artificiale per Consulenti',
       status: 'in_progress',
+      registeredAt: '2026-08-15',
     },
     {
       id: 'r-2',
-      code: 'AI-START-3K11',
+      code: 'STUD-3105',
       studentName: 'Laura Bianchi',
-      studentEmail: 'laura.b@studio-consulting.com',
-      courseTitle: 'Consulenza B2B & Strategie di Digital Transformation',
-      registeredAt: new Date(Date.now() - 86400000).toISOString(),
+      studentEmail: 'laura.b@example.com',
+      courseTitle: 'AI Start - Intelligenza Artificiale per Consulenti',
       status: 'enrolled',
+      registeredAt: '2026-08-17',
     },
   ])
 
@@ -334,7 +335,7 @@ function CorsiInnerContent() {
       id: 'm-1',
       sender: 'Marco (Studente)',
       isAi: false,
-      text: '@AI come posso applicare i prompt del Modulo 2 alle risposte email commerciali?',
+      text: 'Ciao! Ho un dubbio sulla lezione 2 riguardante il Prompt Engineering per le email commerciali.',
       time: '14:20',
     },
     {
@@ -680,7 +681,12 @@ function CorsiInnerContent() {
       order: zoomOrderInput || zoomRecordings.length + 1,
     }
 
-    setZoomRecordings([newZoom, ...zoomRecordings])
+    const updatedZoom = [newZoom, ...zoomRecordings]
+    setZoomRecordings(updatedZoom)
+    try {
+      localStorage.setItem('ti_aiuto_zoom_recordings', JSON.stringify(updatedZoom))
+    } catch (e) {}
+
     setIsAddZoomModalOpen(false)
     setZoomTitleInput('')
     setZoomUrlInput('')
@@ -690,34 +696,75 @@ function CorsiInnerContent() {
 
   const handleDeleteZoom = (id: string, title: string) => {
     if (!confirm(`Sei sicuro di voler eliminare la registrazione "${title}"?`)) return
-    setZoomRecordings(zoomRecordings.filter((z) => z.id !== id))
+    const updatedZoom = zoomRecordings.filter((z) => z.id !== id)
+    setZoomRecordings(updatedZoom)
+    try {
+      localStorage.setItem('ti_aiuto_zoom_recordings', JSON.stringify(updatedZoom))
+    } catch (e) {}
   }
 
   const handleSaveResource = (e: React.FormEvent) => {
     e.preventDefault()
     if (!resTitleInput.trim() || !resUrlInput.trim()) return
 
-    const newRes: CourseResource = {
-      id: `res-${Date.now()}`,
-      title: resTitleInput.trim(),
-      category: resCategoryInput,
-      description: resDescInput.trim(),
-      fileUrl: resUrlInput.trim(),
-      fileSize: resSizeInput.trim() || '1.5 MB',
-      createdAt: new Date().toISOString(),
+    let updatedResources: CourseResource[]
+
+    if (editingResourceId) {
+      updatedResources = resources.map((r) =>
+        r.id === editingResourceId
+          ? {
+              ...r,
+              title: resTitleInput.trim(),
+              category: resCategoryInput,
+              description: resDescInput.trim(),
+              fileUrl: resUrlInput.trim(),
+              fileSize: resSizeInput.trim() || r.fileSize || '1.5 MB',
+            }
+          : r
+      )
+    } else {
+      const newRes: CourseResource = {
+        id: `res-${Date.now()}`,
+        title: resTitleInput.trim(),
+        category: resCategoryInput,
+        description: resDescInput.trim(),
+        fileUrl: resUrlInput.trim(),
+        fileSize: resSizeInput.trim() || '1.5 MB',
+        createdAt: new Date().toISOString(),
+      }
+      updatedResources = [newRes, ...resources]
     }
 
-    setResources([newRes, ...resources])
+    setResources(updatedResources)
+    try {
+      localStorage.setItem('ti_aiuto_course_resources', JSON.stringify(updatedResources))
+    } catch (e) {}
+
     setIsAddResourceModalOpen(false)
+    setEditingResourceId(null)
     setResTitleInput('')
     setResUrlInput('')
     setResDescInput('')
-    alert(`Risorsa/Manuale "${newRes.title}" aggiunta con successo!`)
+    alert(editingResourceId ? 'Risorsa aggiornata con successo!' : `Risorsa/Manuale "${resTitleInput.trim()}" aggiunta con successo!`)
+  }
+
+  const handleEditResource = (res: CourseResource) => {
+    setEditingResourceId(res.id)
+    setResTitleInput(res.title)
+    setResCategoryInput(res.category)
+    setResDescInput(res.description)
+    setResUrlInput(res.fileUrl)
+    setResSizeInput(res.fileSize || '1.5 MB')
+    setIsAddResourceModalOpen(true)
   }
 
   const handleDeleteResource = (id: string, title: string) => {
     if (!confirm(`Sei sicuro di voler eliminare la risorsa "${title}"?`)) return
-    setResources(resources.filter((r) => r.id !== id))
+    const updatedResources = resources.filter((r) => r.id !== id)
+    setResources(updatedResources)
+    try {
+      localStorage.setItem('ti_aiuto_course_resources', JSON.stringify(updatedResources))
+    } catch (e) {}
   }
 
   const handleSendStudentChat = (e: React.FormEvent) => {
@@ -1267,7 +1314,14 @@ function CorsiInnerContent() {
 
             {!activeStudent && (
               <Button
-                onClick={() => setIsAddResourceModalOpen(true)}
+                onClick={() => {
+                  setEditingResourceId(null)
+                  setResTitleInput('')
+                  setResUrlInput('')
+                  setResDescInput('')
+                  setResSizeInput('1.5 MB')
+                  setIsAddResourceModalOpen(true)
+                }}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
               >
                 <Plus className="h-4 w-4" />
@@ -1302,15 +1356,26 @@ function CorsiInnerContent() {
                   </a>
 
                   {!activeStudent && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteResource(res.id, res.title)}
-                      className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                      title="Elimina Risorsa"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditResource(res)}
+                        className="h-8 w-8 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                        title="Modifica Risorsa"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteResource(res.id, res.title)}
+                        className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                        title="Elimina Risorsa"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1797,7 +1862,9 @@ function CorsiInnerContent() {
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2">
                 <Gift className="h-5 w-5 text-indigo-600" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Aggiungi Nuova Risorsa o Manuale</h3>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  {editingResourceId ? 'Modifica Risorsa o Manuale' : 'Aggiungi Nuova Risorsa o Manuale'}
+                </h3>
               </div>
               <button onClick={() => setIsAddResourceModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
                 <X className="h-5 w-5" />
