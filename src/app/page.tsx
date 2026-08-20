@@ -29,6 +29,14 @@ import {
   Check,
   Send,
   BellRing,
+  Network,
+  Share2,
+  Layers,
+  Database,
+  Workflow,
+  Terminal,
+  FileCode2,
+  Binary,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -409,6 +417,9 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* VETRINA INTERATTIVA: SECONDO CERVELLO & NEURAL KNOWLEDGE GRAPH */}
+        <SecondBrainSection />
+
         {/* DEMO PROMPT SIMULATOR INTERATTIVO */}
         <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-8 sm:p-10 space-y-6 max-w-4xl mx-auto shadow-2xl">
           <div className="text-center space-y-2">
@@ -651,3 +662,331 @@ export default function LandingPage() {
     </div>
   )
 }
+
+interface BrainNodeData {
+  id: string
+  title: string
+  subtitle: string
+  category: string
+  icon: any
+  badge: string
+  badgeColor: string
+  color: string
+  glowColor: string
+  description: string
+  highlights: string[]
+  exampleSnippet: string
+  syncDetails: string
+}
+
+const BRAIN_NODES: BrainNodeData[] = [
+  {
+    id: 'core',
+    title: '🧠 AI Second Brain Hub',
+    subtitle: 'Il Nucleo Centrale di Conoscenza',
+    category: 'Nucleo Centrale',
+    icon: Sparkles,
+    badge: 'Motore 24/7',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+    color: 'from-blue-600 via-indigo-600 to-purple-600',
+    glowColor: 'rgba(99, 102, 241, 0.4)',
+    description: 'Il cuore intelligente che coordina prompt, memorie degli agenti, dispense dei corsi e progetti del team in un grafo vivente e costantemente aggiornato.',
+    highlights: [
+      'Memoria condivisa e permanente per tutti gli assistenti AI',
+      'Nessun dato duplicato: una sola fonte di verità per tutto il team',
+      'Interrogazione istantanea in linguaggio naturale via chat'
+    ],
+    exampleSnippet: `// Interrogazione semantica del Secondo Cervello:
+queryBrain("Qual è la formula per l'email commerciale B2B approvata per il Cliente Rossi?")
+→ ⚡ Risposta generata in 400ms con fonti collegate: [[Modulo_08_Email]], [[Cliente_Rossi_B2B]]`,
+    syncDetails: 'Sincronizzazione in tempo reale su Supabase Cloud PostgreSQL.'
+  },
+  {
+    id: 'prompt',
+    title: '📚 Prompt Library & Frameworks',
+    subtitle: '50+ Formule Collaudate sul Campo',
+    category: 'Libreria Operativa',
+    icon: Terminal,
+    badge: 'Framework RCCF',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    color: 'from-amber-500 to-orange-600',
+    glowColor: 'rgba(245, 158, 11, 0.4)',
+    description: 'Un archivio strutturato di prompt ad alte prestazioni: formula RCCF, Reverse Prompting, template per copywriting, analisi Excel avanzata e prompt visivi.',
+    highlights: [
+      'Formula Segreta RCCF: Ruolo + Contesto + Contenuto + Formato',
+      'Prompt per pulizia dati e formule Excel (CERCA.X, Macro VBA)',
+      'Prompt visivi fotorealistici per Midjourney, DALL-E e Canva'
+    ],
+    exampleSnippet: `### 🎯 Prompt Formula RCCF (Modulo 5):
+**[RUOLO]** Senior Copywriter B2B
+**[CONTESTO]** Lancio offerta software di automazione per PMI italiane
+**[CONTENUTO]** Sequenza di 3 email di follow-up persuasive senza sembrare invadenti
+**[FORMATO]** Markdown con Oggetto, Corpo e Call-to-Action chiara`,
+    syncDetails: 'Pronto da copiare in 1 click o esportare nel tuo Obsidian Vault.'
+  },
+  {
+    id: 'aistart',
+    title: '🎓 Corso AI Start (20 Moduli)',
+    subtitle: 'Fondamenta & Produttività Personale',
+    category: 'Formazione Base',
+    icon: GraduationCap,
+    badge: '20 Video HD',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    color: 'from-blue-500 to-cyan-600',
+    glowColor: 'rgba(59, 130, 246, 0.4)',
+    description: 'Il percorso pratico passo-passo per chi parte da zero: superare il foglio bianco, dominare i modelli linguistici e risparmiare 10 ore di lavoro ogni settimana.',
+    highlights: [
+      '20 lezioni video in alta risoluzione con sottotitoli',
+      'Assistente @AI dedicato attivo su ogni modulo 24/7',
+      'Attestato Ufficiale Verificato in Full HD al completamento'
+    ],
+    exampleSnippet: `// Argomenti chiave inclusi:
+1. Benvenuti nel Futuro • 2. Breve Storia • 3. Foglio Bianco • 4. Chiarezza • 5. RCCF
+6. Iterazione • 7. Modelli (Claude, ChatGPT, Gemini, Perplexity) • 8. Scrivere senza Sforzo
+9. Dipingere con le Parole • 12. Excel • 15. Allucinazioni • 18. Workflow Personale`,
+    syncDetails: 'Player HTML5 integrato con tracciamento automatico dei progressi.'
+  },
+  {
+    id: 'aipro',
+    title: '⚡ AI Pro & Agenti Autonomi',
+    subtitle: 'Automazioni Aziendali Avanzate B2B',
+    category: 'Formazione Avanzata',
+    icon: Cpu,
+    badge: 'Prossimo Lancio',
+    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    color: 'from-purple-600 to-pink-600',
+    glowColor: 'rgba(168, 85, 247, 0.4)',
+    description: 'Progettazione di architetture multi-agente, integrazione webhook, flussi n8n e sistemi RAG per connettere l’IA ai database e ai software aziendali.',
+    highlights: [
+      'Costruzione di Agenti Autonomi con memoria persistente',
+      'Integrazione Webhook, trigger automatici e API REST',
+      'Casi studio reali di automazione per PMI e professionisti'
+    ],
+    exampleSnippet: `// Architettura Agente Autonomo:
+[Nuova Email Ricevuta] 
+  → 🧠 Agente Analisi Intento (Gemini Flash)
+  → 📋 Creazione Automatica Task su Bacheca Kanban
+  → ✉️ Bozza di Risposta Commerciale Generata in 2s
+  → 🔔 Notifica al Team`,
+    syncDetails: 'Lista d’attesa attiva con coupon sconto prioritario.'
+  },
+  {
+    id: 'obsidian',
+    title: '🔮 Obsidian & Markdown Native',
+    subtitle: 'Collegamenti Bidirezionali & Zero Lock-in',
+    category: 'Ecosistema Conoscenza',
+    icon: Network,
+    badge: '[[Wikilinks]]',
+    badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+    color: 'from-violet-500 to-indigo-700',
+    glowColor: 'rgba(139, 92, 246, 0.4)',
+    description: 'Tutti i contenuti sono strutturati in Markdown `.md` puro con collegamenti bidirezionali `[[link]]`: puoi aprirli su Obsidian per navigare la mappa concettuale interattiva.',
+    highlights: [
+      'File aperti e leggibili: i tuoi dati restano per sempre tuoi',
+      'Visualizzazione a Grafo delle Relazioni (Graph View)',
+      'Esportazione in 1 click del Vault completo pronto all’uso'
+    ],
+    exampleSnippet: `// Esempio di Nota Interconnessa Obsidian:
+# [[Lezione 05 - Formula RCCF]]
+Vedi anche: [[Lezione 08 - Scrivere senza Sforzo]], [[Template Email B2B]]
+Utilizzato da: [[Agente Copywriter]], [[Progetto Consulenza Rossi]]
+
+> "La precisione del vincolo determina la qualità dell'output."`,
+    syncDetails: 'Piena compatibilità con l’app desktop e mobile di Obsidian.'
+  },
+  {
+    id: 'cloud',
+    title: '🔒 Proton Drive & Cloud Sicuro',
+    subtitle: 'Crittografia E2E & Database Supabase',
+    category: 'Sicurezza & Cloud',
+    icon: ShieldCheck,
+    badge: 'Zero Retention',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    color: 'from-emerald-500 to-teal-600',
+    glowColor: 'rgba(16, 185, 129, 0.4)',
+    description: 'Protezione massima: sincronizzazione sicura con Proton Drive crittografato end-to-end e database ad alta affidabilità su Supabase Cloud.',
+    highlights: [
+      'Nessun addestramento dei modelli sui tuoi dati riservati',
+      'Backup continuo e sincronizzazione multi-dispositivo',
+      'Conformità GDPR e protezione dei file aziendali'
+    ],
+    exampleSnippet: `// Protocollo di Sicurezza & Cloud Sync:
+[Cloud Database Supabase] ⟷ [Cartella Sincronizzata Proton Drive E2E]
+  • Crittografia Zero-Knowledge
+  • Accesso multi-device protetto (Mac, PC, Smartphone)
+  • Backup automatico delle note e dei compiti`,
+    syncDetails: 'Crittografia a riposo e in transito con chiavi private.'
+  }
+]
+
+function SecondBrainSection() {
+  const [activeNodeId, setActiveNodeId] = useState<string>('core')
+  const activeNode = BRAIN_NODES.find((n) => n.id === activeNodeId) || BRAIN_NODES[0]
+
+  return (
+    <div className="relative bg-gradient-to-b from-slate-950 via-slate-900/90 to-slate-950 border border-indigo-500/20 rounded-3xl p-8 sm:p-12 shadow-2xl overflow-hidden space-y-10">
+      {/* Background Neural Glow Beams */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Section Header */}
+      <div className="text-center space-y-3 max-w-3xl mx-auto relative z-10">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold shadow-xs">
+          <Network className="h-4 w-4 text-indigo-400 animate-pulse" />
+          <span>L'Ecosistema Interconnesso • Visione Secondo Cervello</span>
+        </div>
+
+        <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+          Non un semplice corso, ma il tuo{' '}
+          <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            Secondo Cervello
+          </span>
+        </h2>
+
+        <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+          Tutti i nodi sono interconnessi: le lezioni alimentano la <strong>Prompt Library</strong>, l’assistente <strong>@AI</strong> ricorda il contesto operativo, e le tue note si sincronizzano con <strong>Obsidian</strong> e <strong>Proton Drive</strong>.
+        </p>
+      </div>
+
+      {/* INTERACTIVE NEURAL KNOWLEDGE GRAPH & INSPECTOR */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+        {/* Left Side: Neural Nodes Graph Interactive Map */}
+        <div className="lg:col-span-6 flex flex-col items-center justify-center p-6 sm:p-8 bg-slate-950/80 rounded-3xl border border-slate-800 relative min-h-[440px] overflow-hidden">
+          {/* Radial Grid Pattern */}
+          <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:18px_18px] opacity-30 pointer-events-none" />
+
+          {/* SVG Neural Connections */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+            <defs>
+              <linearGradient id="neuralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#a855f7" stopOpacity="0.8" />
+              </linearGradient>
+            </defs>
+            {/* Animated Pulses */}
+            <circle cx="50%" cy="50%" r="140" fill="none" stroke="url(#neuralGrad)" strokeWidth="1" strokeDasharray="4 6" className="animate-spin opacity-30" style={{ animationDuration: '40s' }} />
+            <circle cx="50%" cy="50%" r="85" fill="none" stroke="#6366f1" strokeWidth="1.5" strokeDasharray="3 3" className="animate-spin opacity-40" style={{ animationDuration: '25s', animationDirection: 'reverse' }} />
+          </svg>
+
+          {/* Interactive Nodes Orbit */}
+          <div className="relative z-10 flex flex-col items-center justify-center gap-5 w-full">
+            {/* Central Node */}
+            <button
+              type="button"
+              onClick={() => setActiveNodeId('core')}
+              className={`p-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-extrabold text-sm shadow-xl shadow-indigo-600/40 flex items-center gap-3 transition-all hover:scale-105 border-2 ${
+                activeNodeId === 'core' ? 'border-white ring-4 ring-indigo-500/40 scale-105' : 'border-indigo-400/40'
+              }`}
+            >
+              <div className="h-8 w-8 rounded-xl bg-white/20 flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-left">
+                <span className="block text-xs font-black tracking-wide uppercase">Core AI Brain</span>
+                <span className="text-[10px] text-indigo-100 font-normal">Nucleo Interconnesso</span>
+              </div>
+            </button>
+
+            {/* Orbiting Satellite Nodes Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-md pt-2">
+              {BRAIN_NODES.filter((n) => n.id !== 'core').map((node) => {
+                const isSelected = activeNodeId === node.id
+                const IconComponent = node.icon
+
+                return (
+                  <button
+                    key={node.id}
+                    type="button"
+                    onClick={() => setActiveNodeId(node.id)}
+                    className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2 relative group overflow-hidden ${
+                      isSelected
+                        ? 'bg-slate-800/90 border-indigo-400 ring-2 ring-indigo-500/40 shadow-lg scale-102'
+                        : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className={`h-7 w-7 rounded-lg bg-gradient-to-tr ${node.color} text-white flex items-center justify-center shadow-xs`}>
+                        <IconComponent className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="text-[9px] font-mono text-slate-400">[[.md]]</span>
+                    </div>
+
+                    <div>
+                      <span className="block text-xs font-bold text-white group-hover:text-indigo-300 transition-colors line-clamp-1">
+                        {node.title.replace(/^[^\w\s]*\s*/, '')}
+                      </span>
+                      <span className="block text-[10px] text-slate-400 line-clamp-1">
+                        {node.category}
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <span className="text-[10px] text-slate-500 font-mono mt-4 relative z-10">
+            💡 Clicca su qualsiasi nodo per esplorare la connessione sinaptica
+          </span>
+        </div>
+
+        {/* Right Side: Live Node Inspector Panel */}
+        <div className="lg:col-span-6 bg-slate-950/90 rounded-3xl border border-slate-800 p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
+          {/* Header of Active Node */}
+          <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-5">
+            <div className="flex items-center gap-3.5">
+              <div className={`h-12 w-12 rounded-2xl bg-gradient-to-tr ${activeNode.color} text-white flex items-center justify-center shadow-lg`}>
+                <activeNode.icon className="h-6 w-6" />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400">
+                  {activeNode.category}
+                </span>
+                <h3 className="text-xl font-black text-white leading-tight">
+                  {activeNode.title}
+                </h3>
+                <span className="text-xs text-slate-400">
+                  {activeNode.subtitle}
+                </span>
+              </div>
+            </div>
+
+            <Badge className={`text-[10px] uppercase font-mono px-2.5 py-1 ${activeNode.badgeColor}`}>
+              {activeNode.badge}
+            </Badge>
+          </div>
+
+          {/* Description */}
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            {activeNode.description}
+          </p>
+
+          {/* Key Highlights */}
+          <div className="space-y-2 text-xs text-slate-300">
+            <span className="font-bold text-[11px] uppercase tracking-wider text-slate-400 block mb-1">
+              ✨ Caratteristiche Chiave:
+            </span>
+            {activeNode.highlights.map((h, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" />
+                <span>{h}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Live Code / Snippet Preview */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+              <span>Struttura del Nodo</span>
+              <span className="text-emerald-400 font-semibold">{activeNode.syncDetails}</span>
+            </div>
+            <pre className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-200 overflow-x-auto leading-relaxed whitespace-pre-wrap">
+              {activeNode.exampleSnippet}
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
