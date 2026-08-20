@@ -31,7 +31,7 @@ export async function getTasksAction() {
     // 3. Prendi i compiti
     const { data: tasks, error: tasksError } = await (supabase as any)
       .from('tasks')
-      .select('*, project:projects(*), assignee:profiles(*)')
+      .select('*, project:projects(*), assignee:profiles!tasks_assigned_to_fkey(*)')
       .order('position', { ascending: true })
       .order('created_at', { ascending: false })
 
@@ -71,7 +71,7 @@ export async function createTaskAction(input: CreateTaskInput) {
         due_date: input.dueDate || null,
         assigned_to: input.assignedTo || null,
       })
-      .select('*, project:projects(*), assignee:profiles(*)')
+      .select('*, project:projects(*), assignee:profiles!tasks_assigned_to_fkey(*)')
       .single()
 
     if (error) {
@@ -135,7 +135,7 @@ export async function updateTaskDetailsAction(
       .from('tasks')
       .update(updateData)
       .eq('id', taskId)
-      .select('*, project:projects(*), assignee:profiles(*)')
+      .select('*, project:projects(*), assignee:profiles!tasks_assigned_to_fkey(*)')
       .single()
 
     if (error) {
