@@ -518,64 +518,35 @@ DEVI RESTITUIRE ESCLUSIVAMENTE UN ARRAY JSON VALIDO con la seguente struttura:
       }
     }
 
-    // Fallback Quiz Contestuale di qualità
-    const defaultQuizzes: Record<number, QuizQuestion[]> = {
-      1: [
-        {
-          question: "Qual è il vantaggio principale dell'adozione dell'IA nel lavoro quotidiano?",
-          options: [
-            "Sostituire completamente qualsiasi figura umana senza supervisione",
-            "Automatizzare compiti ripetitivi e accelerare la produzione di bozze e analisi",
-            "Funzionare solo come motore di ricerca statico senza elaborazione",
-            "Eliminare la necessità di verificare qualsiasi dato"
-          ],
-          correctIndex: 1,
-          explanation: "L'IA agisce come un moltiplicatore di produttività che riduce i tempi sulle attività ripetitive lasciando all'umano la direzione strategica."
-        }
-      ],
-      5: [
-        {
-          question: "Cosa rappresenta la lettera 'C' di Contesto nella formula segreta RCCF?",
-          options: [
-            "Il codice sorgente dell'applicazione",
-            "La situazione di partenza, il pubblico target e i vincoli operativi",
-            "La commissione da pagare per la risposta",
-            "Il comando di spegnimento del modello"
-          ],
-          correctIndex: 1,
-          explanation: "Il Contesto fornisce all'IA lo scenario di riferimento in cui deve calare la propria risposta."
-        }
-      ],
-      6: [
-        {
-          question: "Perché l'Iterazione è fondamentale nell'utilizzo dei Large Language Models?",
-          options: [
-            "Perché l'IA non risponde mai al primo tentativo",
-            "Perché dialogando e correggendo progressivamente l'output si raggiunge la massima qualità",
-            "Perché azzera i consumi di memoria del server",
-            "Perché impedisce all'IA di fare domande"
-          ],
-          correctIndex: 1,
-          explanation: "L'approccio iterativo consente di guidare il modello affinando tono, dettagli e struttura fino alla versione perfetta."
-        }
-      ]
-    }
+    // Fallback Quiz Contestuale di qualità (2 domande per ogni modulo)
+    const dynamicQuestions: QuizQuestion[] = [
+      {
+        question: `Qual è il principio chiave spiegato in: "${lessonTitle}"?`,
+        options: [
+          lessonInfo.takeaways[0] || 'Strutturare le richieste in modo chiaro e contestualizzato',
+          'Affidarsi all\'IA senza verificare le risposte fornite',
+          'Evitare di dare dettagli o vincoli nei comandi',
+          'Utilizzare un unico prompt generico per qualunque lavoro',
+        ],
+        correctIndex: 0,
+        explanation: `In questo modulo abbiamo appreso che: ${lessonInfo.takeaways[0] || 'la qualità della risposta dipende dalla chiarezza del contesto fornito.'}`,
+      },
+      {
+        question: `Qual è l'approccio pratico consigliato per applicare questa lezione?`,
+        options: [
+          lessonInfo.takeaways[1] || lessonInfo.exercise,
+          'Lavorare senza impostare ruoli o formati di output',
+          'Non utilizzare mai esempi pratici (Few-Shot) nei prompt',
+          'Ignorare le impostazioni di sicurezza e privacy',
+        ],
+        correctIndex: 0,
+        explanation: `L'esercizio operativo del modulo prevede: ${lessonInfo.exercise}`,
+      },
+    ]
 
     return {
       success: true,
-      quiz: defaultQuizzes[lessonId] || [
-        {
-          question: `Qual è il punto chiave affrontato nella ${lessonTitle}?`,
-          options: [
-            lessonInfo.takeaways[0] || "Applicare il metodo corretto di prompting",
-            "Ignorare le istruzioni fornite dal docente",
-            "Evitare di fare pratica sul campo",
-            "Usare un solo prompt generico per qualsiasi scopo"
-          ],
-          correctIndex: 0,
-          explanation: `Nella ${lessonTitle} impariamo che: ${lessonInfo.takeaways[0] || 'la chiarezza e la struttura determinano il successo del risultato.'}`
-        }
-      ]
+      quiz: dynamicQuestions,
     }
   } catch (err: any) {
     return { success: false, error: err.message }

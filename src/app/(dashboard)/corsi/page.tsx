@@ -816,11 +816,38 @@ function CorsiInnerContent() {
 
     try {
       const res = await generateLessonQuizAction(lesson.id, lesson.title)
-      if (res.success && res.quiz) {
+      if (res.success && res.quiz && res.quiz.length > 0) {
         setCurrentQuizQuestions(res.quiz)
+      } else {
+        setCurrentQuizQuestions([
+          {
+            question: `Qual è il principio chiave affrontato nella ${lesson.title}?`,
+            options: [
+              'Applicare il metodo e le strategie operative spiegate nel video',
+              'Ignorare le istruzioni e procedere senza un metodo strutturato',
+              'Evitare di fare pratica e di testare i prompt',
+              'Non impostare mai contesti o ruoli specifici',
+            ],
+            correctIndex: 0,
+            explanation: 'La chiarezza, la struttura e la pratica costante sono le fondamenta per padroneggiare l’IA.',
+          },
+        ])
       }
     } catch (e) {
       console.error('Errore quiz:', e)
+      setCurrentQuizQuestions([
+        {
+          question: `Qual è il principio chiave affrontato nella ${lesson.title}?`,
+          options: [
+            'Applicare il metodo e le strategie operative spiegate nel video',
+            'Ignorare le istruzioni e procedere senza un metodo strutturato',
+            'Evitare di fare pratica e di testare i prompt',
+            'Non impostare mai contesti o ruoli specifici',
+          ],
+          correctIndex: 0,
+          explanation: 'La chiarezza, la struttura e la pratica costante sono le fondamenta per padroneggiare l’IA.',
+        },
+      ])
     } finally {
       setIsGeneratingQuiz(false)
     }
@@ -1482,6 +1509,22 @@ function CorsiInnerContent() {
                         <span>Modifica Titolo & Video Link</span>
                       </Button>
                     )}
+
+                    <a
+                      href="https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs gap-1.5 border-purple-300 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold hover:bg-purple-100"
+                        title="Apri le 20 Dispense PDF su Proton Drive"
+                      >
+                        <FileText className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                        <span>Dispensa PDF (Proton)</span>
+                      </Button>
+                    </a>
 
                     <Button
                       size="sm"
