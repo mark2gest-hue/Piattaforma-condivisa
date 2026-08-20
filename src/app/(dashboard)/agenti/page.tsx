@@ -20,6 +20,11 @@ import { Card } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound } from '@/lib/notifications'
 import { sendSharedEmail } from '../posta/actions'
+import {
+  generateEmailDraftAction,
+  generateKanbanTasksAction,
+  generateSummaryAction,
+} from '@/app/actions/ai'
 
 export default function AgentiAIPage() {
   const [activeTab, setActiveTab] = useState<'email' | 'kanban' | 'summary'>('email')
@@ -47,30 +52,29 @@ export default function AgentiAIPage() {
   const supabase = createClient()
 
   // 1. Generatore Bozze Email AI
-  const handleGenerateEmail = () => {
-    if (!emailPrompt.trim()) return
+  const handleGenerateEmail = async () => {
+    if (!emailPrompt.trim() || isGeneratingEmail) return
     setIsGeneratingEmail(true)
     setGeneratedEmail(null)
 
-    setTimeout(() => {
-      let subject = 'Aggiornamento dal Team | Piattaforma Condivisa'
-      let body = ''
+    try {
+      const res = await generateEmailDraftAction({
+        prompt: emailPrompt.trim(),
+        tone: emailTone,
+        recipient: emailRecipient.trim() || undefined,
+      })
 
-      if (emailTone === 'commercial') {
-        subject = 'Proposta di Consulenza e Percorso Formativo Personalizzato'
-        body = `Gentile Cliente,\n\nin riferimento alla nostra recente conversazione, ho il piacere di condividere la proposta per il percorso formativo ed il supporto consulenziale dedicato.\n\nSintesi della proposta:\n- Modulo Formativo: Strategie ed integrazione Agenti AI\n- Supporto Consulenziale B2B dedicato\n\nRestiamo a disposizione per fissare una breve videocall di approfondimento.\n\nCordiali saluti,\nIl Team di Piattaforma Condivisa`
-      } else if (emailTone === 'support') {
-        subject = 'Riscontro ed Assistenza Tecnica | Team Hub'
-        body = `Gentile Utente,\n\ngrazie per averci contattato. Abbiamo preso in carico la sua richiesta di supporto tecnico.\n\nIl nostro team di sviluppo ha verificato le configurazioni del sistema ed ha applicato le ottimizzazioni necessarie.\n\nLa invitiamo a verificare il funzionamento e a farci sapere se riscontra ulteriori esigenze.\n\nCordiali saluti,\nSupporto Tecnico Team Hub`
+      if (res.success && res.subject && res.body) {
+        setGeneratedEmail({ subject: res.subject, body: res.body })
+        playNotificationSound('chat')
       } else {
-        subject = 'Allineamento Operativo e Prossimi Passi'
-        body = `Gentili colleghi/partner,\n\nfacendo seguito al nostro ultimo aggiornamento, riassumo di seguito i punti chiave concordati:\n\n${emailPrompt}\n\nRestiamo a disposizione per qualsiasi chiarimento.\n\nCordiali saluti,\nTeam Hub`
+        alert(`Errore generazione: ${res.error || 'Impossibile creare bozza.'}`)
       }
-
-      setGeneratedEmail({ subject, body })
+    } catch (err: any) {
+      alert(`Errore di rete: ${err.message}`)
+    } finally {
       setIsGeneratingEmail(false)
-      playNotificationSound('chat')
-    }, 1000)
+    }
   }
 
   const handleSendGeneratedEmail = async () => {
@@ -92,47 +96,27 @@ export default function AgentiAIPage() {
   }
 
   // 2. Generatore Task Kanban AI
-  const handleGenerateTasks = () => {
-    if (!kanbanGoalPrompt.trim()) return
+  const handleGenerateTasks = async () => {
+    if (!kanbanGoalPrompt.trim() || isGeneratingTasks) return
     setIsGeneratingTasks(true)
     setGeneratedTasks([])
 
-    setTimeout(() => {
-      const promptLower = kanbanGoalPrompt.toLowerCase()
-      const tasks: Array<{ title: string; desc: string; priority: 'medium' | 'high' | 'urgent' }> = []
-
-      tasks.push({
-        title: `Pianificazione: ${kanbanGoalPrompt.substring(0, 45)}...`,
-        desc: `Definizione requisiti ed architettura per l'obiettivo: ${kanbanGoalPrompt}`,
-        priority: 'high',
+    try {
+      const res = await generateKanbanTasksAction({
+        goalPrompt: kanbanGoalPrompt.trim(),
       })
 
-      if (promptLower.includes('corso') || promptLower.includes('slide') || promptLower.includes('formazione')) {
-        tasks.push({
-          title: 'Preparazione materiale didattico e risorse PDF',
-          desc: 'Creare e caricare le slide ed i documenti di supporto nella sezione File Condivisi.',
-          priority: 'medium',
-        })
+      if (res.success && res.tasks) {
+        setGeneratedTasks(res.tasks)
+        playNotificationSound('chat')
+      } else {
+        alert(`Errore scomposizione: ${res.error || 'Impossibile generare task.'}`)
       }
-
-      if (promptLower.includes('database') || promptLower.includes('migrazione') || promptLower.includes('api')) {
-        tasks.push({
-          title: 'Ottimizzazione query SQL ed aggiornamento schema DB',
-          desc: 'Eseguire i test di integrazione sul database Supabase e verificare le RLS.',
-          priority: 'urgent',
-        })
-      }
-
-      tasks.push({
-        title: 'Verifica finale e collaudo in Videocall di Team',
-        desc: 'Organizzare meeting WebRTC di revisione finale prima della consegna.',
-        priority: 'medium',
-      })
-
-      setGeneratedTasks(tasks)
+    } catch (err: any) {
+      alert(`Errore di rete: ${err.message}`)
+    } finally {
       setIsGeneratingTasks(false)
-      playNotificationSound('chat')
-    }, 1200)
+    }
   }
 
   const handleSaveTasksToKanban = async () => {
@@ -158,18 +142,27 @@ export default function AgentiAIPage() {
   }
 
   // 3. Generatore Sintesi Conversazioni AI
-  const handleGenerateSummary = () => {
-    if (!summaryInput.trim()) return
+  const handleGenerateSummary = async () => {
+    if (!summaryInput.trim() || isGeneratingSummary) return
     setIsGeneratingSummary(true)
     setGeneratedSummary(null)
 
-    setTimeout(() => {
-      const summary = `📌 SINTESI ESECUTIVA GENERATA DALL'AGENTE AI:\n\n1. OBIETTIVO PRINCIPALE:\n   Analisi e sincronizzazione del flusso operativo del team.\n\n2. PUNTI CHIAVE EMERSI:\n   - Ottimizzazione delle comunicazioni in tempo reale via Chat e Posta Condivisa.\n   - Gestione centralizzata delle risorse file con permessi di anteprima.\n   - Pianificazione delle attività prioritari nel Kanban di progetto.\n\n3. PROSSIME AZIONI RACCOMANDATE:\n   - Completare la revisione delle scadenze e verificare il calendario condiviso.`
+    try {
+      const res = await generateSummaryAction({
+        text: summaryInput.trim(),
+      })
 
-      setGeneratedSummary(summary)
+      if (res.success && res.summary) {
+        setGeneratedSummary(res.summary)
+        playNotificationSound('chat')
+      } else {
+        alert(`Errore sintesi: ${res.error || 'Impossibile generare riepilogo.'}`)
+      }
+    } catch (err: any) {
+      alert(`Errore di rete: ${err.message}`)
+    } finally {
       setIsGeneratingSummary(false)
-      playNotificationSound('chat')
-    }, 1000)
+    }
   }
 
   return (

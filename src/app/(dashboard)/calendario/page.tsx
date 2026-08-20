@@ -67,24 +67,39 @@ export default function CalendarioPage() {
 
   const fetchTasksForCalendar = async () => {
     setLoading(true)
-    const { data } = await supabase.from('tasks').select('*')
-
-    if (data) {
-      const taskEvents: CalendarEvent[] = data.map((t: any) => ({
+    try {
+      // 1. Carica i task reali dal Kanban
+      const { data: tasksData } = await supabase.from('tasks').select('*')
+      const taskEvents: CalendarEvent[] = (tasksData || []).map((t: any) => ({
         id: `task-${t.id}`,
         title: t.title,
-        date: t.created_at ? t.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+        date: t.due_date ? t.due_date.split('T')[0] : (t.created_at ? t.created_at.split('T')[0] : new Date().toISOString().split('T')[0]),
         time: '12:00',
         category: 'task',
         description: t.description || 'Task dal Kanban',
       }))
 
-      setEvents((prev) => {
-        const customEvents = prev.filter((e) => !e.id.startsWith('task-'))
-        return [...customEvents, ...taskEvents]
-      })
+      // 2. Carica gli eventi reali del calendario da Supabase
+      const { data: calData } = await (supabase as any)
+        .from('calendar_events')
+        .select('*')
+        .order('event_date', { ascending: true })
+
+      const dbCalEvents: CalendarEvent[] = (calData || []).map((ev: any) => ({
+        id: ev.id,
+        title: ev.title,
+        date: ev.event_date,
+        time: ev.event_time || '09:00',
+        category: ev.category as any,
+        description: ev.description || '',
+      }))
+
+      setEvents([...dbCalEvents, ...taskEvents])
+    } catch (err) {
+      console.error('Errore caricamento eventi calendario:', err)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   // Navigazione Mese
@@ -105,37 +120,75 @@ export default function CalendarioPage() {
   const startingDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1 // Lunedì = 0
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
-  const handleCreateEvent = (e: React.FormEvent) => {
+  const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!eventTitle.trim()) return
 
-    const newEvent: CalendarEvent = {
-      id: `ev-${Date.now()}`,
-      title: eventTitle.trim(),
-      date: selectedDateStr,
-      time: eventTime,
-      category: eventCategory,
-      description: eventDesc,
+    try {
+      const { data: userData } = await supabase.auth.getUser()
+
+      const { data: newRow, error } = await (supabase as any)
+        .from('calendar_events')
+        .insert({
+          title: eventTitle.trim(),
+          description: eventDesc.trim(),
+          event_date: selectedDateStr,
+          event_time: eventTime,
+          category: eventCategory,
+          created_by: userData.user?.id || null,
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.warn('Errore salvataggio evento su DB, fallback locale:', error.message)
+        const fallbackEvent: CalendarEvent = {
+          id: `ev-${Date.now()}`,
+          title: eventTitle.trim(),
+          date: selectedDateStr,
+          time: eventTime,
+          category: eventCategory,
+          description: eventDesc,
+        }
+        setEvents([fallbackEvent, ...events])
+      } else if (newRow) {
+        const createdEvent: CalendarEvent = {
+          id: newRow.id,
+          title: newRow.title,
+          date: newRow.event_date,
+          time: newRow.event_time,
+          category: newRow.category as any,
+          description: newRow.description,
+        }
+        setEvents([createdEvent, ...events])
+      }
+
+      playNotificationSound('chat')
+      alert(`Evento "${eventTitle}" aggiunto con successo al Calendario!`)
+
+      setIsEventModalOpen(false)
+      setEventTitle('')
+      setEventDesc('')
+    } catch (err: any) {
+      alert(`Errore: ${err.message}`)
     }
-
-    setEvents([newEvent, ...events])
-    playNotificationSound('chat')
-    alert(`Evento "${eventTitle}" aggiunto con successo al Calendario!`)
-
-    setIsEventModalOpen(false)
-    setEventTitle('')
-    setEventDesc('')
   }
 
   const handleDeleteEvent = async (eventId: string) => {
     if (!confirm('Sei sicuro di voler eliminare questo evento dal calendario?')) return
 
-    if (eventId.startsWith('task-')) {
-      const taskId = eventId.replace('task-', '')
-      await supabase.from('tasks').delete().eq('id', taskId)
-    }
+    try {
+      if (eventId.startsWith('task-')) {
+        const taskId = eventId.replace('task-', '')
+        await supabase.from('tasks').delete().eq('id', taskId)
+      } else {
+        await (supabase as any).from('calendar_events').delete().eq('id', eventId)
+      }
 
-    setEvents(events.filter((e) => e.id !== eventId))
+      setEvents(events.filter((e) => e.id !== eventId))
+    } catch (err: any) {
+      alert(`Errore eliminazione: ${err.message}`)
+    }
   }
 
   const getCategoryBadge = (cat: string) => {

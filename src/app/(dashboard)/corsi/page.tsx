@@ -40,6 +40,7 @@ import {
   getBufferProfilesAction,
   publishToBufferAction,
 } from '@/app/actions/marketing'
+import { askStudentAiAction } from '@/app/actions/ai'
 
 interface StudentRegistration {
   id: string
@@ -762,9 +763,9 @@ function CorsiInnerContent() {
     } catch (e) {}
   }
 
-  const handleSendStudentChat = (e: React.FormEvent) => {
+  const handleSendStudentChat = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!chatInput.trim()) return
+    if (!chatInput.trim() || isAiThinking) return
 
     const userText = chatInput.trim()
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -777,23 +778,27 @@ function CorsiInnerContent() {
       time: now,
     }
 
-    setChatMessages((prev) => [...prev, userMsg])
+    const updatedHistory = [...chatMessages, userMsg]
+    setChatMessages(updatedHistory)
     setChatInput('')
 
-    if (userText.includes('@AI') || userText.includes('@ai') || userText.length > 5) {
-      setIsAiThinking(true)
-      setTimeout(() => {
-        const aiMsg = {
-          id: `m-ai-${Date.now()}`,
-          sender: 'Assistente @AI Ti AIuto',
-          isAi: true,
-          text: `Ho ricevuto la tua richiesta! Nel percorso AI Start affrontiamo esattamente questo tema. Se hai dubbi su uno specifico dei 20 moduli video, fammelo sapere!`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        }
-        setChatMessages((prev) => [...prev, aiMsg])
-        setIsAiThinking(false)
-        playNotificationSound('chat')
-      }, 1000)
+    setIsAiThinking(true)
+
+    try {
+      const res = await askStudentAiAction(updatedHistory, activeLesson.id)
+      const aiMsg = {
+        id: `m-ai-${Date.now()}`,
+        sender: 'Assistente @AI Ti AIuto',
+        isAi: true,
+        text: res.success && res.text ? res.text : 'Grazie per la domanda! Ho preso nota del tuo quesito sul modulo attivo.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }
+      setChatMessages((prev) => [...prev, aiMsg])
+      playNotificationSound('chat')
+    } catch (err: any) {
+      console.error('Errore chat AI:', err)
+    } finally {
+      setIsAiThinking(false)
     }
   }
 
