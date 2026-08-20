@@ -200,9 +200,9 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
 // Mappatura precisa dei 20 Moduli Video del Corso AI Start con gli URL MP4 reali
 const AI_START_LESSONS: Lesson[] = [
   { id: 1, title: '1 Benvenuti nel Futuro', duration: '10:30', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%201%20Benvenuti%20nel%20futuro_1080p_caption.mp4' },
-  { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '12:45', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%202%20Breve%20Storia%20dell%27Evoluzione_1080p_caption.mp4' },
+  { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '12:45', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%202%20Breve%20Storia%20Evoluzione%20Lampo_1080p_caption.mp4' },
   { id: 3, title: '3 Sconfiggere il Foglio Bianco', duration: '15:20', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%203%20Sconfiggere%20il%20Foglio%20Bianco_1080p_caption.mp4' },
-  { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '14:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%204%20Il%20Linguaggio%20della%20Chiarezza_1080p_caption.mp4' },
+  { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '14:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20Ai%20-%20Lezione%204%20Il%20Linguaggio%20della%20Chiarezza%20Prompt_1080p_caption.mp4' },
   { id: 5, title: '5 La Formula Segreta RCCF', duration: '18:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%205%20La%20Formula%20Segreta%20RCCF_1080p_caption.mp4' },
   { id: 6, title: '6 Iterazione', duration: '16:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%206%20Iterazione_1080p_caption.mp4' },
   { id: 7, title: '7 ChatGPT, Claude, Gemini, Perplexity', duration: '13:15', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%207%20ChatGPT%20Claude%20Gemini%20Perplexity_1080p_caption.mp4' },
@@ -210,15 +210,15 @@ const AI_START_LESSONS: Lesson[] = [
   { id: 9, title: '9 Dipingere con le Parole', duration: '12:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%209%20Dipingere%20con%20le%20Parole_1080p_caption.mp4' },
   { id: 10, title: '10 Anatomia di un Prompt Visivo', duration: '14:50', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2010%20Anatomia%20di%20un%20Prompt%20Visivo_1080p_caption.mp4' },
   { id: 11, title: '11 Presentazioni in 5 Minuti', duration: '22:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2011%20Presentazioni%20in%205%20Minuti_1080p_caption.mp4' },
-  { id: 12, title: '12 Analisi Dati per Excel', duration: '25:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2012%20Analisi%20Dati%20per%20Excel_1080p_caption.mp4' },
+  { id: 12, title: '12 Analisi Dati per Excel', duration: '25:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_12_Analisi_Dati_per_Excell_1080p_caption_with_captions.mp4' },
   { id: 13, title: '13 L\'Agenda Intelligente', duration: '18:20', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2013%20L%20Agenda%20Intelligente_1080p_caption.mp4' },
   { id: 14, title: '14 Studiare e Imparare ELI5', duration: '20:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2014%20Studiare%20e%20Imparare%20ELI5_1080p_caption.mp4' },
-  { id: 15, title: '15 Allucinazioni: Quando l\'IA mente', duration: '15:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2015%20Allucinazioni%20Quando%20l%20IA%20mente_1080p_caption.mp4' },
+  { id: 15, title: '15 Allucinazioni: Quando l\'IA mente', duration: '15:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_15_Allucinazioni_Quando_IA_mente_1080p_caption_with_captions.mp4' },
   { id: 16, title: '16 Privacy e Sicurezza', duration: '18:45', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2016%20Privacy%20e%20Sicurezza_1080p_caption.mp4' },
   { id: 17, title: '17 Il Lavoro che Cambia', duration: '20:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2017%20Il%20Lavoro%20che%20Cambia_1080p_caption.mp4' },
   { id: 18, title: '18 Creare il proprio Workflow', duration: '16:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2018%20Creare%20il%20proprio%20Workflow_1080p_caption.mp4' },
   { id: 19, title: '19 La Tua Nuova Superpotenza', duration: '24:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2019%20La%20Tua%20Nuova%20Superpotenza_1080p_caption.mp4' },
-  { id: 20, title: '20 Riepilogo Corso AI', duration: '15:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2020%20Riepilogo%20Corso%20AI_1080p_caption.mp4' },
+  { id: 20, title: '20 Riepilogo Corso AI', duration: '15:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_20_Riepilogo_corso_AI_principianti_1080p_caption_with_captions.mp4' },
 ]
 
 // 10 Moduli del Secondo Corso: AI Pro (Automazioni & Agenti)
