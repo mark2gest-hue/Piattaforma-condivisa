@@ -35,7 +35,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { sendSharedEmail } from './(dashboard)/posta/actions'
 import { createClient } from '@/lib/supabase/client'
-import { enrollStudentAction } from '@/app/actions/student'
+import { enrollStudentAction, joinWaitlistAction } from '@/app/actions/student'
 
 const MODULES_LIST = [
   { num: '01', title: '1. Benvenuti nel Futuro', category: 'Modulo 1 – Fondamenta', desc: 'Introduzione ai concetti chiave ed alla rivoluzione dell’Intelligenza Artificiale.' },
@@ -133,11 +133,7 @@ export default function LandingPage() {
     e.preventDefault()
     if (!waitlistEmail.trim()) return
 
-    await sendSharedEmail({
-      to: waitlistEmail.trim(),
-      subject: `Iscrizione Lista d'Attesa: AI Pro & Agenti Autonomi B2B`,
-      body: `Gentile utente,\n\ngrazie per esserti iscritto alla lista d'attesa del Corso Avanzato "AI Pro & Agenti Autonomi B2B".\n\nTi notificheremo in anteprima non appena le lezioni saranno disponibili con un coupon promozionale riservato.\n\nCordiali saluti,\nTeam Ti AIuto (aiutiamoci.cloud)`,
-    })
+    await joinWaitlistAction(waitlistEmail.trim())
 
     setWaitlistSuccess(true)
     setTimeout(() => {

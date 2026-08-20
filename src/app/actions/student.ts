@@ -161,3 +161,91 @@ export async function bulkEnrollStudentsAction(
     return { success: false, error: error.message || 'Errore importazione massiva' }
   }
 }
+
+export async function joinWaitlistAction(email: string, name?: string) {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const cleanEmail = email.trim().toLowerCase()
+    const cleanName = (name || cleanEmail.split('@')[0]).trim()
+
+    // 1. Inserimento nella tabella waitlist_leads
+    const { error: insertError } = await (supabaseAdmin as any).from('waitlist_leads').insert({
+      email: cleanEmail,
+      name: cleanName,
+      course_interest: 'AI Pro - Automazioni & Agenti',
+      converted_to_student: false,
+    })
+
+    if (insertError) {
+      console.error('Errore inserimento waitlist_leads:', insertError)
+    }
+
+    // 2. Creazione del task automatico per il team
+    await (supabaseAdmin as any).from('tasks').insert({
+      title: `Nuovo Lead in Lista d'Attesa: ${cleanEmail}`,
+      description: `L'utente ${cleanName} (${cleanEmail}) si è iscritto alla lista d'attesa del corso "AI Pro: Automazioni & Agenti" dalla landing page.`,
+      status: 'todo',
+      priority: 'medium',
+    })
+
+    // 3. Invio email di conferma all'utente
+    await sendSharedEmail({
+      to: cleanEmail,
+      subject: `Iscrizione Confermata: Lista d'Attesa AI Pro (Automazioni & Agenti)`,
+      body: `Gentile ${cleanName},\n\nti confermiamo che sei stato inserito con priorità nella lista d'attesa del Corso Avanzato "AI Pro: Automazioni & Agenti".\n\nNon appena apriremo i posti ufficiali, riceverai una notifica esclusiva con coupon promozionale riservato.\n\nCordiali saluti,\nTeam Ti AIuto (aiutiamoci.cloud)`,
+    })
+
+    return { success: true }
+  } catch (error: any) {
+    console.error('Errore joinWaitlistAction:', error)
+    return { success: false, error: error.message || 'Errore iscrizione lista d\'attesa' }
+  }
+}
+
+export async function getWaitlistLeadsAction() {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const { data, error } = await (supabaseAdmin as any)
+      .from('waitlist_leads')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      return { success: false, error: error.message, leads: [] }
+    }
+
+    return { success: true, leads: data || [] }
+  } catch (error: any) {
+    return { success: false, error: error.message, leads: [] }
+  }
+}
+
+export async function convertWaitlistLeadAction(leadId: string, email: string, name?: string) {
+  try {
+    const supabaseAdmin = createAdminClient()
+    
+    // 1. Iscrivi lo studente a AI Pro
+    const enrollRes = await enrollStudentAction({
+      studentName: name || email.split('@')[0],
+      studentEmail: email,
+      courseTitle: 'AI Pro - Automazioni & Agenti AI',
+      accessTier: 'ai-pro',
+      source: 'dashboard',
+    })
+
+    if (!enrollRes.success) {
+      return { success: false, error: enrollRes.error }
+    }
+
+    // 2. Segna come convertito nella tabella waitlist_leads
+    await (supabaseAdmin as any)
+      .from('waitlist_leads')
+      .update({ converted_to_student: true })
+      .eq('id', leadId)
+
+    return { success: true, code: enrollRes.code }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+

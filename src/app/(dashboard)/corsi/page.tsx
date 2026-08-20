@@ -33,6 +33,7 @@ import {
   UserCheck,
   FileSpreadsheet,
   Share2,
+  Clock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -40,7 +41,7 @@ import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound } from '@/lib/notifications'
 import { sendSharedEmail } from '../posta/actions'
-import { enrollStudentAction, bulkEnrollStudentsAction } from '@/app/actions/student'
+import { enrollStudentAction, bulkEnrollStudentsAction, getWaitlistLeadsAction, convertWaitlistLeadAction } from '@/app/actions/student'
 import {
   generateSocialContentAction,
   getBufferProfilesAction,
@@ -57,6 +58,15 @@ interface StudentRegistration {
   registeredAt: string
   status: 'enrolled' | 'completed' | 'in_progress'
   accessTier?: 'ai-start' | 'ai-pro' | 'both'
+}
+
+interface WaitlistLead {
+  id: string
+  email: string
+  name?: string
+  course_interest: string
+  converted_to_student: boolean
+  created_at: string
 }
 
 interface Lesson {
@@ -406,6 +416,12 @@ function CorsiInnerContent() {
   const [studentCodeInput, setStudentCodeInput] = useState('')
   const [activeStudent, setActiveStudent] = useState<{ name: string; code: string; accessTier?: 'ai-start' | 'ai-pro' | 'both' } | null>(null)
 
+  // Subtab Registro: 'active' | 'waitlist'
+  const [studentSubTab, setStudentSubTab] = useState<'active' | 'waitlist'>('active')
+  const [waitlistLeads, setWaitlistLeads] = useState<WaitlistLead[]>([])
+  const [isConvertingLeadId, setIsConvertingLeadId] = useState<string | null>(null)
+
+
   // Controllo Accessi Granulare
   const hasCourseAccess = (courseId: 'ai-start' | 'ai-pro') => {
     if (!activeStudent) return true // Admin / Team ha sempre accesso
@@ -509,12 +525,46 @@ function CorsiInnerContent() {
     }
   }, [])
 
-  // Caricamento profili Buffer all'attivazione della tab marketing
+  // Caricamento profili Buffer e Lista d'Attesa all'attivazione
   useEffect(() => {
     if (activeTab === 'marketing') {
       loadBufferProfiles()
     }
+    if (activeTab === 'students') {
+      loadWaitlistLeads()
+    }
   }, [activeTab])
+
+  const loadWaitlistLeads = async () => {
+    const res = await getWaitlistLeadsAction()
+    if (res.success && res.leads) {
+      setWaitlistLeads(res.leads)
+    }
+  }
+
+  const handleConvertLead = async (lead: WaitlistLead) => {
+    setIsConvertingLeadId(lead.id)
+    const res = await convertWaitlistLeadAction(lead.id, lead.email, lead.name)
+    if (res.success && res.code) {
+      alert(`Successo! Lead ${lead.email} convertito in studente AI Pro con codice: ${res.code} ed email inviata!`)
+      loadWaitlistLeads()
+      const newReg: StudentRegistration = {
+        id: `reg-lead-${Date.now()}`,
+        code: res.code,
+        studentName: lead.name || lead.email.split('@')[0],
+        studentEmail: lead.email,
+        courseTitle: 'AI Pro - Automazioni & Agenti AI',
+        accessTier: 'ai-pro',
+        registeredAt: new Date().toISOString(),
+        status: 'enrolled',
+      }
+      setRegistrations((prev) => [newReg, ...prev])
+    } else {
+      alert(`Errore conversione lead: ${res.error}`)
+    }
+    setIsConvertingLeadId(null)
+  }
+
 
   const loadBufferProfiles = async () => {
     setIsBufferLoading(true)
@@ -2109,14 +2159,14 @@ function CorsiInnerContent() {
         </div>
       )}
 
-      {/* TAB 4: REGISTRO STUDENTI & CODICI */}
+      {/* TAB 4: REGISTRO STUDENTI & CODICI & LISTA D'ATTESA */}
       {activeTab === 'students' && !activeStudent && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Registro Codici & Studenti Iscritti</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Registro Studenti & Lista d'Attesa</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Elenco dei codici univoci generati e degli studenti accreditati.
+                Gestione codici corsisti accreditati e leads in lista d'attesa per i prossimi corsi.
               </p>
             </div>
 
@@ -2139,36 +2189,66 @@ function CorsiInnerContent() {
             </div>
           </div>
 
-          {/* KPI Dashboard Statistiche Studenti */}
+          {/* Sotto-Schede: Studenti Attivi vs Lista d'Attesa */}
+          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+            <button
+              onClick={() => setStudentSubTab('active')}
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+                studentSubTab === 'active'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              <span>Studenti Accreditati ({registrations.length})</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setStudentSubTab('waitlist')
+                loadWaitlistLeads()
+              }}
+              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+                studentSubTab === 'waitlist'
+                  ? 'bg-purple-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Clock className="h-4 w-4" />
+              <span>⏳ Lista d'Attesa AI Pro ({waitlistLeads.length})</span>
+            </button>
+          </div>
+
+          {/* KPI Dashboard Statistiche */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
               <div className="flex items-center justify-between text-slate-500">
-                <span className="text-xs font-semibold">Totale Studenti</span>
+                <span className="text-xs font-semibold">Totale Corsisti</span>
                 <Users className="h-4 w-4 text-indigo-600" />
               </div>
               <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2 font-mono">
                 {registrations.length}
               </p>
-              <span className="text-[10px] text-slate-400">Accreditati nel database</span>
+              <span className="text-[10px] text-slate-400">Codici attivi nel sistema</span>
             </div>
 
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
               <div className="flex items-center justify-between text-slate-500">
-                <span className="text-xs font-semibold">Codici Attivi</span>
-                <Key className="h-4 w-4 text-emerald-600" />
+                <span className="text-xs font-semibold">In Lista d'Attesa</span>
+                <Clock className="h-4 w-4 text-purple-600" />
               </div>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2 font-mono">
-                {registrations.length}
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-2 font-mono">
+                {waitlistLeads.length}
               </p>
-              <span className="text-[10px] text-slate-400">100% abilitati all&apos;accesso</span>
+              <span className="text-[10px] text-slate-400">Registrati da landing page</span>
             </div>
 
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
               <div className="flex items-center justify-between text-slate-500">
                 <span className="text-xs font-semibold">Avanzamento Globale</span>
-                <TrendingUp className="h-4 w-4 text-purple-600" />
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
               </div>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-2 font-mono">
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2 font-mono">
                 {Math.round((lessons.filter((l) => l.completed).length / lessons.length) * 100)}%
               </p>
               <span className="text-[10px] text-slate-400">{lessons.filter((l) => l.completed).length} su {lessons.length} completate</span>
@@ -2186,101 +2266,187 @@ function CorsiInnerContent() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase">
-                  <tr>
-                    <th className="py-3 px-4">Codice Accesso</th>
-                    <th className="py-3 px-4">Nome Studente</th>
-                    <th className="py-3 px-4">Email</th>
-                    <th className="py-3 px-4">Corso Formativo</th>
-                    <th className="py-3 px-4">Stato Iscrizione</th>
-                    <th className="py-3 px-4 text-right">Azioni</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                  {registrations.map((reg) => (
-                    <tr key={reg.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                      <td className="py-3.5 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                        {reg.code}
-                      </td>
-                      <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                        {reg.studentName}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400 font-mono">
-                        {reg.studentEmail}
-                      </td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">
-                        <div className="flex flex-col gap-1">
-                          <span>{reg.courseTitle}</span>
-                          <div className="flex items-center gap-1.5">
-                            {reg.accessTier === 'both' ? (
-                              <Badge variant="purple" className="text-[8px] font-mono">🌟 FULL ACCESS (BASE + PRO)</Badge>
-                            ) : reg.accessTier === 'ai-pro' ? (
-                              <Badge variant="purple" className="text-[8px] font-mono">🚀 SOLO AI PRO</Badge>
-                            ) : (
-                              <Badge variant="info" className="text-[8px] font-mono">📘 SOLO AI START</Badge>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <Badge
-                          variant={
-                            reg.status === 'completed'
-                              ? 'success'
-                              : reg.status === 'in_progress'
-                              ? 'warning'
-                              : 'info'
-                          }
-                          className="text-[9px] uppercase"
-                        >
-                          {reg.status === 'in_progress' ? 'In Corso' : reg.status === 'completed' ? 'Completato' : 'Iscritto'}
-                        </Badge>
-                      </td>
-                      <td className="py-3.5 px-4 text-right flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleOpenCertificate(reg.studentName, reg.code)}
-                          className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 gap-1 h-7 font-semibold"
-                        >
-                          <Award className="h-3.5 w-3.5" />
-                          Attestato
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            sendSharedEmail({
-                              to: reg.studentEmail,
-                              subject: `Il tuo Codice di Accesso al Corso: ${reg.code}`,
-                              body: `Gentile ${reg.studentName},\n\nti ricordiamo che il tuo CODICE DI ACCESSO UNIVOCO per le 20 lezioni video è: ${reg.code}.\n\nCordiali saluti,\nTeam Aiutiamoci Cloud`,
-                            })
-                            alert(`Inviato promemoria codice ${reg.code} via Resend a ${reg.studentEmail}!`)
-                          }}
-                          className="text-xs text-indigo-600 hover:text-indigo-800 dark:hover:text-indigo-300 gap-1 h-7"
-                        >
-                          <Mail className="h-3.5 w-3.5" />
-                          Invia Mail
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteStudent(reg.id, reg.studentName, reg.code)}
-                          className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                          title="Elimina Studente e Codice"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </td>
+
+          {studentSubTab === 'active' ? (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase">
+                    <tr>
+                      <th className="py-3 px-4">Codice Accesso</th>
+                      <th className="py-3 px-4">Nome Studente</th>
+                      <th className="py-3 px-4">Email</th>
+                      <th className="py-3 px-4">Corso Formativo</th>
+                      <th className="py-3 px-4">Stato Iscrizione</th>
+                      <th className="py-3 px-4 text-right">Azioni</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                    {registrations.map((reg) => (
+                      <tr key={reg.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                        <td className="py-3.5 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                          {reg.code}
+                        </td>
+                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                          {reg.studentName}
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400 font-mono">
+                          {reg.studentEmail}
+                        </td>
+                        <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">
+                          <div className="flex flex-col gap-1">
+                            <span>{reg.courseTitle}</span>
+                            <div className="flex items-center gap-1.5">
+                              {reg.accessTier === 'both' ? (
+                                <Badge variant="purple" className="text-[8px] font-mono">🌟 FULL ACCESS (BASE + PRO)</Badge>
+                              ) : reg.accessTier === 'ai-pro' ? (
+                                <Badge variant="purple" className="text-[8px] font-mono">🚀 SOLO AI PRO</Badge>
+                              ) : (
+                                <Badge variant="info" className="text-[8px] font-mono">📘 SOLO AI START</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <Badge
+                            variant={
+                              reg.status === 'completed'
+                                ? 'success'
+                                : reg.status === 'in_progress'
+                                ? 'warning'
+                                : 'info'
+                            }
+                            className="text-[9px] uppercase"
+                          >
+                            {reg.status === 'in_progress' ? 'In Corso' : reg.status === 'completed' ? 'Completato' : 'Iscritto'}
+                          </Badge>
+                        </td>
+                        <td className="py-3.5 px-4 text-right flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenCertificate(reg.studentName, reg.code)}
+                            className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 gap-1 h-7 font-semibold"
+                          >
+                            <Award className="h-3.5 w-3.5" />
+                            Attestato
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              sendSharedEmail({
+                                to: reg.studentEmail,
+                                subject: `Il tuo Codice di Accesso al Corso: ${reg.code}`,
+                                body: `Gentile ${reg.studentName},\n\nti ricordiamo che il tuo CODICE DI ACCESSO UNIVOCO per le 20 lezioni video è: ${reg.code}.\n\nCordiali saluti,\nTeam Aiutiamoci Cloud`,
+                              })
+                              alert(`Inviato promemoria codice ${reg.code} via Resend a ${reg.studentEmail}!`)
+                            }}
+                            className="text-xs text-indigo-600 hover:text-indigo-800 dark:hover:text-indigo-300 gap-1 h-7"
+                          >
+                            <Mail className="h-3.5 w-3.5" />
+                            Invia Mail
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteStudent(reg.id, reg.studentName, reg.code)}
+                            className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                            title="Elimina Studente e Codice"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs space-y-4 p-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-purple-600" />
+                  Leads Iscritti alla Lista d'Attesa (Landing Page)
+                </h4>
+                <Button size="sm" variant="outline" onClick={loadWaitlistLeads} className="text-xs h-8">
+                  Aggiorna Lista
+                </Button>
+              </div>
+
+              {waitlistLeads.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-xs">
+                  Nessun contatto registrato in lista d'attesa al momento.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase">
+                      <tr>
+                        <th className="py-3 px-4">Email</th>
+                        <th className="py-3 px-4">Nome</th>
+                        <th className="py-3 px-4">Corso Richiesto</th>
+                        <th className="py-3 px-4">Data Iscrizione</th>
+                        <th className="py-3 px-4">Stato</th>
+                        <th className="py-3 px-4 text-right">Azioni Rapide</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {waitlistLeads.map((lead) => (
+                        <tr key={lead.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                          <td className="py-3.5 px-4 font-mono font-bold text-slate-900 dark:text-white">
+                            {lead.email}
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">
+                            {lead.name || '—'}
+                          </td>
+                          <td className="py-3.5 px-4 font-medium text-purple-600 dark:text-purple-400">
+                            {lead.course_interest}
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-400 font-mono text-[11px]">
+                            {new Date(lead.created_at).toLocaleString('it-IT')}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            {lead.converted_to_student ? (
+                              <Badge variant="success" className="text-[9px] uppercase font-mono">
+                                Sbloccato / Studente
+                              </Badge>
+                            ) : (
+                              <Badge variant="warning" className="text-[9px] uppercase font-mono">
+                                ⏳ In Attesa
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            {!lead.converted_to_student ? (
+                              <Button
+                                size="sm"
+                                disabled={isConvertingLeadId === lead.id}
+                                onClick={() => handleConvertLead(lead)}
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] h-7 px-3 rounded-lg gap-1.5 shadow-xs"
+                              >
+                                {isConvertingLeadId === lead.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="h-3 w-3" />
+                                )}
+                                <span>Converti in Corsista AI Pro</span>
+                              </Button>
+                            ) : (
+                              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                Già Abilitato ✓
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
