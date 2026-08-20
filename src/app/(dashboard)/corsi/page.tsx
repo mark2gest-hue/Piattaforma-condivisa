@@ -1482,81 +1482,87 @@ function CorsiInnerContent() {
               </div>
 
               {/* Dettaglio Lezione e Playlist */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="purple" className="text-[10px] uppercase font-mono px-2 py-0.5">
-                        Modulo {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id} di {selectedCourseId === 'ai-start' ? lessons.length : lessonsPro.length}
-                      </Badge>
-                      <span className="text-xs text-slate-400 font-mono">
-                        {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).duration}
-                      </span>
-                    </div>
-                    <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                      {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).title}
-                    </h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
+                {/* Header Titolo e Info Modulo */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="purple" className="text-[10px] uppercase font-mono px-2.5 py-0.5">
+                      Modulo {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id} di {selectedCourseId === 'ai-start' ? lessons.length : lessonsPro.length}
+                    </Badge>
+                    <span className="text-xs text-slate-400 font-mono font-medium">
+                      Durata: {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).duration}
+                    </span>
                   </div>
+                  <h3 className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">
+                    {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).title}
+                  </h3>
+                </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {!activeStudent && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          const curr = selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro
-                          setCustomVideoUrlInput(curr.videoUrl || '')
-                          setIsEditVideoModalOpen(true)
-                        }}
-                        className="h-8 text-xs gap-1.5 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                      >
-                        <Edit className="h-3.5 w-3.5 text-indigo-500" />
-                        <span>Modifica Video</span>
-                      </Button>
-                    )}
-
-                    <a
-                      href={(selectedCourseId === 'ai-start' ? activeLesson.resourcesPdfUrl : null) || 'https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 text-xs gap-1.5 border-purple-400/40 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold hover:bg-purple-100 dark:hover:bg-purple-900/40"
-                        title={`Apri la Dispensa PDF del Modulo ${(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id}`}
-                      >
-                        <FileText className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                        <span>Dispensa PDF</span>
-                      </Button>
-                    </a>
-
+                {/* Barra Azioni Rapide a 4 Colonne Uniformi e Identiche per Tutti i Video */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+                  {!activeStudent ? (
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleOpenQuizForLesson(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro)}
-                      className="h-8 text-xs gap-1.5 border-indigo-400/40 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
-                    >
-                      <HelpCircle className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                      <span>Quiz @AI</span>
-                    </Button>
-
-                    <Button
-                      size="sm"
                       onClick={() => {
                         const curr = selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro
-                        toggleLessonCompleted(curr.id)
+                        setCustomVideoUrlInput(curr.videoUrl || '')
+                        setIsEditVideoModalOpen(true)
                       }}
-                      className={`h-8 text-xs gap-1.5 font-bold shadow-xs transition-all ${
-                        (selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).completed
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                          : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                      }`}
+                      className="w-full h-9 text-xs font-semibold gap-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl"
                     >
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      <span>{(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).completed ? 'Completata ✓' : 'Segna Completata'}</span>
+                      <Edit className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                      <span className="truncate">Modifica Video</span>
                     </Button>
-                  </div>
+                  ) : (
+                    <div className="w-full h-9 flex items-center justify-center px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-500 text-xs font-medium gap-1.5">
+                      <BookOpen className="h-3.5 w-3.5 text-indigo-500" />
+                      <span>Modulo {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id}</span>
+                    </div>
+                  )}
+
+                  <a
+                    href={(selectedCourseId === 'ai-start' ? activeLesson.resourcesPdfUrl : null) || 'https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full"
+                  >
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full h-9 text-xs font-semibold gap-2 border-purple-400/40 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-xl"
+                      title={`Apri la Dispensa PDF del Modulo ${(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id}`}
+                    >
+                      <FileText className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                      <span className="truncate">Dispensa PDF</span>
+                    </Button>
+                  </a>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleOpenQuizForLesson(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro)}
+                    className="w-full h-9 text-xs font-semibold gap-2 border-indigo-400/40 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-xl"
+                  >
+                    <HelpCircle className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                    <span className="truncate">Quiz @AI</span>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      const curr = selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro
+                      toggleLessonCompleted(curr.id)
+                    }}
+                    className={`w-full h-9 text-xs font-bold gap-2 rounded-xl shadow-xs transition-all ${
+                      (selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).completed
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    }`}
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).completed ? 'Completata ✓' : 'Segna Completata'}</span>
+                  </Button>
                 </div>
 
                 {/* SCHEDA DIDATTICA INTERATTIVA: SINTESI, PUNTI CHIAVE & ESERCIZIO DI QUESTO MODULO */}
