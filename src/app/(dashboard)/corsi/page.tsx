@@ -1561,19 +1561,36 @@ function CorsiInnerContent() {
                           {LESSON_SUMMARIES[activeLesson.id].exercise}
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          const inputEl = document.querySelector('input[placeholder*="Scrivi una domanda"]') as HTMLInputElement
-                          if (inputEl) {
-                            inputEl.value = `Ho una domanda sull'esercizio della Lezione ${activeLesson.id}: "${LESSON_SUMMARIES[activeLesson.id].exercise}"`
-                            inputEl.focus()
-                          }
-                        }}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] h-7 px-3 rounded-lg shrink-0 gap-1"
-                      >
-                        <span>Chiedi a @AI</span>
-                      </Button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <a
+                          href="https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-[11px] h-7 px-3 rounded-lg border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 gap-1 bg-white dark:bg-slate-900"
+                          >
+                            <FileText className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
+                            <span>Dispensa PDF (Proton Drive)</span>
+                          </Button>
+                        </a>
+
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const inputEl = document.querySelector('input[placeholder*="Scrivi una domanda"]') as HTMLInputElement
+                            if (inputEl) {
+                              inputEl.value = `Ho una domanda sull'esercizio della Lezione ${activeLesson.id}: "${LESSON_SUMMARIES[activeLesson.id].exercise}"`
+                              inputEl.focus()
+                            }
+                          }}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] h-7 px-3 rounded-lg gap-1"
+                        >
+                          <span>Chiedi a @AI</span>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1919,6 +1936,39 @@ function CorsiInnerContent() {
                 <span>+ Carica Nuova Risorsa</span>
               </Button>
             )}
+          </div>
+
+          {/* Banner Ufficiale Proton Drive 20 PDF */}
+          <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-slate-900 border border-purple-500/30 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-md">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-2xl bg-purple-600/20 text-purple-400 border border-purple-500/40 flex items-center justify-center shrink-0 shadow-md">
+                <FileText className="h-7 w-7" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Badge variant="purple" className="text-[9px] uppercase font-mono">Archivio Cloud Crittografato E2E</Badge>
+                  <span className="text-[10px] text-emerald-400 font-mono font-semibold">20/20 PDF Disponibili</span>
+                </div>
+                <h4 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  📚 Archivio Completo 20 Dispense PDF Ufficiali (AI Start)
+                </h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
+                  Scarica tutte le dispense, schemi operativi, checklist e materiali didattici delle 20 video lezioni salvati in modo sicuro su Proton Drive.
+                </p>
+              </div>
+            </div>
+
+            <a
+              href="https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0"
+            >
+              <Button className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs h-11 px-5 rounded-xl gap-2 shadow-lg shadow-purple-600/30">
+                <Download className="h-4 w-4" />
+                <span>Apri Cartella PDF su Proton Drive</span>
+              </Button>
+            </a>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
