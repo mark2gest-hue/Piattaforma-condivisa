@@ -56,6 +56,7 @@ interface StudentRegistration {
   courseTitle: string
   registeredAt: string
   status: 'enrolled' | 'completed' | 'in_progress'
+  accessTier?: 'ai-start' | 'ai-pro' | 'both'
 }
 
 interface Lesson {
@@ -210,7 +211,21 @@ const AI_START_LESSONS: Lesson[] = [
   { id: 20, title: '20 Riepilogo Corso AI', duration: '15:00', completed: false, videoUrl: REAL_ZOOM_RECORDINGS[9].videoUrl },
 ]
 
-function generateCertificateDataUrl(studentName: string, dateStr: string, certCode: string): string {
+// 10 Moduli del Secondo Corso: AI Pro (Automazioni & Agenti)
+const AI_PRO_LESSONS: Lesson[] = [
+  { id: 101, title: '1. Fondamenta degli Agenti Autonomi & Architettura LLM', duration: '22:00', completed: false, videoUrl: '' },
+  { id: 102, title: '2. Connettere Modelli ad API, Webhook & Servizi Esterni', duration: '26:30', completed: false, videoUrl: '' },
+  { id: 103, title: '3. Automazioni No-Code & Low-Code (Make, n8n, Zapier)', duration: '28:15', completed: false, videoUrl: '' },
+  { id: 104, title: '4. Creazione di Assistenti RAG su Documenti e Database', duration: '31:00', completed: false, videoUrl: '' },
+  { id: 105, title: '5. Automazione Flussi Email, CRM & Lead Management', duration: '24:45', completed: false, videoUrl: '' },
+  { id: 106, title: '6. Agenti per Ricerca Web, Scraping & Reportistica Automatica', duration: '20:30', completed: false, videoUrl: '' },
+  { id: 107, title: '7. Orchestrazione Multi-Agente & Flussi Operativi Paralleli', duration: '29:00', completed: false, videoUrl: '' },
+  { id: 108, title: '8. Sicurezza Dati, Gestione Token & Budgeting Aziendale', duration: '19:15', completed: false, videoUrl: '' },
+  { id: 109, title: '9. Monitoraggio, Debugging & Manutenzione Continua Agenti', duration: '23:40', completed: false, videoUrl: '' },
+  { id: 110, title: '10. Casi Studio B2B Reali & Progetto Finale di Automazione', duration: '35:00', completed: false, videoUrl: '' },
+]
+
+function generateCertificateDataUrl(studentName: string, dateStr: string, certCode: string, courseTitleStr?: string): string {
   if (typeof document === 'undefined') return ''
   const canvas = document.createElement('canvas')
   canvas.width = 1920
@@ -218,11 +233,13 @@ function generateCertificateDataUrl(studentName: string, dateStr: string, certCo
   const ctx = canvas.getContext('2d')
   if (!ctx) return ''
 
+  const isPro = certCode.includes('PRO') || (courseTitleStr && courseTitleStr.includes('Pro'))
+
   // Background - Dark luxury slate navy gradient
   const bgGrad = ctx.createLinearGradient(0, 0, 1920, 1080)
   bgGrad.addColorStop(0, '#090d16')
-  bgGrad.addColorStop(0.5, '#0f172a')
-  bgGrad.addColorStop(1, '#1e1b4b')
+  bgGrad.addColorStop(0.5, isPro ? '#1e1035' : '#0f172a')
+  bgGrad.addColorStop(1, isPro ? '#3b0764' : '#1e1b4b')
   ctx.fillStyle = bgGrad
   ctx.fillRect(0, 0, 1920, 1080)
 
@@ -269,16 +286,16 @@ function generateCertificateDataUrl(studentName: string, dateStr: string, certCo
   // Achievement Description
   ctx.fillStyle = '#cbd5e1'
   ctx.font = '24px sans-serif'
-  ctx.fillText('ha completato con successo l’intero percorso formativo avanzato di 20 Moduli Video:', 960, 530)
+  ctx.fillText(isPro ? 'ha completato con successo l’intero percorso avanzato di Automazioni & Agenti:' : 'ha completato con successo l’intero percorso formativo di 20 Moduli Video:', 960, 530)
 
   // Course Name
-  ctx.fillStyle = '#60a5fa'
+  ctx.fillStyle = isPro ? '#c084fc' : '#60a5fa'
   ctx.font = 'bold 36px sans-serif'
-  ctx.fillText('AI START — DOMINA L’INTELLIGENZA ARTIFICIALE DA ZERO', 960, 600)
+  ctx.fillText(isPro ? 'AI PRO — AUTOMAZIONI AVANZATE & AGENTI INTELLIGENTI' : 'AI START — DOMINA L’INTELLIGENZA ARTIFICIALE DA ZERO', 960, 600)
 
   ctx.fillStyle = '#94a3b8'
   ctx.font = '20px sans-serif'
-  ctx.fillText('Prompt Engineering Avanzato • Flussi Operativi • Automazioni & Sicurezza Dati', 960, 650)
+  ctx.fillText(isPro ? 'Integrazione API • Agenti Autonomi • Automazione Processi Aziendali' : 'Prompt Engineering Avanzato • Flussi Operativi • Automazioni & Sicurezza Dati', 960, 650)
 
   // Seal / Badge
   ctx.fillStyle = 'rgba(234, 179, 8, 0.15)'
@@ -314,13 +331,22 @@ function generateCertificateDataUrl(studentName: string, dateStr: string, certCo
   return canvas.toDataURL('image/png')
 }
 
+
 function CorsiInnerContent() {
   const searchParams = useSearchParams()
   const supabase = createClient()
 
-  // Lezioni attive
+  // Selettore Corso Attivo (AI Start vs AI Pro)
+  const [selectedCourseId, setSelectedCourseId] = useState<'ai-start' | 'ai-pro'>('ai-start')
+
+  // Lezioni attive AI Start (Corso Base)
   const [lessons, setLessons] = useState<Lesson[]>(AI_START_LESSONS)
   const [activeLesson, setActiveLesson] = useState<Lesson>(lessons[0])
+
+  // Lezioni attive AI Pro (Corso Avanzato)
+  const [lessonsPro, setLessonsPro] = useState<Lesson[]>(AI_PRO_LESSONS)
+  const [activeLessonPro, setActiveLessonPro] = useState<Lesson>(lessonsPro[0])
+
 
   // Registrazioni Zoom Live
   const [zoomRecordings, setZoomRecordings] = useState<ZoomRecording[]>(REAL_ZOOM_RECORDINGS)
@@ -378,7 +404,18 @@ function CorsiInnerContent() {
 
   // Stato Studente Loggato tramite Codice
   const [studentCodeInput, setStudentCodeInput] = useState('')
-  const [activeStudent, setActiveStudent] = useState<{ name: string; code: string } | null>(null)
+  const [activeStudent, setActiveStudent] = useState<{ name: string; code: string; accessTier?: 'ai-start' | 'ai-pro' | 'both' } | null>(null)
+
+  // Controllo Accessi Granulare
+  const hasCourseAccess = (courseId: 'ai-start' | 'ai-pro') => {
+    if (!activeStudent) return true // Admin / Team ha sempre accesso
+    const tier = activeStudent.accessTier || (activeStudent.code.startsWith('AI-PRO-') ? 'ai-pro' : activeStudent.code.startsWith('AI-ALL-') ? 'both' : 'ai-start')
+    if (tier === 'both') return true
+    return tier === courseId
+  }
+
+  const hasAccessToCurrentCourse = () => hasCourseAccess(selectedCourseId)
+
   const [codeError, setCodeError] = useState('')
 
   // Registrazioni Studenti
@@ -673,7 +710,7 @@ function CorsiInnerContent() {
 
   // Modal Nuova Iscrizione Studente
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
-  const [selectedCourseTitle, setSelectedCourseTitle] = useState('AI Start - Domina l’Intelligenza Artificiale da Zero')
+  const [enrollAccessTier, setEnrollAccessTier] = useState<'ai-start' | 'ai-pro' | 'both'>('ai-start')
   const [studentName, setStudentName] = useState('')
   const [studentEmail, setStudentEmail] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
@@ -686,12 +723,12 @@ function CorsiInnerContent() {
 
   const handleOpenCertificate = (name?: string, code?: string) => {
     const student = name || activeStudent?.name || 'Marco (Corsista)'
-    const certCode = code || activeStudent?.code || `CERT-AI-${Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase()}`
+    const certCode = code || activeStudent?.code || `CERT-${selectedCourseId === 'ai-pro' ? 'PRO' : 'AI'}-${Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase()}`
     const dateStr = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
     
     setCertificateStudentName(student)
     setCertificateCode(certCode)
-    const dataUrl = generateCertificateDataUrl(student, dateStr, certCode)
+    const dataUrl = generateCertificateDataUrl(student, dateStr, certCode, selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start')
     setCertificateDataUrl(dataUrl)
     setIsCertificateModalOpen(true)
   }
@@ -700,12 +737,13 @@ function CorsiInnerContent() {
     if (!certificateDataUrl) return
     const a = document.createElement('a')
     a.href = certificateDataUrl
-    a.download = `Attestato_AI_Start_${certificateStudentName.replace(/\s+/g, '_')}.png`
+    a.download = `Attestato_${selectedCourseId === 'ai-pro' ? 'AI_Pro' : 'AI_Start'}_${certificateStudentName.replace(/\s+/g, '_')}.png`
     a.click()
   }
 
   const handleShareLinkedIn = () => {
-    const shareText = encodeURIComponent(`🎉 Ho completato con successo l'intero percorso formativo di 20 Video Lezioni "AI Start: Domina l'Intelligenza Artificiale da Zero" su aiutiamoci.cloud! 🚀\n\nAttestato Ufficiale Verificato: ${certificateCode}`)
+    const courseName = selectedCourseId === 'ai-pro' ? 'AI Pro: Automazioni Avanzate & Agenti Intelligenti' : 'AI Start: Domina l\'Intelligenza Artificiale da Zero'
+    const shareText = encodeURIComponent(`🎉 Ho completato con successo l'intero percorso formativo "${courseName}" su aiutiamoci.cloud! 🚀\n\nAttestato Ufficiale Verificato: ${certificateCode}`)
     const url = encodeURIComponent('https://aiutiamoci.cloud')
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&summary=${shareText}`, '_blank')
   }
@@ -740,6 +778,7 @@ function CorsiInnerContent() {
   // State Importatore Massivo Studenti
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false)
   const [bulkInputText, setBulkInputText] = useState('')
+  const [bulkAccessTier, setBulkAccessTier] = useState<'ai-start' | 'ai-pro' | 'both'>('ai-start')
   const [bulkSendEmail, setBulkSendEmail] = useState(false)
   const [isBulkImporting, setIsBulkImporting] = useState(false)
 
@@ -766,21 +805,28 @@ function CorsiInnerContent() {
       return
     }
 
-    const res = await bulkEnrollStudentsAction(parsedStudents, bulkSendEmail)
+    const res = await bulkEnrollStudentsAction(parsedStudents, bulkSendEmail, bulkAccessTier)
     if (res.success && res.students) {
+      const defaultCourseTitle = bulkAccessTier === 'ai-pro'
+        ? 'AI Pro - Automazioni & Agenti AI'
+        : bulkAccessTier === 'both'
+        ? 'Bundle Completo: AI Start + AI Pro'
+        : 'AI Start - Domina l’Intelligenza Artificiale da Zero'
+
       const newItems: StudentRegistration[] = res.students.map((s, idx) => ({
         id: `reg-bulk-${Date.now()}-${idx}`,
         code: s.code,
         studentName: s.name,
         studentEmail: s.email,
-        courseTitle: 'AI Start - Domina l’Intelligenza Artificiale da Zero',
+        courseTitle: defaultCourseTitle,
+        accessTier: bulkAccessTier,
         registeredAt: new Date().toISOString(),
         status: 'enrolled',
       }))
       setRegistrations([...newItems, ...registrations])
       setIsBulkModalOpen(false)
       setBulkInputText('')
-      alert(`Successo! Importati ${res.count} studenti con relativi codici univoci generati su Supabase!`)
+      alert(`Successo! Importati ${res.count} studenti abilitati per ${bulkAccessTier.toUpperCase()} con codici generati su Supabase!`)
     } else {
       alert(`Errore importazione: ${res.error}`)
     }
@@ -804,15 +850,37 @@ function CorsiInnerContent() {
     const dbStudent = data && (data as any[]).length > 0 ? (data as any[])[0] : null
 
     if (dbStudent) {
-      setActiveStudent({ name: dbStudent.student_name, code: dbStudent.code })
+      const tier = dbStudent.access_tier || (dbStudent.code.startsWith('AI-PRO-') ? 'ai-pro' : dbStudent.code.startsWith('AI-ALL-') ? 'both' : 'ai-start')
+      setActiveStudent({
+        name: dbStudent.student_name,
+        code: dbStudent.code,
+        accessTier: tier,
+      })
+      if (tier === 'ai-pro') {
+        setSelectedCourseId('ai-pro')
+      } else {
+        setSelectedCourseId('ai-start')
+      }
       setActiveTab('player')
     } else {
       const found = registrations.find((r) => r.code === cleanCode)
       if (found) {
-        setActiveStudent({ name: found.studentName, code: found.code })
+        const tier = found.accessTier || (found.code.startsWith('AI-PRO-') ? 'ai-pro' : found.code.startsWith('AI-ALL-') ? 'both' : 'ai-start')
+        setActiveStudent({ name: found.studentName, code: found.code, accessTier: tier })
+        if (tier === 'ai-pro') {
+          setSelectedCourseId('ai-pro')
+        } else {
+          setSelectedCourseId('ai-start')
+        }
         setActiveTab('player')
-      } else if (cleanCode === 'DEMO2026' || cleanCode.startsWith('AI-START-')) {
-        setActiveStudent({ name: 'Studente Autenticato', code: cleanCode })
+      } else if (cleanCode === 'DEMO2026' || cleanCode.startsWith('AI-START-') || cleanCode.startsWith('AI-PRO-') || cleanCode.startsWith('AI-ALL-')) {
+        const tier = cleanCode.startsWith('AI-PRO-') ? 'ai-pro' : cleanCode.startsWith('AI-ALL-') ? 'both' : 'ai-start'
+        setActiveStudent({ name: 'Studente Autenticato', code: cleanCode, accessTier: tier })
+        if (tier === 'ai-pro') {
+          setSelectedCourseId('ai-pro')
+        } else {
+          setSelectedCourseId('ai-start')
+        }
         setActiveTab('player')
       }
     }
@@ -839,11 +907,18 @@ function CorsiInnerContent() {
 
     setIsRegistering(true)
 
+    const defaultTitle = enrollAccessTier === 'ai-pro'
+      ? 'AI Pro - Automazioni & Agenti AI'
+      : enrollAccessTier === 'both'
+      ? 'Bundle Completo: AI Start + AI Pro'
+      : 'AI Start - Domina l’Intelligenza Artificiale da Zero'
+
     // Esegui iscrizione sicura lato server tramite Server Action (supera RLS)
     const result = await enrollStudentAction({
       studentName: studentName.trim(),
       studentEmail: studentEmail.trim(),
-      courseTitle: selectedCourseTitle,
+      courseTitle: defaultTitle,
+      accessTier: enrollAccessTier,
       source: 'dashboard',
     })
 
@@ -860,7 +935,8 @@ function CorsiInnerContent() {
       code: generatedCode,
       studentName: studentName.trim(),
       studentEmail: studentEmail.trim(),
-      courseTitle: selectedCourseTitle,
+      courseTitle: defaultTitle,
+      accessTier: enrollAccessTier,
       registeredAt: new Date().toISOString(),
       status: 'enrolled',
     }
@@ -868,7 +944,7 @@ function CorsiInnerContent() {
     setRegistrations([newReg, ...registrations])
 
     playNotificationSound('chat')
-    alert(`Studente ${studentName} iscritto con successo! Codice generato: ${generatedCode}. Inviata mail via Resend!`)
+    alert(`Studente ${studentName} iscritto con successo!\nAssegnato codice ${generatedCode} (Accesso: ${enrollAccessTier.toUpperCase()}).\nEmail inviata via Resend!`)
 
     setIsRegistering(false)
     setIsEnrollModalOpen(false)
@@ -1022,72 +1098,141 @@ function CorsiInnerContent() {
   }
 
   const isLessonUnlocked = (index: number) => {
-    if (!activeStudent || lessons.every((l) => l.completed)) return true
+    const list = selectedCourseId === 'ai-start' ? lessons : lessonsPro
+    if (!activeStudent || list.every((l) => l.completed)) return true
     if (index === 0) return true
-    return lessons[index - 1].completed
+    return list[index - 1].completed
   }
 
   const toggleLessonCompleted = (lessonId: number) => {
-    const updatedLessons = lessons.map((l) => (l.id === lessonId ? { ...l, completed: !l.completed } : l))
-    setLessons(updatedLessons)
+    if (selectedCourseId === 'ai-start') {
+      const updatedLessons = lessons.map((l) => (l.id === lessonId ? { ...l, completed: !l.completed } : l))
+      setLessons(updatedLessons)
 
-    const currentIndex = lessons.findIndex((l) => l.id === lessonId)
-    if (currentIndex >= 0 && currentIndex < lessons.length - 1) {
-      const nextLesson = updatedLessons[currentIndex + 1]
-      setActiveLesson(nextLesson)
+      const currentIndex = lessons.findIndex((l) => l.id === lessonId)
+      if (currentIndex >= 0 && currentIndex < lessons.length - 1) {
+        setActiveLesson(updatedLessons[currentIndex + 1])
+      }
+    } else {
+      const updatedLessonsPro = lessonsPro.map((l) => (l.id === lessonId ? { ...l, completed: !l.completed } : l))
+      setLessonsPro(updatedLessonsPro)
+
+      const currentIndex = lessonsPro.findIndex((l) => l.id === lessonId)
+      if (currentIndex >= 0 && currentIndex < lessonsPro.length - 1) {
+        setActiveLessonPro(updatedLessonsPro[currentIndex + 1])
+      }
     }
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-            Portale Corsi Formativi & Studenti (aiutiamoci.cloud)
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            20 Lezioni Video AI Start, Registrazioni Zoom Live (12 Sessioni MP4), risorse PDF e supporto @AI.
-          </p>
+      {/* Header & Course Switcher */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+              <GraduationCap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              Accademia & Formazione AI
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Percorsi formativi guidati: Corso Base AI Start & Corso Avanzato AI Pro (Automazioni & Agenti).
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {activeStudent ? (
+              <div className="flex items-center gap-2">
+                <Badge variant="success" className="py-1 px-3 flex items-center gap-1 text-xs">
+                  <Unlock className="h-3.5 w-3.5" />
+                  <span>
+                    Studente: <strong>{activeStudent.name}</strong> ({activeStudent.code})
+                  </span>
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setActiveStudent(null)}
+                  className="text-xs text-slate-400 hover:text-white h-8"
+                >
+                  Esci
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => setActiveTab('login')}
+                className="text-xs font-semibold h-10 gap-1.5 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400"
+              >
+                <Key className="h-4 w-4" />
+                <span>Accedi con Codice Studente</span>
+              </Button>
+            )}
+
+            {!activeStudent && (
+              <Button
+                onClick={() => setIsEnrollModalOpen(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>Iscrivi Studente</span>
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {activeStudent ? (
-            <div className="flex items-center gap-2">
-              <Badge variant="success" className="py-1 px-3 flex items-center gap-1 text-xs">
-                <Unlock className="h-3.5 w-3.5" />
-                <span>Studente: <strong>{activeStudent.name}</strong> ({activeStudent.code})</span>
-              </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveStudent(null)}
-                className="text-xs text-slate-400 hover:text-white h-8"
-              >
-                Esci
-              </Button>
+        {/* Course Switcher Pills */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+          <button
+            onClick={() => setSelectedCourseId('ai-start')}
+            className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between ${
+              selectedCourseId === 'ai-start'
+                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-indigo-500/30'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-sm ${
+                selectedCourseId === 'ai-start' ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}>
+                01
+              </div>
+              <div>
+                <h4 className="font-bold text-xs sm:text-sm">📘 AI Start (Corso Base)</h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">20 Video Lezioni • Prompting & Strumenti</p>
+              </div>
             </div>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={() => setActiveTab('login')}
-              className="text-xs font-semibold h-10 gap-1.5 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400"
-            >
-              <Key className="h-4 w-4" />
-              <span>Accedi con Codice Studente</span>
-            </Button>
-          )}
+            {hasCourseAccess('ai-start') ? (
+              <Badge variant="success" className="text-[9px]">ATTIVO</Badge>
+            ) : (
+              <Badge variant="secondary" className="text-[9px] gap-1"><Lock className="h-2.5 w-2.5" /> BLOCCATO</Badge>
+            )}
+          </button>
 
-          {!activeStudent && (
-            <Button
-              onClick={() => setIsEnrollModalOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>Iscrivi Studente</span>
-            </Button>
-          )}
+          <button
+            onClick={() => setSelectedCourseId('ai-pro')}
+            className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between ${
+              selectedCourseId === 'ai-pro'
+                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-purple-500/30'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-sm ${
+                selectedCourseId === 'ai-pro' ? 'bg-purple-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}>
+                02
+              </div>
+              <div>
+                <h4 className="font-bold text-xs sm:text-sm">🚀 AI Pro (Automazioni & Agenti)</h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">10 Moduli • Webhook, RAG & Multi-Agenti</p>
+              </div>
+            </div>
+            {hasCourseAccess('ai-pro') ? (
+              <Badge variant="purple" className="text-[9px]">ATTIVO</Badge>
+            ) : (
+              <Badge variant="secondary" className="text-[9px] gap-1"><Lock className="h-2.5 w-2.5" /> BLOCCATO</Badge>
+            )}
+          </button>
         </div>
       </div>
 
@@ -1102,7 +1247,7 @@ function CorsiInnerContent() {
           }`}
         >
           <PlayCircle className="h-4 w-4" />
-          <span>Player 20 Video Lezioni</span>
+          <span>Player {selectedCourseId === 'ai-pro' ? 'AI Pro (10 Moduli)' : 'AI Start (20 Lezioni)'}</span>
         </button>
 
         <button
@@ -1128,6 +1273,7 @@ function CorsiInnerContent() {
           <Gift className="h-4 w-4" />
           <span>Risorse & Manuali ({resources.length})</span>
         </button>
+
 
 
         {!activeStudent && (
@@ -1197,243 +1343,309 @@ function CorsiInnerContent() {
         </div>
       )}
 
-      {/* TAB 1: PLAYER 20 VIDEO LEZIONI AI START & CHAT @AI */}
+      {/* TAB 1: PLAYER VIDEO LEZIONI (AI START & AI PRO) & CHAT @AI */}
       {activeTab === 'player' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left / Center: Video Player & Lezione Attiva */}
-          <div className="lg:col-span-8 space-y-4">
-            <div className="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden relative aspect-video flex items-center justify-center group">
-              <video
-                key={activeLesson.id}
-                controls
-                playsInline
-                preload="metadata"
-                controlsList="nodownload"
-                onEnded={() => {
-                  if (!activeLesson.completed) toggleLessonCompleted(activeLesson.id)
-                }}
-                src={activeLesson.videoUrl || REAL_ZOOM_RECORDINGS[0].videoUrl}
-                className="w-full h-full object-cover rounded-2xl"
-              >
-                Il tuo browser non supporta il riproduttore video.
-              </video>
+        !hasAccessToCurrentCourse() ? (
+          <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 max-w-2xl mx-auto my-8">
+            <div className="h-16 w-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20">
+              <Lock className="h-8 w-8" />
             </div>
+            <div className="space-y-2">
+              <Badge variant="purple" className="text-xs uppercase font-mono px-2.5 py-0.5">
+                {selectedCourseId === 'ai-pro' ? 'Percorso Avanzato AI Pro' : 'Percorso Base AI Start'}
+              </Badge>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                Accesso Riservato al Corso {selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start'}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                Il tuo codice attuale (<code>{activeStudent?.code}</code>) è abilitato per {activeStudent?.accessTier === 'ai-start' ? 'AI Start (Corso Base)' : 'AI Pro'}.
+                Per sbloccare anche questo percorso, richiedi il codice di upgrade al team.
+              </p>
+            </div>
+            <div className="pt-2 flex items-center justify-center gap-3">
+              <Button
+                onClick={() => setSelectedCourseId(selectedCourseId === 'ai-pro' ? 'ai-start' : 'ai-pro')}
+                variant="outline"
+                className="text-xs"
+              >
+                Vai al corso abilitato ({selectedCourseId === 'ai-pro' ? 'AI Start' : 'AI Pro'})
+              </Button>
+              <Button
+                onClick={() => {
+                  window.open('mailto:info@aiutiamoci.cloud?subject=Richiesta Upgrade Corso AI Pro&body=Gentile Team, richiedo l\'upgrade del mio codice per il secondo corso.', '_blank')
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                Richiedi Upgrade Accesso
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left / Center: Video Player & Lezione Attiva */}
+            <div className="lg:col-span-8 space-y-4">
+              <div className="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden relative aspect-video flex items-center justify-center group">
+                <video
+                  key={(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  controlsList="nodownload"
+                  onEnded={() => {
+                    const currentActive = selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro
+                    if (!currentActive.completed) toggleLessonCompleted(currentActive.id)
+                  }}
+                  src={(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).videoUrl || (selectedCourseId === 'ai-start' ? REAL_ZOOM_RECORDINGS[0].videoUrl : '')}
+                  className="w-full h-full object-cover rounded-2xl"
+                >
+                  Il tuo browser non supporta il riproduttore video.
+                </video>
+              </div>
 
-            {/* Dettaglio Lezione e Playlist */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                    {activeLesson.title}
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5 font-mono">
-                    Durata: {activeLesson.duration} • Lezione {activeLesson.id} di 20
-                  </p>
-                </div>
+              {/* Dettaglio Lezione e Playlist */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                      {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).title}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5 font-mono">
+                      Durata: {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).duration} • Modulo {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id} di {selectedCourseId === 'ai-start' ? lessons.length : lessonsPro.length}
+                    </p>
+                  </div>
 
-                <div className="flex items-center gap-2">
-                  {!activeStudent && (
+                  <div className="flex items-center gap-2">
+                    {!activeStudent && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const curr = selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro
+                          setCustomVideoUrlInput(curr.videoUrl || '')
+                          setIsEditVideoModalOpen(true)
+                        }}
+                        className="h-8 text-xs gap-1.5 border-slate-200 dark:border-slate-700"
+                      >
+                        <Edit className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                        <span>Modifica Titolo & Video Link</span>
+                      </Button>
+                    )}
+
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
-                        setCustomVideoUrlInput(activeLesson.videoUrl || '')
-                        setIsEditVideoModalOpen(true)
-                      }}
-                      className="h-8 text-xs gap-1.5 border-slate-200 dark:border-slate-700"
+                      onClick={() => handleOpenQuizForLesson(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro)}
+                      className="h-8 text-xs gap-1.5 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40"
                     >
-                      <Edit className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                      <span>Modifica Titolo & Video Link</span>
+                      <HelpCircle className="h-3.5 w-3.5 text-purple-600" />
+                      <span>Quiz @AI Lezione</span>
                     </Button>
-                  )}
 
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleOpenQuizForLesson(activeLesson)}
-                    className="h-8 text-xs gap-1.5 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40"
-                  >
-                    <HelpCircle className="h-3.5 w-3.5 text-purple-600" />
-                    <span>Quiz @AI Lezione</span>
-                  </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const curr = selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro
+                        toggleLessonCompleted(curr.id)
+                      }}
+                      className={`h-8 text-xs gap-1.5 ${
+                        (selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).completed
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                          : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      }`}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      <span>{(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).completed ? 'Completata ✓' : 'Segna Completata'}</span>
+                    </Button>
+                  </div>
+                </div>
 
-                  <Button
-                    size="sm"
-                    onClick={() => toggleLessonCompleted(activeLesson.id)}
-                    className={`h-8 text-xs gap-1.5 ${
-                      activeLesson.completed
-                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                {/* Banner Completamento & Attestato */}
+                {(selectedCourseId === 'ai-start' ? lessons : lessonsPro).every((l) => l.completed) && (
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-indigo-500/20 to-purple-500/20 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
+                        <Award className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                          🎉 Complimenti! Hai completato il percorso {selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start'}!
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Il tuo Attestato Ufficiale di Completamento è pronto per essere scaricato.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleOpenCertificate(activeStudent?.name, activeStudent?.code)}
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs h-9 px-4 gap-1.5 shrink-0 shadow-xs"
+                    >
+                      <Award className="h-4 w-4" />
+                      <span>Scarica Attestato</span>
+                    </Button>
+                  </div>
+                )}
+
+                {/* Lista dei Moduli del Corso Selezionato */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
+                    <span>Playlist {selectedCourseId === 'ai-pro' ? '10 Moduli AI Pro (Automazioni)' : '20 Moduli AI Start'}</span>
+                    <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                      {(selectedCourseId === 'ai-start' ? lessons : lessonsPro).filter((l) => l.completed).length} / {(selectedCourseId === 'ai-start' ? lessons : lessonsPro).length} Completate
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                    {(selectedCourseId === 'ai-start' ? lessons : lessonsPro).map((lesson, idx) => {
+                      const isUnlocked = isLessonUnlocked(idx)
+                      const isSelected = (selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id === lesson.id
+                      return (
+                        <div
+                          key={lesson.id}
+                          onClick={() => {
+                            if (isUnlocked) {
+                              if (selectedCourseId === 'ai-start') {
+                                setActiveLesson(lesson)
+                              } else {
+                                setActiveLessonPro(lesson)
+                              }
+                            } else {
+                              alert(`Devi prima completare il modulo precedente per sbloccare questo argomento!`)
+                            }
+                          }}
+                          className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
+                            !isUnlocked
+                              ? 'opacity-60 bg-slate-100/50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 cursor-not-allowed'
+                              : isSelected
+                              ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 font-bold cursor-pointer'
+                              : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 truncate pr-2">
+                            {isUnlocked ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleLessonCompleted(lesson.id)
+                                }}
+                                className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
+                                  lesson.completed
+                                    ? 'bg-emerald-500 border-emerald-600 text-white'
+                                    : 'border-slate-300 dark:border-slate-600'
+                                }`}
+                              >
+                                {lesson.completed && <CheckCircle2 className="h-3.5 w-3.5" />}
+                              </button>
+                            ) : (
+                              <div className="h-5 w-5 rounded-full border border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-400">
+                                <Lock className="h-3 w-3" />
+                              </div>
+                            )}
+
+                            <span className={`text-xs truncate ${!isUnlocked ? 'text-slate-400 dark:text-slate-500' : isSelected ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
+                              {lesson.title}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {!isUnlocked ? (
+                              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 gap-1 bg-slate-200 dark:bg-slate-800 text-slate-500">
+                                <Lock className="h-2.5 w-2.5" />
+                                <span>BLOCCATA</span>
+                              </Badge>
+                            ) : isSelected ? (
+                              <Badge variant="purple" className="text-[9px] px-1.5 py-0">IN RIPRODUZIONE</Badge>
+                            ) : null}
+                            <span className="text-[11px] text-slate-400 font-mono">
+                              {lesson.duration}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Chat Studenti con Assistente @AI */}
+            <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col h-[650px]">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+                <div className="flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                  <div>
+                    <h3 className="font-bold text-xs text-slate-900 dark:text-white">Chat Studenti & Assistente @AI</h3>
+                    <p className="text-[10px] text-slate-400">Scrivi @AI per risposte automatiche sui 20 moduli</p>
+                  </div>
+                </div>
+                <Badge variant="success" className="text-[9px] uppercase">Online 24/7</Badge>
+              </div>
+
+              <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
+                {chatMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`p-3 rounded-xl max-w-[88%] space-y-1 ${
+                      msg.isAi
+                        ? 'bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-slate-900 dark:text-slate-100 ml-0'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 ml-auto'
                     }`}
                   >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    <span>{activeLesson.completed ? 'Completata ✓' : 'Segna Completata'}</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Banner Completamento & Attestato */}
-              {lessons.every((l) => l.completed) && (
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-indigo-500/20 to-purple-500/20 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
-                      <Award className="h-6 w-6" />
+                    <div className="flex items-center justify-between font-bold text-[11px] text-indigo-600 dark:text-indigo-400">
+                      <span className="flex items-center gap-1">
+                        {msg.isAi && <Sparkles className="h-3 w-3 text-amber-500" />}
+                        {msg.sender}
+                      </span>
+                      <span className="text-[9px] font-normal text-slate-400">{msg.time}</span>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-                        🎉 Complimenti! Hai completato tutte le 20 lezioni!
-                      </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Il tuo Attestato Ufficiale di Completamento è pronto per essere scaricato.
-                      </p>
-                    </div>
+                    <p className="leading-relaxed">{msg.text}</p>
                   </div>
-                  <Button
-                    onClick={() => handleOpenCertificate()}
-                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs h-9 px-4 gap-1.5 shrink-0 shadow-xs"
-                  >
-                    <Award className="h-4 w-4" />
-                    <span>Scarica Attestato</span>
-                  </Button>
-                </div>
-              )}
+                ))}
 
-              {/* Lista dei 20 Moduli */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
-                  <span>Playlist 20 Moduli AI Start</span>
-                  <span className="font-mono text-indigo-600 dark:text-indigo-400">
-                    {lessons.filter((l) => l.completed).length} / {lessons.length} Completate
-                  </span>
-                </div>
-
-                <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
-                  {lessons.map((lesson, idx) => {
-                    const isUnlocked = isLessonUnlocked(idx)
-                    return (
-                      <div
-                        key={lesson.id}
-                        onClick={() => {
-                          if (isUnlocked) {
-                            setActiveLesson(lesson)
-                          } else {
-                            alert(`Devi prima completare la "${lessons[idx - 1].title}" per sbloccare questo modulo!`)
-                          }
-                        }}
-                        className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                          !isUnlocked
-                            ? 'opacity-60 bg-slate-100/50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 cursor-not-allowed'
-                            : activeLesson.id === lesson.id
-                            ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 font-bold cursor-pointer'
-                            : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 truncate pr-2">
-                          {isUnlocked ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                toggleLessonCompleted(lesson.id)
-                              }}
-                              className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
-                                lesson.completed
-                                  ? 'bg-emerald-500 border-emerald-600 text-white'
-                                  : 'border-slate-300 dark:border-slate-600'
-                              }`}
-                            >
-                              {lesson.completed && <CheckCircle2 className="h-3.5 w-3.5" />}
-                            </button>
-                          ) : (
-                            <div className="h-5 w-5 rounded-full border border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-400">
-                              <Lock className="h-3 w-3" />
-                            </div>
-                          )}
-
-                          <span className={`text-xs truncate ${!isUnlocked ? 'text-slate-400 dark:text-slate-500' : activeLesson.id === lesson.id ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
-                            {lesson.title}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          {!isUnlocked ? (
-                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 gap-1 bg-slate-200 dark:bg-slate-800 text-slate-500">
-                              <Lock className="h-2.5 w-2.5" />
-                              <span>BLOCCATA</span>
-                            </Badge>
-                          ) : activeLesson.id === lesson.id ? (
-                            <Badge variant="purple" className="text-[9px] px-1.5 py-0">IN RIPRODUZIONE</Badge>
-                          ) : null}
-                          <span className="text-[11px] text-slate-400 font-mono">
-                            {lesson.duration}
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                {isAiThinking && (
+                  <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                    <span className="text-slate-400 font-mono text-[11px]">Assistente @AI sta elaborando...</span>
+                  </div>
+                )}
               </div>
+
+              <form onSubmit={handleSendStudentChat} className="p-3 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+                <Input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Scrivi una domanda o digita @AI..."
+                  className="text-xs h-10 dark:bg-slate-800 dark:border-slate-700"
+                />
+                <Button type="submit" size="icon" className="h-10 w-10 shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </form>
             </div>
           </div>
-
-          {/* Right: Chat Studenti con Assistente @AI */}
-          <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col h-[650px]">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-              <div className="flex items-center gap-2">
-                <Bot className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                <div>
-                  <h3 className="font-bold text-xs text-slate-900 dark:text-white">Chat Studenti & Assistente @AI</h3>
-                  <p className="text-[10px] text-slate-400">Scrivi @AI per risposte automatiche sui 20 moduli</p>
-                </div>
-              </div>
-              <Badge variant="success" className="text-[9px] uppercase">Online 24/7</Badge>
-            </div>
-
-            <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
-              {chatMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`p-3 rounded-xl max-w-[88%] space-y-1 ${
-                    msg.isAi
-                      ? 'bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-slate-900 dark:text-slate-100 ml-0'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 ml-auto'
-                  }`}
-                >
-                  <div className="flex items-center justify-between font-bold text-[11px] text-indigo-600 dark:text-indigo-400">
-                    <span className="flex items-center gap-1">
-                      {msg.isAi && <Sparkles className="h-3 w-3 text-amber-500" />}
-                      {msg.sender}
-                    </span>
-                    <span className="text-[9px] font-normal text-slate-400">{msg.time}</span>
-                  </div>
-                  <p className="leading-relaxed">{msg.text}</p>
-                </div>
-              ))}
-
-              {isAiThinking && (
-                <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
-                  <span className="text-slate-400 font-mono text-[11px]">Assistente @AI sta elaborando...</span>
-                </div>
-              )}
-            </div>
-
-            <form onSubmit={handleSendStudentChat} className="p-3 border-t border-slate-200 dark:border-slate-800 flex gap-2">
-              <Input
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Scrivi una domanda o digita @AI..."
-                className="text-xs h-10 dark:bg-slate-800 dark:border-slate-700"
-              />
-              <Button type="submit" size="icon" className="h-10 w-10 shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white">
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
-          </div>
-        </div>
+        )
       )}
 
       {/* TAB 2: REGISTRAZIONI ZOOM LIVE */}
       {activeTab === 'zoom' && (
+        !hasAccessToCurrentCourse() ? (
+          <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 max-w-2xl mx-auto my-8">
+            <div className="h-16 w-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20">
+              <Lock className="h-8 w-8" />
+            </div>
+            <div className="space-y-2">
+              <Badge variant="purple" className="text-xs uppercase font-mono px-2.5 py-0.5">
+                {selectedCourseId === 'ai-pro' ? 'Registrazioni AI Pro' : 'Registrazioni AI Start'}
+              </Badge>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                Contenuto Riservato
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                Le registrazioni Zoom di questo percorso sono accessibili solo con il codice abilitato.
+              </p>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
             <div>
@@ -1538,10 +1750,29 @@ function CorsiInnerContent() {
             ))}
           </div>
         </div>
+        )
       )}
 
       {/* TAB 3: RISORSE BONUS & MANUALI */}
       {activeTab === 'bonus' && (
+        !hasAccessToCurrentCourse() ? (
+          <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 max-w-2xl mx-auto my-8">
+            <div className="h-16 w-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20">
+              <Lock className="h-8 w-8" />
+            </div>
+            <div className="space-y-2">
+              <Badge variant="purple" className="text-xs uppercase font-mono px-2.5 py-0.5">
+                {selectedCourseId === 'ai-pro' ? 'Risorse AI Pro' : 'Risorse AI Start'}
+              </Badge>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                Contenuto Riservato
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                I manuali e le risorse di questo percorso sono accessibili solo con il codice abilitato.
+              </p>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
             <div>
@@ -1624,6 +1855,7 @@ function CorsiInnerContent() {
             ))}
           </div>
         </div>
+        )
       )}
 
 
@@ -1980,7 +2212,18 @@ function CorsiInnerContent() {
                         {reg.studentEmail}
                       </td>
                       <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">
-                        {reg.courseTitle}
+                        <div className="flex flex-col gap-1">
+                          <span>{reg.courseTitle}</span>
+                          <div className="flex items-center gap-1.5">
+                            {reg.accessTier === 'both' ? (
+                              <Badge variant="purple" className="text-[8px] font-mono">🌟 FULL ACCESS (BASE + PRO)</Badge>
+                            ) : reg.accessTier === 'ai-pro' ? (
+                              <Badge variant="purple" className="text-[8px] font-mono">🚀 SOLO AI PRO</Badge>
+                            ) : (
+                              <Badge variant="info" className="text-[8px] font-mono">📘 SOLO AI START</Badge>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td className="py-3.5 px-4">
                         <Badge
@@ -2242,15 +2485,15 @@ function CorsiInnerContent() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Corso</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Livello di Accesso Abilitato</label>
                 <select
-                  value={selectedCourseTitle}
-                  onChange={(e) => setSelectedCourseTitle(e.target.value)}
+                  value={enrollAccessTier}
+                  onChange={(e) => setEnrollAccessTier(e.target.value as any)}
                   className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 >
-                  <option value="AI Start - Domina l’Intelligenza Artificiale da Zero">
-                    AI Start - Domina l’Intelligenza Artificiale da Zero
-                  </option>
+                  <option value="ai-start">📘 Solo Corso Base (AI Start - 20 Lezioni)</option>
+                  <option value="ai-pro">🚀 Solo Corso Avanzato (AI Pro - Automazioni & Agenti)</option>
+                  <option value="both">🌟 Pacchetto Completo (AI Start + AI Pro)</option>
                 </select>
               </div>
 
@@ -2512,6 +2755,21 @@ function CorsiInnerContent() {
             <form onSubmit={handleBulkImport} className="p-6 space-y-4 text-xs">
               <div className="space-y-1.5">
                 <label className="font-semibold text-slate-700 dark:text-slate-300">
+                  Livello di Accesso per questa Importazione
+                </label>
+                <select
+                  value={bulkAccessTier}
+                  onChange={(e) => setBulkAccessTier(e.target.value as any)}
+                  className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
+                >
+                  <option value="ai-start">📘 Solo Corso Base (AI Start)</option>
+                  <option value="ai-pro">🚀 Solo Corso Avanzato (AI Pro: Automazioni & Agenti)</option>
+                  <option value="both">🌟 Pacchetto Completo (AI Start + AI Pro)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">
                   Incolla Lista Studenti (1 per riga) *
                 </label>
                 <p className="text-[11px] text-slate-400">
@@ -2519,7 +2777,7 @@ function CorsiInnerContent() {
                 </p>
                 <textarea
                   required
-                  rows={6}
+                  rows={5}
                   value={bulkInputText}
                   onChange={(e) => setBulkInputText(e.target.value)}
                   placeholder="Mario Rossi, mario.rossi@email.com&#10;Luigi Verdi, luigi.verdi@email.com&#10;Giulia Bianchi, giulia@azienda.it"
