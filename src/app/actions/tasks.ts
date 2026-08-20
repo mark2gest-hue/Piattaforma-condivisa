@@ -195,3 +195,59 @@ export async function createProjectAction(title: string, description?: string) {
   }
 }
 
+export async function updateProjectAction(
+  projectId: string,
+  payload: { title?: string; description?: string; status?: string; category?: string }
+) {
+  try {
+    const supabase = createAdminClient()
+    const updateData: any = {}
+    if (payload.title) updateData.title = payload.title.trim()
+    if (payload.description !== undefined) updateData.description = payload.description?.trim() || null
+    if (payload.status) updateData.status = payload.status
+    if (payload.category) updateData.category = payload.category
+
+    const { data, error } = await (supabase as any)
+      .from('projects')
+      .update(updateData)
+      .eq('id', projectId)
+      .select('*')
+      .single()
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, project: data }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function deleteProjectAction(projectId: string) {
+  try {
+    const supabase = createAdminClient()
+    
+    // Dissocia i task collegati impostando project_id = null
+    await (supabase as any)
+      .from('tasks')
+      .update({ project_id: null })
+      .eq('project_id', projectId)
+
+    // Elimina il progetto
+    const { error } = await (supabase as any)
+      .from('projects')
+      .delete()
+      .eq('id', projectId)
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+
