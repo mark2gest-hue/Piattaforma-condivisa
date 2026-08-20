@@ -41,18 +41,6 @@ import {
   publishToBufferAction,
 } from '@/app/actions/marketing'
 
-interface CourseItem {
-  id: string
-  title: string
-  category: 'ai' | 'consulting' | 'dev'
-  description: string
-  duration: string
-  lessonsCount: number
-  studentsCount: number
-  price: string
-  status: 'active' | 'draft' | 'archived'
-}
-
 interface StudentRegistration {
   id: string
   code: string
@@ -219,31 +207,6 @@ function CorsiInnerContent() {
   const searchParams = useSearchParams()
   const supabase = createClient()
 
-  const [courses] = useState<CourseItem[]>([
-    {
-      id: 'c-1',
-      title: 'AI Start - Domina l’Intelligenza Artificiale da Zero',
-      category: 'ai',
-      description: 'Corso pratico in 20 lezioni. Impara a delegare la noia, potenziare la creatività e gestire il tempo spiegato semplice.',
-      duration: '20 Video • 5 Moduli',
-      lessonsCount: 20,
-      studentsCount: 42,
-      price: '€ 69 (Gratuito con Codice)',
-      status: 'active',
-    },
-    {
-      id: 'c-2',
-      title: 'Consulenza B2B & Strategie di Digital Transformation',
-      category: 'consulting',
-      description: 'Audit processi, integrazione agenti AI personalizzati e formazione staff aziendale.',
-      duration: 'Percorso Personalizzato',
-      lessonsCount: 12,
-      studentsCount: 8,
-      price: 'Su Misura',
-      status: 'active',
-    },
-  ])
-
   // Lezioni attive
   const [lessons, setLessons] = useState<Lesson[]>(AI_START_LESSONS)
   const [activeLesson, setActiveLesson] = useState<Lesson>(lessons[0])
@@ -349,7 +312,7 @@ function CorsiInnerContent() {
   const [chatInput, setChatInput] = useState('')
   const [isAiThinking, setIsAiThinking] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'catalog' | 'students' | 'marketing' | 'login'>('player')
+  const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'students' | 'marketing' | 'login'>('player')
 
   // Social Content Creator
   const [selectedSocialLessonId, setSelectedSocialLessonId] = useState<number>(1)
@@ -599,7 +562,7 @@ function CorsiInnerContent() {
 
   // Modal Nuova Iscrizione Studente
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
-  const [selectedCourseTitle, setSelectedCourseTitle] = useState(courses[0].title)
+  const [selectedCourseTitle, setSelectedCourseTitle] = useState('AI Start - Domina l’Intelligenza Artificiale da Zero')
   const [studentName, setStudentName] = useState('')
   const [studentEmail, setStudentEmail] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
@@ -942,19 +905,6 @@ function CorsiInnerContent() {
           <span>Risorse & Manuali ({resources.length})</span>
         </button>
 
-        {!activeStudent && (
-          <button
-            onClick={() => setActiveTab('catalog')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
-              activeTab === 'catalog'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <BookOpen className="h-4 w-4" />
-            <span>Catalogo Corsi ({courses.length})</span>
-          </button>
-        )}
 
         {!activeStudent && (
           <button
@@ -1416,55 +1366,6 @@ function CorsiInnerContent() {
         </div>
       )}
 
-      {/* TAB: CATALOGO CORSI */}
-      {activeTab === 'catalog' && !activeStudent && (
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              Catalogo Corsi Formativi ({courses.length})
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Elenco dei percorsi formativi attivi e prossimamente disponibili.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {courses.map((course) => (
-              <div key={course.id} className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 hover:border-indigo-500/50 transition-all">
-                <div className="flex items-center justify-between">
-                  <Badge
-                    variant={course.status === 'active' ? 'success' : 'secondary'}
-                    className="text-[9px] uppercase"
-                  >
-                    {course.status === 'active' ? 'Attivo' : course.status === 'draft' ? 'Bozza' : 'Archiviato'}
-                  </Badge>
-                  <span className="text-xs font-mono text-slate-400">{course.duration}</span>
-                </div>
-
-                <div>
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">{course.title}</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{course.description}</p>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-4 text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <PlayCircle className="h-3.5 w-3.5 text-indigo-600" />
-                      {course.lessonsCount} Lezioni
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5 text-indigo-600" />
-                      {course.studentsCount} Studenti
-                    </span>
-                  </div>
-                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{course.price}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* TAB: MARKETING / SOCIAL CREATOR */}
       {activeTab === 'marketing' && !activeStudent && (
@@ -2021,9 +1922,9 @@ function CorsiInnerContent() {
                   onChange={(e) => setSelectedCourseTitle(e.target.value)}
                   className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 >
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.title}>{c.title}</option>
-                  ))}
+                  <option value="AI Start - Domina l’Intelligenza Artificiale da Zero">
+                    AI Start - Domina l’Intelligenza Artificiale da Zero
+                  </option>
                 </select>
               </div>
 
