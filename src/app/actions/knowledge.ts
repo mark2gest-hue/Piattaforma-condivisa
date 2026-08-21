@@ -215,6 +215,43 @@ Regole Operative:
     is_featured: true,
   },
   {
+    id: 'k-12',
+    title: 'Workflow n8n: Lead Capture, Analisi AI e Notifica Telegram',
+    category: 'agents_workflows',
+    tags: ['n8n', 'automazione', 'telegram', 'lead-generation', 'webhook'],
+    description: 'Flusso per ricevere contatti da form web, qualificarli con Gemini/Claude e notificare il team.',
+    content: `### ⚡ Schema Flusso n8n Lead Qualification (Modulo 19)
+
+1. **Trigger [Webhook POST]**: Riceve payload JSON da form contatti (nome, email, budget, richiesta).
+2. **Node [AI Agent / LLM Chain]**: 
+   - Prompt: "Analizza la richiesta del cliente, assegna un punteggio da 1 a 10 e riassumi le sue esigenze in 3 punti."
+3. **Node [IF Punteggio >= 7]**:
+   - **True**: Invia messaggio su canale Telegram VIP del team con link WhatsApp diretto.
+   - **False**: Invia email di benvenuto standard con brochure allegata.
+4. **Node [Database / Sheet]**: Salva il record aggiornato con i tag generati dall'IA.`,
+    lesson_id: 19,
+    is_featured: true,
+  },
+  {
+    id: 'k-13',
+    title: 'Agente Voice AI: Script e Gestione Chiamate di Conferma',
+    category: 'agents_workflows',
+    tags: ['voice-ai', 'chiamate', 'assistente-vocale', 'customer-care'],
+    description: 'Istruzioni e logica per agenti vocali (es. Retell / Vapi / ElevenLabs) per confermare appuntamenti.',
+    content: `### 📞 Voice Agent Prompt (Modulo 20)
+
+Ruolo: Sei Chiara, l'assistente vocale di [Nome Clinica/Azienda].
+Obiettivo: Confermare la presenza del paziente per la visita di domani alle [Orario].
+
+Linee Guida Vocali:
+- Frasi brevissime (max 15 parole per battuta per non sovrapporsi).
+- Tono cordiale, naturale e rassicurante.
+- Se il cliente dice "Sì", ringrazia e invia SMS di riepilogo.
+- Se il cliente dice "Non posso", chiedi gentilmente: "Vuole che la richiamiamo per fissare una nuova data?".`,
+    lesson_id: 20,
+    is_featured: true,
+  },
+  {
     id: 'k-11',
     title: 'Prompt Anti-Allucinazione con Grounding e Verifica Fonti',
     category: 'prompting',
@@ -242,37 +279,47 @@ Domanda: [Scrivi la tua domanda]`,
 // 1. Leggi tutti i Knowledge Items
 export async function getKnowledgeItemsAction(category?: string, search?: string) {
   try {
-    const supabase = createAdminClient()
-    let query = (supabase as any).from('knowledge_items').select('*').order('created_at', { ascending: false })
+    let items = [...DEFAULT_KNOWLEDGE_ITEMS]
 
-    if (category && category !== 'all') {
-      query = query.eq('category', category)
-    }
+    // Prova a recuperare da Supabase DB se disponibile
+    try {
+      const supabase = createAdminClient()
+      let query = (supabase as any).from('knowledge_items').select('*').order('created_at', { ascending: false })
 
-    if (search && search.trim()) {
-      query = query.ilike('title', `%${search.trim()}%`)
-    }
-
-    const { data, error } = await query
-
-    if (error || !data || data.length === 0) {
-      // Fallback sul catalogo predefinito con filtri locali
-      let items = [...DEFAULT_KNOWLEDGE_ITEMS]
       if (category && category !== 'all') {
-        items = items.filter((i) => i.category === category)
+        query = query.eq('category', category)
       }
+
       if (search && search.trim()) {
-        const s = search.toLowerCase().trim()
-        items = items.filter(
-          (i) => i.title.toLowerCase().includes(s) || i.content.toLowerCase().includes(s) || i.tags.some((t) => t.toLowerCase().includes(s))
-        )
+        query = query.ilike('title', `%${search.trim()}%`)
       }
-      return { success: true, items }
+
+      const { data, error } = await query
+      if (!error && data && data.length > 0) {
+        return { success: true, items: data }
+      }
+    } catch {
+      // DB in fase di boot/schema, usa il catalogo nativo
     }
 
-    return { success: true, items: data }
-  } catch (error: any) {
-    return { success: true, items: DEFAULT_KNOWLEDGE_ITEMS }
+    // Filtra sul catalogo nativo
+    if (category && category !== 'all') {
+      items = items.filter((i) => i.category === category)
+    }
+    if (search && search.trim()) {
+      const s = search.toLowerCase().trim()
+      items = items.filter(
+        (i) => i.title.toLowerCase().includes(s) || i.content.toLowerCase().includes(s) || i.tags.some((t) => t.toLowerCase().includes(s))
+      )
+    }
+
+    return { success: true, items }
+  } catch {
+    let fallback = [...DEFAULT_KNOWLEDGE_ITEMS]
+    if (category && category !== 'all') {
+      fallback = fallback.filter((i) => i.category === category)
+    }
+    return { success: true, items: fallback }
   }
 }
 

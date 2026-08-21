@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Sparkles,
   Search,
@@ -52,7 +52,7 @@ export default function CervelloKnowledgePage() {
   const [items, setItems] = useState<KnowledgeItem[]>(DEFAULT_KNOWLEDGE_ITEMS)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   // Modal State
@@ -71,16 +71,33 @@ export default function CervelloKnowledgePage() {
 
   useEffect(() => {
     fetchItems()
-  }, [selectedCategory, searchQuery])
+  }, [])
 
   const fetchItems = async () => {
-    setLoading(true)
-    const res = await getKnowledgeItemsAction(selectedCategory, searchQuery)
-    if (res.success && res.items) {
+    const res = await getKnowledgeItemsAction()
+    if (res.success && res.items && res.items.length > 0) {
       setItems(res.items)
     }
-    setLoading(false)
   }
+
+  // Filtraggio istantaneo locale senza attese
+  const displayedItems = useMemo(() => {
+    let list = items
+    if (selectedCategory && selectedCategory !== 'all') {
+      list = list.filter((i) => i.category === selectedCategory)
+    }
+    if (searchQuery && searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      list = list.filter(
+        (i) =>
+          i.title.toLowerCase().includes(q) ||
+          i.content.toLowerCase().includes(q) ||
+          (i.description && i.description.toLowerCase().includes(q)) ||
+          i.tags.some((t) => t.toLowerCase().includes(q))
+      )
+    }
+    return list
+  }, [items, selectedCategory, searchQuery])
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text)
@@ -275,20 +292,16 @@ export default function CervelloKnowledgePage() {
       </div>
 
       {/* Knowledge Cards Grid */}
-      {loading ? (
-        <div className="flex-1 flex items-center justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-        </div>
-      ) : items.length === 0 ? (
+      {displayedItems.length === 0 ? (
         <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
-          <p className="text-sm font-semibold text-slate-400">Nessun prompt o risorsa trovata per questa ricerca.</p>
+          <p className="text-sm font-semibold text-slate-400">Nessun prompt o risorsa trovata per questa categoria/ricerca.</p>
           <Button size="sm" variant="ghost" onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}>
             Reimposta Filtri
           </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map((item) => {
+          {displayedItems.map((item: KnowledgeItem) => {
             const isCopied = copiedId === item.id
 
             return (
@@ -335,7 +348,7 @@ export default function CervelloKnowledgePage() {
                   {/* Tags */}
                   {item.tags && item.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {item.tags.map((t, idx) => (
+                      {item.tags.map((t: string, idx: number) => (
                         <span
                           key={idx}
                           className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-1.5 py-0.5 rounded"
