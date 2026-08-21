@@ -62,8 +62,8 @@ export function Sidebar() {
     if (data && data.length > 0) {
       setSidebarProjects(data.map((p: any) => ({
         id: p.id,
-        title: p.title.replace(/^[^\w\s]*\s*/, ''),
-        status: p.status === 'active' ? 'Attivo' : p.status,
+        title: p.title ? p.title.replace(/^[^\w\s]*\s*/, '') : 'Progetto',
+        status: p.status === 'active' ? 'Attivo' : p.status || 'Attivo',
       })))
     }
   }

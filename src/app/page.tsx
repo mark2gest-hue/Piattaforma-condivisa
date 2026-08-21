@@ -41,7 +41,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { sendSharedEmail } from './(dashboard)/posta/actions'
 import { createClient } from '@/lib/supabase/client'
 import { enrollStudentAction, joinWaitlistAction } from '@/app/actions/student'
 
