@@ -77,14 +77,15 @@ export default function FilesManagerPage() {
 
   const handleCreateFolder = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newFolderName.trim()) return
+    if (!newFolderName.trim() || isCreatingFolder) return
 
     setIsCreatingFolder(true)
     const { data: { user } } = await supabase.auth.getUser()
 
+    const cleanName = newFolderName.trim().replace(/[^a-zA-Z0-9._\- ]/g, '_')
     const folderPath = currentFolderId
-      ? `folder_${currentFolderId}_${Date.now()}_${newFolderName.trim()}`
-      : `folder_${Date.now()}_${newFolderName.trim()}`
+      ? `${currentFolderId}/folder_${Date.now()}_${cleanName}`
+      : `folder_${Date.now()}_${cleanName}`
 
     const { data: dbFolder, error } = await (supabase as any)
       .from('files')
@@ -94,15 +95,16 @@ export default function FilesManagerPage() {
         size_bytes: 0,
         mime_type: 'folder',
         uploaded_by: user?.id || null,
-        project_id: currentFolderId || null, // usiamo project_id come riferimento cartella padre
+        project_id: null,
       })
       .select('*, uploader:profiles(*)')
       .single()
 
     if (error) {
+      console.error('Errore creazione cartella:', error)
       alert(`Errore creazione cartella: ${error.message}`)
     } else if (dbFolder) {
-      setFiles([dbFolder, ...files])
+      setFiles((prev) => [dbFolder as any, ...prev])
       setIsFolderModalOpen(false)
       setNewFolderName('')
     }
@@ -111,48 +113,67 @@ export default function FilesManagerPage() {
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
+    const uploadedFiles = e.target.files
+    if (!uploadedFiles || uploadedFiles.length === 0) return
 
     setUploading(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const newItems: FileWithUploader[] = []
 
-    const cleanFileName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-    const storagePath = currentFolderId
-      ? `${currentFolderId}/${Date.now()}_${cleanFileName}`
-      : `${Date.now()}_${cleanFileName}`
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const selectedFile = uploadedFiles[i]
+        const cleanFileName = selectedFile.name.replace(/[^a-zA-Z0-9._\-]/g, '_')
+        const storagePath = currentFolderId
+          ? `${currentFolderId}/${Date.now()}_${cleanFileName}`
+          : `${Date.now()}_${cleanFileName}`
 
-    const { error: storageError } = await supabase.storage
-      .from('team-files')
-      .upload(storagePath, selectedFile)
+        // 1. Upload su Supabase Storage bucket 'team-files'
+        const { error: storageError } = await supabase.storage
+          .from('team-files')
+          .upload(storagePath, selectedFile, {
+            cacheControl: '3600',
+            upsert: true,
+          })
 
-    if (storageError) {
-      console.error('Errore Upload Storage:', storageError)
-      alert(`Errore nel caricamento del file: ${storageError.message}`)
+        if (storageError) {
+          console.error('Errore Upload Storage:', storageError)
+          alert(`Errore caricamento su Storage per "${selectedFile.name}": ${storageError.message}`)
+          continue
+        }
+
+        // 2. Salva metadati nel Database (con project_id: null per evitare vincoli FK)
+        const { data: dbFile, error: dbError } = await (supabase as any)
+          .from('files')
+          .insert({
+            name: selectedFile.name,
+            storage_path: storagePath,
+            size_bytes: selectedFile.size,
+            mime_type: selectedFile.type || 'application/octet-stream',
+            uploaded_by: user?.id || null,
+            project_id: null,
+          })
+          .select('*, uploader:profiles(*)')
+          .single()
+
+        if (dbError) {
+          console.error('Errore salvataggio DB:', dbError)
+          alert(`Errore registrazione database per "${selectedFile.name}": ${dbError.message}`)
+        } else if (dbFile) {
+          newItems.push(dbFile as any)
+        }
+      }
+
+      if (newItems.length > 0) {
+        setFiles((prev) => [...newItems, ...prev])
+      }
+    } catch (err: any) {
+      console.error('Errore generico upload:', err)
+      alert(`Errore durante il caricamento: ${err?.message || 'Sconosciuto'}`)
+    } finally {
+      e.target.value = ''
       setUploading(false)
-      return
     }
-
-    const { data: dbFile, error: dbError } = await (supabase as any)
-      .from('files')
-      .insert({
-        name: selectedFile.name,
-        storage_path: storagePath,
-        size_bytes: selectedFile.size,
-        mime_type: selectedFile.type || 'application/octet-stream',
-        uploaded_by: user?.id || null,
-        project_id: currentFolderId || null,
-      })
-      .select('*, uploader:profiles(*)')
-      .single()
-
-    if (dbError) {
-      console.error('Errore salvataggio file in DB:', dbError)
-    } else if (dbFile) {
-      setFiles([dbFile, ...files])
-    }
-
-    setUploading(false)
   }
 
   const handleOpenFolder = (folder: FileWithUploader) => {
@@ -192,10 +213,23 @@ export default function FilesManagerPage() {
 
     if (!isFolder) {
       await supabase.storage.from('team-files').remove([item.storage_path])
+    } else {
+      // Elimina anche i file contenuti nella cartella
+      const childFiles = files.filter(
+        (f) => f.storage_path.startsWith(`${item.id}/`) || f.storage_path.startsWith(`${item.storage_path}/`)
+      )
+      const childStoragePaths = childFiles.filter((f) => f.mime_type !== 'folder').map((f) => f.storage_path)
+      if (childStoragePaths.length > 0) {
+        await supabase.storage.from('team-files').remove(childStoragePaths)
+      }
+      const childIds = childFiles.map((f) => f.id)
+      if (childIds.length > 0) {
+        await supabase.from('files').delete().in('id', childIds)
+      }
     }
 
     await supabase.from('files').delete().eq('id', item.id)
-    setFiles(files.filter((f) => f.id !== item.id))
+    setFiles((prev) => prev.filter((f) => f.id !== item.id && !f.storage_path.startsWith(`${item.id}/`)))
 
     if (previewFile?.id === item.id) {
       setPreviewFile(null)
@@ -232,7 +266,23 @@ export default function FilesManagerPage() {
 
   // Filtraggio file e cartelle del livello corrente
   const currentLevelItems = files.filter((f) => {
-    const isCurrentLevel = (f as any).project_id === currentFolderId || (!currentFolderId && !(f as any).project_id)
+    let isCurrentLevel = false
+
+    if (!currentFolderId) {
+      // Livello Principale (Root):
+      // elementi che non hanno prefisso di cartella (nessuno slash)
+      const hasFolderPrefix = f.storage_path.includes('/')
+      isCurrentLevel = !hasFolderPrefix
+    } else {
+      // Livello Interno alla cartella selezionata:
+      const currentFolder = files.find((item) => item.id === currentFolderId)
+      const currentFolderPath = currentFolder?.storage_path || ''
+
+      const matchByFolderId = f.storage_path.startsWith(`${currentFolderId}/`)
+      const matchByFolderPath = currentFolderPath ? f.storage_path.startsWith(`${currentFolderPath}/`) : false
+      isCurrentLevel = matchByFolderId || matchByFolderPath
+    }
+
     const matchesSearch = f.name.toLowerCase().includes(searchQuery.toLowerCase())
     return isCurrentLevel && matchesSearch
   })
@@ -269,6 +319,7 @@ export default function FilesManagerPage() {
           <label className="cursor-pointer">
             <input
               type="file"
+              multiple
               onChange={handleFileUpload}
               disabled={uploading}
               className="hidden"
