@@ -450,11 +450,17 @@ export default function FilesManagerPage() {
 
                   {/* Rendering File */}
                   {currentFiles.map((f) => (
-                    <tr key={f.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                    <tr
+                      key={f.id}
+                      onClick={() => handlePreviewFile(f)}
+                      className="hover:bg-blue-50/50 dark:hover:bg-blue-950/20 cursor-pointer transition-colors group"
+                    >
                       <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">
                         <div className="flex items-center gap-2.5">
                           {getFileIcon(f.mime_type)}
-                          <span className="truncate max-w-xs">{f.name}</span>
+                          <span className="truncate max-w-xs group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors font-medium">
+                            {f.name}
+                          </span>
                         </div>
                       </td>
                       <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 font-mono">
@@ -466,13 +472,13 @@ export default function FilesManagerPage() {
                       <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">
                         {formatDate(f.created_at)}
                       </td>
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
-                            title="Anteprima Senza Scaricare"
+                            title="Visualizza / Anteprima"
                             onClick={() => handlePreviewFile(f)}
                           >
                             <Eye className="h-4 w-4" />
@@ -568,8 +574,8 @@ export default function FilesManagerPage() {
 
       {/* Modal Anteprima File senza scaricare */}
       {previewFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-4xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-5xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]">
             
             {/* Modal Header */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
@@ -591,10 +597,10 @@ export default function FilesManagerPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => window.open(previewUrl, '_blank')}
-                    className="text-xs gap-1.5 h-8 bg-white dark:bg-slate-800"
+                    className="text-xs gap-1.5 h-8 bg-white dark:bg-slate-800 font-semibold text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                    Apri in Scheda
+                    Apri a Schermo Intero
                   </Button>
                 )}
                 <Button
@@ -609,7 +615,7 @@ export default function FilesManagerPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-4 flex-1 overflow-auto flex items-center justify-center min-h-[350px] bg-slate-100 dark:bg-slate-950">
+            <div className="p-4 flex-1 overflow-auto flex items-center justify-center min-h-[400px] bg-slate-100 dark:bg-slate-950">
               {previewLoading ? (
                 <div className="flex flex-col items-center gap-2 text-slate-400">
                   <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -620,15 +626,16 @@ export default function FilesManagerPage() {
                   <img
                     src={previewUrl}
                     alt={previewFile.name}
-                    className="max-h-[600px] w-auto max-w-full rounded-lg shadow-md object-contain"
+                    className="max-h-[70vh] w-auto max-w-full rounded-lg shadow-md object-contain"
                   />
                 ) : previewFile.mime_type.includes('pdf') ? (
                   <iframe
                     src={previewUrl}
-                    className="w-full h-[600px] rounded-lg border-0 shadow-md"
+                    title={previewFile.name}
+                    className="w-full h-[72vh] rounded-xl border border-slate-200 dark:border-slate-800 shadow-md bg-white"
                   />
                 ) : previewFile.mime_type.includes('video') ? (
-                  <video src={previewUrl} controls className="w-full max-h-[600px] rounded-lg shadow-md" />
+                  <video src={previewUrl} controls className="w-full max-h-[70vh] rounded-lg shadow-md" />
                 ) : previewFile.mime_type.includes('audio') ? (
                   <audio src={previewUrl} controls className="w-full p-4" />
                 ) : (
