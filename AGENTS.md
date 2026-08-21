@@ -9,4 +9,4 @@
 - **Protezione configurazioni (.env)**: Non toccare né sovrascrivere mai i file `.env`.
 - **Pianificazione esplicita**: Prima di modificare più di 5 file, presenta sempre un piano dettagliato per approvazione.
 - **Retrocompatibilità**: Mantieni sempre la retrocompatibilità con le API esistenti.
-- **Consultazione Preventiva Skills**: Prima di implementare nuove funzionalità, automazioni o architetture, verifica sempre se esiste una Skill pertinente (in iCloud Drive o nel pool di skills) e applicane le linee guida.
+- **Consultazione Preventiva Skills**: Prima di implementare nuove funzionalità, automazioni o architetture, verifica sempre se esiste una Skill pertinente (nella cartella Proton Drive: https://drive.proton.me/urls/XF6PZNAD84#yrottI5pvplQ o nel pool di skills) e applicane le linee guida.

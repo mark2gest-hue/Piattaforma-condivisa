@@ -183,6 +183,20 @@ export default function CervelloKnowledgePage() {
 
         <div className="flex items-center gap-3 relative z-10 flex-wrap">
           <a
+            href="https://drive.proton.me/urls/XF6PZNAD84#yrottI5pvplQ"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button
+              variant="outline"
+              className="h-10 px-4 text-xs font-bold rounded-xl border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/50 text-amber-200 gap-2"
+            >
+              <Sparkles className="h-4 w-4 text-amber-400" />
+              <span>Skills Hub (Proton Drive)</span>
+            </Button>
+          </a>
+
+          <a
             href="https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY"
             target="_blank"
             rel="noopener noreferrer"
@@ -192,7 +206,7 @@ export default function CervelloKnowledgePage() {
               className="h-10 px-4 text-xs font-bold rounded-xl border-purple-500/30 bg-purple-950/30 hover:bg-purple-900/50 text-purple-200 gap-2"
             >
               <ExternalLink className="h-4 w-4 text-purple-400" />
-              <span>Cartella 20 PDF (Proton Drive)</span>
+              <span>20 PDF Corsi (Proton Drive)</span>
             </Button>
           </a>
 
