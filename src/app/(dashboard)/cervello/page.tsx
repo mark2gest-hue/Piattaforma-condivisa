@@ -24,13 +24,17 @@ import {
   Share2,
   FolderDown,
   Info,
+  LayoutGrid,
+  Network,
 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 import { playNotificationSound } from '@/lib/notifications'
 import { KnowledgeItem, DEFAULT_KNOWLEDGE_ITEMS } from '@/lib/knowledge-data'
+import { KnowledgeGraphView } from '@/components/cervello/knowledge-graph-view'
 import {
   getKnowledgeItemsAction,
   createKnowledgeItemAction,
@@ -51,6 +55,7 @@ export default function CervelloKnowledgePage() {
   const [items, setItems] = useState<KnowledgeItem[]>(DEFAULT_KNOWLEDGE_ITEMS)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [viewMode, setViewMode] = useState<'grid' | 'graph'>('graph')
   const [loading, setLoading] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
@@ -252,25 +257,58 @@ export default function CervelloKnowledgePage() {
         </div>
       </div>
 
-      {/* Search & Category Filter Pills */}
+      {/* Search, Category Filter Pills & View Switcher */}
       <div className="space-y-4">
-        {/* Search Bar */}
-        <div className="relative max-w-md">
-          <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-3" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cerca prompt per titolo, formula o tag (es. RCCF, Excel, Midjourney)..."
-            className="pl-10 h-10 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl"
-          />
-          {searchQuery && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Search Bar */}
+          <div className="relative max-w-md w-full">
+            <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-3" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cerca prompt per titolo, formula o tag (es. RCCF, Excel, Midjourney)..."
+              className="pl-10 h-10 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* View Mode Toggle: Schede vs Grafo */}
+          <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs self-start sm:self-auto">
             <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-3 text-slate-400 hover:text-slate-200"
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={cn(
+                'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
+                viewMode === 'grid'
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              )}
             >
-              <X className="h-4 w-4" />
+              <LayoutGrid className="h-4 w-4" />
+              <span>Vista Schede</span>
             </button>
-          )}
+
+            <button
+              type="button"
+              onClick={() => setViewMode('graph')}
+              className={cn(
+                'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
+                viewMode === 'graph'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/30'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              )}
+            >
+              <Network className="h-4 w-4 text-indigo-300" />
+              <span>Vista Grafo Neurale</span>
+            </button>
+          </div>
         </div>
 
         {/* Category Pills */}
@@ -296,8 +334,16 @@ export default function CervelloKnowledgePage() {
         </div>
       </div>
 
-      {/* Knowledge Cards Grid */}
-      {displayedItems.length === 0 ? (
+      {/* Main Content Area: Grafo Neurale oppure Griglia Schede */}
+      {viewMode === 'graph' ? (
+        <KnowledgeGraphView
+          items={displayedItems}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+          onCopyPrompt={handleCopy}
+          copiedId={copiedId}
+        />
+      ) : displayedItems.length === 0 ? (
         <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
           <p className="text-sm font-semibold text-slate-400">Nessun prompt o risorsa trovata per questa categoria/ricerca.</p>
           <Button size="sm" variant="ghost" onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}>
