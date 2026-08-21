@@ -74,9 +74,14 @@ export default function CervelloKnowledgePage() {
   }, [])
 
   const fetchItems = async () => {
-    const res = await getKnowledgeItemsAction()
-    if (res.success && res.items && res.items.length > 0) {
-      setItems(res.items)
+    try {
+      const res = await getKnowledgeItemsAction()
+      if (res && res.success && Array.isArray(res.items) && res.items.length > 0) {
+        setItems(res.items)
+      }
+    } catch (err) {
+      // Se la Server Action fallisce (DB non raggiungibile), usa il catalogo predefinito
+      console.warn('Knowledge items: uso catalogo predefinito (DB non raggiungibile)', err)
     }
   }
 
