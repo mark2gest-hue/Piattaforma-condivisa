@@ -30,13 +30,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { playNotificationSound } from '@/lib/notifications'
+import { KnowledgeItem, DEFAULT_KNOWLEDGE_ITEMS } from '@/lib/knowledge-data'
 import {
-  KnowledgeItem,
   getKnowledgeItemsAction,
   createKnowledgeItemAction,
   deleteKnowledgeItemAction,
   generateObsidianVaultBundleAction,
-  DEFAULT_KNOWLEDGE_ITEMS,
 } from '@/app/actions/knowledge'
 
 const CATEGORIES = [

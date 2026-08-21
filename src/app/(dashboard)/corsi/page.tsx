@@ -48,7 +48,8 @@ import {
   getBufferProfilesAction,
   publishToBufferAction,
 } from '@/app/actions/marketing'
-import { askStudentAiAction, generateLessonQuizAction, QuizQuestion, LESSON_SUMMARIES } from '@/app/actions/ai'
+import { LESSON_SUMMARIES } from '@/lib/course-data'
+import { askStudentAiAction, generateLessonQuizAction, QuizQuestion } from '@/app/actions/ai'
 
 interface StudentRegistration {
   id: string
