@@ -80,23 +80,24 @@ export default function CervelloKnowledgePage() {
     }
   }
 
-  // Filtraggio istantaneo locale senza attese
+  // Filtraggio istantaneo locale super-sicuro senza attese
   const displayedItems = useMemo(() => {
-    let list = items
-    if (selectedCategory && selectedCategory !== 'all') {
-      list = list.filter((i) => i.category === selectedCategory)
-    }
-    if (searchQuery && searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim()
-      list = list.filter(
-        (i) =>
-          i.title.toLowerCase().includes(q) ||
-          i.content.toLowerCase().includes(q) ||
-          (i.description && i.description.toLowerCase().includes(q)) ||
-          i.tags.some((t) => t.toLowerCase().includes(q))
-      )
-    }
-    return list
+    const list = Array.isArray(items) && items.length > 0 ? items : DEFAULT_KNOWLEDGE_ITEMS
+    return list.filter((i) => {
+      if (!i) return false
+      if (selectedCategory && selectedCategory !== 'all' && i.category !== selectedCategory) {
+        return false
+      }
+      if (searchQuery && searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim()
+        const matchTitle = Boolean(i.title && i.title.toLowerCase().includes(q))
+        const matchContent = Boolean(i.content && i.content.toLowerCase().includes(q))
+        const matchDesc = Boolean(i.description && i.description.toLowerCase().includes(q))
+        const matchTags = Array.isArray(i.tags) && i.tags.some((t) => typeof t === 'string' && t.toLowerCase().includes(q))
+        return matchTitle || matchContent || matchDesc || matchTags
+      }
+      return true
+    })
   }, [items, selectedCategory, searchQuery])
 
   const handleCopy = (id: string, text: string) => {
@@ -312,12 +313,12 @@ export default function CervelloKnowledgePage() {
                 <CardHeader className="p-5 pb-3 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/50">
-                      {item.category.replace('_', ' ')}
+                      {(item.category || 'prompting').replace('_', ' ')}
                     </span>
 
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={() => handleDelete(item.id, item.title)}
+                        onClick={() => handleDelete(item.id, item.title || 'elemento')}
                         className="p-1 text-slate-400 hover:text-red-500 rounded-md"
                         title="Elimina"
                       >
@@ -327,7 +328,7 @@ export default function CervelloKnowledgePage() {
                   </div>
 
                   <CardTitle className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">
-                    {item.title}
+                    {item.title || 'Prompt Risorsa'}
                   </CardTitle>
 
                   {item.description && (
@@ -341,12 +342,12 @@ export default function CervelloKnowledgePage() {
                   {/* Content Code Preview */}
                   <div className="relative">
                     <pre className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 text-[11px] font-mono text-slate-800 dark:text-slate-300 overflow-hidden line-clamp-6 leading-relaxed whitespace-pre-wrap select-all">
-                      {item.content}
+                      {item.content || ''}
                     </pre>
                   </div>
 
                   {/* Tags */}
-                  {item.tags && item.tags.length > 0 && (
+                  {Array.isArray(item.tags) && item.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {item.tags.map((t: string, idx: number) => (
                         <span
@@ -367,7 +368,7 @@ export default function CervelloKnowledgePage() {
 
                     <Button
                       size="sm"
-                      onClick={() => handleCopy(item.id, item.content)}
+                      onClick={() => handleCopy(item.id, item.content || '')}
                       className={`text-xs h-8 px-3 rounded-lg gap-1.5 font-bold transition-all ${
                         isCopied
                           ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
