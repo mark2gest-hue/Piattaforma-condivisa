@@ -34,15 +34,9 @@ import { formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Email, Profile } from '@/types/index'
 import { requestNotificationPermission, sendDesktopNotification } from '@/lib/notifications'
-import { sendSharedEmail, updateEmailStatus, deleteSharedEmail, AVAILABLE_FROM_EMAILS } from './actions'
-
+import { sendSharedEmail, updateEmailStatus, deleteSharedEmail } from './actions'
+import { AVAILABLE_FROM_EMAILS, ArubaMailboxConfig, DEFAULT_IMAP_ACCOUNTS } from './constants'
 import { useRouter } from 'next/navigation'
-
-export interface ArubaMailboxConfig {
-  email: string
-  password?: string
-  label?: string
-}
 
 type EmailWithSender = Email & { senderProfile?: Profile }
 type FolderFilter = 'inbox' | 'sent' | 'unread' | 'all'
@@ -62,13 +56,6 @@ function getToArray(to_address: any): string[] {
   }
   return []
 }
-
-const DEFAULT_IMAP_ACCOUNTS: ArubaMailboxConfig[] = [
-  { email: 'info@aiutiamoci.cloud', label: 'info@aiutiamoci.cloud', password: '' },
-  { email: 'assistenza@aiutiamoci.cloud', label: 'assistenza@aiutiamoci.cloud', password: '' },
-  { email: 'info@mar2.cloud', label: 'info@mar2.cloud', password: '' },
-  { email: 'support@mar2.cloud', label: 'support@mar2.cloud', password: '' },
-]
 
 export default function PostaCondivisaPage() {
   const router = useRouter()
@@ -1172,7 +1159,7 @@ export default function PostaCondivisaPage() {
               </div>
 
               <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
-                {imapAccounts.map((acc, idx) => (
+                {(Array.isArray(imapAccounts) ? imapAccounts : DEFAULT_IMAP_ACCOUNTS).map((acc, idx) => (
                   <div key={acc.email} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-bold text-slate-900 dark:text-white text-xs">

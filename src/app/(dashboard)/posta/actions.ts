@@ -5,13 +5,6 @@ import { createClient } from '@/lib/supabase/server'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-export const AVAILABLE_FROM_EMAILS = [
-  { id: 'info-aiutiamoci', email: 'info@aiutiamoci.cloud', label: 'Ti AIuto <info@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
-  { id: 'assistenza-aiutiamoci', email: 'assistenza@aiutiamoci.cloud', label: 'Assistenza Ti AIuto <assistenza@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
-  { id: 'info-mar2', email: 'info@mar2.cloud', label: 'Mar2 <info@mar2.cloud>', domain: 'mar2.cloud' },
-  { id: 'support-mar2', email: 'support@mar2.cloud', label: 'Support Mar2 <support@mar2.cloud>', domain: 'mar2.cloud' },
-]
-
 export async function sendSharedEmail(formData: {
   to: string
   subject: string
