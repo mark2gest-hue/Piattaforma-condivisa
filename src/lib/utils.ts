@@ -16,11 +16,16 @@ export function formatBytes(bytes: number, decimals = 2) {
 
 export function formatDate(dateString: string | null | undefined) {
   if (!dateString) return ''
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('it-IT', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return ''
+    return new Intl.DateTimeFormat('it-IT', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date)
+  } catch {
+    return ''
+  }
 }

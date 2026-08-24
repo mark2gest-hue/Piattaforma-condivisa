@@ -55,10 +55,14 @@ export function playNotificationSound(type: 'chat' | 'email' | 'call' = 'chat') 
  * Richiede i permessi per le notifiche desktop del browser
  */
 export async function requestNotificationPermission() {
-  if (typeof window !== 'undefined' && 'Notification' in window) {
-    if (Notification.permission === 'default') {
-      await Notification.requestPermission()
+  try {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        await Notification.requestPermission()
+      }
     }
+  } catch (e) {
+    // Permessi notifiche non supportati o bloccati dal browser senza gesto utente
   }
 }
 

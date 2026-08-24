@@ -151,36 +151,45 @@ export default function PostaCondivisaPage() {
 
   const fetchEmails = async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('emails')
-      .select('*, senderProfile:profiles(*)')
-      .order('created_at', { ascending: false })
+    try {
+      const { data, error } = await supabase
+        .from('emails')
+        .select('*, senderProfile:profiles(*)')
+        .order('created_at', { ascending: false })
 
-    if (data && !error) {
-      setEmails(data)
-      if (data.length > 0 && !selectedEmail) {
-        setSelectedEmail(data[0])
+      if (data && !error) {
+        setEmails(data)
+        if (data.length > 0 && !selectedEmail) {
+          setSelectedEmail(data[0])
+        }
       }
+    } catch (err) {
+      console.error('Errore fetchEmails:', err)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   // Conteggi per badge
   const counts = useMemo(() => {
-    const inbound = emails.filter((e) => e.direction === 'inbound')
-    const unread = inbound.filter((e) => e.status === 'received')
-    const sent = emails.filter((e) => e.direction === 'outbound')
+    const list = Array.isArray(emails) ? emails : []
+    const inbound = list.filter((e) => e && e.direction === 'inbound')
+    const unread = inbound.filter((e) => e && e.status === 'received')
+    const sent = list.filter((e) => e && e.direction === 'outbound')
     return {
       inbox: inbound.length,
       unread: unread.length,
       sent: sent.length,
-      all: emails.length,
+      all: list.length,
     }
   }, [emails])
 
   // Filtro ed elenco cercato
   const filteredEmails = useMemo(() => {
-    return emails.filter((em) => {
+    const list = Array.isArray(emails) ? emails : []
+    return list.filter((em) => {
+      if (!em) return false
+
       // 1. Filtro cartella
       if (currentFilter === 'inbox' && em.direction !== 'inbound') return false
       if (currentFilter === 'sent' && em.direction !== 'outbound') return false
