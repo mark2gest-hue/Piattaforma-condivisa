@@ -34,10 +34,18 @@ import { createClient } from '@/lib/supabase/client'
 import { Email, Profile } from '@/types/index'
 import { requestNotificationPermission, sendDesktopNotification } from '@/lib/notifications'
 import { sendSharedEmail, updateEmailStatus, deleteSharedEmail, AVAILABLE_FROM_EMAILS } from './actions'
+import { syncArubaImapAction, ArubaMailboxConfig } from './imap-sync'
 
 type EmailWithSender = Email & { senderProfile?: Profile }
 type FolderFilter = 'inbox' | 'sent' | 'unread' | 'all'
 type AccountFilter = 'all' | 'info@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mar2.cloud' | 'support@mar2.cloud'
+
+const DEFAULT_IMAP_ACCOUNTS: ArubaMailboxConfig[] = [
+  { email: 'info@aiutiamoci.cloud', label: 'info@aiutiamoci.cloud', password: '' },
+  { email: 'assistenza@aiutiamoci.cloud', label: 'assistenza@aiutiamoci.cloud', password: '' },
+  { email: 'info@mar2.cloud', label: 'info@mar2.cloud', password: '' },
+  { email: 'support@mar2.cloud', label: 'support@mar2.cloud', password: '' },
+]
 
 export default function PostaCondivisaPage() {
   const [emails, setEmails] = useState<EmailWithSender[]>([])
@@ -50,6 +58,12 @@ export default function PostaCondivisaPage() {
   const [currentFilter, setCurrentFilter] = useState<FolderFilter>('inbox')
   const [accountFilter, setAccountFilter] = useState<AccountFilter>('all')
   const [viewMode, setViewMode] = useState<'html' | 'text'>('html')
+
+  // IMAP Sync State
+  const [imapAccounts, setImapAccounts] = useState<ArubaMailboxConfig[]>(DEFAULT_IMAP_ACCOUNTS)
+  const [isImapModalOpen, setIsImapModalOpen] = useState(false)
+  const [isSyncingImap, setIsSyncingImap] = useState(false)
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null)
 
   // Modal Nuova Email
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false)
@@ -64,6 +78,21 @@ export default function PostaCondivisaPage() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
   const supabase = createClient()
+
+  useEffect(() => {
+    // Carica configurazione IMAP da localStorage se presente
+    const saved = localStorage.getItem('piattaforma_imap_accounts')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed)) {
+          setImapAccounts(parsed)
+        }
+      } catch (e) {
+        console.error('Errore parsing accounts IMAP salvati', e)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     fetchEmails()
@@ -266,6 +295,40 @@ export default function PostaCondivisaPage() {
     }
   }
 
+  // Sincronizzazione IMAP con Aruba
+  const handleSyncImap = async () => {
+    const configuredAccounts = imapAccounts.filter((a) => a.password && a.password.trim().length > 0)
+    if (configuredAccounts.length === 0) {
+      setIsImapModalOpen(true)
+      return
+    }
+
+    setIsSyncingImap(true)
+    setSyncStatusMsg('Connessione e sincronizzazione con Aruba IMAP in corso...')
+
+    try {
+      const res = await syncArubaImapAction(configuredAccounts)
+      if (res.success) {
+        setSyncStatusMsg(`Sincronizzazione completata: ${res.syncedCount} nuove email scaricate con successo!`)
+        await fetchEmails()
+      } else {
+        setSyncStatusMsg(`Errore sync: ${res.error}`)
+      }
+    } catch (e: any) {
+      setSyncStatusMsg(`Errore imprevisto durante il sync: ${e.message}`)
+    } finally {
+      setIsSyncingImap(false)
+      setTimeout(() => setSyncStatusMsg(null), 6000)
+    }
+  }
+
+  const handleSaveImapAccounts = (e: React.FormEvent) => {
+    e.preventDefault()
+    localStorage.setItem('piattaforma_imap_accounts', JSON.stringify(imapAccounts))
+    setIsImapModalOpen(false)
+    handleSyncImap()
+  }
+
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text)
     setCopiedKey(key)
@@ -285,26 +348,42 @@ export default function PostaCondivisaPage() {
               <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                 Posta Condivisa
                 <Badge variant="outline" className="text-[11px] font-mono font-medium text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/60">
-                  @aiutiamoci.cloud
+                  4 Caselle Aruba
                 </Badge>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Ricezione e invio posta in tempo reale con dominio verificato.
+                aiutiamoci.cloud & mar2.cloud con sincronizzazione IMAP diretta.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {syncStatusMsg && (
+            <div className="text-[11px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800 animate-pulse">
+              {syncStatusMsg}
+            </div>
+          )}
+
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsDnsModalOpen(true)}
-            className="text-xs border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 h-9 gap-1.5"
+            onClick={handleSyncImap}
+            disabled={isSyncingImap}
+            className="text-xs border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 h-9 gap-1.5 font-medium shadow-xs"
           >
-            <Globe className="h-4 w-4 text-emerald-500" />
-            <span className="hidden md:inline">Configura DNS Aruba</span>
-            <span className="md:hidden">DNS Aruba</span>
+            <RefreshCw className={`h-3.5 w-3.5 ${isSyncingImap ? 'animate-spin text-blue-600' : ''}`} />
+            <span>{isSyncingImap ? 'Sincronizzazione...' : 'Sincronizza Aruba IMAP'}</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsImapModalOpen(true)}
+            className="text-xs border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 h-9 gap-1.5"
+            title="Configura password e caselle Aruba"
+          >
+            <span>⚙️ Password Caselle</span>
           </Button>
 
           <Button
@@ -984,6 +1063,92 @@ export default function PostaCondivisaPage() {
                 Chiudi Guida
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Configurazione Credenziali IMAP Aruba */}
+      {isImapModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Configurazione Caselle Aruba (IMAP)
+                </h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsImapModalOpen(false)}
+                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleSaveImapAccounts} className="p-5 space-y-4 text-xs">
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl space-y-1">
+                <p className="text-[11px] text-blue-800 dark:text-blue-300">
+                  Inserisci le password delle caselle per consentire la sincronizzazione diretta con i server <strong>imaps.aruba.it (porta 993 SSL)</strong>.
+                </p>
+              </div>
+
+              <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+                {imapAccounts.map((acc, idx) => (
+                  <div key={acc.email} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-slate-900 dark:text-white text-xs">
+                        {acc.email}
+                      </span>
+                      <Badge variant="outline" className="text-[9px] font-mono text-slate-500">
+                        imaps.aruba.it:993
+                      </Badge>
+                    </div>
+
+                    <div>
+                      <Input
+                        type="password"
+                        placeholder={`Password per ${acc.email}`}
+                        value={acc.password || ''}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setImapAccounts((prev) =>
+                            prev.map((item, i) => (i === idx ? { ...item, password: val } : item))
+                          )
+                        }}
+                        className="text-xs h-8 dark:bg-slate-900 dark:border-slate-700"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                <Button type="button" variant="outline" size="sm" onClick={() => setIsImapModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={isSyncingImap}
+                  className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+                >
+                  {isSyncingImap ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Sincronizzazione...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      Salva e Sincronizza Ora
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
