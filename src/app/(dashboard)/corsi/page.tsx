@@ -57,6 +57,7 @@ import {
   deleteCourseRegistrationAction,
   getStudentCodesAction,
   deleteStudentCodeAction,
+  verifyStudentCodeAction,
 } from '@/app/actions/student'
 import {
   generateSocialContentAction,
@@ -1004,12 +1005,12 @@ function CorsiInnerContent() {
   const verifyAndSetCode = async (codeStr: string) => {
     const cleanCode = codeStr.trim().toUpperCase()
     setStudentCodeInput(cleanCode)
+    setCodeError('')
 
-    // Usa RPC sicura per la verifica (nessun SELECT pubblico)
-    const { data } = await (supabase as any).rpc('verify_student_code', { input_code: cleanCode })
-    const dbStudent = data && (data as any[]).length > 0 ? (data as any[])[0] : null
+    const res = await verifyStudentCodeAction(cleanCode)
 
-    if (dbStudent) {
+    if (res.success && res.student) {
+      const dbStudent = res.student
       const tier = dbStudent.access_tier || (dbStudent.code.startsWith('AI-PRO-') ? 'ai-pro' : dbStudent.code.startsWith('AI-ALL-') ? 'both' : 'ai-start')
       setActiveStudent({
         name: dbStudent.student_name,
@@ -1023,26 +1024,7 @@ function CorsiInnerContent() {
       }
       setActiveTab('player')
     } else {
-      const found = registrations.find((r) => r.code === cleanCode)
-      if (found) {
-        const tier = found.accessTier || (found.code.startsWith('AI-PRO-') ? 'ai-pro' : found.code.startsWith('AI-ALL-') ? 'both' : 'ai-start')
-        setActiveStudent({ name: found.studentName, code: found.code, accessTier: tier })
-        if (tier === 'ai-pro') {
-          setSelectedCourseId('ai-pro')
-        } else {
-          setSelectedCourseId('ai-start')
-        }
-        setActiveTab('player')
-      } else if (cleanCode === 'DEMO2026' || cleanCode.startsWith('AI-START-') || cleanCode.startsWith('AI-PRO-') || cleanCode.startsWith('AI-ALL-')) {
-        const tier = cleanCode.startsWith('AI-PRO-') ? 'ai-pro' : cleanCode.startsWith('AI-ALL-') ? 'both' : 'ai-start'
-        setActiveStudent({ name: 'Studente Autenticato', code: cleanCode, accessTier: tier })
-        if (tier === 'ai-pro') {
-          setSelectedCourseId('ai-pro')
-        } else {
-          setSelectedCourseId('ai-start')
-        }
-        setActiveTab('player')
-      }
+      setCodeError(res.error || 'Codice non valido o non trovato. Controlla il codice ricevuto.')
     }
   }
 

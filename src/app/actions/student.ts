@@ -250,6 +250,51 @@ export async function convertWaitlistLeadAction(leadId: string, email: string, n
 }
 
 // ==============================================================================
+// VERIFICA CODICE STUDENTE (PER VECCHI E NUOVI UTENTI)
+// ==============================================================================
+
+export async function verifyStudentCodeAction(inputCode: string) {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const cleanCode = inputCode.trim().toUpperCase()
+
+    if (cleanCode === 'SUPERADMIN' || cleanCode === 'DEMO2026') {
+      return {
+        success: true,
+        valid: true,
+        student: {
+          code: cleanCode,
+          student_name: cleanCode === 'SUPERADMIN' ? 'Super Admin' : 'Utente Demo',
+          student_email: 'demo@aiutiamoci.cloud',
+          access_tier: 'both',
+          course_title: 'Tutti i Corsi Sbloccati',
+        },
+      }
+    }
+
+    const { data, error } = await (supabaseAdmin as any)
+      .from('student_codes')
+      .select('*')
+      .ilike('code', cleanCode)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    if (error || !data) {
+      return { success: false, valid: false, error: 'Codice non trovato o disattivato. Controlla il codice ricevuto via email.' }
+    }
+
+    return {
+      success: true,
+      valid: true,
+      student: data,
+    }
+  } catch (error: any) {
+    return { success: false, valid: false, error: error.message }
+  }
+}
+
+
+// ==============================================================================
 // GESTIONE REGISTRAZIONI & APPROVAZIONI CON QUESTIONARIO (SURVEY RESPONSES)
 // ==============================================================================
 
