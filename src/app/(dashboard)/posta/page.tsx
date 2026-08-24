@@ -34,7 +34,12 @@ import { createClient } from '@/lib/supabase/client'
 import { Email, Profile } from '@/types/index'
 import { requestNotificationPermission, sendDesktopNotification } from '@/lib/notifications'
 import { sendSharedEmail, updateEmailStatus, deleteSharedEmail, AVAILABLE_FROM_EMAILS } from './actions'
-import { syncArubaImapAction, ArubaMailboxConfig } from './imap-sync'
+
+export interface ArubaMailboxConfig {
+  email: string
+  password?: string
+  label?: string
+}
 
 type EmailWithSender = Email & { senderProfile?: Profile }
 type FolderFilter = 'inbox' | 'sent' | 'unread' | 'all'
@@ -333,12 +338,17 @@ export default function PostaCondivisaPage() {
     setSyncStatusMsg('Connessione e sincronizzazione con Aruba IMAP in corso...')
 
     try {
-      const res = await syncArubaImapAction(configuredAccounts)
+      const response = await fetch('/api/email/imap-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accounts: configuredAccounts }),
+      })
+      const res = await response.json()
       if (res.success) {
         setSyncStatusMsg(`Sincronizzazione completata: ${res.syncedCount} nuove email scaricate con successo!`)
         await fetchEmails()
       } else {
-        setSyncStatusMsg(`Errore sync: ${res.error}`)
+        setSyncStatusMsg(`Errore sync: ${res.error || 'Errore di sincronizzazione'}`)
       }
     } catch (e: any) {
       setSyncStatusMsg(`Errore imprevisto durante il sync: ${e.message}`)
