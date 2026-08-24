@@ -40,6 +40,21 @@ type EmailWithSender = Email & { senderProfile?: Profile }
 type FolderFilter = 'inbox' | 'sent' | 'unread' | 'all'
 type AccountFilter = 'all' | 'info@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mar2.cloud' | 'support@mar2.cloud'
 
+function getToArray(to_address: any): string[] {
+  if (!to_address) return []
+  if (Array.isArray(to_address)) return to_address
+  if (typeof to_address === 'string') {
+    try {
+      const parsed = JSON.parse(to_address)
+      if (Array.isArray(parsed)) return parsed
+    } catch {
+      return [to_address]
+    }
+    return [to_address]
+  }
+  return []
+}
+
 const DEFAULT_IMAP_ACCOUNTS: ArubaMailboxConfig[] = [
   { email: 'info@aiutiamoci.cloud', label: 'info@aiutiamoci.cloud', password: '' },
   { email: 'assistenza@aiutiamoci.cloud', label: 'assistenza@aiutiamoci.cloud', password: '' },
@@ -171,19 +186,21 @@ export default function PostaCondivisaPage() {
       if (currentFilter === 'sent' && em.direction !== 'outbound') return false
       if (currentFilter === 'unread' && (em.direction !== 'inbound' || em.status !== 'received')) return false
 
+      const toList = getToArray(em.to_address)
+
       // 2. Filtro per casella / account
       if (accountFilter !== 'all') {
-        const matchTo = em.to_address.some((t) => t.toLowerCase().includes(accountFilter.toLowerCase()))
-        const matchFrom = em.from_address.toLowerCase().includes(accountFilter.toLowerCase())
+        const matchTo = toList.some((t) => (t || '').toLowerCase().includes(accountFilter.toLowerCase()))
+        const matchFrom = (em.from_address || '').toLowerCase().includes(accountFilter.toLowerCase())
         if (!matchTo && !matchFrom) return false
       }
 
       // 3. Filtro ricerca
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
-        const matchFrom = em.from_address.toLowerCase().includes(q)
-        const matchTo = em.to_address.some((t) => t.toLowerCase().includes(q))
-        const matchSubj = em.subject.toLowerCase().includes(q)
+        const matchFrom = (em.from_address || '').toLowerCase().includes(q)
+        const matchTo = toList.some((t) => (t || '').toLowerCase().includes(q))
+        const matchSubj = (em.subject || '').toLowerCase().includes(q)
         const matchBody = (em.body_text || '').toLowerCase().includes(q)
         return matchFrom || matchTo || matchSubj || matchBody
       }
@@ -197,7 +214,7 @@ export default function PostaCondivisaPage() {
     setSelectedEmail(em)
 
     // Imposta automaticamente il mittente della risposta in base all'indirizzo destinatario dell'email
-    const toStr = em.to_address.join(' ').toLowerCase()
+    const toStr = getToArray(em.to_address).join(' ').toLowerCase()
     const matching = AVAILABLE_FROM_EMAILS.find((opt) => toStr.includes(opt.email.toLowerCase()))
     if (matching) {
       setReplyFrom(matching.label)
@@ -230,11 +247,11 @@ export default function PostaCondivisaPage() {
     const recipient =
       selectedEmail.direction === 'inbound'
         ? selectedEmail.from_address
-        : selectedEmail.to_address[0]
+        : getToArray(selectedEmail.to_address)[0] || 'info@aiutiamoci.cloud'
 
-    const subject = selectedEmail.subject.startsWith('Re:')
+    const subject = (selectedEmail.subject || '').startsWith('Re:')
       ? selectedEmail.subject
-      : `Re: ${selectedEmail.subject}`
+      : `Re: ${selectedEmail.subject || ''}`
 
     const result = await sendSharedEmail({
       to: recipient,
@@ -544,7 +561,8 @@ export default function PostaCondivisaPage() {
               filteredEmails.map((em) => {
                 const isSelected = selectedEmail?.id === em.id
                 const isUnread = em.direction === 'inbound' && em.status === 'received'
-                const toStr = em.to_address.join(' ').toLowerCase()
+                const toList = getToArray(em.to_address)
+                const toStr = toList.join(' ').toLowerCase()
                 const isMar2 = toStr.includes('mar2.cloud')
                 const isAssistenza = toStr.includes('assistenza@')
                 const isSupport = toStr.includes('support@')
@@ -573,11 +591,11 @@ export default function PostaCondivisaPage() {
                               : 'font-medium text-slate-700 dark:text-slate-300'
                           }`}
                         >
-                          {em.direction === 'inbound' ? em.from_address : `A: ${em.to_address.join(', ')}`}
+                          {em.direction === 'inbound' ? em.from_address : `A: ${toList.join(', ')}`}
                         </span>
                       </div>
                       <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0">
-                        {formatDate(em.created_at)}
+                        {em.created_at ? formatDate(em.created_at) : ''}
                       </span>
                     </div>
 
@@ -620,7 +638,7 @@ export default function PostaCondivisaPage() {
                               }`}
                             >
                               <ArrowDownLeft className="h-2.5 w-2.5" />
-                              {em.to_address[0] || 'info@aiutiamoci.cloud'}
+                              {toList[0] || 'info@aiutiamoci.cloud'}
                             </Badge>
 
                             <Badge
@@ -684,7 +702,7 @@ export default function PostaCondivisaPage() {
                       <Avatar
                         fallback={
                           selectedEmail.direction === 'inbound'
-                            ? selectedEmail.from_address.charAt(0).toUpperCase()
+                            ? (selectedEmail.from_address ? selectedEmail.from_address.charAt(0).toUpperCase() : 'M')
                             : 'T'
                         }
                         className="h-9 w-9 bg-blue-600/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800"
@@ -696,7 +714,7 @@ export default function PostaCondivisaPage() {
                             : 'Team (@aiutiamoci.cloud)'}
                         </span>
                         <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                          A: {selectedEmail.to_address.join(', ')}
+                          A: {getToArray(selectedEmail.to_address).join(', ')}
                         </span>
                       </div>
                     </div>
@@ -704,7 +722,7 @@ export default function PostaCondivisaPage() {
 
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-[11px] text-slate-400 font-medium">
-                      {formatDate(selectedEmail.created_at)}
+                      {selectedEmail.created_at ? formatDate(selectedEmail.created_at) : ''}
                     </span>
 
                     {selectedEmail.body_html && (
@@ -758,7 +776,7 @@ export default function PostaCondivisaPage() {
                       <strong className="text-slate-900 dark:text-white truncate max-w-[220px]">
                         {selectedEmail.direction === 'inbound'
                           ? selectedEmail.from_address
-                          : selectedEmail.to_address[0]}
+                          : getToArray(selectedEmail.to_address)[0] || 'info@aiutiamoci.cloud'}
                       </strong>
                     </span>
                     <div className="flex items-center gap-1.5">
