@@ -200,10 +200,10 @@ export default function LandingPage() {
           <div className="flex items-center gap-3 text-xs font-semibold">
             <button
               onClick={() => setIsStudentModalOpen(true)}
-              className="text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 px-3 py-2 border border-slate-800 rounded-xl bg-slate-900/80 hover:bg-slate-800"
+              className="text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 px-3.5 py-2 border border-slate-800 rounded-xl bg-slate-900/80 hover:bg-slate-800"
             >
               <Key className="h-4 w-4 text-blue-400" />
-              <span>Riscatta Codice</span>
+              <span>Hai già il codice? Entra qui</span>
             </button>
 
             <button
@@ -268,7 +268,7 @@ export default function LandingPage() {
               className="w-full sm:w-auto border-slate-800 bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold h-13 px-6 rounded-2xl gap-2 text-sm"
             >
               <Key className="h-4 w-4 text-blue-400" />
-              <span>Hai un codice? Accedi</span>
+              <span>Hai già il codice? Entra qui</span>
             </Button>
           </div>
         </div>
@@ -535,7 +535,7 @@ export default function LandingPage() {
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
               <div className="flex items-center gap-2">
                 <Key className="h-5 w-5 text-blue-400" />
-                <h3 className="font-bold text-sm text-white">Area Studenti — Riscatta Codice</h3>
+                <h3 className="font-bold text-sm text-white">Area Studenti — Hai già il codice?</h3>
               </div>
               <button onClick={() => setIsStudentModalOpen(false)} className="p-1 text-slate-400 hover:text-white rounded-lg">
                 <X className="h-5 w-5" />
@@ -543,6 +543,10 @@ export default function LandingPage() {
             </div>
 
             <form onSubmit={handleStudentAccess} className="p-6 space-y-4 text-xs">
+              <p className="text-slate-400 text-xs leading-relaxed">
+                Inserisci il tuo codice di accesso personale (ricevuto via email o dal corso precedente) per sbloccare subito le 20 video lezioni e i contenuti.
+              </p>
+
               <div className="space-y-2">
                 <label className="font-semibold text-slate-300">Codice Univoco di Accesso *</label>
                 <Input
@@ -550,13 +554,13 @@ export default function LandingPage() {
                   required
                   value={studentCode}
                   onChange={(e) => setStudentCode(e.target.value)}
-                  placeholder="Es. AI-START-8F92 oppure DEMO2026"
+                  placeholder="Es. AI-8QASM3 oppure DEMO2026"
                   className="text-center font-mono uppercase tracking-widest font-bold text-sm h-12 bg-slate-950 border-slate-800 text-white"
                 />
               </div>
 
               <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-blue-600/20">
-                Sblocca 20 Video & Accedi
+                Accedi al Corso
               </Button>
             </form>
           </div>
