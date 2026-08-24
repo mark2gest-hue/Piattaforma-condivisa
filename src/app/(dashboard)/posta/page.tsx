@@ -23,6 +23,7 @@ import {
   RefreshCw,
   ArrowDownLeft,
   ArrowUpRight,
+  ArrowRight,
   ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -34,6 +35,8 @@ import { createClient } from '@/lib/supabase/client'
 import { Email, Profile } from '@/types/index'
 import { requestNotificationPermission, sendDesktopNotification } from '@/lib/notifications'
 import { sendSharedEmail, updateEmailStatus, deleteSharedEmail, AVAILABLE_FROM_EMAILS } from './actions'
+
+import { useRouter } from 'next/navigation'
 
 export interface ArubaMailboxConfig {
   email: string
@@ -68,6 +71,8 @@ const DEFAULT_IMAP_ACCOUNTS: ArubaMailboxConfig[] = [
 ]
 
 export default function PostaCondivisaPage() {
+  const router = useRouter()
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const [emails, setEmails] = useState<EmailWithSender[]>([])
   const [selectedEmail, setSelectedEmail] = useState<EmailWithSender | null>(null)
   const [replyText, setReplyText] = useState('')
@@ -98,6 +103,12 @@ export default function PostaCondivisaPage() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
   const supabase = createClient()
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUser(user)
+    })
+  }, [])
 
   useEffect(() => {
     // Carica configurazione IMAP da localStorage se presente
@@ -369,6 +380,34 @@ export default function PostaCondivisaPage() {
     navigator.clipboard.writeText(text)
     setCopiedKey(key)
     setTimeout(() => setCopiedKey(null), 2500)
+  }
+
+  // Se l'utente non è autenticato con account team Supabase
+  if (!loading && !currentUser) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-5">
+          <div className="h-16 w-16 mx-auto rounded-2xl bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 flex items-center justify-center">
+            <Mail className="h-8 w-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Posta Condivisa del Team</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Questa sezione è riservata ai membri del team per la gestione delle 4 caselle di posta aziendali (aiutiamoci.cloud e mar2.cloud).
+            </p>
+          </div>
+          <div className="pt-2">
+            <Button
+              onClick={() => router.push('/login')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-10 gap-2 shadow-md"
+            >
+              <span>Accedi con Account Team</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
