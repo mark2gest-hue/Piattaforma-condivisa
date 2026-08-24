@@ -249,3 +249,203 @@ export async function convertWaitlistLeadAction(leadId: string, email: string, n
   }
 }
 
+// ==============================================================================
+// GESTIONE REGISTRAZIONI & APPROVAZIONI CON QUESTIONARIO (SURVEY RESPONSES)
+// ==============================================================================
+
+export async function getCourseRegistrationsAction() {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const { data, error } = await (supabaseAdmin as any)
+      .from('course_registrations')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Errore getCourseRegistrationsAction:', error)
+      return { success: false, error: error.message, registrations: [] }
+    }
+
+    return { success: true, registrations: data || [] }
+  } catch (error: any) {
+    console.error('Errore getCourseRegistrationsAction:', error)
+    return { success: false, error: error.message, registrations: [] }
+  }
+}
+
+export async function submitCourseRegistrationAction(formData: {
+  name: string
+  email: string
+  ai_experience?: string
+  objective?: string
+  blocker?: string
+  expectation?: string
+  raw_answers?: any
+}) {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const cleanEmail = formData.email.trim().toLowerCase()
+    const cleanName = formData.name.trim()
+
+    // Inserisci la nuova registrazione in stato 'pending'
+    const { data, error: insertError } = await (supabaseAdmin as any)
+      .from('course_registrations')
+      .insert({
+        name: cleanName,
+        email: cleanEmail,
+        ai_experience: formData.ai_experience || 'Qualche prova',
+        objective: formData.objective || 'Migliorare il lavoro',
+        blocker: formData.blocker || 'Non so da dove iniziare',
+        expectation: formData.expectation || 'Voglio sperimentare e capire',
+        raw_answers: formData.raw_answers || null,
+        status: 'pending',
+        approved: false,
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('Errore submitCourseRegistrationAction:', insertError)
+      return { success: false, error: insertError.message }
+    }
+
+    // Crea un task operativo per notificare il team
+    await (supabaseAdmin as any).from('tasks').insert({
+      title: `Nuova Richiesta Registrazione Corso: ${cleanName}`,
+      description: `L'utente ${cleanName} (${cleanEmail}) ha completato il questionario di iscrizione.\nEsperienza AI: ${formData.ai_experience}\nObiettivo: ${formData.objective}\nBlocco: ${formData.blocker}\nAspettativa: ${formData.expectation}`,
+      status: 'todo',
+      priority: 'high',
+    })
+
+    return { success: true, registration: data }
+  } catch (error: any) {
+    console.error('Errore submitCourseRegistrationAction:', error)
+    return { success: false, error: error.message || 'Errore durante la registrazione' }
+  }
+}
+
+export async function approveCourseRegistrationAction(registrationId: string) {
+  try {
+    const supabaseAdmin = createAdminClient()
+
+    // 1. Recupera i dati della registrazione
+    const { data: reg, error: fetchErr } = await (supabaseAdmin as any)
+      .from('course_registrations')
+      .select('*')
+      .eq('id', registrationId)
+      .single()
+
+    if (fetchErr || !reg) {
+      return { success: false, error: 'Registrazione non trovata.' }
+    }
+
+    // 2. Genera il codice studente univoco (o usa quello pre-esistente)
+    let accessCode = reg.access_code
+    if (!accessCode) {
+      const randomHex = Math.floor(100000 + Math.random() * 900000).toString(16).toUpperCase()
+      accessCode = `AI-${randomHex}`
+    }
+
+    // 3. Inserisci o aggiorna nella tabella student_codes
+    const { error: codeErr } = await (supabaseAdmin as any)
+      .from('student_codes')
+      .upsert({
+        code: accessCode,
+        student_name: reg.name,
+        student_email: reg.email,
+        course_title: 'AI Start: Domina l’IA da Zero',
+        access_tier: 'ai-start',
+        is_active: true,
+      }, { onConflict: 'code' })
+
+    if (codeErr) {
+      console.warn('Avviso inserimento student_codes durante approvazione:', codeErr)
+    }
+
+    // 4. Invia l'email con il codice di sblocco all'iscritto
+    try {
+      await sendSharedEmail({
+        to: reg.email,
+        subject: `🎉 Richiesta Approvata: Il tuo Codice di Accesso ad AI Start`,
+        body: `Ciao ${reg.name},\n\nSiamo felici di comunicarti che la tua richiesta di registrazione è stata approvata!\n\nEcco il tuo codice univoco per accedere a tutte le 20 lezioni pratiche e registrazioni del corso "AI Start":\n\n👉 CODICE DI ACCESSO: ${accessCode}\n\nPer iniziare:\n1. Vai su https://aiutiamoci.cloud\n2. Clicca su "Accedi al Corso"\n3. Inserisci il tuo codice: ${accessCode}\n\nBuon apprendimento!\nTeam Ti AIuto\nsupporto: info@aiutiamoci.cloud`,
+      })
+    } catch (mailErr) {
+      console.error('Errore invio email approvazione a', reg.email, mailErr)
+    }
+
+    // 5. Aggiorna lo stato su course_registrations
+    const nowIso = new Date().toISOString()
+    const { error: updateErr } = await (supabaseAdmin as any)
+      .from('course_registrations')
+      .update({
+        status: 'approved',
+        approved: true,
+        approved_at: nowIso,
+        access_code: accessCode,
+        updated_at: nowIso,
+      })
+      .eq('id', registrationId)
+
+    if (updateErr) {
+      return { success: false, error: updateErr.message }
+    }
+
+    return { success: true, code: accessCode, approvedAt: nowIso }
+  } catch (error: any) {
+    console.error('Errore approveCourseRegistrationAction:', error)
+    return { success: false, error: error.message || 'Errore durante l\'approvazione' }
+  }
+}
+
+export async function getStudentCodesAction() {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const { data, error } = await (supabaseAdmin as any)
+      .from('student_codes')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Errore getStudentCodesAction:', error)
+      return { success: false, error: error.message, studentCodes: [] }
+    }
+
+    return { success: true, studentCodes: data || [] }
+  } catch (error: any) {
+    console.error('Errore getStudentCodesAction:', error)
+    return { success: false, error: error.message, studentCodes: [] }
+  }
+}
+
+export async function deleteStudentCodeAction(id: string) {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const { error } = await (supabaseAdmin as any)
+      .from('student_codes')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function deleteCourseRegistrationAction(registrationId: string) {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const { error } = await (supabaseAdmin as any)
+      .from('course_registrations')
+      .delete()
+      .eq('id', registrationId)
+
+    if (error) throw error
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+
+

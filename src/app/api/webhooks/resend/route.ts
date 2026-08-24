@@ -66,15 +66,33 @@ export async function POST(request: Request) {
 
     const payload = JSON.parse(rawBody)
 
-    // Resend Inbound Email Event payload
-    const { from, to, subject, html, text, message_id } = payload?.data || payload
+    // Supporta sia payload diretti sia eventi incapsulati (es. email.received)
+    const emailData = payload?.data || payload
 
-    if (!from || !to || !subject) {
+    const fromRaw = emailData?.from
+    const toRaw = emailData?.to
+    const subject = emailData?.subject || '(Nessun oggetto)'
+    const html = emailData?.html || null
+    const text = emailData?.text || emailData?.plain || (html ? html.replace(/<[^>]*>?/gm, '') : '')
+    const messageId = emailData?.message_id || emailData?.id || payload?.id || null
+    const inReplyTo = emailData?.headers?.['in-reply-to'] || emailData?.in_reply_to || null
+
+    if (!fromRaw || !toRaw) {
       return NextResponse.json(
-        { error: `Payload incompleto per l'email in ingresso.` },
+        { error: `Payload incompleto per l'email in ingresso: mittente o destinatario mancante.` },
         { status: 400 }
       )
     }
+
+    const fromAddress = typeof fromRaw === 'string'
+      ? fromRaw
+      : fromRaw?.email
+        ? (fromRaw.name ? `${fromRaw.name} <${fromRaw.email}>` : fromRaw.email)
+        : String(fromRaw)
+
+    const toAddresses: string[] = Array.isArray(toRaw)
+      ? toRaw.map((t: any) => (typeof t === 'string' ? t : t?.email || String(t)))
+      : [typeof toRaw === 'string' ? toRaw : toRaw?.email || String(toRaw)]
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
@@ -84,17 +102,18 @@ export async function POST(request: Request) {
 
     const { data, error } = await (supabaseAdmin as any).from('emails').insert({
       direction: 'inbound',
-      from_address: typeof from === 'string' ? from : from?.email || String(from),
-      to_address: Array.isArray(to) ? to : [typeof to === 'string' ? to : to?.email || String(to)],
+      from_address: fromAddress,
+      to_address: toAddresses,
       subject: subject,
-      body_html: html || null,
-      body_text: text || text || html || '',
+      body_html: html,
+      body_text: text,
       status: 'received',
-      message_id: message_id || null,
+      message_id: messageId,
+      thread_id: inReplyTo || messageId || null,
     })
 
     if (error) {
-      console.error('Errore inserimento email Supabase:', error)
+      console.error('[Resend Inbound] Errore inserimento email Supabase:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 

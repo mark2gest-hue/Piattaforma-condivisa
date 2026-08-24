@@ -6,6 +6,8 @@ export type Task = Database['public']['Tables']['tasks']['Row']
 export type Message = Database['public']['Tables']['messages']['Row']
 export type Email = Database['public']['Tables']['emails']['Row']
 export type FileItem = Database['public']['Tables']['files']['Row']
+export type CourseRegistration = Database['public']['Tables']['course_registrations']['Row']
+export type StudentCode = Database['public']['Tables']['student_codes']['Row']
 
 export interface TaskWithAssignee extends Task {
   assignee?: Profile | null

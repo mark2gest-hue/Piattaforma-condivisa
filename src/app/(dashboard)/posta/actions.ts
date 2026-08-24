@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Indirizzo mittente predefinito accettato da Resend
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Ti AIuto <onboarding@resend.dev>'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Ti AIuto <info@aiutiamoci.cloud>'
 
 export async function sendSharedEmail(formData: {
   to: string
@@ -52,5 +52,37 @@ export async function sendSharedEmail(formData: {
   } catch (error: any) {
     console.error('Errore server in sendSharedEmail:', error)
     return { success: false, error: error.message || 'Errore interno del server' }
+  }
+}
+
+export async function updateEmailStatus(emailId: string, status: 'received' | 'read' | 'archived') {
+  try {
+    const supabase = await createClient()
+    const { error } = await (supabase as any)
+      .from('emails')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', emailId)
+
+    if (error) throw error
+    return { success: true }
+  } catch (err: any) {
+    console.error('Errore updateEmailStatus:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+export async function deleteSharedEmail(emailId: string) {
+  try {
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('emails')
+      .delete()
+      .eq('id', emailId)
+
+    if (error) throw error
+    return { success: true }
+  } catch (err: any) {
+    console.error('Errore deleteSharedEmail:', err)
+    return { success: false, error: err.message }
   }
 }

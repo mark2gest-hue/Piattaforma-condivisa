@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Mail,
   Inbox,
@@ -11,6 +11,19 @@ import {
   Trash2,
   PlusCircle,
   X,
+  Search,
+  Globe,
+  Check,
+  Copy,
+  CheckCircle2,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  Filter,
+  RefreshCw,
+  ArrowDownLeft,
+  ArrowUpRight,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,9 +33,10 @@ import { formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Email, Profile } from '@/types/index'
 import { requestNotificationPermission, sendDesktopNotification } from '@/lib/notifications'
-import { sendSharedEmail } from './actions'
+import { sendSharedEmail, updateEmailStatus, deleteSharedEmail } from './actions'
 
 type EmailWithSender = Email & { senderProfile?: Profile }
+type FolderFilter = 'inbox' | 'sent' | 'unread' | 'all'
 
 export default function PostaCondivisaPage() {
   const [emails, setEmails] = useState<EmailWithSender[]>([])
@@ -30,35 +44,53 @@ export default function PostaCondivisaPage() {
   const [replyText, setReplyText] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentFilter, setCurrentFilter] = useState<FolderFilter>('inbox')
+  const [viewMode, setViewMode] = useState<'html' | 'text'>('html')
 
-  // Modal Nuova Email da zero
+  // Modal Nuova Email
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false)
   const [composeTo, setComposeTo] = useState('')
   const [composeSubject, setComposeSubject] = useState('')
   const [composeBody, setComposeBody] = useState('')
   const [isComposing, setIsComposing] = useState(false)
 
+  // Modal Guida Configurazione Dominio Aruba
+  const [isDnsModalOpen, setIsDnsModalOpen] = useState(false)
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+
   const supabase = createClient()
 
   useEffect(() => {
     fetchEmails()
+    requestNotificationPermission()
 
     // Realtime subscription per email in arrivo ed inviate
     const channel = supabase
       .channel('public:emails')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'emails' },
+        { event: '*', schema: 'public', table: 'emails' },
         (payload) => {
-          const newEmail = payload.new as Email
-          setEmails((prev) => [newEmail, ...prev])
+          if (payload.eventType === 'INSERT') {
+            const newEmail = payload.new as Email
+            setEmails((prev) => [newEmail, ...prev.filter((e) => e.id !== newEmail.id)])
 
-          if (newEmail.direction === 'inbound') {
-            sendDesktopNotification(
-              `Nuova Email da ${newEmail.from_address}`,
-              { body: newEmail.subject },
-              'email'
-            )
+            if (newEmail.direction === 'inbound') {
+              sendDesktopNotification(
+                `Nuova Email da ${newEmail.from_address}`,
+                { body: newEmail.subject },
+                'email'
+              )
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as Email
+            setEmails((prev) => prev.map((e) => (e.id === updated.id ? { ...e, ...updated } : e)))
+            setSelectedEmail((prev) => (prev?.id === updated.id ? { ...prev, ...updated } : prev))
+          } else if (payload.eventType === 'DELETE') {
+            const oldId = payload.old?.id
+            setEmails((prev) => prev.filter((e) => e.id !== oldId))
+            setSelectedEmail((prev) => (prev?.id === oldId ? null : prev))
           }
         }
       )
@@ -78,11 +110,66 @@ export default function PostaCondivisaPage() {
 
     if (data && !error) {
       setEmails(data)
-      if (data.length > 0) {
+      if (data.length > 0 && !selectedEmail) {
         setSelectedEmail(data[0])
       }
     }
     setLoading(false)
+  }
+
+  // Conteggi per badge
+  const counts = useMemo(() => {
+    const inbound = emails.filter((e) => e.direction === 'inbound')
+    const unread = inbound.filter((e) => e.status === 'received')
+    const sent = emails.filter((e) => e.direction === 'outbound')
+    return {
+      inbox: inbound.length,
+      unread: unread.length,
+      sent: sent.length,
+      all: emails.length,
+    }
+  }, [emails])
+
+  // Filtro ed elenco cercato
+  const filteredEmails = useMemo(() => {
+    return emails.filter((em) => {
+      // 1. Filtro cartella
+      if (currentFilter === 'inbox' && em.direction !== 'inbound') return false
+      if (currentFilter === 'sent' && em.direction !== 'outbound') return false
+      if (currentFilter === 'unread' && (em.direction !== 'inbound' || em.status !== 'received')) return false
+
+      // 2. Filtro ricerca
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase()
+        const matchFrom = em.from_address.toLowerCase().includes(q)
+        const matchTo = em.to_address.some((t) => t.toLowerCase().includes(q))
+        const matchSubj = em.subject.toLowerCase().includes(q)
+        const matchBody = (em.body_text || '').toLowerCase().includes(q)
+        return matchFrom || matchTo || matchSubj || matchBody
+      }
+
+      return true
+    })
+  }, [emails, currentFilter, searchQuery])
+
+  // Segna come letta al click
+  const handleSelectEmail = async (em: EmailWithSender) => {
+    setSelectedEmail(em)
+    if (em.direction === 'inbound' && em.status === 'received') {
+      await updateEmailStatus(em.id, 'read')
+      setEmails((prev) => prev.map((e) => (e.id === em.id ? { ...e, status: 'read' } : e)))
+    }
+  }
+
+  // Toggle Letta / Non letta
+  const handleToggleReadStatus = async (em: EmailWithSender, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const nextStatus = em.status === 'read' ? 'received' : 'read'
+    await updateEmailStatus(em.id, nextStatus)
+    setEmails((prev) => prev.map((e) => (e.id === em.id ? { ...e, status: nextStatus } : e)))
+    if (selectedEmail?.id === em.id) {
+      setSelectedEmail({ ...selectedEmail, status: nextStatus })
+    }
   }
 
   // Invio risposta ad un'email esistente
@@ -90,12 +177,13 @@ export default function PostaCondivisaPage() {
     if (!replyText.trim() || !selectedEmail) return
     setIsSending(true)
 
-    const recipient = selectedEmail.direction === 'inbound' 
-      ? selectedEmail.from_address 
-      : selectedEmail.to_address[0]
+    const recipient =
+      selectedEmail.direction === 'inbound'
+        ? selectedEmail.from_address
+        : selectedEmail.to_address[0]
 
-    const subject = selectedEmail.subject.startsWith('Re:') 
-      ? selectedEmail.subject 
+    const subject = selectedEmail.subject.startsWith('Re:')
+      ? selectedEmail.subject
       : `Re: ${selectedEmail.subject}`
 
     const result = await sendSharedEmail({
@@ -106,15 +194,15 @@ export default function PostaCondivisaPage() {
     })
 
     if (result.success) {
-      alert('Risposta inviata con successo tramite Resend!')
       setReplyText('')
+      await fetchEmails()
     } else {
       alert(`Errore durante l'invio: ${result.error}`)
     }
     setIsSending(false)
   }
 
-  // Invio nuova email da zero a qualsiasi destinatario
+  // Invio nuova email da zero
   const handleSendNewEmail = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!composeTo.trim() || !composeSubject.trim() || !composeBody.trim()) return
@@ -127,65 +215,79 @@ export default function PostaCondivisaPage() {
     })
 
     if (result.success) {
-      alert(`Email inviata con successo a ${composeTo}!`)
       setIsComposeModalOpen(false)
       setComposeTo('')
       setComposeSubject('')
       setComposeBody('')
+      await fetchEmails()
     } else {
       alert(`Errore durante l'invio dell'email: ${result.error}`)
     }
     setIsComposing(false)
   }
 
-  // Eliminazione email dal database Supabase
+  // Eliminazione email
   const handleDeleteEmail = async (emailId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     if (!confirm('Sei sicuro di voler eliminare questa email dal sistema condiviso?')) return
 
-    const { error } = await supabase.from('emails').delete().eq('id', emailId)
-
-    if (error) {
-      alert(`Impossibile eliminare l'email: ${error.message}`)
-      return
-    }
-
-    const updated = emails.filter((em) => em.id !== emailId)
-    setEmails(updated)
-
-    if (selectedEmail?.id === emailId) {
-      setSelectedEmail(updated.length > 0 ? updated[0] : null)
+    const result = await deleteSharedEmail(emailId)
+    if (result.success) {
+      const updated = emails.filter((em) => em.id !== emailId)
+      setEmails(updated)
+      if (selectedEmail?.id === emailId) {
+        setSelectedEmail(updated.length > 0 ? updated[0] : null)
+      }
+    } else {
+      alert(`Impossibile eliminare l'email: ${result.error}`)
     }
   }
 
-  const markAsRead = async (emailId: string) => {
-    await (supabase as any).from('emails').update({ status: 'read' }).eq('id', emailId)
-    setEmails(emails.map(e => e.id === emailId ? { ...e, status: 'read' } : e))
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedKey(key)
+    setTimeout(() => setCopiedKey(null), 2500)
   }
 
   return (
-    <div className="space-y-6 flex flex-col h-[calc(100vh-8rem)]">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
+    <div className="space-y-4 flex flex-col h-[calc(100vh-7.5rem)]">
+      {/* Top Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            Posta Condivisa
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Gestione messaggi email via Resend SDK & Webhook condivisa con il team.
-          </p>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
+              <Mail className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                Posta Condivisa
+                <Badge variant="outline" className="text-[11px] font-mono font-medium text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/60">
+                  @aiutiamoci.cloud
+                </Badge>
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Ricezione e invio posta in tempo reale con dominio verificato.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Badge variant="success" className="py-1 px-3 hidden sm:flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            Webhook Resend Attivo
-          </Badge>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsDnsModalOpen(true)}
+            className="text-xs border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 h-9 gap-1.5"
+          >
+            <Globe className="h-4 w-4 text-emerald-500" />
+            <span className="hidden md:inline">Configura DNS Aruba</span>
+            <span className="md:hidden">DNS Aruba</span>
+          </Button>
 
           <Button
+            size="sm"
             onClick={() => setIsComposeModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-9 px-4"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold h-9 px-4 gap-2 shadow-xs"
           >
             <PlusCircle className="h-4 w-4" />
             <span>Nuova Email</span>
@@ -193,123 +295,253 @@ export default function PostaCondivisaPage() {
         </div>
       </div>
 
-      {/* 2-Pane Email Interface */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden min-h-[500px]">
-        {/* Left Column: Email List */}
-        <div className="lg:col-span-4 xl:col-span-5 border-r border-slate-200 dark:border-slate-800 flex flex-col max-h-full">
-          {/* List Header */}
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2 font-semibold text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-              <Inbox className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              Tutti i Messaggi ({emails.length})
+      {/* Main Container */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden min-h-0">
+        {/* Left Column: Folders + Email List (5 cols) */}
+        <div className="lg:col-span-5 xl:col-span-5 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden bg-slate-50/50 dark:bg-slate-900/50">
+          {/* Folders / Filter Bar */}
+          <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-2.5 bg-white dark:bg-slate-900">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cerca per mittente, oggetto o testo..."
+                className="pl-9 text-xs h-9 bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-xl"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Folder Tabs */}
+            <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300">
+              <button
+                onClick={() => setCurrentFilter('inbox')}
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  currentFilter === 'inbox'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
+                    : 'hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <ArrowDownLeft className="h-3.5 w-3.5" />
+                <span>In arrivo</span>
+                {counts.unread > 0 && (
+                  <span className="ml-0.5 px-1.5 py-0.2 bg-blue-600 text-white text-[10px] rounded-full font-bold">
+                    {counts.unread}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setCurrentFilter('unread')}
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  currentFilter === 'unread'
+                    ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs font-semibold'
+                    : 'hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span>Non lette</span>
+                <span className="text-[10px] opacity-75">({counts.unread})</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentFilter('sent')}
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  currentFilter === 'sent'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
+                    : 'hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <ArrowUpRight className="h-3.5 w-3.5" />
+                <span>Inviate</span>
+                <span className="text-[10px] opacity-75">({counts.sent})</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentFilter('all')}
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                  currentFilter === 'all'
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-semibold'
+                    : 'hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span>Tutte</span>
+                <span className="text-[10px] opacity-75">({counts.all})</span>
+              </button>
             </div>
           </div>
 
-          {/* Email Items */}
-          <div className="divide-y divide-slate-100 dark:divide-slate-800 flex-1 overflow-y-auto">
+          {/* Email List */}
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/60 flex-1 overflow-y-auto">
             {loading ? (
-              <div className="h-full flex items-center justify-center py-12">
+              <div className="h-48 flex items-center justify-center">
                 <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
               </div>
-            ) : emails.length > 0 ? (
-              emails.map((em) => {
+            ) : filteredEmails.length > 0 ? (
+              filteredEmails.map((em) => {
                 const isSelected = selectedEmail?.id === em.id
+                const isUnread = em.direction === 'inbound' && em.status === 'received'
+
                 return (
                   <div
                     key={em.id}
-                    onClick={() => {
-                      setSelectedEmail(em)
-                      if (em.status === 'received') markAsRead(em.id)
-                    }}
-                    className={`p-4 cursor-pointer transition-colors relative group ${
+                    onClick={() => handleSelectEmail(em)}
+                    className={`p-3.5 cursor-pointer transition-all relative group border-l-4 ${
                       isSelected
-                        ? 'bg-blue-50/70 dark:bg-blue-950/40 border-l-4 border-blue-600'
-                        : em.status === 'received' 
-                          ? 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 font-bold'
-                          : 'bg-white dark:bg-slate-900 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 opacity-90'
+                        ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-600'
+                        : isUnread
+                          ? 'bg-white dark:bg-slate-900 border-amber-500 font-semibold'
+                          : 'bg-white/60 dark:bg-slate-900/60 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-90'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className={`text-xs truncate ${em.status === 'received' ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-700 dark:text-slate-300 font-semibold'}`}>
-                        {em.direction === 'inbound' ? em.from_address : `A: ${em.to_address[0]}`}
-                      </span>
-                      <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {isUnread && (
+                          <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" title="Nuovo messaggio non letto" />
+                        )}
+                        <span
+                          className={`text-xs truncate ${
+                            isUnread
+                              ? 'font-bold text-slate-900 dark:text-white'
+                              : 'font-medium text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {em.direction === 'inbound' ? em.from_address : `A: ${em.to_address.join(', ')}`}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0">
                         {formatDate(em.created_at)}
                       </span>
                     </div>
 
-                    <div className={`text-xs line-clamp-1 mb-1 ${em.status === 'received' ? 'text-slate-800 dark:text-slate-200 font-bold' : 'text-slate-600 dark:text-slate-400 font-medium'}`}>
-                      {em.subject}
+                    <div
+                      className={`text-xs line-clamp-1 mb-1 ${
+                        isUnread
+                          ? 'font-bold text-slate-900 dark:text-slate-100'
+                          : 'text-slate-700 dark:text-slate-300 font-normal'
+                      }`}
+                    >
+                      {em.subject || '(Nessun oggetto)'}
                     </div>
 
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                      {em.body_text?.substring(0, 100) || 'Nessun testo...'}
+                      {em.body_text?.substring(0, 110) || 'Nessun testo...'}
                     </p>
 
-                    <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center justify-between mt-2.5 pt-1">
                       <div className="flex items-center gap-1.5">
                         {em.direction === 'outbound' ? (
-                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-blue-600 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300">
-                            Inviata da {em.senderProfile?.full_name?.split(' ')[0] || 'Team'}
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] px-1.5 py-0 text-blue-600 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300 flex items-center gap-1"
+                          >
+                            <ArrowUpRight className="h-2.5 w-2.5" />
+                            Inviata
                           </Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                            In arrivo
+                          <Badge
+                            variant="secondary"
+                            className={`text-[9px] px-1.5 py-0 flex items-center gap-1 ${
+                              isUnread
+                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                            }`}
+                          >
+                            <ArrowDownLeft className="h-2.5 w-2.5" />
+                            {isUnread ? 'Da Leggere' : 'Letta'}
                           </Badge>
                         )}
                       </div>
 
-                      {/* Pulsante Elimina Rapido */}
-                      <button
-                        onClick={(e) => handleDeleteEmail(em.id, e)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded transition-all"
-                        title="Elimina Email"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {em.direction === 'inbound' && (
+                          <button
+                            onClick={(e) => handleToggleReadStatus(em, e)}
+                            className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded"
+                            title={em.status === 'read' ? 'Segna come non letta' : 'Segna come già letta'}
+                          >
+                            {em.status === 'read' ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => handleDeleteEmail(em.id, e)}
+                          className="p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded"
+                          title="Elimina email"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
               })
             ) : (
-              <div className="p-8 text-center text-xs text-slate-400">
-                Nessuna email presente.
+              <div className="p-12 text-center text-xs text-slate-400 space-y-2">
+                <Inbox className="h-8 w-8 mx-auto text-slate-300 dark:text-slate-600" />
+                <p>Nessun messaggio trovato in questa cartella.</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Column: Selected Email Viewer & Reply */}
-        <div className="lg:col-span-8 xl:col-span-7 flex flex-col p-0 h-full">
+        {/* Right Column: Selected Email Viewer & Quick Reply (7 cols) */}
+        <div className="lg:col-span-7 xl:col-span-7 flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden">
           {selectedEmail ? (
-            <div className="flex-1 flex flex-col h-full">
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
               {/* Message Header */}
-              <div className="p-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+              <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex-shrink-0 bg-slate-50/40 dark:bg-slate-800/30">
                 <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
-                      {selectedEmail.subject}
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-base font-bold text-slate-900 dark:text-white leading-tight break-words">
+                      {selectedEmail.subject || '(Nessun oggetto)'}
                     </h2>
-                    <div className="flex items-center gap-2 mt-3">
+
+                    <div className="flex items-center gap-3 mt-3">
                       <Avatar
-                        fallback={selectedEmail.direction === 'inbound' ? selectedEmail.from_address.charAt(0) : 'T'}
-                        className="h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-700"
+                        fallback={
+                          selectedEmail.direction === 'inbound'
+                            ? selectedEmail.from_address.charAt(0).toUpperCase()
+                            : 'T'
+                        }
+                        className="h-9 w-9 bg-blue-600/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800"
                       />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                          {selectedEmail.direction === 'inbound' ? selectedEmail.from_address : 'Team Hub'}
+                      <div className="flex flex-col min-w-0 text-xs">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                          {selectedEmail.direction === 'inbound'
+                            ? selectedEmail.from_address
+                            : 'Team (@aiutiamoci.cloud)'}
                         </span>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                           A: {selectedEmail.to_address.join(', ')}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-slate-400 font-medium">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-slate-400 font-medium">
                       {formatDate(selectedEmail.created_at)}
                     </span>
+
+                    {selectedEmail.body_html && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setViewMode(viewMode === 'html' ? 'text' : 'html')}
+                        className="h-8 px-2 text-xs text-slate-600 dark:text-slate-300"
+                        title="Cambia vista HTML/Testo"
+                      >
+                        {viewMode === 'html' ? 'Visualizza Testo' : 'Visualizza HTML'}
+                      </Button>
+                    )}
+
                     <Button
                       variant="ghost"
                       size="icon"
@@ -323,66 +555,94 @@ export default function PostaCondivisaPage() {
                 </div>
               </div>
 
-              {/* Message Body */}
-              <div className="p-6 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed flex-1 overflow-y-auto">
-                {selectedEmail.body_text || selectedEmail.body_html || 'Nessun contenuto in questa email.'}
+              {/* Message Content */}
+              <div className="p-6 flex-1 overflow-y-auto">
+                {viewMode === 'html' && selectedEmail.body_html ? (
+                  <iframe
+                    srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.6;color:#334155;padding:12px;margin:0;word-break:break-word;}a{color:#2563eb;}</style></head><body>${selectedEmail.body_html}</body></html>`}
+                    className="w-full h-full min-h-[260px] border-0 rounded-lg bg-transparent"
+                    sandbox="allow-popups allow-popups-to-escape-sandbox"
+                    title="Email Preview"
+                  />
+                ) : (
+                  <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                    {selectedEmail.body_text || selectedEmail.body_html?.replace(/<[^>]*>?/gm, '') || 'Nessun contenuto in questo messaggio.'}
+                  </div>
+                )}
               </div>
 
               {/* Reply Box */}
-              <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex-shrink-0">
-                <div className="space-y-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex-shrink-0">
+                <div className="space-y-2 bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
                   <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    <span className="flex items-center gap-1.5">
-                      <Reply className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      Rispondi come Team a <strong className="text-slate-900 dark:text-white truncate max-w-[200px]">
-                        {selectedEmail.direction === 'inbound' ? selectedEmail.from_address : selectedEmail.to_address[0]}
+                    <span className="flex items-center gap-1.5 truncate">
+                      <Reply className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      Rispondi a{' '}
+                      <strong className="text-slate-900 dark:text-white truncate max-w-[220px]">
+                        {selectedEmail.direction === 'inbound'
+                          ? selectedEmail.from_address
+                          : selectedEmail.to_address[0]}
                       </strong>
                     </span>
-                    <span className="text-[10px] text-slate-400 hidden sm:inline-block">via Resend API</span>
+                    <span className="text-[10px] text-slate-400 font-normal hidden sm:inline-block">
+                      Mittente: info@aiutiamoci.cloud
+                    </span>
                   </div>
 
                   <textarea
-                    rows={4}
+                    rows={3}
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
-                    placeholder="Scrivi qui la risposta condivisa..."
-                    className="w-full text-sm p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-colors"
+                    placeholder="Scrivi qui la risposta condivisa dal team..."
+                    className="w-full text-xs p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-colors"
                   />
 
-                  <div className="flex items-center justify-between pt-2">
-                    <Button variant="ghost" size="sm" className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 gap-1.5 h-8">
-                      <Paperclip className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Allega documento</span>
+                  <div className="flex items-center justify-between pt-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setReplyText(
+                          `\n\n--- Messaggio Originale ---\nDa: ${selectedEmail.from_address}\nOggetto: ${selectedEmail.subject}\n\n${selectedEmail.body_text || ''}`
+                        )
+                      }
+                      className="text-[11px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 h-7 px-2"
+                    >
+                      Cita testo originale
                     </Button>
+
                     <Button
                       size="sm"
                       onClick={handleSendReply}
                       disabled={isSending || !replyText.trim()}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold h-9 px-5 gap-2 shadow-xs transition-all"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold h-8 px-4 gap-1.5 shadow-xs"
                     >
-                      <Send className="h-3.5 w-3.5" />
-                      {isSending ? 'Invio in corso...' : 'Invia Risposta'}
+                      <Send className="h-3 w-3" />
+                      {isSending ? 'Invio...' : 'Invia Risposta'}
                     </Button>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
+            <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-3 p-8">
               <Mail className="h-12 w-12 text-slate-300 dark:text-slate-700" />
-              <p className="text-sm">Seleziona un messaggio dalla lista per leggerlo.</p>
+              <p className="text-sm font-medium">Seleziona un messaggio per leggerlo</p>
+              <p className="text-xs text-slate-400 text-center max-w-xs">
+                Tutte le email in arrivo sul dominio aiutiamoci.cloud compariranno automaticamente qui.
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal Nuova Email da Zero */}
+      {/* Modal Nuova Email */}
       {isComposeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2">
-                <Send className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <Send className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuova Email di Team</h3>
               </div>
               <Button
@@ -415,7 +675,7 @@ export default function PostaCondivisaPage() {
                   required
                   value={composeSubject}
                   onChange={(e) => setComposeSubject(e.target.value)}
-                  placeholder="Es. Offerta Consulenza / Aggiornamento Progetto"
+                  placeholder="Es. Richiesta Informazioni / Preventivo"
                   className="text-xs dark:bg-slate-800 dark:border-slate-700"
                 />
               </div>
@@ -424,33 +684,180 @@ export default function PostaCondivisaPage() {
                 <label className="font-semibold text-slate-700 dark:text-slate-300">Messaggio *</label>
                 <textarea
                   required
-                  rows={5}
+                  rows={6}
                   value={composeBody}
                   onChange={(e) => setComposeBody(e.target.value)}
-                  placeholder="Scrivi qui il contenuto dell'email..."
+                  placeholder="Scrivi qui il messaggio..."
                   className="w-full text-xs p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <Button type="button" variant="outline" onClick={() => setIsComposeModalOpen(false)}>
-                  Annulla
-                </Button>
-                <Button type="submit" disabled={isComposing} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-                  {isComposing ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Invio in corso...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-3.5 w-3.5" />
-                      Invia Email
-                    </>
-                  )}
-                </Button>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                <span className="text-[11px] text-slate-400">Mittente: info@aiutiamoci.cloud</span>
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsComposeModalOpen(false)}>
+                    Annulla
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={isComposing}
+                    className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+                  >
+                    {isComposing ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Invio in corso...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3.5 w-3.5" />
+                        Invia Email
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Guida DNS Aruba */}
+      {isDnsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <Globe className="h-5 w-5 text-emerald-500" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Guida Configurazione DNS Dominio <span className="text-blue-600 dark:text-blue-400 font-mono">aiutiamoci.cloud</span> (Aruba)
+                </h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDnsModalOpen(false)}
+                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="p-5 space-y-5 overflow-y-auto text-xs">
+              <div className="p-3.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-blue-900 dark:text-blue-300">
+                  <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  Pannello Aruba: Gestione DNS e Record Posta
+                </div>
+                <p className="text-blue-800/80 dark:text-blue-300/80 text-[11px] leading-relaxed">
+                  Per far recapitare la posta di <strong>aiutiamoci.cloud</strong> direttamente in questa piattaforma e abilitare l'invio verificato con SPF/DKIM, inserisci i seguenti record nel pannello di controllo Aruba (sezione <em>Gestione DNS / NameServer</em>):
+                </p>
+              </div>
+
+              {/* Tabella Record DNS */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                  <span>1. Record Posta in Arrivo (MX Inbound)</span>
+                </h4>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-mono font-bold text-slate-900 dark:text-white">Tipo MX:</span> Priorità <span className="font-mono font-bold text-blue-600">10</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard('feedback-smtp.us-east-1.amazonses.com', 'mx')}
+                      className="h-7 text-[11px] gap-1"
+                    >
+                      {copiedKey === 'mx' ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      Copia Host
+                    </Button>
+                  </div>
+                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
+                    feedback-smtp.us-east-1.amazonses.com
+                  </div>
+                  <p className="text-[10px] text-slate-400">
+                    (In alternativa, se usi Resend Inbound Routing dedicato: inserisci il record MX fornito nel pannello Resend Domains per Inbound)
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-bold text-slate-800 dark:text-slate-200">
+                  2. Record Autenticazione Invio (SPF, DKIM, DMARC)
+                </h4>
+
+                {/* SPF */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-slate-900 dark:text-white">TXT (SPF): Host @</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard('v=spf1 include:amazonses.com ~all', 'spf')}
+                      className="h-7 text-[11px] gap-1"
+                    >
+                      {copiedKey === 'spf' ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      Copia Valore
+                    </Button>
+                  </div>
+                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
+                    v=spf1 include:amazonses.com ~all
+                  </div>
+                </div>
+
+                {/* DMARC */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-slate-900 dark:text-white">TXT (DMARC): Host _dmarc</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard('v=DMARC1; p=none;', 'dmarc')}
+                      className="h-7 text-[11px] gap-1"
+                    >
+                      {copiedKey === 'dmarc' ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      Copia Valore
+                    </Button>
+                  </div>
+                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
+                    v=DMARC1; p=none;
+                  </div>
+                </div>
+              </div>
+
+              {/* Webhook Endpoint per ricezione automatica */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-slate-800 dark:text-slate-200">
+                  3. Endpoint Webhook Inbound (da inserire su Resend Dashboard)
+                </h4>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">URL Destinazione Webhook Eventi:</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard('https://aiutiamoci.cloud/api/webhooks/resend', 'webhook')}
+                      className="h-7 text-[11px] gap-1"
+                    >
+                      {copiedKey === 'webhook' ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      Copia URL Webhook
+                    </Button>
+                  </div>
+                  <div className="font-mono text-[11px] text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800 select-all">
+                    https://aiutiamoci.cloud/api/webhooks/resend
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-end">
+              <Button onClick={() => setIsDnsModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white text-xs">
+                Chiudi Guida
+              </Button>
+            </div>
           </div>
         </div>
       )}

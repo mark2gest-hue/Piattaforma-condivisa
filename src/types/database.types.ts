@@ -248,6 +248,94 @@ export interface Database {
           created_at?: string
         }
       }
+      student_codes: {
+        Row: {
+          id: string
+          code: string
+          student_name: string
+          student_email: string
+          course_title: string
+          access_tier: string
+          is_active: boolean
+          expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          student_name: string
+          student_email: string
+          course_title?: string
+          access_tier?: string
+          is_active?: boolean
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          student_name?: string
+          student_email?: string
+          course_title?: string
+          access_tier?: string
+          is_active?: boolean
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      course_registrations: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          ai_experience: string | null
+          objective: string | null
+          blocker: string | null
+          expectation: string | null
+          raw_answers: Json | null
+          status: 'pending' | 'approved' | 'rejected'
+          access_code: string | null
+          approved: boolean
+          approved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          ai_experience?: string | null
+          objective?: string | null
+          blocker?: string | null
+          expectation?: string | null
+          raw_answers?: Json | null
+          status?: 'pending' | 'approved' | 'rejected'
+          access_code?: string | null
+          approved?: boolean
+          approved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          ai_experience?: string | null
+          objective?: string | null
+          blocker?: string | null
+          expectation?: string | null
+          raw_answers?: Json | null
+          status?: 'pending' | 'approved' | 'rejected'
+          access_code?: string | null
+          approved?: boolean
+          approved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

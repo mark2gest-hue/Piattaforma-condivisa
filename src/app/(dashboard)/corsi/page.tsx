@@ -35,6 +35,11 @@ import {
   FileSpreadsheet,
   Share2,
   Clock,
+  ClipboardList,
+  RefreshCw,
+  Copy,
+  Check,
+  Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -42,7 +47,17 @@ import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound } from '@/lib/notifications'
 import { sendSharedEmail } from '../posta/actions'
-import { enrollStudentAction, bulkEnrollStudentsAction, getWaitlistLeadsAction, convertWaitlistLeadAction } from '@/app/actions/student'
+import {
+  enrollStudentAction,
+  bulkEnrollStudentsAction,
+  getWaitlistLeadsAction,
+  convertWaitlistLeadAction,
+  getCourseRegistrationsAction,
+  approveCourseRegistrationAction,
+  deleteCourseRegistrationAction,
+  getStudentCodesAction,
+  deleteStudentCodeAction,
+} from '@/app/actions/student'
 import {
   generateSocialContentAction,
   getBufferProfilesAction,
@@ -50,6 +65,7 @@ import {
 } from '@/app/actions/marketing'
 import { LESSON_SUMMARIES } from '@/lib/course-data'
 import { askStudentAiAction, generateLessonQuizAction, QuizQuestion } from '@/app/actions/ai'
+import { CourseRegistration } from '@/types/index'
 
 interface StudentRegistration {
   id: string
@@ -418,8 +434,14 @@ function CorsiInnerContent() {
   const [studentCodeInput, setStudentCodeInput] = useState('')
   const [activeStudent, setActiveStudent] = useState<{ name: string; code: string; accessTier?: 'ai-start' | 'ai-pro' | 'both' } | null>(null)
 
-  // Subtab Registro: 'active' | 'waitlist'
-  const [studentSubTab, setStudentSubTab] = useState<'active' | 'waitlist'>('active')
+  // Subtab Registro: 'registrations' | 'active' | 'waitlist'
+  const [studentSubTab, setStudentSubTab] = useState<'registrations' | 'active' | 'waitlist'>('registrations')
+  const [courseRegistrations, setCourseRegistrations] = useState<CourseRegistration[]>([])
+  const [loadingRegistrations, setLoadingRegistrations] = useState<boolean>(false)
+  const [copiedEmailKey, setCopiedEmailKey] = useState<string | null>(null)
+  const [isApprovingId, setIsApprovingId] = useState<string | null>(null)
+  const [regSearchQuery, setRegSearchQuery] = useState<string>('')
+  const [regStatusFilter, setRegStatusFilter] = useState<'all' | 'pending' | 'approved'>('all')
   const [waitlistLeads, setWaitlistLeads] = useState<WaitlistLead[]>([])
   const [isConvertingLeadId, setIsConvertingLeadId] = useState<string | null>(null)
 
@@ -436,27 +458,9 @@ function CorsiInnerContent() {
 
   const [codeError, setCodeError] = useState('')
 
-  // Registrazioni Studenti
-  const [registrations, setRegistrations] = useState<StudentRegistration[]>([
-    {
-      id: 'r-1',
-      code: 'STUD-9842',
-      studentName: 'Marco Rossi',
-      studentEmail: 'marco.rossi@example.com',
-      courseTitle: 'AI Start - Intelligenza Artificiale per Consulenti',
-      status: 'in_progress',
-      registeredAt: '2026-08-15',
-    },
-    {
-      id: 'r-2',
-      code: 'STUD-3105',
-      studentName: 'Laura Bianchi',
-      studentEmail: 'laura.b@example.com',
-      courseTitle: 'AI Start - Intelligenza Artificiale per Consulenti',
-      status: 'enrolled',
-      registeredAt: '2026-08-17',
-    },
-  ])
+  // Registrazioni Studenti (Codici Attivi nel Database)
+  const [registrations, setRegistrations] = useState<StudentRegistration[]>([])
+
 
   // Chat Studenti con Assistente @AI
   const [chatMessages, setChatMessages] = useState<Array<{ id: string; sender: string; isAi: boolean; text: string; time: string }>>([
@@ -527,15 +531,92 @@ function CorsiInnerContent() {
     }
   }, [])
 
-  // Caricamento profili Buffer e Lista d'Attesa all'attivazione
+  // Caricamento dati iniziali all'avvio e al cambio tab
+  useEffect(() => {
+    loadCourseRegistrations()
+    loadStudentCodes()
+    loadWaitlistLeads()
+
+    const channel = supabase
+      .channel('public:courses_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'course_registrations' }, () => {
+        loadCourseRegistrations()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_codes' }, () => {
+        loadStudentCodes()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
   useEffect(() => {
     if (activeTab === 'marketing') {
       loadBufferProfiles()
     }
     if (activeTab === 'students') {
+      loadCourseRegistrations()
+      loadStudentCodes()
       loadWaitlistLeads()
     }
   }, [activeTab])
+
+  const loadStudentCodes = async () => {
+    const res = await getStudentCodesAction()
+    if (res.success && res.studentCodes) {
+      const formatted: StudentRegistration[] = res.studentCodes.map((sc: any) => ({
+        id: sc.id,
+        code: sc.code,
+        studentName: sc.student_name,
+        studentEmail: sc.student_email,
+        courseTitle: sc.course_title,
+        accessTier: sc.access_tier,
+        registeredAt: sc.created_at,
+        status: 'enrolled',
+      }))
+      setRegistrations(formatted)
+    }
+  }
+
+  const loadCourseRegistrations = async () => {
+    setLoadingRegistrations(true)
+    const res = await getCourseRegistrationsAction()
+    if (res.success && res.registrations) {
+      setCourseRegistrations(res.registrations)
+    }
+    setLoadingRegistrations(false)
+  }
+
+  const handleApproveRegistration = async (reg: CourseRegistration) => {
+    setIsApprovingId(reg.id)
+    const res = await approveCourseRegistrationAction(reg.id)
+    if (res.success && res.code) {
+      playNotificationSound('chat')
+      alert(`🎉 Registrazione per ${reg.name} APPROVATA con successo!\nCodice generato: ${res.code}\nEmail con istruzioni inviata a ${reg.email}.`)
+      await loadCourseRegistrations()
+    } else {
+      alert(`Errore approvazione: ${res.error}`)
+    }
+    setIsApprovingId(null)
+  }
+
+  const handleDeleteRegistration = async (id: string, name: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare la richiesta di registrazione per ${name}?`)) return
+    const res = await deleteCourseRegistrationAction(id)
+    if (res.success) {
+      setCourseRegistrations((prev) => prev.filter((r) => r.id !== id))
+    } else {
+      alert(`Errore eliminazione: ${res.error}`)
+    }
+  }
+
+  const copyEmailToClipboard = (email: string, key: string) => {
+    navigator.clipboard.writeText(email)
+    setCopiedEmailKey(key)
+    setTimeout(() => setCopiedEmailKey(null), 2000)
+  }
 
   const loadWaitlistLeads = async () => {
     const res = await getWaitlistLeadsAction()
@@ -1034,7 +1115,7 @@ function CorsiInnerContent() {
   const handleDeleteStudent = async (studentId: string, name: string, code: string) => {
     if (!confirm(`Sei sicuro di voler eliminare lo studente "${name}" (Codice: ${code}) dal sistema?`)) return
 
-    await supabase.from('student_codes').delete().eq('code', code)
+    await deleteStudentCodeAction(studentId)
     setRegistrations(registrations.filter((r) => r.id !== studentId))
   }
 
@@ -1357,7 +1438,11 @@ function CorsiInnerContent() {
 
         {!activeStudent && (
           <button
-            onClick={() => setActiveTab('students')}
+            onClick={() => {
+              setActiveTab('students')
+              loadCourseRegistrations()
+              loadStudentCodes()
+            }}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
               activeTab === 'students'
                 ? 'bg-indigo-600 text-white shadow-xs'
@@ -1365,7 +1450,7 @@ function CorsiInnerContent() {
             }`}
           >
             <Users className="h-4 w-4" />
-            <span>Registro Codici & Studenti ({registrations.length})</span>
+            <span>Registro Codici & Studenti ({courseRegistrations.length || registrations.length})</span>
           </button>
         )}
 
@@ -2374,85 +2459,266 @@ function CorsiInnerContent() {
             </div>
           </div>
 
-          {/* Sotto-Schede: Studenti Attivi vs Lista d'Attesa */}
-          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-            <button
-              onClick={() => setStudentSubTab('active')}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-                studentSubTab === 'active'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              <Users className="h-4 w-4" />
-              <span>Studenti Accreditati ({registrations.length})</span>
-            </button>
+          {/* Sotto-Schede: Registrazioni & Questionario vs Studenti Attivi vs Lista d'Attesa */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setStudentSubTab('registrations')}
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+                  studentSubTab === 'registrations'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <ClipboardList className="h-4 w-4" />
+                <span>Questionario & Registrazioni ({courseRegistrations.length})</span>
+                {courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length > 0 && (
+                  <span className="px-1.5 py-0.2 bg-amber-500 text-white text-[10px] rounded-full font-bold">
+                    {courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length}
+                  </span>
+                )}
+              </button>
 
-            <button
-              onClick={() => {
-                setStudentSubTab('waitlist')
-                loadWaitlistLeads()
-              }}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-                studentSubTab === 'waitlist'
-                  ? 'bg-purple-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+              <button
+                onClick={() => setStudentSubTab('active')}
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+                  studentSubTab === 'active'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                <span>Studenti Accreditati ({registrations.length})</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setStudentSubTab('waitlist')
+                  loadWaitlistLeads()
+                }}
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+                  studentSubTab === 'waitlist'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Clock className="h-4 w-4" />
+                <span>⏳ Lista d'Attesa AI Pro ({waitlistLeads.length})</span>
+              </button>
+            </div>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={loadCourseRegistrations}
+              className="text-xs h-8 gap-1.5 border-slate-200 dark:border-slate-700"
             >
-              <Clock className="h-4 w-4" />
-              <span>⏳ Lista d'Attesa AI Pro ({waitlistLeads.length})</span>
-            </button>
+              <RefreshCw className={`h-3.5 w-3.5 ${loadingRegistrations ? 'animate-spin' : ''}`} />
+              <span>Ricarica</span>
+            </Button>
           </div>
 
-          {/* KPI Dashboard Statistiche */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-              <div className="flex items-center justify-between text-slate-500">
-                <span className="text-xs font-semibold">Totale Corsisti</span>
-                <Users className="h-4 w-4 text-indigo-600" />
+          {/* TABELLA 1: REGISTRAZIONI & QUESTIONARIO (COME NELLA FOTO) */}
+          {studentSubTab === 'registrations' && (
+            <div className="space-y-4">
+              {/* Barra Filtri e Ricerca */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="relative w-full sm:w-80">
+                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    value={regSearchQuery}
+                    onChange={(e) => setRegSearchQuery(e.target.value)}
+                    placeholder="Cerca per nome, email o obiettivo..."
+                    className="pl-9 text-xs h-9 bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-xl"
+                  />
+                  {regSearchQuery && (
+                    <button
+                      onClick={() => setRegSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
+                  <button
+                    onClick={() => setRegStatusFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      regStatusFilter === 'all'
+                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    Tutti ({courseRegistrations.length})
+                  </button>
+                  <button
+                    onClick={() => setRegStatusFilter('pending')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      regStatusFilter === 'pending'
+                        ? 'bg-amber-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    In Attesa ({courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length})
+                  </button>
+                  <button
+                    onClick={() => setRegStatusFilter('approved')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      regStatusFilter === 'approved'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    Approvati ({courseRegistrations.filter(r => r.approved || r.status === 'approved').length})
+                  </button>
+                </div>
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2 font-mono">
-                {registrations.length}
-              </p>
-              <span className="text-[10px] text-slate-400">Codici attivi nel sistema</span>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-              <div className="flex items-center justify-between text-slate-500">
-                <span className="text-xs font-semibold">In Lista d'Attesa</span>
-                <Clock className="h-4 w-4 text-purple-600" />
+              {/* Tabella Registrazioni */}
+              <div className="bg-[#0f172a] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#1e293b]/70 border-b border-slate-800 text-slate-400 font-semibold">
+                      <tr>
+                        <th className="py-3 px-4 min-w-[140px]">Nome</th>
+                        <th className="py-3 px-4 min-w-[200px]">Email</th>
+                        <th className="py-3 px-4 min-w-[160px]">Esperienza AI</th>
+                        <th className="py-3 px-4 min-w-[170px]">Obiettivo</th>
+                        <th className="py-3 px-4 min-w-[160px]">Blocco</th>
+                        <th className="py-3 px-4 min-w-[160px]">Aspettativa</th>
+                        <th className="py-3 px-4 min-w-[130px]">Data</th>
+                        <th className="py-3 px-4 min-w-[140px] text-right">Stato</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {courseRegistrations
+                        .filter((reg) => {
+                          const isAppr = reg.approved === true || reg.status === 'approved'
+                          if (regStatusFilter === 'pending' && isAppr) return false
+                          if (regStatusFilter === 'approved' && !isAppr) return false
+
+                          if (regSearchQuery.trim()) {
+                            const q = regSearchQuery.toLowerCase()
+                            const mName = reg.name.toLowerCase().includes(q)
+                            const mEmail = reg.email.toLowerCase().includes(q)
+                            const mObj = (reg.objective || '').toLowerCase().includes(q)
+                            const mExp = (reg.ai_experience || '').toLowerCase().includes(q)
+                            const mBlk = (reg.blocker || '').toLowerCase().includes(q)
+                            return mName || mEmail || mObj || mExp || mBlk
+                          }
+                          return true
+                        })
+                        .map((reg) => {
+                          const isAppr = reg.approved === true || reg.status === 'approved'
+                          return (
+                            <tr key={reg.id} className="hover:bg-slate-800/40 transition-colors">
+                              <td className="py-3.5 px-4 font-bold text-slate-100">
+                                {reg.name}
+                              </td>
+
+                              <td className="py-3.5 px-4 font-mono text-blue-400">
+                                <div className="flex items-center gap-1.5 group">
+                                  <span className="truncate max-w-[180px]">{reg.email}</span>
+                                  <button
+                                    onClick={() => copyEmailToClipboard(reg.email, reg.id)}
+                                    className="text-slate-500 hover:text-slate-300 transition-colors"
+                                    title="Copia Email"
+                                  >
+                                    {copiedEmailKey === reg.id ? (
+                                      <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                    ) : (
+                                      <Copy className="h-3.5 w-3.5" />
+                                    )}
+                                  </button>
+                                </div>
+                              </td>
+
+                              <td className="py-3.5 px-4 text-slate-300 truncate max-w-[160px]" title={reg.ai_experience || ''}>
+                                {reg.ai_experience || '—'}
+                              </td>
+
+                              <td className="py-3.5 px-4 text-slate-300 truncate max-w-[170px]" title={reg.objective || ''}>
+                                {reg.objective || '—'}
+                              </td>
+
+                              <td className="py-3.5 px-4 text-slate-400 truncate max-w-[160px]" title={reg.blocker || ''}>
+                                {reg.blocker || '—'}
+                              </td>
+
+                              <td className="py-3.5 px-4 text-slate-400 truncate max-w-[160px]" title={reg.expectation || ''}>
+                                {reg.expectation || '—'}
+                              </td>
+
+                              <td className="py-3.5 px-4 text-slate-400 font-mono text-[11px] whitespace-nowrap">
+                                {new Date(reg.created_at).toLocaleString('it-IT', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </td>
+
+                              <td className="py-3.5 px-4 text-right">
+                                {isAppr ? (
+                                  <div className="flex flex-col items-end">
+                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-400 font-semibold text-[11px]">
+                                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                      <span>Approvato</span>
+                                    </div>
+                                    {reg.approved_at && (
+                                      <span className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                        {new Date(reg.approved_at).toLocaleString('it-IT', {
+                                          day: '2-digit',
+                                          month: '2-digit',
+                                          year: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                        })}
+                                      </span>
+                                    )}
+                                    {reg.access_code && (
+                                      <span className="text-[10px] text-indigo-400 font-mono">
+                                        {reg.access_code}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    disabled={isApprovingId === reg.id}
+                                    onClick={() => handleApproveRegistration(reg)}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] h-7 px-3 rounded-lg gap-1.5 shadow-xs"
+                                  >
+                                    {isApprovingId === reg.id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <CheckCircle2 className="h-3 w-3" />
+                                    )}
+                                    <span>Approva</span>
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {courseRegistrations.length === 0 && (
+                  <div className="p-12 text-center text-slate-400 text-xs space-y-2">
+                    <ClipboardList className="h-8 w-8 mx-auto text-slate-600" />
+                    <p>Nessuna registrazione al momento. Tutte le richieste compilate dalla landing page compariranno qui.</p>
+                  </div>
+                )}
               </div>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-2 font-mono">
-                {waitlistLeads.length}
-              </p>
-              <span className="text-[10px] text-slate-400">Registrati da landing page</span>
             </div>
+          )}
 
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-              <div className="flex items-center justify-between text-slate-500">
-                <span className="text-xs font-semibold">Avanzamento Globale</span>
-                <TrendingUp className="h-4 w-4 text-emerald-600" />
-              </div>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2 font-mono">
-                {Math.round((lessons.filter((l) => l.completed).length / lessons.length) * 100)}%
-              </p>
-              <span className="text-[10px] text-slate-400">{lessons.filter((l) => l.completed).length} su {lessons.length} completate</span>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-              <div className="flex items-center justify-between text-slate-500">
-                <span className="text-xs font-semibold">Attestati Sbloccati</span>
-                <Award className="h-4 w-4 text-amber-500" />
-              </div>
-              <p className="text-2xl font-bold text-amber-500 mt-2 font-mono">
-                {registrations.filter((r) => r.status === 'completed').length || 1}
-              </p>
-              <span className="text-[10px] text-slate-400">Pronti per il download</span>
-            </div>
-          </div>
-
-
-          {studentSubTab === 'active' ? (
+          {/* TABELLA 2: STUDENTI ATTIVI ACCREDITATI */}
+          {studentSubTab === 'active' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
@@ -2548,7 +2814,10 @@ function CorsiInnerContent() {
                 </table>
               </div>
             </div>
-          ) : (
+          )}
+
+          {/* TABELLA 3: LISTA D'ATTESA AI PRO */}
+          {studentSubTab === 'waitlist' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs space-y-4 p-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 flex items-center gap-2">

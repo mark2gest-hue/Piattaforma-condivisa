@@ -42,7 +42,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
-import { enrollStudentAction, joinWaitlistAction } from '@/app/actions/student'
+import { enrollStudentAction, joinWaitlistAction, submitCourseRegistrationAction } from '@/app/actions/student'
 
 const MODULES_LIST = [
   { num: '01', title: '1. Benvenuti nel Futuro', category: 'Modulo 1 – Fondamenta', desc: 'Introduzione ai concetti chiave ed alla rivoluzione dell’Intelligenza Artificiale.' },
@@ -78,11 +78,16 @@ export default function LandingPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Form Iscrizione Rapida AI Start
+  // Form Iscrizione & Questionario AI Start
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
   const [nameInput, setNameInput] = useState('')
   const [emailInput, setEmailInput] = useState('')
+  const [aiExperience, setAiExperience] = useState('Qualche prova (tipo ChatGPT ogni tanto)')
+  const [objective, setObjective] = useState('Migliorare il lavoro o il business')
+  const [blocker, setBlocker] = useState('Non so da dove iniziare')
+  const [expectation, setExpectation] = useState('Voglio sperimentare e capire')
   const [isRegistering, setIsRegistering] = useState(false)
+  const [enrollSuccess, setEnrollSuccess] = useState(false)
 
   // Login Studente Rapido con Codice
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false)
@@ -114,26 +119,29 @@ export default function LandingPage() {
     if (!nameInput.trim() || !emailInput.trim()) return
     setIsRegistering(true)
 
-    const result = await enrollStudentAction({
-      studentName: nameInput.trim(),
-      studentEmail: emailInput.trim(),
-      courseTitle: "AI Start - Domina l'IA da Zero",
-      source: 'landing',
+    const result = await submitCourseRegistrationAction({
+      name: nameInput.trim(),
+      email: emailInput.trim(),
+      ai_experience: aiExperience,
+      objective: objective,
+      blocker: blocker,
+      expectation: expectation,
+      raw_answers: {
+        experience: aiExperience,
+        goal: objective,
+        blocker: blocker,
+        mindset: expectation,
+      }
     })
 
+    setIsRegistering(false)
+
     if (!result.success) {
-      alert(`Errore durante l'iscrizione: ${result.error}`)
-      setIsRegistering(false)
+      alert(`Errore durante l'invio della richiesta: ${result.error}`)
       return
     }
 
-    const generatedCode = result.code || ''
-
-    alert(`Iscrizione completata con successo! Il tuo Codice di Accesso è: ${generatedCode}. Ti abbiamo inviato una mail di conferma.`)
-    setIsRegistering(false)
-    setIsEnrollModalOpen(false)
-
-    router.push(`/corsi?tab=login&code=${encodeURIComponent(generatedCode)}`)
+    setEnrollSuccess(true)
   }
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
@@ -555,56 +563,151 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* MODAL 2: FORM ISCRIZIONE RAPIDA AI START */}
+      {/* MODAL 2: FORM QUESTIONARIO & ISCRIZIONE AI START */}
       {isEnrollModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-800 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg border border-slate-800 overflow-hidden my-8">
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 text-indigo-400" />
-                <h3 className="font-bold text-sm text-white">Iscrizione a AI Start</h3>
+                <h3 className="font-bold text-sm text-white">Richiesta di Iscrizione: AI Start</h3>
               </div>
-              <button onClick={() => setIsEnrollModalOpen(false)} className="p-1 text-slate-400 hover:text-white rounded-lg">
+              <button
+                onClick={() => {
+                  setIsEnrollModalOpen(false)
+                  setEnrollSuccess(false)
+                }}
+                className="p-1 text-slate-400 hover:text-white rounded-lg"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleEnrollSubmit} className="p-6 space-y-4 text-xs">
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-300">Nome e Cognome *</label>
-                <Input
-                  autoFocus
-                  required
-                  value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
-                  placeholder="Es. Mario Rossi"
-                  className="bg-slate-950 border-slate-800 text-white"
-                />
+            {enrollSuccess ? (
+              <div className="p-8 text-center space-y-4">
+                <div className="h-14 w-14 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
+                  <Check className="h-7 w-7" />
+                </div>
+                <h4 className="font-bold text-lg text-white">Richiesta Ricevuta con Successo!</h4>
+                <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
+                  Grazie <strong>{nameInput}</strong>. Abbiamo registrato le tue risposte al questionario.
+                  <br /><br />
+                  Il nostro team verificherà la tua richiesta e ti invieremo un&apos;email a <strong>{emailInput}</strong> con il tuo <strong>Codice di Accesso personale</strong> non appena il profilo sarà approvato.
+                </p>
+                <Button
+                  onClick={() => {
+                    setIsEnrollModalOpen(false)
+                    setEnrollSuccess(false)
+                    setNameInput('')
+                    setEmailInput('')
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-6 py-2 rounded-xl mt-2"
+                >
+                  Ho Capito
+                </Button>
               </div>
+            ) : (
+              <form onSubmit={handleEnrollSubmit} className="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Compila questo breve questionario per richiedere l&apos;accesso gratuito al corso e alle registrazioni video.
+                </p>
 
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-300">Indirizzo Email *</label>
-                <Input
-                  required
-                  type="email"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="Es. mario.rossi@azienda.it"
-                  className="bg-slate-950 border-slate-800 text-white"
-                />
-              </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300">Nome e Cognome *</label>
+                  <Input
+                    autoFocus
+                    required
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    placeholder="Es. Mario Rossi"
+                    className="bg-slate-950 border-slate-800 text-white text-xs"
+                  />
+                </div>
 
-              <Button type="submit" disabled={isRegistering} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-indigo-600/20">
-                {isRegistering ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Generazione Codice ed Invio Mail...
-                  </>
-                ) : (
-                  'Conferma Iscrizione & Ricevi Codice'
-                )}
-              </Button>
-            </form>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300">Indirizzo Email *</label>
+                  <Input
+                    required
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    placeholder="Es. mario.rossi@azienda.it"
+                    className="bg-slate-950 border-slate-800 text-white text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300">Esperienza attuale con l&apos;AI *</label>
+                  <select
+                    value={aiExperience}
+                    onChange={(e) => setAiExperience(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="Mai">Mai usata</option>
+                    <option value="Qualche prova (tipo ChatGPT ogni tanto)">Qualche prova (tipo ChatGPT ogni tanto)</option>
+                    <option value="Li uso abbastanza spesso">Li uso abbastanza spesso</option>
+                    <option value="Li uso ogni giorno">Li uso ogni giorno</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300">Il tuo Obiettivo principale *</label>
+                  <select
+                    value={objective}
+                    onChange={(e) => setObjective(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="Migliorare il lavoro o il business">Migliorare il lavoro o il business</option>
+                    <option value="Trovare idee e fare brainstorming">Trovare idee e fare brainstorming</option>
+                    <option value="Scrivere testi e contenuti">Scrivere testi e contenuti</option>
+                    <option value="Altro">Altro / Curiosità personale</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300">Cosa ti blocca o trovi più difficile? *</label>
+                  <select
+                    value={blocker}
+                    onChange={(e) => setBlocker(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="Non so da dove iniziare">Non so da dove iniziare</option>
+                    <option value="Non capisco come usarla nel mio lavoro">Non capisco come usarla nel mio lavoro</option>
+                    <option value="Ho paura di usarla male">Ho paura di usarla male</option>
+                    <option value="Non ho tempo">Non ho tempo da dedicarci</option>
+                    <option value="Non ottengo risultati utili">Non ottengo risultati utili</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300">Cosa ti aspetti dal percorso? *</label>
+                  <select
+                    value={expectation}
+                    onChange={(e) => setExpectation(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="Voglio sperimentare e capire">Voglio sperimentare e capire</option>
+                    <option value="Voglio risultati pratici subito">Voglio risultati pratici subito</option>
+                    <option value="Voglio imparare le basi con calma">Voglio imparare le basi con calma</option>
+                  </select>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isRegistering}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-indigo-600/20 mt-4"
+                >
+                  {isRegistering ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Invio della Richiesta...
+                    </>
+                  ) : (
+                    'Invia Richiesta di Registrazione'
+                  )}
+                </Button>
+              </form>
+            )}
           </div>
         </div>
       )}
