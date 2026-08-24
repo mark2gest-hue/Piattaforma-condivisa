@@ -25,7 +25,9 @@ export const metadata: Metadata = {
     description: 'Il percorso formativo completo in 20 moduli per integrare l’IA nel tuo lavoro quotidiano.',
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/icon.svg',
   },
 }
 
