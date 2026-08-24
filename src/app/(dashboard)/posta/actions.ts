@@ -5,24 +5,31 @@ import { createClient } from '@/lib/supabase/server'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Indirizzo mittente predefinito accettato da Resend
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Ti AIuto <info@aiutiamoci.cloud>'
+export const AVAILABLE_FROM_EMAILS = [
+  { id: 'info-aiutiamoci', email: 'info@aiutiamoci.cloud', label: 'Ti AIuto <info@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
+  { id: 'assistenza-aiutiamoci', email: 'assistenza@aiutiamoci.cloud', label: 'Assistenza Ti AIuto <assistenza@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
+  { id: 'info-mar2', email: 'info@mar2.cloud', label: 'Mar2 <info@mar2.cloud>', domain: 'mar2.cloud' },
+  { id: 'support-mar2', email: 'support@mar2.cloud', label: 'Support Mar2 <support@mar2.cloud>', domain: 'mar2.cloud' },
+]
 
 export async function sendSharedEmail(formData: {
   to: string
   subject: string
   body: string
+  from?: string
   threadId?: string
 }) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    console.log(`[Resend] Invio email a: ${formData.to} | Oggetto: ${formData.subject}`)
+    const chosenFrom = formData.from || process.env.RESEND_FROM_EMAIL || 'Ti AIuto <info@aiutiamoci.cloud>'
+
+    console.log(`[Resend] Invio email da: ${chosenFrom} a: ${formData.to} | Oggetto: ${formData.subject}`)
 
     // Invio effettivo tramite Resend SDK
     const resendResponse = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: chosenFrom,
       to: formData.to,
       subject: formData.subject,
       text: formData.body,
@@ -38,7 +45,7 @@ export async function sendSharedEmail(formData: {
     // Salva l'email inviata nel database Supabase
     await (supabase as any).from('emails').insert({
       direction: 'outbound',
-      from_address: FROM_EMAIL,
+      from_address: chosenFrom,
       to_address: [formData.to],
       subject: formData.subject,
       body_text: formData.body,

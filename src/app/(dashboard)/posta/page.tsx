@@ -33,23 +33,27 @@ import { formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Email, Profile } from '@/types/index'
 import { requestNotificationPermission, sendDesktopNotification } from '@/lib/notifications'
-import { sendSharedEmail, updateEmailStatus, deleteSharedEmail } from './actions'
+import { sendSharedEmail, updateEmailStatus, deleteSharedEmail, AVAILABLE_FROM_EMAILS } from './actions'
 
 type EmailWithSender = Email & { senderProfile?: Profile }
 type FolderFilter = 'inbox' | 'sent' | 'unread' | 'all'
+type AccountFilter = 'all' | 'info@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mar2.cloud' | 'support@mar2.cloud'
 
 export default function PostaCondivisaPage() {
   const [emails, setEmails] = useState<EmailWithSender[]>([])
   const [selectedEmail, setSelectedEmail] = useState<EmailWithSender | null>(null)
   const [replyText, setReplyText] = useState('')
+  const [replyFrom, setReplyFrom] = useState<string>('Ti AIuto <info@aiutiamoci.cloud>')
   const [isSending, setIsSending] = useState(false)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentFilter, setCurrentFilter] = useState<FolderFilter>('inbox')
+  const [accountFilter, setAccountFilter] = useState<AccountFilter>('all')
   const [viewMode, setViewMode] = useState<'html' | 'text'>('html')
 
   // Modal Nuova Email
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false)
+  const [composeFrom, setComposeFrom] = useState<string>('Ti AIuto <info@aiutiamoci.cloud>')
   const [composeTo, setComposeTo] = useState('')
   const [composeSubject, setComposeSubject] = useState('')
   const [composeBody, setComposeBody] = useState('')
@@ -138,7 +142,14 @@ export default function PostaCondivisaPage() {
       if (currentFilter === 'sent' && em.direction !== 'outbound') return false
       if (currentFilter === 'unread' && (em.direction !== 'inbound' || em.status !== 'received')) return false
 
-      // 2. Filtro ricerca
+      // 2. Filtro per casella / account
+      if (accountFilter !== 'all') {
+        const matchTo = em.to_address.some((t) => t.toLowerCase().includes(accountFilter.toLowerCase()))
+        const matchFrom = em.from_address.toLowerCase().includes(accountFilter.toLowerCase())
+        if (!matchTo && !matchFrom) return false
+      }
+
+      // 3. Filtro ricerca
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
         const matchFrom = em.from_address.toLowerCase().includes(q)
@@ -150,11 +161,21 @@ export default function PostaCondivisaPage() {
 
       return true
     })
-  }, [emails, currentFilter, searchQuery])
+  }, [emails, currentFilter, accountFilter, searchQuery])
 
   // Segna come letta al click
   const handleSelectEmail = async (em: EmailWithSender) => {
     setSelectedEmail(em)
+
+    // Imposta automaticamente il mittente della risposta in base all'indirizzo destinatario dell'email
+    const toStr = em.to_address.join(' ').toLowerCase()
+    const matching = AVAILABLE_FROM_EMAILS.find((opt) => toStr.includes(opt.email.toLowerCase()))
+    if (matching) {
+      setReplyFrom(matching.label)
+    } else {
+      setReplyFrom('Ti AIuto <info@aiutiamoci.cloud>')
+    }
+
     if (em.direction === 'inbound' && em.status === 'received') {
       await updateEmailStatus(em.id, 'read')
       setEmails((prev) => prev.map((e) => (e.id === em.id ? { ...e, status: 'read' } : e)))
@@ -188,6 +209,7 @@ export default function PostaCondivisaPage() {
 
     const result = await sendSharedEmail({
       to: recipient,
+      from: replyFrom,
       subject: subject,
       body: replyText,
       threadId: selectedEmail.thread_id || selectedEmail.id,
@@ -210,6 +232,7 @@ export default function PostaCondivisaPage() {
 
     const result = await sendSharedEmail({
       to: composeTo.trim(),
+      from: composeFrom,
       subject: composeSubject.trim(),
       body: composeBody.trim(),
     })
@@ -376,6 +399,60 @@ export default function PostaCondivisaPage() {
                 <span className="text-[10px] opacity-75">({counts.all})</span>
               </button>
             </div>
+
+            {/* Account Selector Pills (4 Caselle Aruba) */}
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[10px] scrollbar-none pt-1 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => setAccountFilter('all')}
+                className={`px-2 py-1 rounded-lg font-semibold whitespace-nowrap transition-all ${
+                  accountFilter === 'all'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800/60 text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                Tutte ({emails.length})
+              </button>
+              <button
+                onClick={() => setAccountFilter('info@aiutiamoci.cloud')}
+                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${
+                  accountFilter === 'info@aiutiamoci.cloud'
+                    ? 'bg-blue-600 text-white shadow-xs font-bold'
+                    : 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100'
+                }`}
+              >
+                info@aiutiamoci
+              </button>
+              <button
+                onClick={() => setAccountFilter('assistenza@aiutiamoci.cloud')}
+                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${
+                  accountFilter === 'assistenza@aiutiamoci.cloud'
+                    ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                    : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100'
+                }`}
+              >
+                assistenza@aiutiamoci
+              </button>
+              <button
+                onClick={() => setAccountFilter('info@mar2.cloud')}
+                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${
+                  accountFilter === 'info@mar2.cloud'
+                    ? 'bg-purple-600 text-white shadow-xs font-bold'
+                    : 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100'
+                }`}
+              >
+                info@mar2
+              </button>
+              <button
+                onClick={() => setAccountFilter('support@mar2.cloud')}
+                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${
+                  accountFilter === 'support@mar2.cloud'
+                    ? 'bg-amber-600 text-white shadow-xs font-bold'
+                    : 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 hover:bg-amber-100'
+                }`}
+              >
+                support@mar2
+              </button>
+            </div>
           </div>
 
           {/* Email List */}
@@ -388,6 +465,10 @@ export default function PostaCondivisaPage() {
               filteredEmails.map((em) => {
                 const isSelected = selectedEmail?.id === em.id
                 const isUnread = em.direction === 'inbound' && em.status === 'received'
+                const toStr = em.to_address.join(' ').toLowerCase()
+                const isMar2 = toStr.includes('mar2.cloud')
+                const isAssistenza = toStr.includes('assistenza@')
+                const isSupport = toStr.includes('support@')
 
                 return (
                   <div
@@ -436,7 +517,7 @@ export default function PostaCondivisaPage() {
                     </p>
 
                     <div className="flex items-center justify-between mt-2.5 pt-1">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {em.direction === 'outbound' ? (
                           <Badge
                             variant="outline"
@@ -446,17 +527,34 @@ export default function PostaCondivisaPage() {
                             Inviata
                           </Badge>
                         ) : (
-                          <Badge
-                            variant="secondary"
-                            className={`text-[9px] px-1.5 py-0 flex items-center gap-1 ${
-                              isUnread
-                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                            }`}
-                          >
-                            <ArrowDownLeft className="h-2.5 w-2.5" />
-                            {isUnread ? 'Da Leggere' : 'Letta'}
-                          </Badge>
+                          <>
+                            <Badge
+                              variant="outline"
+                              className={`text-[9px] px-1.5 py-0 font-mono flex items-center gap-1 ${
+                                isMar2
+                                  ? isSupport
+                                    ? 'border-amber-500/30 text-amber-600 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300'
+                                    : 'border-purple-500/30 text-purple-600 bg-purple-50 dark:bg-purple-950/60 dark:text-purple-300'
+                                  : isAssistenza
+                                    ? 'border-indigo-500/30 text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-300'
+                                    : 'border-blue-500/30 text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-300'
+                              }`}
+                            >
+                              <ArrowDownLeft className="h-2.5 w-2.5" />
+                              {em.to_address[0] || 'info@aiutiamoci.cloud'}
+                            </Badge>
+
+                            <Badge
+                              variant="secondary"
+                              className={`text-[9px] px-1.5 py-0 flex items-center gap-1 ${
+                                isUnread
+                                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                              }`}
+                            >
+                              {isUnread ? 'Da Leggere' : 'Letta'}
+                            </Badge>
+                          </>
                         )}
                       </div>
 
@@ -584,9 +682,22 @@ export default function PostaCondivisaPage() {
                           : selectedEmail.to_address[0]}
                       </strong>
                     </span>
-                    <span className="text-[10px] text-slate-400 font-normal hidden sm:inline-block">
-                      Mittente: info@aiutiamoci.cloud
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 font-normal hidden sm:inline-block">
+                        Invia come:
+                      </span>
+                      <select
+                        value={replyFrom}
+                        onChange={(e) => setReplyFrom(e.target.value)}
+                        className="h-6 px-1.5 text-[10px] rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono"
+                      >
+                        {AVAILABLE_FROM_EMAILS.map((opt) => (
+                          <option key={opt.id} value={opt.label}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   <textarea
@@ -629,7 +740,7 @@ export default function PostaCondivisaPage() {
               <Mail className="h-12 w-12 text-slate-300 dark:text-slate-700" />
               <p className="text-sm font-medium">Seleziona un messaggio per leggerlo</p>
               <p className="text-xs text-slate-400 text-center max-w-xs">
-                Tutte le email in arrivo sul dominio aiutiamoci.cloud compariranno automaticamente qui.
+                Tutte le email in arrivo sulle caselle aiutiamoci.cloud e mar2.cloud compariranno automaticamente qui.
               </p>
             </div>
           )}
@@ -656,6 +767,21 @@ export default function PostaCondivisaPage() {
             </div>
 
             <form onSubmit={handleSendNewEmail} className="p-5 space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Invia da (Mittente Casella) *</label>
+                <select
+                  value={composeFrom}
+                  onChange={(e) => setComposeFrom(e.target.value)}
+                  className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-mono font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {AVAILABLE_FROM_EMAILS.map((opt) => (
+                    <option key={opt.id} value={opt.label}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="font-semibold text-slate-700 dark:text-slate-300">A (Destinatario) *</label>
                 <Input
