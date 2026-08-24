@@ -1,7 +1,5 @@
 'use server'
 
-import { ImapFlow } from 'imapflow'
-import { simpleParser } from 'mailparser'
 import { createAdminClient } from '@/lib/supabase/server'
 
 export interface ArubaMailboxConfig {
@@ -14,6 +12,10 @@ export async function syncArubaImapAction(accounts: ArubaMailboxConfig[]) {
   if (!accounts || accounts.length === 0) {
     return { success: false, syncedCount: 0, error: 'Nessun account IMAP specificato per la sincronizzazione.' }
   }
+
+  // Import dinamici server-side per isolamento completo dal bundle client
+  const { ImapFlow } = await import('imapflow')
+  const { simpleParser } = await import('mailparser')
 
   const supabase = createAdminClient()
   let totalNewEmails = 0
