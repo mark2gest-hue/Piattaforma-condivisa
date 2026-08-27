@@ -16,6 +16,7 @@ import {
   Bot,
   GraduationCap,
   Network,
+  Megaphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -135,6 +136,13 @@ export function Sidebar() {
       href: '/cervello',
       icon: Network,
       badge: 'Vault',
+    },
+    {
+      title: 'Marketing & Campagne',
+      subtitle: 'APEX • Funnel & Social',
+      href: '/marketing',
+      icon: Megaphone,
+      badge: 'Growth',
     },
     {
       title: 'Agenti AI',

@@ -1,9 +1,20 @@
 'use server'
 
-import { createAdminClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { sendSharedEmail } from '@/app/(dashboard)/posta/actions'
 
 export type CourseAccessTier = 'ai-start' | 'ai-pro' | 'both'
+
+async function requireAuthUser() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    throw new Error('Accesso non autorizzato: operazione riservata esclusivamente agli amministratori.')
+  }
+  return user
+}
 
 export async function enrollStudentAction(formData: {
   studentName: string
@@ -13,6 +24,9 @@ export async function enrollStudentAction(formData: {
   source: 'landing' | 'dashboard'
 }) {
   try {
+    if (formData.source === 'dashboard') {
+      await requireAuthUser()
+    }
     const supabaseAdmin = createAdminClient()
     const tier: CourseAccessTier = formData.accessTier || 'ai-start'
     
@@ -94,6 +108,7 @@ export async function bulkEnrollStudentsAction(
   accessTier: CourseAccessTier = 'ai-start'
 ) {
   try {
+    await requireAuthUser()
     const supabaseAdmin = createAdminClient()
     const results: Array<{ name: string; email: string; code: string; tier: string }> = []
     const insertRows = []
@@ -204,6 +219,7 @@ export async function joinWaitlistAction(email: string, name?: string) {
 
 export async function getWaitlistLeadsAction() {
   try {
+    await requireAuthUser()
     const supabaseAdmin = createAdminClient()
     const { data, error } = await (supabaseAdmin as any)
       .from('waitlist_leads')
@@ -222,6 +238,7 @@ export async function getWaitlistLeadsAction() {
 
 export async function convertWaitlistLeadAction(leadId: string, email: string, name?: string) {
   try {
+    await requireAuthUser()
     const supabaseAdmin = createAdminClient()
     
     // 1. Iscrivi lo studente a AI Pro
@@ -300,6 +317,7 @@ export async function verifyStudentCodeAction(inputCode: string) {
 
 export async function getCourseRegistrationsAction() {
   try {
+    await requireAuthUser()
     const supabaseAdmin = createAdminClient()
     const { data, error } = await (supabaseAdmin as any)
       .from('course_registrations')
@@ -371,6 +389,7 @@ export async function submitCourseRegistrationAction(formData: {
 
 export async function approveCourseRegistrationAction(registrationId: string) {
   try {
+    await requireAuthUser()
     const supabaseAdmin = createAdminClient()
 
     // 1. Recupera i dati della registrazione
@@ -444,6 +463,7 @@ export async function approveCourseRegistrationAction(registrationId: string) {
 
 export async function getStudentCodesAction() {
   try {
+    await requireAuthUser()
     const supabaseAdmin = createAdminClient()
     const { data, error } = await (supabaseAdmin as any)
       .from('student_codes')
@@ -464,6 +484,7 @@ export async function getStudentCodesAction() {
 
 export async function deleteStudentCodeAction(id: string) {
   try {
+    await requireAuthUser()
     const supabaseAdmin = createAdminClient()
     const { error } = await (supabaseAdmin as any)
       .from('student_codes')
@@ -479,6 +500,7 @@ export async function deleteStudentCodeAction(id: string) {
 
 export async function deleteCourseRegistrationAction(registrationId: string) {
   try {
+    await requireAuthUser()
     const supabaseAdmin = createAdminClient()
     const { error } = await (supabaseAdmin as any)
       .from('course_registrations')

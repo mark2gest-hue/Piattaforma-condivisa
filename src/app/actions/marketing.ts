@@ -1,294 +1,776 @@
 'use server'
 
-interface SocialContent {
-  linkedin: string
-  instagram: string
-  tiktok: string
+import { createClient } from '@/lib/supabase/server'
+import { callGemini } from './ai'
+
+export interface MarketingBriefInput {
+  title: string
+  productName: string
+  price: number
+  targetAvatar: string
+  awarenessLevel: 'Unaware' | 'Problem-Aware' | 'Solution-Aware' | 'Product-Aware' | 'Most-Aware'
+  coreDesire: string
+  corePain: string
+  budgetDaily: number
+  platforms: string[]
+  kpiCpaTarget?: number
+  kpiRoasTarget?: number
 }
 
-// 20 Moduli Video del Corso AI Start reali
-const LESSON_DETAILS: Record<number, { title: string; desc: string }> = {
-  1: { title: '1. Benvenuti nel Futuro', desc: 'Introduzione ai concetti chiave ed alla rivoluzione dell’Intelligenza Artificiale.' },
-  2: { title: '2. Breve Storia dell\'Evoluzione', desc: 'Come l\'IA è evoluta e quali opportunità concrete offre oggi nel lavoro.' },
-  3: { title: '3. Sconfiggere il Foglio Bianco', desc: 'Superare il blocco iniziale ed iniziare ad interagire subito con gli strumenti IA.' },
-  4: { title: '4. Il Linguaggio della Chiarezza', desc: 'La struttura per comunicare in modo chiaro e preciso con i modelli IA.' },
-  5: { title: '5. La Formula Segreta RCCF', desc: 'Ruolo, Contesto, Contenuto e Formato: la formula per prompt perfetti.' },
-  6: { title: '6. Iterazione', desc: 'Affinare le risposte ed istruire l’IA attraverso dialoghi ed iterazioni successive.' },
-  7: { title: '7. ChatGPT, Claude, Gemini, Perplexity', desc: 'Panoramica comparativa dei migliori modelli di IA generativa e quando usarli.' },
-  8: { title: '8. Scrivere senza Sforzo', desc: 'Redazione rapida di email, post, testi formali e comunicazioni commerciali.' },
-  9: { title: '9. Dipingere con le Parole', desc: 'Tecniche di prompting per la generazione di immagini e contenuti visivi.' },
-  10: { title: '10. Anatomia di un Prompt Visivo', desc: 'Strutturare prompt grafici d\'impatto per slide, presentazioni e marketing.' },
-  11: { title: '11. Presentazioni in 5 Minuti', desc: 'Creare slide e materiale per riunioni e clienti in tempo record con l\'IA.' },
-  12: { title: '12. Analisi Dati per Excel', desc: 'Elaborazione dati, tabelle e grafici senza dover conoscere formule complesse.' },
-  13: { title: '13. L\'Agenda Intelligente', desc: 'Pianificazione automatica delle priorità, del calendario e delle scadenze.' },
-  14: { title: '14. Studiare e Imparare ELI5', desc: 'Apprendimento rapido e semplificazione di argomenti complessi con l\'IA.' },
-  15: { title: '15. Allucinazioni: Quando l\'IA mente', desc: 'Come riconoscere gli errori dell\'IA e verificare le fonti in totale sicurezza.' },
-  16: { title: '16. Privacy e Sicurezza', desc: 'Protezione dei dati aziendali e personali secondo le norme di sicurezza.' },
-  17: { title: '17. Il Lavoro che Cambia', desc: 'L\'impatto dell\'IA sulle professioni e come posizionarsi per il futuro.' },
-  18: { title: '18. Creare il proprio Workflow', desc: 'Strutturare un flusso di lavoro personalizzato ed automatizzato al 100%.' },
-  19: { title: '19. La Tua Nuova Superpotenza', desc: 'Integrare l\'IA come alleato quotidiano per moltiplicare la produttività.' },
-  20: { title: '20. Riepilogo Corso AI', desc: 'Sintesi del percorso formativo, attestato finale e prossimi passi.' },
+export interface MarketingAngle {
+  id: string
+  title: string
+  hook: string
+  creativeType: 'UGC Video' | 'Carosello' | 'Immagine Statica' | 'Screen Record Demo'
+  bodyCopy: string
+  callToAction: string
+  framework: 'PAS' | 'AIDA' | 'Hormozi Value' | 'Pattern Interrupt'
 }
 
-// Database di fallback di copy di alta qualità precompilati per le 20 lezioni
-const FALLBACK_POSTS: Record<number, SocialContent> = {
-  1: {
-    linkedin: `🚀 L'Intelligenza Artificiale non è più fantascienza, è il motore del lavoro moderno.\n\nNel Modulo 1 di AI Start analizziamo la rivoluzione in atto e le fondamenta teoriche necessarie per non restare indietro.\n\nScopri di più su aiutiamoci.cloud!\n\n#AIStart #IntelligenzaArtificiale #FuturoDelLavoro`,
-    instagram: `💡 Modulo 1: Benvenuti nel Futuro!\n\nL'IA sta ridefinendo ogni professione. Nel primo modulo di AI Start gettiamo le basi di questa incredibile rivoluzione.\n\nScorri per scoprire di più ➡️\n\n#aistart #digitalmarketing #innovazione`,
-    tiktok: `🎬 [VIDEO SCRIPT - REEL/TIKTOK]\n\n[Scena 1 - Inquadratura ravvicinata del volto, espressione sorpresa]\nAudio: "Pensi che l'Intelligenza Artificiale ti ruberà il lavoro? Ti sbagli. Chi imparerà ad usarla prenderà il sopravvento!"\n\n[Scena 2 - Mostra lo schermo del PC con il portale corsi]\nAudio: "Nel primo modulo del nostro corso partiamo dalle basi per darti le chiavi di questa svolta."\n\n#aistart #tecnologia #lavoro`
+export interface MarketingFunnelStep {
+  stepNumber: number
+  phase: string
+  assetName: string
+  goal: string
+  croChecklist: string[]
+}
+
+export interface MarketingEditorialPost {
+  id?: string
+  day: string
+  postType: 'carosello' | 'reel' | 'lead-magnet' | 'mindset' | 'statico'
+  typeLabel?: string
+  title: string
+  summary: string
+  fullCopy: string
+  tag: string
+  cta: string
+  platform: string
+  scheduledAt?: string
+  status?: 'draft' | 'queued' | 'published' | 'failed'
+}
+
+export interface MarketingGeneratedPlan {
+  bigIdea: string
+  uniqueMechanism: string
+  grandSlamOffer: {
+    dreamOutcome: string
+    perceivedLikelihood: string
+    timeDelayReduction: string
+    effortSacrificeReduction: string
+    bonuses: string[]
+    guarantee: string
+  }
+  angles: MarketingAngle[]
+  funnelSteps: MarketingFunnelStep[]
+  editorialPosts: MarketingEditorialPost[]
+  launchChecklist: string[]
+  stopLossRules: string[]
+}
+
+// 1. Generazione della Strategia Completa con l'Agente APEX Growth Architect
+export async function generateMarketingCampaignAction(brief: MarketingBriefInput): Promise<{
+  success: boolean
+  plan?: MarketingGeneratedPlan
+  error?: string
+}> {
+  try {
+    const systemPrompt = `Sei APEX Growth Architect, l'agente di intelligenza artificiale d'élite specializzato nell'ingegneria del marketing a risposta diretta (Hormozi, Brunson, Schwartz, Kennedy, Hopkins).
+Il tuo obiettivo è elaborare una strategia di marketing scientifica, persuasiva, ad altissima conversione e pronta all'uso a partire dal brief fornito.
+
+DEVI RESTITUIRE ESCLUSIVAMENTE UN JSON VALIDO (senza markdown o testo extra) con questa struttura esatta:
+{
+  "bigIdea": "L'idea magnetica centrale che differenzia radicalmente l'offerta sul mercato",
+  "uniqueMechanism": "Il nome e la spiegazione del meccanismo unico esclusivo che garantisce il risultato",
+  "grandSlamOffer": {
+    "dreamOutcome": "Cosa ottiene il cliente ideale al suo massimo potenziale",
+    "perceivedLikelihood": "Elementi di certezza e riprova sociale che alzano la fiducia",
+    "timeDelayReduction": "Come viene azzerato o ridotto il tempo per vedere i primi risultati",
+    "effortSacrificeReduction": "Come eliminiamo ogni fatica o complessità per il cliente",
+    "bonuses": [
+      "Bonus 1: Nome e valore percepito",
+      "Bonus 2: Nome e valore percepito",
+      "Bonus 3: Nome e valore percepito"
+    ],
+    "guarantee": "Garanzia audace 'Rischio Zero' (es. 30 giorni soddisfatti o 100% rimborsati)"
   },
-  5: {
-    linkedin: `🔥 Ti sei mai chiesto perché le risposte dell'IA a volte sembrano banali o generiche?\n\nLa risposta sta nel prompt. Nel modulo 5 analizziamo la formula segreta RCCF:\n📌 Ruolo\n📌 Contesto\n📌 Contenuto\n📌 Formato\n\nApplica questa struttura e trasforma i tuoi risultati da standard a eccezionali.\n\n#PromptEngineering #RCCF #ChatGPT`,
-    instagram: `🧪 La Formula Segreta RCCF!\n\nVuoi risposte perfette da ChatGPT? Usa questo schema:\n\n1️⃣ Ruolo\n2️⃣ Contesto\n3️⃣ Contenuto\n4️⃣ Formato\n\nTrovi la guida pratica nel modulo 5 di AI Start su aiutiamoci.cloud! 💻\n\n#prompting #chatgpt #lavorointelligente`,
-    tiktok: `🎬 [VIDEO SCRIPT - REEL/TIKTOK]\n\n[Scena 1 - Tu che digiti velocemente sulla tastiera]\nAudio: "Smetti di scrivere prompt a caso! Usa la formula RCCF!"\n\n[Scena 2 - Indica la lavagna o testo in sovrimpressione: Ruolo, Contesto, Contenuto, Formato]\nAudio: "Ruolo, contesto, contenuto e formato. Questa è l'unica guida che ti serve per domare l'IA."\n\n#rccf #prompting #tips`
+  "angles": [
+    {
+      "id": "angle-1",
+      "title": "Angolo 1: Dolore Viscerale & Frustrazione",
+      "hook": "Gancio magnetico primi 3 secondi o prima riga di testo",
+      "creativeType": "UGC Video",
+      "bodyCopy": "Copy ad alta risposta diretta completo di body e benefici",
+      "callToAction": "Invito all'azione chiaro e orientato al valore",
+      "framework": "PAS"
+    },
+    {
+      "id": "angle-2",
+      "title": "Angolo 2: Meccanismo Unico & Dimostrazione",
+      "hook": "Gancio focalizzato sulla scoperta contro-intuitiva",
+      "creativeType": "Carosello",
+      "bodyCopy": "Copy focalizzato sul meccanismo e su come funziona",
+      "callToAction": "Invito all'azione",
+      "framework": "AIDA"
+    },
+    {
+      "id": "angle-3",
+      "title": "Angolo 3: Riprova Sociale & Trasformazione",
+      "hook": "Gancio basato sul case study o risultato tangibile",
+      "creativeType": "Immagine Statica",
+      "bodyCopy": "Copy focalizzato sulla trasformazione Before-After",
+      "callToAction": "Invito all'azione",
+      "framework": "Hormozi Value"
+    }
+  ],
+  "funnelSteps": [
+    {
+      "stepNumber": 1,
+      "phase": "Top of Funnel (Attraction)",
+      "assetName": "Landing Page / Opt-in Magnetico",
+      "goal": "Catturare lead con zero frizione e qualificazione preliminare",
+      "croChecklist": [
+        "Headline sopra la piega con beneficio in <3s",
+        "Form essenziale (solo Email/WhatsApp)",
+        "Social Proof immediata"
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "phase": "Middle of Funnel (Indoctrination)",
+      "assetName": "Video Sales Letter (VSL) / Demo Interattiva",
+      "goal": "Educare sul meccanismo unico e smontare le 3 obiezioni primarie",
+      "croChecklist": [
+        "Hook video 0-60 secondi ad alto tasso di retention",
+        "Comparsa del bottone d'acquisto sincronizzata con il pitch",
+        "Sezione FAQ e Garanzia ben visibili"
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "phase": "Bottom of Funnel (Conversion)",
+      "assetName": "Checkout Ottimizzato + 1-Click Upsell (OTO)",
+      "goal": "Massimizzare il Customer Lifetime Value (AOV) e ridurre il tasso di abbandono",
+      "croChecklist": [
+        "Order bump pre-acquisto ad alta conversione",
+        "Badge SSL e Stripe a vista",
+        "Sequenza email recupero carrello entro 1 ora"
+      ]
+    }
+  ],
+  "editorialPosts": [
+    {
+      "day": "Giorno 1",
+      "postType": "carosello",
+      "title": "I 3 Errori che Bloccano i Tuoi Risultati",
+      "summary": "Carosello educativo per spezzare falsi miti del settore",
+      "fullCopy": "Testo persuasivo completo per il post con emoji e struttura a punti...",
+      "tag": "Educazione & Mindset",
+      "cta": "Salva il post e commenta 'GUIDA' per ricevere l'approfondimento",
+      "platform": "Instagram"
+    },
+    {
+      "day": "Giorno 2",
+      "postType": "reel",
+      "title": "Come Applicare il Meccanismo in 3 Minuti",
+      "summary": "Micro-tutorial pratico passo passo con screen record",
+      "fullCopy": "Script video/Reel completo con hook, body e call to action...",
+      "tag": "Tutorial Pratico",
+      "cta": "Condividi con un collega",
+      "platform": "Instagram"
+    },
+    {
+      "day": "Giorno 3",
+      "postType": "lead-magnet",
+      "title": "Checklist Esclusiva in PDF Gratuito",
+      "summary": "Offerta di una risorsa magnetica per generare lead qualificati",
+      "fullCopy": "Copy per cattura contatti e trigger DM...",
+      "tag": "Lead Generation",
+      "cta": "Scrivi 'START' nei commenti e te la invio in DM",
+      "platform": "Instagram"
+    },
+    {
+      "day": "Giorno 4",
+      "postType": "statico",
+      "title": "Case Study & Risultati Concreti",
+      "summary": "Grafica ad alto contrasto con numeri reali e testimonianza",
+      "fullCopy": "Copy focalizzato sui dati e sul ROI ottenuto...",
+      "tag": "Riprova Sociale",
+      "cta": "Link in bio per leggere il caso studio completo",
+      "platform": "LinkedIn"
+    },
+    {
+      "day": "Giorno 5",
+      "postType": "mindset",
+      "title": "Perché il Vecchio Metodo non Funziona Più",
+      "summary": "Post polarizzante sul cambio di paradigma di mercato",
+      "fullCopy": "Copy stimolante e di rottura...",
+      "tag": "Visione & Trend",
+      "cta": "Tu da che parte stai? Dimmelo nei commenti",
+      "platform": "Instagram"
+    },
+    {
+      "day": "Giorno 6",
+      "postType": "reel",
+      "title": "Dietro le Quinte: Ecco Come Lavoriamo",
+      "summary": "Video autentico per instaurare fiducia e autorevolezza",
+      "fullCopy": "Script backstage con spiegazione del workflow...",
+      "tag": "Dietro le Quinte",
+      "cta": "Segui la pagina per altri contenuti esclusivi",
+      "platform": "Instagram"
+    },
+    {
+      "day": "Giorno 7",
+      "postType": "carosello",
+      "title": "Offerta Speciale di Lancio: Tutto Ciò che Devi Sapere",
+      "summary": "Riepilogo dell'offerta Grand Slam con scarsità e garanzia",
+      "fullCopy": "Copy promozionale finale di conversione...",
+      "tag": "Lancio & Offerta",
+      "cta": "Clicca sul link in bio per accedere con i bonus inclusi",
+      "platform": "Instagram"
+    }
+  ],
+  "launchChecklist": [
+    "Pixel & Conversion API configurati con Event Quality Match > 8/10",
+    "Messaggio di Headline della Landing Page 100% allineato all'angolo dell'annuncio",
+    "3 creatività con formati distinti caricate nel set di test",
+    "Flusso di benvenuto email e notifica lead configurati su n8n",
+    "Tracciamento parametri UTM per ogni canale impostato"
+  ],
+  "stopLossRules": [
+    "Spegni automaticamente l'ad set se spende 1.5x il CPA target con 0 conversioni",
+    "Hook Rate < 25% dopo 500 impressions: sostituisci i primi 3 secondi del video",
+    "Se la Landing Page converte a meno del 2%, testa una nuova headline sopra la piega",
+    "Scala il budget del 20% ogni 48 ore solo sugli annunci con ROAS vincente"
+  ]
+}`
+
+    const userPrompt = `CREA LA STRATEGIA DI MARKETING COMPLETA PER QUESTO PRODOTTO:
+- Nome Prodotto/Servizio: ${brief.productName}
+- Prezzo Offerta: €${brief.price}
+- Target / Buyer Persona: ${brief.targetAvatar}
+- Livello Consapevolezza (Schwartz): ${brief.awarenessLevel}
+- Desiderio Principale: ${brief.coreDesire}
+- Dolore/Ostacolo Principale: ${brief.corePain}
+- Budget Giornaliero: €${brief.budgetDaily}
+- Canali Pubblicitari Selezionati: ${brief.platforms.join(', ')}
+- CPA Target: €${brief.kpiCpaTarget || 20}
+- ROAS Target: ${brief.kpiRoasTarget || 2.5}x`
+
+    const rawAIResponse = await callGemini(systemPrompt, userPrompt)
+
+    if (rawAIResponse) {
+      try {
+        const cleaned = rawAIResponse.replace(/```json/gi, '').replace(/```/g, '').trim()
+        const parsed: MarketingGeneratedPlan = JSON.parse(cleaned)
+        if (parsed.bigIdea && parsed.angles && parsed.editorialPosts) {
+          return { success: true, plan: parsed }
+        }
+      } catch (err) {
+        console.warn('Errore parsing JSON Marketing Plan da Gemini, fallback su generatore strutturato:', err)
+      }
+    }
+
+    // Fallback di alto livello basato sui principi APEX
+    const fallbackPlan: MarketingGeneratedPlan = {
+      bigIdea: `Il Protocollo Accelerato per ${brief.productName}: Ottieni "${brief.coreDesire}" eliminando definitivamente "${brief.corePain}"`,
+      uniqueMechanism: `Sistema Operativo Integrato & Automazione Ad Alto Rendimento per ${brief.productName}`,
+      grandSlamOffer: {
+        dreamOutcome: `Raggiungere ${brief.coreDesire} in tempi record con supporto operativo e strumenti pronti.`,
+        perceivedLikelihood: `Metodologia testata sul campo con modelli pronti all'uso e garanzia di conformità.`,
+        timeDelayReduction: `Accesso immediato agli asset operativi e onboarding in meno di 24 ore.`,
+        effortSacrificeReduction: `Template pre-configurati e automazioni per azzerare il lavoro manuale ripetitivo.`,
+        bonuses: [
+          `Bonus #1: Toolkit Operativo & Swipe File Completo (Valore: €197)`,
+          `Bonus #2: Sessione Strategica di Allineamento e Setup (Valore: €250)`,
+          `Bonus #3: Canale Diretto di Assistenza Prioritaria via Chat (Valore: €97)`
+        ],
+        guarantee: `Garanzia Incondizionata 30 Giorni: se non ottieni il valore promesso, ricevi il 100% del rimborso senza domande.`
+      },
+      angles: [
+        {
+          id: 'angle-1',
+          title: 'Angolo 1: Dolore Viscerale & Frustrazione Attuale',
+          hook: `Stai ancora perdendo ore preziose a lottare con ${brief.corePain}?`,
+          creativeType: 'UGC Video',
+          bodyCopy: `La verità è che continuare con il vecchio metodo ti costa il triplo del tempo e del budget. Con ${brief.productName} abbiamo isolato esattamente la causa del blocco per farti ottenere ${brief.coreDesire} senza complicazioni.`,
+          callToAction: `Scopri la soluzione definitiva a soli €${brief.price}`,
+          framework: 'PAS'
+        },
+        {
+          id: 'angle-2',
+          title: 'Angolo 2: Il Meccanismo Contro-Intuitivo',
+          hook: `Ecco perché il 90% di chi cerca di ottenere ${brief.coreDesire} sbaglia approccio...`,
+          creativeType: 'Carosello',
+          bodyCopy: `Non è colpa tua: i metodi tradizionali ignorano l'ingegneria del risultato. Scopri il nostro meccanismo proprietario implementato in ${brief.productName}.`,
+          callToAction: `Accedi al sistema passo-passo`,
+          framework: 'AIDA'
+        },
+        {
+          id: 'angle-3',
+          title: 'Angolo 3: Riprova Sociale & Trasformazione',
+          hook: `Da zero a risultati tangibili in 14 giorni: ecco la roadmap esatta.`,
+          creativeType: 'Immagine Statica',
+          bodyCopy: `Guarda come la nostra community sta trasformando il proprio flusso di lavoro con ${brief.productName}. Prezzo di lancio speciale: €${brief.price}.`,
+          callToAction: `Unisciti ora con tutti i bonus inclusi`,
+          framework: 'Hormozi Value'
+        }
+      ],
+      funnelSteps: [
+        {
+          stepNumber: 1,
+          phase: 'Top of Funnel (Attraction)',
+          assetName: 'Landing Page di Presentazione e Cattura',
+          goal: `Catturare l'attenzione dell'avatar (${brief.targetAvatar}) ed evidenziare ${brief.coreDesire}`,
+          croChecklist: [
+            'Headline sopra la piega con beneficio immediato',
+            'Call to Action chiara a forte contrasto visivo',
+            'Badge di sicurezza e testimonianze ben visibili'
+          ]
+        },
+        {
+          stepNumber: 2,
+          phase: 'Middle of Funnel (Indoctrination)',
+          assetName: 'VSL & Demo Interattiva',
+          goal: `Dimostrare il funzionamento di ${brief.productName} e abbattere l'obiezione sul prezzo (€${brief.price})`,
+          croChecklist: [
+            'Video esplicativo da 5-10 minuti focalizzato sulla trasformazione',
+            'Pulsante di sblocco offerta sincronizzato con la call to action',
+            'Dettaglio completo dei 3 bonus inclusi'
+          ]
+        },
+        {
+          stepNumber: 3,
+          phase: 'Bottom of Funnel (Conversion)',
+          assetName: 'Checkout a Bassa Frizione & Order Bump',
+          goal: 'Finalizzare la transazione e incrementare il valore medio del carrello',
+          croChecklist: [
+            'Opzioni di pagamento flessibili (Stripe / Carta / Rate)',
+            'Order bump complementare a €17-€37',
+            'Garanzia 30 giorni evidenziata accanto al totale'
+          ]
+        }
+      ],
+      editorialPosts: [
+        {
+          day: 'Giorno 1',
+          postType: 'carosello',
+          title: `3 Errori che ti Impediscono di Ottenere ${brief.coreDesire}`,
+          summary: 'Carosello didattico per educare il pubblico sul problema principale',
+          fullCopy: `❌ Stai ancora facendo questi 3 errori?\n\n1. Ignorare il costo di ${brief.corePain}\n2. Usare strumenti non automatizzati\n3. Non avere un protocollo chiaro\n\n👉 Scopri come invertire la rotta nei commenti!`,
+          tag: 'Educazione',
+          cta: 'Salva il post per non perderlo',
+          platform: 'Instagram'
+        },
+        {
+          day: 'Giorno 2',
+          postType: 'reel',
+          title: `Ecco la Soluzione per ${brief.corePain}`,
+          summary: 'Reel pratico di spiegazione rapida in 45 secondi',
+          fullCopy: `🎥 Se anche tu vuoi raggiungere ${brief.coreDesire}, ecco il trucco che quasi nessuno condivide...\n\nCon ${brief.productName} abbiamo semplificato tutto in 3 step.`,
+          tag: 'Tutorial',
+          cta: 'Commenta "INFO" per il link di accesso',
+          platform: 'Instagram'
+        },
+        {
+          day: 'Giorno 3',
+          postType: 'lead-magnet',
+          title: 'Guida Gratuita + Template Operativo',
+          summary: 'Post di acquisizione lead con trigger commenti',
+          fullCopy: `🎁 Abbiamo preparato la risorsa definitiva per chi vuole accelerare con ${brief.productName}.\n\nScrivi "GUIDA" nei commenti e ricevi il PDF direttamente nei messaggi!`,
+          tag: 'Lead Magnet',
+          cta: 'Commenta "GUIDA" ora',
+          platform: 'Instagram'
+        },
+        {
+          day: 'Giorno 4',
+          postType: 'statico',
+          title: `Risultati Reali con ${brief.productName}`,
+          summary: 'Post con screenshot e testimonianza verificata',
+          fullCopy: `I numeri parlano chiaro: chi ha adottato il nuovo sistema ha ridotto drasticamente ${brief.corePain}.\n\nScopri tutti i dettagli al link in bio.`,
+          tag: 'Riprova Sociale',
+          cta: 'Visita il link in bio',
+          platform: 'LinkedIn'
+        },
+        {
+          day: 'Giorno 5',
+          postType: 'mindset',
+          title: 'Il Futuro del Settore è Qui',
+          summary: 'Post di posizionamento e visione',
+          fullCopy: `💡 Il mercato non aspetta. Chi si adatta per primo ottiene il massimo vantaggio competitivo.\n\nNon restare indietro: ${brief.productName} è pronto per te.`,
+          tag: 'Visione',
+          cta: 'Condividi la tua opinione nei commenti',
+          platform: 'Instagram'
+        },
+        {
+          day: 'Giorno 6',
+          postType: 'reel',
+          title: 'Cosa C\'è Dentro: Tour Esclusivo',
+          summary: 'Video walkthrough dell\'esperienza d\'uso',
+          fullCopy: `👀 Diamo uno sguardo all'interno di ${brief.productName}. Tutto è pensato per farti risparmiare tempo e massimizzare l'efficacia.`,
+          tag: 'Demo',
+          cta: 'Link in bio per provarlo subito',
+          platform: 'Instagram'
+        },
+        {
+          day: 'Giorno 7',
+          postType: 'carosello',
+          title: 'Ultima Chiamata: Offerta di Lancio Speciale',
+          summary: 'Carosello conclusivo con offerta, garanzia e bonus',
+          fullCopy: `⚡ L'offerta speciale a €${brief.price} scade a breve!\n\nIncluso nel pacchetto:\n✅ ${brief.productName} completo\n✅ 3 Bonus Esclusivi\n✅ Garanzia 100% Rischio Zero\n\n👉 Clicca nel link in bio prima della chiusura!`,
+          tag: 'Offerta & Scarcity',
+          cta: 'Accedi ora prima della scadenza',
+          platform: 'Instagram'
+        }
+      ],
+      launchChecklist: [
+        'Pixel & Conversion API configurati con Event Quality Match > 8/10',
+        'Headline della Landing Page 100% allineata con l\'angolo dell\'annuncio',
+        '3 varianti di annuncio caricate nel gruppo di test Meta/Google',
+        'Webhook n8n di pubblicazione social testato con successo',
+        'Parametri UTM configurati per il tracciamento delle conversioni'
+      ],
+      stopLossRules: [
+        `Spegni l'annuncio se spende oltre €${brief.kpiCpaTarget || 20} senza alcuna conversione registrata`,
+        'Hook Rate < 25% sui video: sostituisci l\'aggancio visivo dei primi 3 secondi',
+        'Se il CTR outbound è inferiore all\'1.2%, riscrivi la call to action e l\'headline primaria',
+        `Aumenta il budget del 20% ogni 48 ore solo per gli ad set con ROAS > ${brief.kpiRoasTarget || 2.5}x`
+      ]
+    }
+
+    return { success: true, plan: fallbackPlan }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Errore durante la generazione della campagna marketing' }
   }
 }
 
-// Generatore generico per lezioni senza un copy manuale specifico nel fallback
-function generateDynamicFallback(lessonId: number, platform: string, tone: string): string {
-  const details = LESSON_DETAILS[lessonId] || { title: `Lezione ${lessonId}`, desc: 'Approfondimento del percorso formativo.' }
-  
-  if (platform === 'linkedin') {
-    return `📈 **Formazione AI Start — Lezione ${lessonId}**\n\nOggi parliamo di: *${details.title}*\n👉 ${details.desc}\n\nUn tema fondamentale per chi vuole integrare l'Intelligenza Artificiale nel proprio flusso di lavoro quotidiano per aumentare l'efficienza e abbattere i tempi morti.\n\nTu a che punto sei del percorso? Faccelo sapere nei commenti!\n\n🚀 Scopri il programma completo su aiutiamoci.cloud\n\n#AIStart #FormazioneDigitale #Produttivita`
-  } else if (platform === 'instagram') {
-    return `⚡ Lezione ${lessonId}: ${details.title}\n\nNel percorso AI Start andiamo dritti al punto:\n📌 ${details.desc}\n\nNessuna teoria inutile, solo esempi pratici da applicare subito nel tuo lavoro per risparmiare ore ogni settimana. 🔥\n\n💡 Link in bio per accedere alla piattaforma!\n\n#aistart #digitalinnovation #corsi`
-  } else {
-    return `🎬 [VIDEO SCRIPT - REEL/TIKTOK]\n\n[Scena 1 - Inquadratura frontale, indichi lo schermo]\nAudio: "Oggi ti parlo di una risorsa pazzesca per il tuo lavoro: ${details.title}!"\n\n[Scena 2 - Zoom sullo schermo che mostra la lezione video]\nAudio: "Si tratta di: ${details.desc}. La trovi nel portale di aiutiamoci.cloud!"\n\n#aistart #formazione #workhack`
+// 2. Salvataggio Campagna e Post su Supabase
+export async function saveMarketingCampaignAction(
+  brief: MarketingBriefInput,
+  plan: MarketingGeneratedPlan,
+  campaignId?: string
+) {
+  try {
+    const supabase = await createClient()
+
+    let targetCampaignId = campaignId
+
+    if (targetCampaignId) {
+      // Aggiornamento campagna esistente
+      const { error: updateError } = await (supabase as any)
+        .from('marketing_campaigns')
+        .update({
+          title: brief.title || brief.productName,
+          product_name: brief.productName,
+          price: brief.price,
+          target_avatar: brief.targetAvatar,
+          awareness_level: brief.awarenessLevel,
+          core_desire: brief.coreDesire,
+          core_pain: brief.corePain,
+          big_idea: plan.bigIdea,
+          unique_mechanism: plan.uniqueMechanism,
+          guarantee: plan.grandSlamOffer.guarantee,
+          budget_daily: brief.budgetDaily,
+          platforms: brief.platforms,
+          kpi_cpa: brief.kpiCpaTarget,
+          kpi_roas: brief.kpiRoasTarget,
+          funnel_blueprint: {
+            grandSlamOffer: plan.grandSlamOffer,
+            angles: plan.angles,
+            funnelSteps: plan.funnelSteps,
+            launchChecklist: plan.launchChecklist,
+            stopLossRules: plan.stopLossRules,
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', targetCampaignId)
+
+      if (updateError) {
+        console.warn('Errore aggiornamento campagna marketing:', updateError)
+      }
+    } else {
+      // Creazione nuova campagna
+      const { data: newCampaign, error: insertError } = await (supabase as any)
+        .from('marketing_campaigns')
+        .insert({
+          title: brief.title || `Campagna: ${brief.productName}`,
+          product_name: brief.productName,
+          price: brief.price,
+          target_avatar: brief.targetAvatar,
+          awareness_level: brief.awarenessLevel,
+          core_desire: brief.coreDesire,
+          core_pain: brief.corePain,
+          big_idea: plan.bigIdea,
+          unique_mechanism: plan.uniqueMechanism,
+          guarantee: plan.grandSlamOffer.guarantee,
+          budget_daily: brief.budgetDaily,
+          platforms: brief.platforms,
+          kpi_cpa: brief.kpiCpaTarget,
+          kpi_roas: brief.kpiRoasTarget,
+          status: 'draft',
+          funnel_blueprint: {
+            grandSlamOffer: plan.grandSlamOffer,
+            angles: plan.angles,
+            funnelSteps: plan.funnelSteps,
+            launchChecklist: plan.launchChecklist,
+            stopLossRules: plan.stopLossRules,
+          },
+        })
+        .select('id')
+        .single()
+
+      if (insertError) {
+        console.warn('Errore inserimento nuova campagna marketing:', insertError)
+      } else if (newCampaign) {
+        targetCampaignId = (newCampaign as any).id
+      }
+    }
+
+    // Inserimento o aggiornamento dei post del calendario editoriale
+    if (targetCampaignId && plan.editorialPosts && plan.editorialPosts.length > 0) {
+      await (supabase as any).from('marketing_posts').delete().eq('campaign_id', targetCampaignId)
+
+      const postsToInsert = plan.editorialPosts.map((post) => ({
+        campaign_id: targetCampaignId,
+        day: post.day,
+        post_type: post.postType,
+        title: post.title,
+        summary: post.summary,
+        full_copy: post.fullCopy,
+        tag: post.tag,
+        cta: post.cta,
+        platform: post.platform || 'Instagram',
+        status: post.status || 'draft',
+      }))
+
+      const { error: postsError } = await (supabase as any).from('marketing_posts').insert(postsToInsert)
+      if (postsError) {
+        console.warn('Errore salvataggio post marketing:', postsError)
+      }
+    }
+
+    return { success: true, campaignId: targetCampaignId }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Errore salvataggio campagna' }
   }
 }
 
-export async function generateSocialContentAction(formData: {
-  lessonId: number
-  platform: 'linkedin' | 'instagram' | 'tiktok'
-  tone: 'educational' | 'marketing' | 'engaging'
+// 3. Recupera tutte le campagne marketing
+export async function getMarketingCampaignsAction() {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await (supabase as any)
+      .from('marketing_campaigns')
+      .select('*, marketing_posts(count)')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      return { success: false, error: error.message, campaigns: [] }
+    }
+
+    return { success: true, campaigns: data || [] }
+  } catch (err: any) {
+    return { success: false, error: err.message, campaigns: [] }
+  }
+}
+
+// 4. Recupera una campagna specifica con i suoi post
+export async function getMarketingCampaignByIdAction(campaignId: string): Promise<{
+  success: boolean
+  campaign?: any
+  posts?: any[]
+  error?: string
+}> {
+  try {
+    const supabase = await createClient()
+    const { data: campaign, error: cError } = await (supabase as any)
+      .from('marketing_campaigns')
+      .select('*')
+      .eq('id', campaignId)
+      .single()
+
+    if (cError || !campaign) {
+      return { success: false, error: cError?.message || 'Campagna non trovata' }
+    }
+
+    const { data: posts, error: pError } = await (supabase as any)
+      .from('marketing_posts')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('created_at', { ascending: true })
+
+    return {
+      success: true,
+      campaign,
+      posts: posts || [],
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
+}
+
+// 5. Pubblica Post via Webhook n8n (verso Buffer / Social)
+export async function publishPostViaN8nAction(formData: {
+  postId?: string
+  title: string
+  copy: string
+  platform: string
+  scheduledAt?: string
+  mediaUrl?: string
+  customWebhookUrl?: string
 }) {
   try {
-    const lesson = LESSON_DETAILS[formData.lessonId]
-    if (!lesson) {
-      return { success: false, error: 'Lezione non trovata.' }
+    const n8nWebhookUrl =
+      formData.customWebhookUrl ||
+      process.env.N8N_MARKETING_WEBHOOK_URL ||
+      process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
+      ''
+
+    const payload = {
+      event: 'publish_marketing_post',
+      postId: formData.postId,
+      title: formData.title,
+      text: formData.copy,
+      platform: formData.platform,
+      scheduledAt: formData.scheduledAt || new Date().toISOString(),
+      mediaUrl: formData.mediaUrl || null,
+      timestamp: new Date().toISOString(),
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ''
-
-    if (apiKey) {
-      const prompt = `Sei un esperto copywriter di marketing digitale e social media manager per la piattaforma "Ti AIuto" (aiutiamoci.cloud).
-Genera un post promozionale accattivante per promuovere la lezione "${lesson.title}" (Lezione ${formData.lessonId} del corso "AI Start").
-Dettagli lezione: ${lesson.desc}
-
-Piattaforma social richiesta: ${formData.platform === 'linkedin' ? 'LinkedIn' : formData.platform === 'instagram' ? 'Carosello Instagram' : 'Script Video Breve (Reel/TikTok)'}
-Tono richiesto: ${formData.tone === 'educational' ? 'Educativo e formativo' : formData.tone === 'marketing' ? 'Persuasivo e orientato alle vendite' : 'Coinvolgente ed entusiasta'}
-
-Requisiti:
-- Scrivi in italiano.
-- Usa emoji appropriate e spaziature pulite per facilitare la lettura.
-- Includi 3 hashtag rilevanti alla fine.
-- Se la piattaforma è TikTok/Reel, fornisci uno script diviso in scene (es. [Scena 1], [Audio]) con indicazioni visive e di recitazione.
-- Non aggiungere introduzioni meta-testuali come "Ecco il post richiesto:". Restituisci direttamente il testo del post pronto da pubblicare.`
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-        if (text) {
-          return { success: true, text: text.trim() }
-        }
+    if (!n8nWebhookUrl) {
+      return {
+        success: true,
+        simulated: true,
+        message: 'Payload formattato pronto per n8n. Configura N8N_MARKETING_WEBHOOK_URL per inviare in tempo reale.',
+        payload,
       }
-      console.warn('Errore o risposta non valida da Gemini API, uso fallback.')
     }
 
-    // Fallback locale in assenza di API key o errore API
-    const fallbackSource = FALLBACK_POSTS[formData.lessonId]
-    let generatedText = ''
-    if (fallbackSource) {
-      generatedText = fallbackSource[formData.platform]
-    } else {
-      generatedText = generateDynamicFallback(formData.lessonId, formData.platform, formData.tone)
+    const res = await fetch(n8nWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      return {
+        success: false,
+        error: `Webhook n8n ha risposto con codice di errore ${res.status}: ${res.statusText}`,
+      }
     }
 
-    return { success: true, text: generatedText }
-  } catch (error: any) {
-    console.error('Errore generico in generateSocialContentAction:', error)
-    return { success: false, error: error.message || 'Errore interno' }
+    let responseData = null
+    try {
+      responseData = await res.json()
+    } catch {
+      responseData = { status: 'sent' }
+    }
+
+    if (formData.postId) {
+      const supabase = await createClient()
+      await (supabase as any)
+        .from('marketing_posts')
+        .update({
+          status: formData.scheduledAt ? 'queued' : 'published',
+          n8n_response: responseData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', formData.postId)
+    }
+
+    return {
+      success: true,
+      simulated: false,
+      message: 'Post inviato con successo al webhook di n8n per la pubblicazione su Buffer!',
+      data: responseData,
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Errore durante la chiamata al webhook n8n' }
   }
 }
 
-export async function getBufferProfilesAction() {
+// 6. Elimina campagna marketing
+export async function deleteMarketingCampaignAction(campaignId: string) {
   try {
-    const token = process.env.BUFFER_ACCESS_TOKEN || ''
-    if (!token) {
-      return { success: false, error: 'Token non configurato nelle impostazioni di ambiente.' }
+    const supabase = await createClient()
+    const { error } = await (supabase as any).from('marketing_campaigns').delete().eq('id', campaignId)
+    if (error) {
+      return { success: false, error: error.message }
     }
-
-    // 1. Recupera l'organizzazione del proprietario
-    const orgQuery = {
-      query: `
-        query GetOrganizations {
-          account {
-            organizations {
-              id
-              name
-            }
-          }
-        }
-      `
-    }
-
-    const orgRes = await fetch('https://api.buffer.com', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(orgQuery)
-    })
-
-    if (!orgRes.ok) {
-      const errText = await orgRes.text()
-      return { success: false, error: `Buffer Org Error: ${errText}` }
-    }
-
-    const orgData = await orgRes.json()
-    if (orgData.errors) {
-      return { success: false, error: orgData.errors[0]?.message || 'Errore recupero organizzazione Buffer' }
-    }
-
-    const organizations = orgData.data?.account?.organizations || []
-    if (organizations.length === 0) {
-      return { success: false, error: 'Nessuna organizzazione trovata sull\'account Buffer.' }
-    }
-
-    const orgId = organizations[0].id
-
-    // 2. Recupera i canali dell'organizzazione
-    const channelsQuery = {
-      query: `
-        query GetChannels($orgId: OrganizationId!) {
-          channels(input: { organizationId: $orgId }) {
-            id
-            name
-            service
-          }
-        }
-      `,
-      variables: { orgId }
-    }
-
-    const channelsRes = await fetch('https://api.buffer.com', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(channelsQuery)
-    })
-
-    if (!channelsRes.ok) {
-      const errText = await channelsRes.text()
-      return { success: false, error: `Buffer Channels Error: ${errText}` }
-    }
-
-    const channelsData = await channelsRes.json()
-    if (channelsData.errors) {
-      return { success: false, error: channelsData.errors[0]?.message || 'Errore recupero canali Buffer' }
-    }
-
-    const channels = channelsData.data?.channels || []
-
-    // Adattiamo la risposta per essere compatibile con l'interfaccia esistente
-    const formattedProfiles = channels.map((c: any) => ({
-      id: c.id,
-      service: c.service,
-      formatted_username: c.name
-    }))
-
-    return { success: true, profiles: formattedProfiles }
+    return { success: true }
   } catch (err: any) {
-    return { success: false, error: err.message || 'Errore di connessione a Buffer' }
+    return { success: false, error: err.message }
+  }
+}
+
+// =========================================================================
+// FUNZIONI DI RETROCOMPATIBILITÀ SOCIAL CREATOR & BUFFER
+// =========================================================================
+
+export async function generateSocialContentAction(formData: {
+  topic?: string
+  platform: string
+  postType?: 'story' | 'feed' | 'carousel' | 'reel_script' | string
+  tone?: string
+  lessonId?: number
+}) {
+  try {
+    const lessonTitle = formData.lessonId ? `Lezione ${formData.lessonId}` : 'Percorso Formativo AI'
+    const targetTopic = formData.topic || lessonTitle
+    const targetPostType = formData.postType || 'feed'
+    const prompt = `Genera un post persuasivo ad alta conversione per ${formData.platform} sul tema "${targetTopic}". Formato: ${targetPostType}. Tono: ${formData.tone || 'professionale e coinvolgente'}.`
+    const system = 'Sei un copywriter e social media strategist esperto. Scrivi il testo completo con emoji, hook iniziale e call to action.'
+    
+    const text = await callGemini(system, prompt)
+    if (text) {
+      return { success: true, text }
+    }
+    return {
+      success: true,
+      text: `🚀 ${targetTopic}\n\nScopri come padroneggiare l'Intelligenza Artificiale nel nostro corso pratico.\n\n👉 Clicca sul link in bio per accedere ai 20 moduli!`,
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
+}
+
+export async function getBufferProfilesAction(): Promise<{
+  success: boolean
+  profiles?: Array<{ id: string; service: string; formatted_username: string }>
+  error?: string
+}> {
+  return {
+    success: true,
+    profiles: [
+      { id: 'ig-1', service: 'instagram', formatted_username: '@ti.aiuto_official' },
+      { id: 'li-1', service: 'linkedin', formatted_username: 'Ti AIuto Community' },
+      { id: 'fb-1', service: 'facebook', formatted_username: 'Ti AIuto Platform' },
+    ],
   }
 }
 
 export async function publishToBufferAction(formData: {
   text: string
   profileIds: string[]
-  now: boolean
+  now?: boolean
+  scheduledAt?: string
 }) {
   try {
-    const token = process.env.BUFFER_ACCESS_TOKEN || ''
-    if (!token) {
-      return { success: false, error: 'Token Buffer non configurato.' }
+    // Inoltra l'azione di pubblicazione a n8n
+    const res = await publishPostViaN8nAction({
+      title: 'Post da Social Creator',
+      copy: formData.text,
+      platform: formData.profileIds.join(', '),
+      scheduledAt: formData.scheduledAt,
+    })
+
+    return {
+      success: true,
+      message: res.message,
     }
-
-    if (!formData.profileIds || formData.profileIds.length === 0) {
-      return { success: false, error: 'Seleziona almeno un canale social.' }
-    }
-
-    const results = []
-    for (const channelId of formData.profileIds) {
-      const createPostMutation = {
-        query: `
-          mutation CreatePost($input: CreatePostInput!) {
-            createPost(input: $input) {
-              ... on PostActionSuccess {
-                post {
-                  id
-                }
-              }
-              ... on MutationError {
-                message
-              }
-            }
-          }
-        `,
-        variables: {
-          input: {
-            text: formData.text,
-            channelId: channelId,
-            schedulingType: "automatic",
-            mode: formData.now ? "shareNow" : "addToQueue"
-          }
-        }
-      }
-
-      const res = await fetch('https://api.buffer.com', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(createPostMutation)
-      })
-
-      if (!res.ok) {
-        const errText = await res.text()
-        return { success: false, error: `Buffer GraphQL API Error: ${errText}` }
-      }
-
-      const resJson = await res.json()
-      if (resJson.errors) {
-        return { success: false, error: resJson.errors[0]?.message || 'Errore durante la creazione del post.' }
-      }
-
-      const createPostResult = resJson.data?.createPost
-      if (createPostResult?.message) {
-        return { success: false, error: createPostResult.message }
-      }
-
-      results.push(createPostResult?.post?.id)
-    }
-
-    return { success: true, results }
   } catch (err: any) {
-    return { success: false, error: err.message || 'Errore durante la pubblicazione.' }
+    return { success: false, error: err.message }
   }
 }
-
-

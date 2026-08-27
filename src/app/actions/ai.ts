@@ -3,7 +3,7 @@
 const GEMINI_MODELS = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash']
 
 // Helper per invocare Gemini con fallback sicuro e supporto multi-modello
-async function callGemini(systemInstruction: string, userPrompt: string): Promise<string | null> {
+export async function callGemini(systemInstruction: string, userPrompt: string): Promise<string | null> {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ''
   if (!apiKey) return null
 

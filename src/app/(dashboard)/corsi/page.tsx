@@ -59,11 +59,6 @@ import {
   deleteStudentCodeAction,
   verifyStudentCodeAction,
 } from '@/app/actions/student'
-import {
-  generateSocialContentAction,
-  getBufferProfilesAction,
-  publishToBufferAction,
-} from '@/app/actions/marketing'
 import { LESSON_SUMMARIES } from '@/lib/course-data'
 import { askStudentAiAction, generateLessonQuizAction, QuizQuestion } from '@/app/actions/ai'
 import { CourseRegistration } from '@/types/index'
@@ -434,6 +429,8 @@ function CorsiInnerContent() {
   // Stato Studente Loggato tramite Codice
   const [studentCodeInput, setStudentCodeInput] = useState('')
   const [activeStudent, setActiveStudent] = useState<{ name: string; code: string; accessTier?: 'ai-start' | 'ai-pro' | 'both' } | null>(null)
+  const [isTeamMember, setIsTeamMember] = useState<boolean>(false)
+  const [authChecked, setAuthChecked] = useState<boolean>(false)
 
   // Subtab Registro: 'registrations' | 'active' | 'waitlist'
   const [studentSubTab, setStudentSubTab] = useState<'registrations' | 'active' | 'waitlist'>('registrations')
@@ -449,7 +446,8 @@ function CorsiInnerContent() {
 
   // Controllo Accessi Granulare
   const hasCourseAccess = (courseId: 'ai-start' | 'ai-pro') => {
-    if (!activeStudent) return true // Admin / Team ha sempre accesso
+    if (isTeamMember) return true // Admin / Team ha sempre accesso
+    if (!activeStudent) return false // Studente senza codice non ha accesso
     const tier = activeStudent.accessTier || (activeStudent.code.startsWith('AI-PRO-') ? 'ai-pro' : activeStudent.code.startsWith('AI-ALL-') ? 'both' : 'ai-start')
     if (tier === 'both') return true
     return tier === courseId
@@ -483,22 +481,7 @@ function CorsiInnerContent() {
   const [chatInput, setChatInput] = useState('')
   const [isAiThinking, setIsAiThinking] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'students' | 'marketing' | 'login'>('player')
-
-  // Social Content Creator
-  const [selectedSocialLessonId, setSelectedSocialLessonId] = useState<number>(1)
-  const [selectedSocialPlatform, setSelectedSocialPlatform] = useState<'linkedin' | 'instagram' | 'tiktok'>('linkedin')
-  const [selectedSocialTone, setSelectedSocialTone] = useState<'educational' | 'marketing' | 'engaging'>('educational')
-  const [generatedSocialCopy, setGeneratedSocialCopy] = useState<string>('')
-  const [isGeneratingSocial, setIsGeneratingSocial] = useState<boolean>(false)
-
-  // Buffer Integration States
-  const [bufferProfiles, setBufferProfiles] = useState<any[]>([])
-  const [selectedBufferProfileIds, setSelectedBufferProfileIds] = useState<string[]>([])
-  const [isPublishingBuffer, setIsPublishingBuffer] = useState<boolean>(false)
-  const [isBufferLoading, setIsBufferLoading] = useState<boolean>(false)
-  const [bufferError, setBufferError] = useState<string>('')
-  const [publishSuccessMessage, setPublishSuccessMessage] = useState<string>('')
+  const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'students' | 'login'>('player')
 
   // Caricamento persistente da localStorage all'avvio
   useEffect(() => {
@@ -532,11 +515,32 @@ function CorsiInnerContent() {
     }
   }, [])
 
-  // Caricamento dati iniziali all'avvio e al cambio tab
+  // Verifica autenticazione e caricamento dati riservati solo se membro del team
   useEffect(() => {
-    loadCourseRegistrations()
-    loadStudentCodes()
-    loadWaitlistLeads()
+    const checkTeamAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        const isTeam = !!user
+        setIsTeamMember(isTeam)
+        setAuthChecked(true)
+
+        if (isTeam) {
+          loadCourseRegistrations()
+          loadStudentCodes()
+          loadWaitlistLeads()
+        }
+      } catch (err) {
+        console.error('Errore verifica autenticazione team:', err)
+        setAuthChecked(true)
+      }
+    }
+
+    checkTeamAuth()
+  }, [])
+
+  // Realtime solo per membri del team autenticati
+  useEffect(() => {
+    if (!isTeamMember) return
 
     const channel = supabase
       .channel('public:courses_live')
@@ -551,18 +555,15 @@ function CorsiInnerContent() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [isTeamMember])
 
   useEffect(() => {
-    if (activeTab === 'marketing') {
-      loadBufferProfiles()
-    }
-    if (activeTab === 'students') {
+    if (activeTab === 'students' && isTeamMember) {
       loadCourseRegistrations()
       loadStudentCodes()
       loadWaitlistLeads()
     }
-  }, [activeTab])
+  }, [activeTab, isTeamMember])
 
   const loadStudentCodes = async () => {
     const res = await getStudentCodesAction()
@@ -650,197 +651,7 @@ function CorsiInnerContent() {
   }
 
 
-  const loadBufferProfiles = async () => {
-    setIsBufferLoading(true)
-    setBufferError('')
-    try {
-      const res = await getBufferProfilesAction()
-      if (res.success && res.profiles) {
-        setBufferProfiles(res.profiles)
-      } else {
-        setBufferError(res.error || 'Errore nel recupero profili Buffer.')
-      }
-    } catch (err: any) {
-      setBufferError('Impossibile connettersi a Buffer.')
-    } finally {
-      setIsBufferLoading(false)
-    }
-  }
 
-  const handlePublishToBuffer = async (now: boolean) => {
-    if (!generatedSocialCopy.trim()) {
-      alert('Nessun copy generato da pubblicare.')
-      return
-    }
-    if (selectedBufferProfileIds.length === 0) {
-      alert('Seleziona almeno un canale social.')
-      return
-    }
-
-    setIsPublishingBuffer(true)
-    setPublishSuccessMessage('')
-
-    try {
-      const res = await publishToBufferAction({
-        text: generatedSocialCopy,
-        profileIds: selectedBufferProfileIds,
-        now,
-      })
-
-      if (res.success) {
-        setPublishSuccessMessage(now ? 'Post pubblicato con successo sui canali selezionati!' : 'Post aggiunto alla coda di Buffer con successo!')
-        setSelectedBufferProfileIds([])
-      } else {
-        alert(`Errore pubblicazione Buffer: ${res.error}`)
-      }
-    } catch (err: any) {
-      alert(`Errore di rete: ${err.message}`)
-    } finally {
-      setIsPublishingBuffer(false)
-    }
-  }
-
-  // Generatore di Card Promozionali HTML5 Canvas
-  const handleDownloadSocialCard = () => {
-    const activeLessonObj = lessons.find((l) => l.id === selectedSocialLessonId)
-    const title = activeLessonObj ? activeLessonObj.title : `Modulo ${selectedSocialLessonId}`
-
-    const canvas = document.createElement('canvas')
-    canvas.width = 1080
-    canvas.height = 1080
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // 1. Sfondo sfumato Premium (Indigo a Deep Slate/Purple)
-    const grad = ctx.createLinearGradient(0, 0, 1080, 1080)
-    grad.addColorStop(0, '#1e1b4b') // Indigo scuro
-    grad.addColorStop(0.5, '#0f172a') // Slate scuro
-    grad.addColorStop(1, '#3b0764') // Purple scuro
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, 1080, 1080)
-
-    // 2. Griglia geometrica futuristica decorativa (linee di sfondo sottili)
-    ctx.strokeStyle = 'rgba(99, 102, 241, 0.1)'
-    ctx.lineWidth = 2
-    for (let i = 0; i < 1080; i += 120) {
-      ctx.beginPath()
-      ctx.moveTo(i, 0)
-      ctx.lineTo(i, 1080)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(0, i)
-      ctx.lineTo(1080, i)
-      ctx.stroke()
-    }
-
-    // 3. Cerchi luminosi (bagliori sfocati)
-    ctx.beginPath()
-    const glowGrad = ctx.createRadialGradient(200, 200, 50, 200, 200, 400)
-    glowGrad.addColorStop(0, 'rgba(139, 92, 246, 0.15)')
-    glowGrad.addColorStop(1, 'rgba(139, 92, 246, 0)')
-    ctx.fillStyle = glowGrad
-    ctx.arc(200, 200, 400, 0, Math.PI * 2)
-    ctx.fill()
-
-    // 4. Logo / Intestazione "Ti AIuto"
-    ctx.fillStyle = '#6366f1' // Indigo
-    ctx.font = 'bold 36px sans-serif'
-    ctx.fillText('⚡ TI AIUTO', 100, 150)
-    
-    ctx.fillStyle = '#cbd5e1'
-    ctx.font = '32px sans-serif'
-    ctx.fillText('aiutiamoci.cloud', 800, 150)
-
-    // Divider
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.moveTo(100, 200)
-    ctx.lineTo(980, 200)
-    ctx.stroke()
-
-    // 5. Etichetta corso (AI Start)
-    ctx.fillStyle = '#f59e0b' // Amber/Gold
-    ctx.font = 'bold 28px sans-serif'
-    ctx.fillText('PROGRAMMA FORMATIVO AI START', 100, 320)
-
-    // 6. Titolo Lezione (Avvolto in più righe se troppo lungo)
-    ctx.fillStyle = '#ffffff'
-    ctx.font = 'bold 60px sans-serif'
-    
-    // Funzione helper per scrivere testo su più righe
-    const wrapText = (text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
-      const words = text.split(' ')
-      let line = ''
-      let currentY = y
-
-      for (let n = 0; n < words.length; n++) {
-        let testLine = line + words[n] + ' '
-        let metrics = ctx.measureText(testLine)
-        let testWidth = metrics.width
-        if (testWidth > maxWidth && n > 0) {
-          ctx.fillText(line, x, currentY)
-          line = words[n] + ' '
-          currentY += lineHeight
-        } else {
-          line = testLine
-        }
-      }
-      ctx.fillText(line, x, currentY)
-      return currentY
-    }
-
-    const nextY = wrapText(title, 100, 430, 880, 80)
-
-    // 7. Sotto-didascalia o slogan
-    ctx.fillStyle = '#94a3b8' // Slate 400
-    ctx.font = '34px sans-serif'
-    ctx.fillText('Disponibile ora nell\'Area Studenti', 100, nextY + 140)
-
-    // 8. Call to Action grande
-    ctx.fillStyle = 'rgba(99, 102, 241, 0.08)'
-    ctx.beginPath()
-    ctx.roundRect(100, 820, 880, 150, 30)
-    ctx.fill()
-    ctx.strokeStyle = 'rgba(99, 102, 241, 0.25)'
-    ctx.lineWidth = 2
-    ctx.stroke()
-
-    ctx.fillStyle = '#ffffff'
-    ctx.font = 'bold 36px sans-serif'
-    ctx.fillText('👉 Inserisci il tuo codice di accesso per guardare il video!', 150, 905)
-
-    // 9. Scarica il file PNG
-    const dataUrl = canvas.toDataURL('image/png')
-    const link = document.createElement('a')
-    link.download = `ti-aiuto-lezione-${selectedSocialLessonId}.png`
-    link.href = dataUrl
-    link.click()
-  }
-
-  const handleGenerateSocialCopy = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsGeneratingSocial(true)
-    setGeneratedSocialCopy('')
-
-    try {
-      const res = await generateSocialContentAction({
-        lessonId: selectedSocialLessonId,
-        platform: selectedSocialPlatform,
-        tone: selectedSocialTone,
-      })
-
-      if (res.success && res.text) {
-        setGeneratedSocialCopy(res.text)
-      } else {
-        alert(`Errore generazione: ${res.error}`)
-      }
-    } catch (err: any) {
-      alert(`Errore di rete: ${err.message}`)
-    } finally {
-      setIsGeneratingSocial(false)
-    }
-  }
 
   // Modal Nuova Iscrizione Studente
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
@@ -1241,7 +1052,7 @@ function CorsiInnerContent() {
 
   const isLessonUnlocked = (index: number) => {
     const list = selectedCourseId === 'ai-start' ? lessons : lessonsPro
-    if (!activeStudent || list.every((l) => l.completed)) return true
+    if (isTeamMember || list.every((l) => l.completed)) return true
     if (index === 0) return true
     return list[index - 1].completed
   }
@@ -1282,7 +1093,21 @@ function CorsiInnerContent() {
           </div>
 
           <div className="flex items-center gap-2">
-            {activeStudent ? (
+            {isTeamMember ? (
+              <div className="flex items-center gap-2">
+                <Badge variant="purple" className="py-1 px-3 flex items-center gap-1.5 text-xs font-semibold">
+                  <Award className="h-3.5 w-3.5" />
+                  <span>Docente / Team</span>
+                </Badge>
+                <Button
+                  onClick={() => setIsEnrollModalOpen(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Iscrivi Studente</span>
+                </Button>
+              </div>
+            ) : activeStudent ? (
               <div className="flex items-center gap-2">
                 <Badge variant="success" className="py-1 px-3 flex items-center gap-1 text-xs">
                   <Unlock className="h-3.5 w-3.5" />
@@ -1307,16 +1132,6 @@ function CorsiInnerContent() {
               >
                 <Key className="h-4 w-4" />
                 <span>Accedi con Codice Studente</span>
-              </Button>
-            )}
-
-            {!activeStudent && (
-              <Button
-                onClick={() => setIsEnrollModalOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
-              >
-                <PlusCircle className="h-4 w-4" />
-                <span>Iscrivi Studente</span>
               </Button>
             )}
           </div>
@@ -1418,7 +1233,7 @@ function CorsiInnerContent() {
 
 
 
-        {!activeStudent && (
+        {isTeamMember && (
           <button
             onClick={() => {
               setActiveTab('students')
@@ -1433,20 +1248,6 @@ function CorsiInnerContent() {
           >
             <Users className="h-4 w-4" />
             <span>Registro Codici & Studenti ({courseRegistrations.length || registrations.length})</span>
-          </button>
-        )}
-
-        {!activeStudent && (
-          <button
-            onClick={() => setActiveTab('marketing')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
-              activeTab === 'marketing'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Sparkles className="h-4 w-4" />
-            <span>Social Creator @AI</span>
           </button>
         )}
       </div>
@@ -1568,7 +1369,7 @@ function CorsiInnerContent() {
 
                 {/* Barra Azioni Rapide a 4 Colonne Uniformi e Identiche per Tutti i Video */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                  {!activeStudent ? (
+                  {isTeamMember ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -1927,7 +1728,7 @@ function CorsiInnerContent() {
               </p>
             </div>
 
-            {!activeStudent && (
+            {isTeamMember && (
               <Button
                 onClick={() => setIsAddZoomModalOpen(true)}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
@@ -2003,7 +1804,7 @@ function CorsiInnerContent() {
                     </Button>
                   </a>
 
-                  {!activeStudent && (
+                  {isTeamMember && (
                     <Button
                       variant="ghost"
                       size="icon"
@@ -2054,7 +1855,7 @@ function CorsiInnerContent() {
               </p>
             </div>
 
-            {!activeStudent && (
+            {isTeamMember && (
               <Button
                 onClick={() => {
                   setEditingResourceId(null)
@@ -2130,7 +1931,7 @@ function CorsiInnerContent() {
                     </Button>
                   </a>
 
-                  {!activeStudent && (
+                  {isTeamMember && (
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
@@ -2161,258 +1962,10 @@ function CorsiInnerContent() {
       )}
 
 
-      {/* TAB: MARKETING / SOCIAL CREATOR */}
-      {activeTab === 'marketing' && !activeStudent && (
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              AI Social Content Builder
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Genera post per i social media basandoti sui 20 moduli reali del corso AI Start per promuovere la piattaforma.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Form parametri di generazione & Buffer */}
-            <div className="space-y-6">
-              {/* Form Parametri */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Parametri di Generazione</h4>
-                
-                <form onSubmit={handleGenerateSocialCopy} className="space-y-4 text-xs">
-                  <div className="space-y-1.5">
-                    <label className="font-semibold text-slate-700 dark:text-slate-300">Seleziona la Lezione del Corso</label>
-                    <select
-                      value={selectedSocialLessonId}
-                      onChange={(e) => setSelectedSocialLessonId(Number(e.target.value))}
-                      className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      {lessons.map((lesson) => (
-                        <option key={lesson.id} value={lesson.id}>
-                          {lesson.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="font-semibold text-slate-700 dark:text-slate-300">Piattaforma Social</label>
-                    <select
-                      value={selectedSocialPlatform}
-                      onChange={(e) => setSelectedSocialPlatform(e.target.value as any)}
-                      className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      <option value="linkedin">LinkedIn (Post Professionale)</option>
-                      <option value="instagram">Instagram (Carosello / Copy Slide)</option>
-                      <option value="tiktok">TikTok / Reel (Video Script)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="font-semibold text-slate-700 dark:text-slate-300">Tono del Messaggio</label>
-                    <select
-                      value={selectedSocialTone}
-                      onChange={(e) => setSelectedSocialTone(e.target.value as any)}
-                      className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      <option value="educational">Educativo / Formativo</option>
-                      <option value="marketing">Persuasivo / Orientato alle vendite</option>
-                      <option value="engaging">Entusiasta / Coinvolgente</option>
-                    </select>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={isGeneratingSocial}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2 h-11 rounded-xl shadow-xs"
-                  >
-                    {isGeneratingSocial ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin text-white" />
-                        <span>Generazione in corso...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 text-white" />
-                        <span>Genera Post con @AI</span>
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </div>
-
-              {/* Box Buffer */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <ExternalLink className="h-3.5 w-3.5 text-indigo-600" />
-                  Pubblica con Buffer
-                </h4>
-
-                {isBufferLoading ? (
-                  <div className="flex items-center gap-2 text-xs text-slate-400">
-                    <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
-                    <span>Connessione canali Buffer...</span>
-                  </div>
-                ) : bufferError ? (
-                  <div className="p-3 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-xl text-[11px] leading-relaxed">
-                    <p className="font-semibold mb-1">Integrazione Buffer non attiva:</p>
-                    <p className="text-[10px] opacity-90">{bufferError}</p>
-                    <p className="text-[10px] mt-2 font-mono bg-slate-900 text-slate-300 p-1.5 rounded">
-                      Aggiungi BUFFER_ACCESS_TOKEN in .env.local
-                    </p>
-                  </div>
-                ) : bufferProfiles.length === 0 ? (
-                  <p className="text-xs text-slate-400">Nessun profilo social configurato su Buffer.</p>
-                ) : (
-                  <div className="space-y-4 text-xs">
-                    <div className="space-y-2">
-                      <label className="font-semibold text-slate-700 dark:text-slate-300">Seleziona Canali Social</label>
-                      <div className="space-y-1.5 max-h-40 overflow-y-auto border border-slate-100 dark:border-slate-800 p-2 rounded-xl">
-                        {bufferProfiles.map((profile) => {
-                          const isChecked = selectedBufferProfileIds.includes(profile.id)
-                          return (
-                            <label key={profile.id} className="flex items-center gap-2 p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedBufferProfileIds([...selectedBufferProfileIds, profile.id])
-                                  } else {
-                                    setSelectedBufferProfileIds(selectedBufferProfileIds.filter((id) => id !== profile.id))
-                                  }
-                                }}
-                                className="rounded text-indigo-600 border-slate-300 focus:ring-indigo-500"
-                              />
-                              <span className="font-mono text-[9px] uppercase bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded font-bold">
-                                {profile.service}
-                              </span>
-                              <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300 truncate">
-                                {profile.formatted_username}
-                              </span>
-                            </label>
-                          )
-                        })}
-                      </div>
-                    </div>
-
-                    {publishSuccessMessage && (
-                      <p className="p-2.5 bg-green-50 dark:bg-green-950/40 text-green-600 dark:text-green-400 rounded-xl text-[11px]">
-                        {publishSuccessMessage}
-                      </p>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <Button
-                        type="button"
-                        disabled={isPublishingBuffer || !generatedSocialCopy}
-                        onClick={() => handlePublishToBuffer(false)}
-                        variant="outline"
-                        className="text-xs h-9 border-slate-200 dark:border-slate-700 font-semibold"
-                      >
-                        {isPublishingBuffer ? 'Invio...' : 'Metti in Coda'}
-                      </Button>
-                      <Button
-                        type="button"
-                        disabled={isPublishingBuffer || !generatedSocialCopy}
-                        onClick={() => handlePublishToBuffer(true)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-9 shadow-xs"
-                      >
-                        {isPublishingBuffer ? 'Invio...' : 'Pubblica Ora'}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Output area & Canvas Preview */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Copy Output */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col min-h-[250px]">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Copy Social Generato</h4>
-                  {generatedSocialCopy && (
-                    <Button
-                      onClick={() => {
-                        navigator.clipboard.writeText(generatedSocialCopy)
-                        alert('Copy copiato negli appunti!')
-                      }}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs h-8 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 gap-1.5"
-                    >
-                      Copia Copy
-                    </Button>
-                  )}
-                </div>
-
-                <div className="flex-1 flex flex-col justify-center">
-                  {generatedSocialCopy ? (
-                    <pre className="text-xs font-sans text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed max-w-full overflow-x-auto select-all">
-                      {generatedSocialCopy}
-                    </pre>
-                  ) : (
-                    <div className="text-center space-y-2 text-slate-400 py-12">
-                      <Sparkles className="h-8 w-8 mx-auto text-slate-300 dark:text-slate-700 animate-pulse" />
-                      <p className="text-[11px] font-mono">
-                        Seleziona i parametri e clicca "Genera" per creare il tuo post social con l'Intelligenza Artificiale.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Canvas Card Generator Preview */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <div>
-                    <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Grafica Promozionale</h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Genera un'immagine banner ad alta risoluzione (1080x1080) per questo modulo.</p>
-                  </div>
-                  <Button
-                    onClick={handleDownloadSocialCard}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-9 font-semibold px-4 rounded-xl gap-2 shadow-xs"
-                  >
-                    <Download className="h-4 w-4 text-white" />
-                    Scarica PNG
-                  </Button>
-                </div>
-
-                {/* Mockup visuale stilizzato della Card */}
-                <div className="relative aspect-square max-w-[280px] mx-auto rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-lg bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 p-6 flex flex-col justify-between text-white font-sans">
-                  {/* Griglia astratta decorativa */}
-                  <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:20px_20px]" />
-                  <div className="absolute top-10 left-10 w-24 h-24 bg-violet-500/10 rounded-full blur-xl" />
-
-                  <div className="flex justify-between items-center text-[10px] opacity-70 font-mono relative z-10">
-                    <span>⚡ TI AIUTO</span>
-                    <span>aiutiamoci.cloud</span>
-                  </div>
-
-                  <div className="space-y-2 relative z-10 my-auto">
-                    <span className="text-[8px] font-bold text-amber-500 tracking-widest uppercase">CORSO AI START</span>
-                    <h5 className="font-extrabold text-sm leading-tight text-white">
-                      {lessons.find((l) => l.id === selectedSocialLessonId)?.title || `Modulo ${selectedSocialLessonId}`}
-                    </h5>
-                    <p className="text-[8px] text-slate-400">Area Studenti Ti AIuto</p>
-                  </div>
-
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-2.5 text-[8px] flex items-center justify-between relative z-10">
-                    <span>👉 Inserisci il codice per sbloccare</span>
-                    <span className="bg-indigo-600 px-1.5 py-0.5 rounded text-white font-bold">VAI</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* TAB 4: REGISTRO STUDENTI & CODICI & LISTA D'ATTESA */}
-      {activeTab === 'students' && !activeStudent && (
+      {activeTab === 'students' && isTeamMember && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
