@@ -26,6 +26,7 @@ interface NavbarProps {
   userRole?: string
   userName?: string
   userEmail?: string
+  avatarUrl?: string | null
 }
 
 interface NotificationItem {
@@ -41,7 +42,16 @@ export function Navbar({
   userRole = 'dev',
   userName = 'Marco (Dev)',
   userEmail = 'marco@team.domain.com',
+  avatarUrl = null,
 }: NavbarProps) {
+  // Current user state
+  const [currentUser, setCurrentUser] = useState({
+    name: userName,
+    email: userEmail,
+    role: userRole,
+    avatarUrl: avatarUrl,
+  })
+
   // Notification Panel State
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotificationItem[]>([
@@ -76,8 +86,55 @@ export function Navbar({
   const supabase = createClient()
 
   useEffect(() => {
+    setCurrentUser({
+      name: userName,
+      email: userEmail,
+      role: userRole,
+      avatarUrl: avatarUrl,
+    })
+  }, [userName, userEmail, userRole, avatarUrl])
+
+  useEffect(() => {
     fetchProjects()
+    fetchCurrentUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchCurrentUser()
+      }
+    })
+
+    return () => {
+      subscription?.unsubscribe()
+    }
   }, [])
+
+  const fetchCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await (supabase as any)
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profile) {
+        setCurrentUser({
+          name: profile.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Utente',
+          email: profile.email || user.email || '',
+          role: profile.role || user.user_metadata?.role || 'dev',
+          avatarUrl: profile.avatar_url || user.user_metadata?.avatar_url || null,
+        })
+      } else {
+        setCurrentUser({
+          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Utente',
+          email: user.email || '',
+          role: user.user_metadata?.role || 'dev',
+          avatarUrl: user.user_metadata?.avatar_url || null,
+        })
+      }
+    }
+  }
 
   const fetchProjects = async () => {
     const { data } = await supabase.from('projects').select('*')
@@ -251,20 +308,21 @@ export function Navbar({
           {/* User Card */}
           <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200 dark:border-slate-800">
             <Avatar
-              fallback={userName}
+              src={currentUser.avatarUrl}
+              fallback={currentUser.name}
               className="h-8 w-8 bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 font-semibold border-blue-200 dark:border-blue-800"
             />
             <div className="hidden md:flex flex-col text-left">
               <div className="flex items-center gap-1.5 leading-none">
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{userName}</span>
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{currentUser.name}</span>
                 <Badge
-                  variant={userRole === 'dev' ? 'purple' : 'info'}
+                  variant={currentUser.role === 'dev' ? 'purple' : currentUser.role === 'admin' ? 'warning' : 'info'}
                   className="text-[9px] px-1.5 py-0 uppercase"
                 >
-                  {userRole}
+                  {currentUser.role}
                 </Badge>
               </div>
-              <span className="text-[11px] text-slate-400 leading-tight mt-0.5">{userEmail}</span>
+              <span className="text-[11px] text-slate-400 leading-tight mt-0.5">{currentUser.email}</span>
             </div>
           </div>
         </div>

@@ -29,11 +29,14 @@ export function Sidebar() {
     { id: '2', title: 'Consulenze B2B', status: 'In corso' },
     { id: '3', title: 'Agenti AI Dev', status: 'Sprint' },
   ])
+  const [teamCount, setTeamCount] = useState<number>(3)
+  const [teamSubtitle, setTeamSubtitle] = useState<string>('2 Dev • 1 Business')
   const supabase = createClient()
 
   useEffect(() => {
     fetchUnreadEmails()
     fetchProjects()
+    fetchTeamMembers()
 
     const channel = supabase
       .channel('sidebar:changes')
@@ -51,12 +54,40 @@ export function Sidebar() {
           fetchProjects()
         }
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles' },
+        () => {
+          fetchTeamMembers()
+        }
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
   }, [])
+
+  const fetchTeamMembers = async () => {
+    const { data: profiles, error } = await (supabase as any)
+      .from('profiles')
+      .select('id, role, is_active')
+
+    if (!error && profiles && profiles.length > 0) {
+      const activeProfiles = profiles.filter((p: any) => p.is_active !== false)
+      const count = activeProfiles.length || profiles.length
+      setTeamCount(count)
+      const devCount = activeProfiles.filter((p: any) => p.role === 'dev').length
+      const othersCount = count - devCount
+      if (devCount > 0 && othersCount > 0) {
+        setTeamSubtitle(`${devCount} Dev • ${othersCount} Business`)
+      } else if (devCount > 0) {
+        setTeamSubtitle(`${devCount} Dev`)
+      } else {
+        setTeamSubtitle(`${count} Membri Attivi`)
+      }
+    }
+  }
 
   const fetchProjects = async () => {
     const { data } = await supabase.from('projects').select('id, title, status').order('created_at', { ascending: true })
@@ -255,8 +286,8 @@ export function Sidebar() {
               <Users className="h-4 w-4" />
             </div>
             <div className="flex flex-col truncate">
-              <span className="text-xs font-semibold text-slate-200">Team (4 Membri)</span>
-              <span className="text-[10px] text-slate-400">2 Dev • 2 Business</span>
+              <span className="text-xs font-semibold text-slate-200">Team ({teamCount} Membri)</span>
+              <span className="text-[10px] text-slate-400">{teamSubtitle}</span>
             </div>
           </div>
         </div>
