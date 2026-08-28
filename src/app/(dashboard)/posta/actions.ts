@@ -118,12 +118,14 @@ export async function analyzeEmailWithAI(emailData: {
 
     const { GoogleGenerativeAI } = await import('@google/generative-ai')
     const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      generationConfig: {
-        responseMimeType: 'application/json',
-      },
-    })
+
+    const candidateModels = [
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro-latest',
+      'gemini-pro',
+    ]
 
     const prompt = `
 Sei un agente AI avanzato per la gestione della posta aziendale del team "Ti AIuto" e "Mar2" (domini aiutiamoci.cloud e mar2.cloud).
@@ -148,9 +150,9 @@ Regole di output JSON:
 6. "sentiment": uno tra "positivo", "neutro", "critico", "urgente".
 7. "confidence": intero da 0 a 100.
 
-Rispondi ESCLUSIVAMENTE con il JSON:
+Rispondi ESCLUSIVAMENTE con un JSON valido (senza markdown o altro testo):
 {
-  "category": "urgente" | "supporto" | "commerciale" | "informativo" | "spam",
+  "category": "urgente",
   "priority": 1,
   "summary": "...",
   "suggestedReply": "...",
@@ -160,9 +162,46 @@ Rispondi ESCLUSIVAMENTE con il JSON:
 }
 `
 
-    const result = await model.generateContent(prompt)
-    const responseText = result.response.text()
-    const parsedData: EmailAIAnalysis = JSON.parse(responseText)
+    let responseText = ''
+    let lastError: any = null
+
+    for (const modelName of candidateModels) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            responseMimeType: 'application/json',
+          },
+        })
+        const result = await model.generateContent(prompt)
+        responseText = result.response.text()
+        if (responseText) break
+      } catch (err: any) {
+        lastError = err
+        // Try fallback without responseMimeType if not supported
+        try {
+          const fallbackModel = genAI.getGenerativeModel({ model: modelName })
+          const result = await fallbackModel.generateContent(prompt)
+          responseText = result.response.text()
+          if (responseText) break
+        } catch (subErr) {
+          lastError = subErr
+        }
+      }
+    }
+
+    if (!responseText) {
+      throw lastError || new Error('Nessun modello Gemini disponibile per generare la risposta')
+    }
+
+    // Pulizia da blocchi markdown ```json se presenti
+    const cleanJson = responseText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim()
+
+    const parsedData: EmailAIAnalysis = JSON.parse(cleanJson)
 
     return {
       success: true,
@@ -176,4 +215,5 @@ Rispondi ESCLUSIVAMENTE con il JSON:
     }
   }
 }
+
 
