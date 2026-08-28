@@ -13,10 +13,13 @@ export interface EmailAnalysisResult {
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY
+    const apiKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GOOGLE_AI_API_KEY
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'GEMINI_API_KEY non configurata sul server (.env.local)' },
+        { error: 'GEMINI_API_KEY non configurata sul server. Esegui un Redeploy su Vercel se l\'hai appena aggiunta.' },
         { status: 500 }
       )
     }

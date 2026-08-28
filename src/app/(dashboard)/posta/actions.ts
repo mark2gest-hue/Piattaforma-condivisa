@@ -105,9 +105,15 @@ export async function analyzeEmailWithAI(emailData: {
   toAddress?: string
 }): Promise<{ success: boolean; analysis?: EmailAIAnalysis; error?: string }> {
   try {
-    const apiKey = process.env.GEMINI_API_KEY
+    const apiKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+      process.env.GOOGLE_AI_API_KEY
     if (!apiKey) {
-      return { success: false, error: 'GEMINI_API_KEY non configurata nel file .env.local' }
+      return {
+        success: false,
+        error: 'GEMINI_API_KEY non trovata nelle variabili d\'ambiente. Se l\'hai appena aggiunta su Vercel, esegui un Redeploy del progetto.',
+      }
     }
 
     const { GoogleGenerativeAI } = await import('@google/generative-ai')
