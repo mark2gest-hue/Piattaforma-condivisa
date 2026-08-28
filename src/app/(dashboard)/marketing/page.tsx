@@ -273,7 +273,7 @@ export default function MarketingHubPage() {
                   type="number"
                   value={simTargetFollowers}
                   onChange={(e) => setSimTargetFollowers(Number(e.target.value) || 0)}
-                  className="h-8 text-xs bg-slate-950 border-slate-700"
+                  className="h-8 text-xs bg-slate-950 border-slate-700 text-slate-100 placeholder:text-slate-500"
                 />
               </div>
 
@@ -285,7 +285,7 @@ export default function MarketingHubPage() {
                     step="0.05"
                     value={simCpc}
                     onChange={(e) => setSimCpc(Number(e.target.value) || 0)}
-                    className="h-8 text-xs bg-slate-950 border-slate-700"
+                    className="h-8 text-xs bg-slate-950 border-slate-700 text-slate-100 placeholder:text-slate-500"
                   />
                 </div>
                 <div>
@@ -294,7 +294,7 @@ export default function MarketingHubPage() {
                     type="number"
                     value={simPrice}
                     onChange={(e) => setSimPrice(Number(e.target.value) || 0)}
-                    className="h-8 text-xs bg-slate-950 border-slate-700"
+                    className="h-8 text-xs bg-slate-950 border-slate-700 text-slate-100 placeholder:text-slate-500"
                   />
                 </div>
               </div>

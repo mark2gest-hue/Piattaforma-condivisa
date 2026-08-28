@@ -436,7 +436,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                   value={brief.title}
                   onChange={(e) => setBrief({ ...brief, title: e.target.value })}
                   placeholder="Es. Lancio Q4 Corso AI Start"
-                  className="bg-slate-950 border-slate-700 text-xs"
+                  className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
                 />
               </div>
 
@@ -447,7 +447,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                     value={brief.productName}
                     onChange={(e) => setBrief({ ...brief, productName: e.target.value })}
                     placeholder="Es. AI Start"
-                    className="bg-slate-950 border-slate-700 text-xs"
+                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
                   />
                 </div>
                 <div>
@@ -456,7 +456,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                     type="number"
                     value={brief.price}
                     onChange={(e) => setBrief({ ...brief, price: Number(e.target.value) || 0 })}
-                    className="bg-slate-950 border-slate-700 text-xs"
+                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
                   />
                 </div>
               </div>
@@ -469,7 +469,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                   value={brief.targetAvatar}
                   onChange={(e) => setBrief({ ...brief, targetAvatar: e.target.value })}
                   rows={2}
-                  className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
                   placeholder="Descrivi chi acquista: età, ruolo, paure e contesto professionale..."
                 />
               </div>
@@ -482,7 +482,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                   value={brief.corePain}
                   onChange={(e) => setBrief({ ...brief, corePain: e.target.value })}
                   rows={2}
-                  className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
                   placeholder="Cosa non li fa dormire la notte o quale ostacolo li blocca..."
                 />
               </div>
@@ -495,7 +495,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                   value={brief.coreDesire}
                   onChange={(e) => setBrief({ ...brief, coreDesire: e.target.value })}
                   rows={2}
-                  className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
                   placeholder="Il risultato ideale che desiderano raggiungere sopra ogni cosa..."
                 />
               </div>
@@ -555,7 +555,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                     type="number"
                     value={brief.budgetDaily}
                     onChange={(e) => setBrief({ ...brief, budgetDaily: Number(e.target.value) || 0 })}
-                    className="bg-slate-950 border-slate-700 text-xs"
+                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
                   />
                 </div>
                 <div>
@@ -564,7 +564,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                     type="number"
                     value={brief.kpiCpaTarget}
                     onChange={(e) => setBrief({ ...brief, kpiCpaTarget: Number(e.target.value) || 0 })}
-                    className="bg-slate-950 border-slate-700 text-xs"
+                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
                   />
                 </div>
                 <div>
@@ -574,7 +574,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                     step="0.1"
                     value={brief.kpiRoasTarget}
                     onChange={(e) => setBrief({ ...brief, kpiRoasTarget: Number(e.target.value) || 0 })}
-                    className="bg-slate-950 border-slate-700 text-xs"
+                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
                   />
                 </div>
               </div>
@@ -838,7 +838,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                 placeholder="URL Webhook n8n (opzionale)"
                 value={customWebhookUrl}
                 onChange={(e) => setCustomWebhookUrl(e.target.value)}
-                className="text-[11px] h-8 bg-slate-950 border-slate-700"
+                className="text-[11px] h-8 bg-slate-950 border-slate-700 text-slate-100 placeholder:text-slate-500"
               />
             </div>
           </div>
