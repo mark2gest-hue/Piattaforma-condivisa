@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Network,
   Megaphone,
+  ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -38,28 +39,23 @@ export function Sidebar() {
     fetchProjects()
     fetchTeamMembers()
 
+    // Realtime subscription per nuove email e nuovi progetti
     const channel = supabase
-      .channel('sidebar:changes')
+      .channel('sidebar-realtime')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'emails' },
-        () => {
-          fetchUnreadEmails()
-        }
+        { event: '*', schema: 'public', table: 'shared_emails' },
+        () => fetchUnreadEmails()
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'projects' },
-        () => {
-          fetchProjects()
-        }
+        () => fetchProjects()
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'profiles' },
-        () => {
-          fetchTeamMembers()
-        }
+        () => fetchTeamMembers()
       )
       .subscribe()
 
@@ -68,46 +64,44 @@ export function Sidebar() {
     }
   }, [])
 
-  const fetchTeamMembers = async () => {
-    const { data: profiles, error } = await (supabase as any)
-      .from('profiles')
-      .select('id, role, is_active')
+  const fetchUnreadEmails = async () => {
+    const { count } = await (supabase as any)
+      .from('shared_emails')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_read', false)
 
-    if (!error && profiles && profiles.length > 0) {
-      const activeProfiles = profiles.filter((p: any) => p.is_active !== false)
-      const count = activeProfiles.length || profiles.length
-      setTeamCount(count)
-      const devCount = activeProfiles.filter((p: any) => p.role === 'dev').length
-      const othersCount = count - devCount
-      if (devCount > 0 && othersCount > 0) {
-        setTeamSubtitle(`${devCount} Dev • ${othersCount} Business`)
-      } else if (devCount > 0) {
-        setTeamSubtitle(`${devCount} Dev`)
-      } else {
-        setTeamSubtitle(`${count} Membri Attivi`)
-      }
+    if (count !== null && count !== undefined) {
+      setUnreadEmailCount(count)
     }
   }
 
   const fetchProjects = async () => {
-    const { data } = await supabase.from('projects').select('id, title, status').order('created_at', { ascending: true })
+    const { data } = await (supabase as any)
+      .from('projects')
+      .select('id, title, status')
+      .limit(4)
+
     if (data && data.length > 0) {
-      setSidebarProjects(data.map((p: any) => ({
-        id: p.id,
-        title: p.title ? p.title.replace(/^[^\w\s]*\s*/, '') : 'Progetto',
-        status: p.status === 'active' ? 'Attivo' : p.status || 'Attivo',
-      })))
+      setSidebarProjects(data)
     }
   }
 
-  const fetchUnreadEmails = async () => {
-    const { count, error } = await supabase
-      .from('emails')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'received')
+  const fetchTeamMembers = async () => {
+    const { data: profiles } = await (supabase as any)
+      .from('profiles')
+      .select('role')
 
-    if (!error && count !== null) {
-      setUnreadEmailCount(count)
+    if (profiles && profiles.length > 0) {
+      setTeamCount(profiles.length)
+      const devs = profiles.filter((p: any) => p.role === 'dev').length
+      const admins = profiles.filter((p: any) => p.role === 'admin').length
+      const others = profiles.length - devs - admins
+
+      const parts = []
+      if (devs > 0) parts.push(`${devs} Dev`)
+      if (admins > 0) parts.push(`${admins} Admin`)
+      if (others > 0) parts.push(`${others} Altri`)
+      setTeamSubtitle(parts.join(' • ') || 'Team Attivo')
     }
   }
 
@@ -138,7 +132,7 @@ export function Sidebar() {
       subtitle: 'Email del Dominio',
       href: '/posta',
       icon: Mail,
-      badge: unreadEmailCount > 0 ? String(unreadEmailCount) : null,
+      badge: unreadEmailCount > 0 ? `${unreadEmailCount} Nuove` : null,
     },
     {
       title: 'Chat',
@@ -177,8 +171,8 @@ export function Sidebar() {
     },
     {
       title: 'Agenti AI',
-      subtitle: 'Assistenti & Automazioni',
-      href: '/agenti',
+      subtitle: 'Piattaforma Esterna',
+      href: 'https://agenti-aiutiamoci.vercel.app/',
       icon: Bot,
       badge: 'AI',
     },
@@ -206,12 +200,15 @@ export function Sidebar() {
             Aree di Lavoro
           </div>
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== '/lavori' && pathname.startsWith(item.href))
+            const isExternal = item.href.startsWith('http')
+            const isActive = !isExternal && (pathname === item.href || (item.href !== '/lavori' && pathname.startsWith(item.href)))
             const Icon = item.icon
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                target={isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
                 className={cn(
                   'group flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-150',
                   isActive
@@ -227,7 +224,10 @@ export function Sidebar() {
                     )}
                   />
                   <div className="flex flex-col text-left">
-                    <span className="text-sm leading-none">{item.title}</span>
+                    <span className="text-sm leading-none flex items-center gap-1.5">
+                      {item.title}
+                      {isExternal && <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-slate-200 inline opacity-70" />}
+                    </span>
                     <span
                       className={cn(
                         'text-[10px] mt-0.5 leading-none',
