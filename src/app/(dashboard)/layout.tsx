@@ -30,7 +30,19 @@ export default async function DashboardLayout({
     profile = data
   }
 
-  const userName = profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Utente'
+  const resolveUserName = (pName?: string | null, metaName?: string | null, email?: string | null) => {
+    if (email && email.toLowerCase() === 'gerelmo@gmail.com') return 'Marco'
+    if (pName && pName.trim() && !pName.includes('@') && pName.toLowerCase() !== 'gerelmo') return pName
+    if (metaName && metaName.trim() && !metaName.includes('@') && metaName.toLowerCase() !== 'gerelmo') return metaName
+    if (email) {
+      if (email.toLowerCase().includes('gerelmo') || email.toLowerCase().includes('marco')) return 'Marco'
+      const namePart = email.split('@')[0]
+      return namePart.charAt(0).toUpperCase() + namePart.slice(1)
+    }
+    return 'Marco'
+  }
+
+  const userName = resolveUserName(profile?.full_name, user.user_metadata?.full_name, user.email)
   const userRole = profile?.role || user.user_metadata?.role || 'dev'
   const userEmail = profile?.email || user.email || ''
   const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url || null
