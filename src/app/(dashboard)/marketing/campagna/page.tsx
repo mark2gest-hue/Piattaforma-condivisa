@@ -41,6 +41,7 @@ import {
   saveMarketingCampaignAction,
   getMarketingCampaignByIdAction,
   publishPostViaN8nAction,
+  publishToBufferAction,
   MarketingBriefInput,
   MarketingGeneratedPlan,
   MarketingEditorialPost,
@@ -206,21 +207,21 @@ function CampaignWizardContent() {
     setIsSaving(false)
   }
 
-  // Dispatch post verso Webhook n8n
-  const handlePublishPostToN8n = async (post: MarketingEditorialPost, index: number) => {
+  // Dispatch post direttamente a Buffer (senza passare da n8n)
+  const handlePublishPostToBuffer = async (post: MarketingEditorialPost, index: number) => {
     const targetKey = post.id || `temp-${index}`
     setIsPublishingPostId(targetKey)
 
-    const res = await publishPostViaN8nAction({
+    const res = await publishToBufferAction({
       postId: post.id,
-      title: post.title,
-      copy: post.fullCopy,
+      text: post.fullCopy,
       platform: post.platform || 'Instagram',
-      customWebhookUrl: customWebhookUrl.trim() || undefined,
+      now: false, // Inserimento nella coda programmata di Buffer
     })
 
     if (res.success) {
-      alert(`🚀 Post inviato a n8n per ${post.platform}! ${res.simulated ? '(Modalità Simulazione/Test Webhook)' : ''}`)
+      playNotificationSound('chat')
+      alert(`🚀 ${res.message}`)
       // Aggiorna stato locale post
       if (plan) {
         const updatedPosts = [...plan.editorialPosts]
@@ -228,7 +229,7 @@ function CampaignWizardContent() {
         setPlan({ ...plan, editorialPosts: updatedPosts })
       }
     } else {
-      alert(`Errore invio a n8n: ${res.error}`)
+      alert(`Errore invio a Buffer: ${res.error}`)
     }
 
     setIsPublishingPostId(null)
@@ -905,7 +906,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                     <Button
                       size="sm"
                       disabled={isPublishing}
-                      onClick={() => handlePublishPostToN8n(post, idx)}
+                      onClick={() => handlePublishPostToBuffer(post, idx)}
                       className={`text-xs font-semibold flex items-center gap-1.5 ${
                         isPublished
                           ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30'
@@ -917,7 +918,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                       ) : (
                         <Send className="h-3.5 w-3.5" />
                       )}
-                      <span>{isPublished ? 'Inviato' : 'Invia a n8n / Buffer'}</span>
+                      <span>{isPublished ? 'Pianificato' : 'Invia a Buffer'}</span>
                     </Button>
                   </div>
                 </Card>

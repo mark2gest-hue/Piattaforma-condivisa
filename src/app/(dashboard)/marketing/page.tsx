@@ -84,14 +84,14 @@ export default function MarketingHubPage() {
                 APEX Growth Engine & Multi-Channel
               </Badge>
               <Badge className="bg-purple-500/20 text-purple-300 border-purple-400/30 font-mono text-xs">
-                n8n + Buffer Bridge
+                Buffer API Diretto
               </Badge>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               Marketing & Campagne dalla A alla Z
             </h1>
             <p className="text-slate-300 text-sm md:text-base max-w-2xl">
-              Progetta offerte irresistibili, genera angoli pubblicitari ad alta conversione, struttura funnel scientifici e pubblica sui social media con automazione su n8n.
+              Progetta offerte irresistibili, genera angoli pubblicitari ad alta conversione, struttura funnel scientifici e pubblica sui social media con integrazione diretta su Buffer.
             </p>
           </div>
 
@@ -345,16 +345,16 @@ export default function MarketingHubPage() {
             </div>
           </Card>
 
-          {/* Quick Integration Card: n8n Webhook */}
+          {/* Quick Integration Card: Buffer API */}
           <Card className="p-5 bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800 rounded-2xl">
             <div className="flex items-center gap-2.5 mb-2">
               <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
                 <Share2 className="h-4 w-4" />
               </div>
-              <h4 className="font-semibold text-xs text-slate-200">Integrazione n8n & Buffer</h4>
+              <h4 className="font-semibold text-xs text-slate-200">Integrazione Diretta Buffer</h4>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Il dispatcher della piattaforma invia i post creati al tuo n8n su VPS Oracle tramite webhook HTTP, il quale inoltra a Buffer per la pubblicazione su Instagram, FB e LinkedIn.
+              Il dispatcher della piattaforma pubblica e pianifica i post del piano editoriale direttamente sul tuo account Buffer tramite API ufficiale, per Instagram, Facebook e LinkedIn.
             </p>
             <div className="mt-3 flex items-center justify-between text-[11px] text-blue-400 font-medium">
               <span className="flex items-center gap-1">

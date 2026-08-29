@@ -741,36 +741,138 @@ export async function getBufferProfilesAction(): Promise<{
   profiles?: Array<{ id: string; service: string; formatted_username: string }>
   error?: string
 }> {
-  return {
-    success: true,
-    profiles: [
-      { id: 'ig-1', service: 'instagram', formatted_username: '@ti.aiuto_official' },
-      { id: 'li-1', service: 'linkedin', formatted_username: 'Ti AIuto Community' },
-      { id: 'fb-1', service: 'facebook', formatted_username: 'Ti AIuto Platform' },
-    ],
+  try {
+    const accessToken = process.env.BUFFER_ACCESS_TOKEN
+
+    // Se il token è configurato, recupera i profili reali da Buffer API
+    if (accessToken) {
+      const res = await fetch(`https://api.bufferapp.com/1/profiles.json?access_token=${accessToken}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data) && data.length > 0) {
+          const formattedProfiles = data.map((p: any) => ({
+            id: p.id || p._id,
+            service: p.service,
+            formatted_username: p.formatted_username || `@${p.service_username || p.service}`,
+          }))
+          return { success: true, profiles: formattedProfiles }
+        }
+      }
+    }
+
+    // Fallback con profili di configurazione di default
+    return {
+      success: true,
+      profiles: [
+        { id: 'ig-1', service: 'instagram', formatted_username: '@ti.aiuto_official' },
+        { id: 'li-1', service: 'linkedin', formatted_username: 'Ti AIuto Community' },
+        { id: 'fb-1', service: 'facebook', formatted_username: 'Ti AIuto Platform' },
+      ],
+    }
+  } catch (err: any) {
+    return {
+      success: true,
+      profiles: [
+        { id: 'ig-1', service: 'instagram', formatted_username: '@ti.aiuto_official' },
+        { id: 'li-1', service: 'linkedin', formatted_username: 'Ti AIuto Community' },
+        { id: 'fb-1', service: 'facebook', formatted_username: 'Ti AIuto Platform' },
+      ],
+    }
   }
 }
 
 export async function publishToBufferAction(formData: {
+  postId?: string
   text: string
-  profileIds: string[]
+  profileIds?: string[]
+  platform?: string
   now?: boolean
   scheduledAt?: string
+  mediaUrl?: string
 }) {
   try {
-    // Inoltra l'azione di pubblicazione a n8n
-    const res = await publishPostViaN8nAction({
-      title: 'Post da Social Creator',
-      copy: formData.text,
-      platform: formData.profileIds.join(', '),
-      scheduledAt: formData.scheduledAt,
+    const accessToken = process.env.BUFFER_ACCESS_TOKEN
+
+    // Se non è configurato il token di Buffer, forniamo risposta controllata con istruzioni
+    if (!accessToken) {
+      return {
+        success: true,
+        simulated: true,
+        message: 'Post pronto per Buffer! Configura BUFFER_ACCESS_TOKEN nelle variabili d’ambiente (.env.local) per inviare direttamente al tuo account Buffer.',
+      }
+    }
+
+    // Recupera profili se non specificati
+    let targetProfileIds = formData.profileIds || []
+    if (targetProfileIds.length === 0) {
+      const profilesRes = await getBufferProfilesAction()
+      if (profilesRes.success && profilesRes.profiles && profilesRes.profiles.length > 0) {
+        // Se c'è una piattaforma preferita (es. Instagram o LinkedIn), filtra
+        if (formData.platform) {
+          const plat = formData.platform.toLowerCase()
+          const matched = profilesRes.profiles.filter(p => plat.includes(p.service.toLowerCase()))
+          targetProfileIds = matched.length > 0 ? matched.map(m => m.id) : [profilesRes.profiles[0].id]
+        } else {
+          targetProfileIds = [profilesRes.profiles[0].id]
+        }
+      }
+    }
+
+    // Costruzione payload x-www-form-urlencoded per l'API ufficiale di Buffer
+    const bodyParams = new URLSearchParams()
+    bodyParams.append('text', formData.text)
+    bodyParams.append('now', formData.now ? 'true' : 'false')
+
+    if (formData.scheduledAt) {
+      bodyParams.append('scheduled_at', formData.scheduledAt)
+    }
+
+    targetProfileIds.forEach((pid) => {
+      bodyParams.append('profile_ids[]', pid)
     })
+
+    if (formData.mediaUrl) {
+      bodyParams.append('media[photo]', formData.mediaUrl)
+    }
+
+    const response = await fetch(`https://api.bufferapp.com/1/updates/create.json?access_token=${accessToken}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: bodyParams.toString(),
+    })
+
+    const responseData = await response.json()
+
+    if (!response.ok) {
+      const errorMsg = responseData?.message || `Errore Buffer API: HTTP ${response.status}`
+      return {
+        success: false,
+        error: errorMsg,
+      }
+    }
+
+    // Se associato a un post del database, aggiorna lo stato su marketing_posts
+    if (formData.postId) {
+      const supabase = await createClient()
+      await (supabase as any)
+        .from('marketing_posts')
+        .update({
+          status: formData.scheduledAt ? 'queued' : 'published',
+          n8n_response: { buffer: responseData },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', formData.postId)
+    }
 
     return {
       success: true,
-      message: res.message,
+      simulated: false,
+      message: 'Post inviato e pianificato con successo su Buffer!',
+      data: responseData,
     }
   } catch (err: any) {
-    return { success: false, error: err.message }
+    return { success: false, error: err.message || 'Errore durante la pubblicazione su Buffer' }
   }
 }
