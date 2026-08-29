@@ -746,23 +746,16 @@ export async function getBufferProfilesAction(): Promise<{
     const accessToken = rawToken ? rawToken.trim() : ''
 
     if (accessToken) {
-      // 1. Prova con la Nuova Buffer API (GraphQL: organizations -> channels)
+      // 1. Prova con la Nuova Buffer API (GraphQL: root channels query)
       try {
         const graphqlQuery = {
           query: `
             query {
-              account {
+              channels {
                 id
-                email
-                organizations {
-                  id
-                  name
-                  channels {
-                    id
-                    name
-                    service
-                  }
-                }
+                name
+                service
+                organizationId
               }
             }
           `,
@@ -773,22 +766,16 @@ export async function getBufferProfilesAction(): Promise<{
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify(graphqlQuery),
         })
 
         if (gqlRes.ok) {
           const gqlData = await gqlRes.json()
-          const orgs = gqlData?.data?.account?.organizations || []
-          const allChannels: any[] = []
-          orgs.forEach((org: any) => {
-            if (Array.isArray(org.channels)) {
-              allChannels.push(...org.channels)
-            }
-          })
-
-          if (allChannels.length > 0) {
-            const formatted = allChannels.map((c: any) => ({
+          const channels = gqlData?.data?.channels
+          if (Array.isArray(channels) && channels.length > 0) {
+            const formatted = channels.map((c: any) => ({
               id: c.id,
               service: c.service || 'social',
               formatted_username: c.name || `@${c.service}`,
@@ -797,7 +784,7 @@ export async function getBufferProfilesAction(): Promise<{
           }
         }
       } catch (gqlErr) {
-        console.warn('[Buffer GraphQL account query]:', gqlErr)
+        console.warn('[Buffer GraphQL channels query]:', gqlErr)
       }
 
       // 2. Fallback con endpoint Channels REST o Legacy
@@ -865,66 +852,59 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // 1. Recupera Organization e Channels reali tramite GraphQL
+    // 1. Recupera Channels e OrganizationId reali tramite GraphQL root query
     let targetChannelId: string | undefined = undefined
     let channelName: string = 'Buffer'
     let organizationId: string | undefined = undefined
     let orgQueryError: string = ''
 
     try {
-      const orgQuery = {
+      const channelsQuery = {
         query: `
-          query GetOrgAndChannels {
-            account {
+          query GetChannelsList {
+            channels {
               id
-              organizations {
-                id
-                name
-                channels {
-                  id
-                  name
-                  service
-                }
-              }
+              name
+              service
+              organizationId
             }
           }
         `,
       }
 
-      const orgRes = await fetch('https://api.buffer.com', {
+      const chanRes = await fetch('https://api.buffer.com', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(orgQuery),
+        body: JSON.stringify(channelsQuery),
       })
 
-      const rawText = await orgRes.text()
-      let orgData: any = null
+      const rawText = await chanRes.text()
+      let chanData: any = null
       try {
-        orgData = JSON.parse(rawText)
+        chanData = JSON.parse(rawText)
       } catch {
-        orgQueryError = `HTTP ${orgRes.status}: ${rawText.slice(0, 100)}`
+        orgQueryError = `HTTP ${chanRes.status}: ${rawText.slice(0, 100)}`
       }
 
-      if (orgData?.errors && orgData.errors.length > 0) {
-        orgQueryError = orgData.errors[0].message
+      if (chanData?.errors && chanData.errors.length > 0) {
+        orgQueryError = chanData.errors[0].message
       }
 
-      const orgs = orgData?.data?.account?.organizations
-      if (Array.isArray(orgs) && orgs.length > 0) {
-        organizationId = orgs[0].id
-        const channels = orgs[0].channels || []
-        if (Array.isArray(channels) && channels.length > 0) {
-          const matched = formData.platform
-            ? channels.find((c: any) => formData.platform!.toLowerCase().includes(c.service?.toLowerCase() || ''))
-            : null
-          const selected = matched || channels[0]
-          targetChannelId = selected.id
-          channelName = `${selected.name} (${selected.service})`
-        }
+      const channels = chanData?.data?.channels
+      if (Array.isArray(channels) && channels.length > 0) {
+        // Estrai l'organizationId dal primo canale disponibile
+        organizationId = channels[0].organizationId
+        
+        const matched = formData.platform
+          ? channels.find((c: any) => formData.platform!.toLowerCase().includes(c.service?.toLowerCase() || ''))
+          : null
+        const selected = matched || channels[0]
+        targetChannelId = selected.id
+        channelName = `${selected.name} (${selected.service})`
       }
     } catch (fetchErr: any) {
       orgQueryError = fetchErr.message
