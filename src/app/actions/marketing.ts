@@ -913,7 +913,9 @@ export async function publishToBufferAction(formData: {
         `,
         variables: {
           input: {
-            text: formData.text,
+            content: {
+              text: formData.text,
+            },
           },
         },
       }
