@@ -922,27 +922,63 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleCopy(post.fullCopy, `post-${idx}`)}
-                      className="h-8 px-2.5 text-xs text-slate-400 hover:text-white"
-                    >
-                      {copiedId === `post-${idx}` ? (
-                        <Check className="h-3.5 w-3.5 text-emerald-400 mr-1" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5 mr-1" />
-                      )}
-                      Copia Testo
-                    </Button>
+                  <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                    {/* Gruppo Azioni Rapide Contenuto */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleCopy(post.fullCopy, `post-${idx}`)}
+                        className="h-7 px-2 text-xs text-slate-400 hover:text-white"
+                      >
+                        {copiedId === `post-${idx}` ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-400 mr-1" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5 mr-1" />
+                        )}
+                        Copia
+                      </Button>
 
-                    <div className="flex items-center gap-1.5">
+                      {/* Tool Generatore Caroselli */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          handleCopy(post.fullCopy, `post-${idx}`)
+                          window.open('https://taplio.com/carousel', '_blank')
+                        }}
+                        title="Copia il testo e apri il generatore di caroselli gratuito"
+                        className="h-7 px-2 text-[11px] border-slate-700 bg-slate-950/60 text-slate-300 hover:text-white hover:border-purple-500/60 transition-colors"
+                      >
+                        <Layout className="h-3 w-3 mr-1 text-purple-400" />
+                        Crea Carosello
+                        <ExternalLink className="h-2.5 w-2.5 ml-1 text-slate-500" />
+                      </Button>
+
+                      {/* Tool Generatore Reel (CapCut Script to Video) */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          handleCopy(post.fullCopy, `post-${idx}`)
+                          window.open('https://www.capcut.com/tools/script-to-video', '_blank')
+                        }}
+                        title="Copia lo script e apri l'AI video generator gratuito di CapCut"
+                        className="h-7 px-2 text-[11px] border-slate-700 bg-slate-950/60 text-slate-300 hover:text-white hover:border-pink-500/60 transition-colors"
+                      >
+                        <Video className="h-3 w-3 mr-1 text-pink-400" />
+                        Crea Reel (CapCut)
+                        <ExternalLink className="h-2.5 w-2.5 ml-1 text-slate-500" />
+                      </Button>
+                    </div>
+
+                    {/* Invio a Buffer */}
+                    <div className="flex items-center gap-1.5 ml-auto">
                       <Button
                         size="sm"
                         disabled={isPublishing}
                         onClick={() => handlePublishPostToBuffer(post, idx)}
-                        className={`text-xs font-semibold flex items-center gap-1.5 ${
+                        className={`h-8 text-xs font-semibold flex items-center gap-1.5 ${
                           isPublished
                             ? 'bg-slate-800 hover:bg-purple-600 text-slate-300 hover:text-white border border-slate-700'
                             : 'bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-500/20'
