@@ -1781,8 +1781,8 @@ function CorsiInnerContent() {
                       <span>{rec.title}</span>
                       <span className="text-[10px] font-mono font-normal text-slate-400">({rec.date})</span>
                     </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate max-w-xl">
-                      {rec.videoUrl}
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Registrazione ufficiale della lezione
                     </p>
                   </div>
                 </div>
@@ -1796,13 +1796,6 @@ function CorsiInnerContent() {
                     <PlayCircle className="h-4 w-4" />
                     <span>Guarda Video</span>
                   </Button>
-
-                  <a href={rec.videoUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm" className="text-xs h-9 gap-1.5 border-slate-200 dark:border-slate-800">
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      <span>Apri Link</span>
-                    </Button>
-                  </a>
 
                   {isTeamMember && (
                     <Button
