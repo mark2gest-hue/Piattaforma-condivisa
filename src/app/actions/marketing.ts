@@ -884,7 +884,10 @@ export async function publishToBufferAction(formData: {
         query: `
           mutation CreateDraft($input: CreateDraftInput!) {
             createDraft(input: $input) {
-              ... on DraftResponse {
+              ... on Response {
+                message
+              }
+              ... on IdeaResponse {
                 __typename
               }
             }
@@ -927,7 +930,10 @@ export async function publishToBufferAction(formData: {
           query: `
             mutation CreatePost($input: CreatePostInput!) {
               createPost(input: $input) {
-                ... on PostResponse {
+                ... on Response {
+                  message
+                }
+                ... on PostsResults {
                   __typename
                 }
               }
