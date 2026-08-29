@@ -913,6 +913,11 @@ export async function publishToBufferAction(formData: {
             needsApproval: false,
             schedulingType: 'automatic',
             saveToDraft: false,
+            metadata: {
+              facebook: {
+                type: 'post',
+              },
+            },
           },
         },
       }
