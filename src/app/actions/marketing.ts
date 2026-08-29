@@ -869,19 +869,21 @@ export async function publishToBufferAction(formData: {
     const profilesRes = await getBufferProfilesAction()
     const availableProfiles = profilesRes.profiles || []
     
+    // Trova i canali reali autenticati da Buffer
+    const realChannels = availableProfiles.filter(p => !p.id.startsWith('ig-') && !p.id.startsWith('li-') && !p.id.startsWith('fb-'))
+    
     let targetChannelId: string | undefined = undefined
-    if (formData.platform && availableProfiles.length > 0) {
+    if (formData.platform && realChannels.length > 0) {
       const plat = formData.platform.toLowerCase()
-      const matched = availableProfiles.find(p => plat.includes(p.service.toLowerCase()))
-      if (matched && !matched.id.startsWith('ig-') && !matched.id.startsWith('li-') && !matched.id.startsWith('fb-')) {
+      const matched = realChannels.find(p => plat.includes(p.service.toLowerCase()) || p.service.toLowerCase().includes(plat))
+      if (matched) {
         targetChannelId = matched.id
       }
     }
-    if (!targetChannelId && availableProfiles.length > 0) {
-      const validProfile = availableProfiles.find(p => !p.id.startsWith('ig-') && !p.id.startsWith('li-') && !p.id.startsWith('fb-'))
-      if (validProfile) {
-        targetChannelId = validProfile.id
-      }
+    
+    // Se non trova match specifico per piattaforma o c'è un solo canale (es. Facebook AI utiamoci), usa il primo canale reale
+    if (!targetChannelId && realChannels.length > 0) {
+      targetChannelId = realChannels[0].id
     }
 
     let successResponse: any = null
@@ -899,9 +901,9 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // Tentativo 1: Creazione diretta di Post / Draft nella Coda del Canale Social (createDraft / createPost)
-    try {
-      if (targetChannelId && !targetChannelId.startsWith('ig-') && !targetChannelId.startsWith('li-') && !targetChannelId.startsWith('fb-')) {
+    // Tentativo 1: Creazione diretta di Draft nel Canale Social (createDraft)
+    if (targetChannelId) {
+      try {
         const draftMutation = {
           query: `
             mutation CreateDraft($input: CreateDraftInput!) {
@@ -935,10 +937,12 @@ export async function publishToBufferAction(formData: {
         const parsedDraft = await safeParseResponse(draftRes)
         if (parsedDraft.ok && parsedDraft.data?.data?.createDraft && !parsedDraft.data?.errors) {
           successResponse = { id: 'draft_created', type: 'draft', text: formData.text }
+        } else if (parsedDraft.data?.errors && parsedDraft.data.errors.length > 0) {
+          console.warn('[Buffer createDraft error]:', parsedDraft.data.errors[0].message)
         }
+      } catch (draftErr) {
+        console.warn('[Buffer createDraft]:', draftErr)
       }
-    } catch (draftErr) {
-      console.warn('[Buffer createDraft]:', draftErr)
     }
 
     // Tentativo 2: Nuova API Buffer GraphQL (createIdea)
