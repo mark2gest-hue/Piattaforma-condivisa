@@ -901,6 +901,37 @@ export async function publishToBufferAction(formData: {
 
     // Tentativo 1: Nuova API Buffer GraphQL (endpoint standard https://api.buffer.com)
     try {
+      // 1.1 Recupera l'organizationId dall'account
+      let organizationId: string | undefined = undefined
+      try {
+        const orgQuery = {
+          query: `
+            query {
+              account {
+                organizations {
+                  id
+                }
+              }
+            }
+          `,
+        }
+        const orgRes = await fetch('https://api.buffer.com', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orgQuery),
+        })
+        const orgData = await orgRes.json()
+        const orgs = orgData?.data?.account?.organizations
+        if (Array.isArray(orgs) && orgs.length > 0 && orgs[0].id) {
+          organizationId = orgs[0].id
+        }
+      } catch (orgErr) {
+        console.warn('[Buffer fetch orgId]:', orgErr)
+      }
+
       const ideaMutation = {
         query: `
           mutation CreateIdea($input: CreateIdeaInput!) {
@@ -913,6 +944,7 @@ export async function publishToBufferAction(formData: {
         `,
         variables: {
           input: {
+            organizationId: organizationId || 'default',
             content: {
               text: formData.text,
             },
