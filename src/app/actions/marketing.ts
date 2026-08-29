@@ -751,7 +751,7 @@ export async function getBufferProfilesAction(): Promise<{
         const graphqlQuery = {
           query: `
             query {
-              channels {
+              channels(input: {}) {
                 id
                 name
                 service
@@ -862,7 +862,7 @@ export async function publishToBufferAction(formData: {
       const channelsQuery = {
         query: `
           query GetChannelsList {
-            channels {
+            channels(input: {}) {
               id
               name
               service
