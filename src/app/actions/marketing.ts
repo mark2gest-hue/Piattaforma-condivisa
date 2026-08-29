@@ -865,25 +865,56 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // Recupera i canali reali da Buffer
-    const profilesRes = await getBufferProfilesAction()
-    const availableProfiles = profilesRes.profiles || []
-    
-    // Trova i canali reali autenticati da Buffer
-    const realChannels = availableProfiles.filter(p => !p.id.startsWith('ig-') && !p.id.startsWith('li-') && !p.id.startsWith('fb-'))
-    
+    // 1. Recupera Organization e Channels reali tramite GraphQL
     let targetChannelId: string | undefined = undefined
-    if (formData.platform && realChannels.length > 0) {
-      const plat = formData.platform.toLowerCase()
-      const matched = realChannels.find(p => plat.includes(p.service.toLowerCase()) || p.service.toLowerCase().includes(plat))
-      if (matched) {
-        targetChannelId = matched.id
+    let channelName: string = 'Buffer'
+    let organizationId: string | undefined = undefined
+
+    try {
+      const orgQuery = {
+        query: `
+          query {
+            account {
+              organizations {
+                id
+                name
+                channels {
+                  id
+                  name
+                  service
+                }
+              }
+            }
+          }
+        `,
       }
-    }
-    
-    // Se non trova match specifico per piattaforma o c'è un solo canale (es. Facebook AI utiamoci), usa il primo canale reale
-    if (!targetChannelId && realChannels.length > 0) {
-      targetChannelId = realChannels[0].id
+
+      const orgRes = await fetch('https://api.buffer.com', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orgQuery),
+      })
+
+      const orgData = await orgRes.json()
+      const orgs = orgData?.data?.account?.organizations
+      if (Array.isArray(orgs) && orgs.length > 0) {
+        organizationId = orgs[0].id
+        const channels = orgs[0].channels || []
+        if (Array.isArray(channels) && channels.length > 0) {
+          // Seleziona il canale corrispondente o il primo disponibile (es. Facebook AI utiamoci)
+          const matched = formData.platform
+            ? channels.find((c: any) => formData.platform!.toLowerCase().includes(c.service?.toLowerCase() || ''))
+            : null
+          const selected = matched || channels[0]
+          targetChannelId = selected.id
+          channelName = `${selected.name} (${selected.service})`
+        }
+      }
+    } catch (fetchErr) {
+      console.warn('[Buffer fetch org/channel]:', fetchErr)
     }
 
     let successResponse: any = null
@@ -901,8 +932,53 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // Tentativo 1: Creazione diretta di Draft nel Canale Social (createDraft)
+    // Tentativo 1: Creazione diretta di Post / Draft nel Canale Social (createPost)
     if (targetChannelId) {
+      try {
+        const createPostMutation = {
+          query: `
+            mutation CreatePost($input: CreatePostInput!) {
+              createPost(input: $input) {
+                ... on PostResponse {
+                  __typename
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              channelId: targetChannelId,
+              content: {
+                text: formData.text,
+              },
+              schedulingType: 'draft', // Salva come bozza visibile nella scheda Drafts del canale
+            },
+          },
+        }
+
+        const postRes = await fetch('https://api.buffer.com', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(createPostMutation),
+        })
+
+        const parsedPost = await safeParseResponse(postRes)
+        if (parsedPost.ok && !parsedPost.data?.errors) {
+          successResponse = { id: 'post_created', type: 'post', target: channelName }
+        } else if (parsedPost.data?.errors && parsedPost.data.errors.length > 0) {
+          lastErrorMessage = parsedPost.data.errors[0].message
+        }
+      } catch (postErr: any) {
+        lastErrorMessage = postErr.message
+      }
+    }
+
+    // Tentativo 2: Creazione Draft (createDraft)
+    if (!successResponse && targetChannelId) {
       try {
         const draftMutation = {
           query: `
@@ -935,49 +1011,19 @@ export async function publishToBufferAction(formData: {
         })
 
         const parsedDraft = await safeParseResponse(draftRes)
-        if (parsedDraft.ok && parsedDraft.data?.data?.createDraft && !parsedDraft.data?.errors) {
-          successResponse = { id: 'draft_created', type: 'draft', text: formData.text }
+        if (parsedDraft.ok && !parsedDraft.data?.errors) {
+          successResponse = { id: 'draft_created', type: 'draft', target: channelName }
         } else if (parsedDraft.data?.errors && parsedDraft.data.errors.length > 0) {
-          console.warn('[Buffer createDraft error]:', parsedDraft.data.errors[0].message)
+          lastErrorMessage = parsedDraft.data.errors[0].message
         }
-      } catch (draftErr) {
-        console.warn('[Buffer createDraft]:', draftErr)
+      } catch (draftErr: any) {
+        lastErrorMessage = draftErr.message
       }
     }
 
-    // Tentativo 2: Nuova API Buffer GraphQL (createIdea)
-    if (!successResponse) {
+    // Tentativo 3: Creazione Idea (createIdea)
+    if (!successResponse && organizationId) {
       try {
-        let organizationId: string | undefined = undefined
-        try {
-          const orgQuery = {
-            query: `
-              query {
-                account {
-                  organizations {
-                    id
-                  }
-                }
-              }
-            `,
-          }
-          const orgRes = await fetch('https://api.buffer.com', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(orgQuery),
-          })
-          const orgData = await orgRes.json()
-          const orgs = orgData?.data?.account?.organizations
-          if (Array.isArray(orgs) && orgs.length > 0 && orgs[0].id) {
-            organizationId = orgs[0].id
-          }
-        } catch (orgErr) {
-          console.warn('[Buffer fetch orgId]:', orgErr)
-        }
-
         const ideaMutation = {
           query: `
             mutation CreateIdea($input: CreateIdeaInput!) {
@@ -990,7 +1036,7 @@ export async function publishToBufferAction(formData: {
           `,
           variables: {
             input: {
-              organizationId: organizationId || 'default',
+              organizationId: organizationId,
               content: {
                 text: formData.text,
               },
@@ -1009,14 +1055,13 @@ export async function publishToBufferAction(formData: {
         })
 
         const parsedGql = await safeParseResponse(gqlRes)
-        const ideaResult = parsedGql.data?.data?.createIdea
-        if (parsedGql.ok && ideaResult && !parsedGql.data?.errors) {
-          successResponse = ideaResult.id ? ideaResult : { id: 'created', text: formData.text }
+        if (parsedGql.ok && !parsedGql.data?.errors) {
+          successResponse = { id: 'idea_created', type: 'idea', target: 'Idee Buffer' }
         } else if (parsedGql.data?.errors && parsedGql.data.errors.length > 0) {
           lastErrorMessage = parsedGql.data.errors[0].message
         }
       } catch (ideaErr: any) {
-        console.warn('[Buffer GraphQL Idea]:', ideaErr)
+        lastErrorMessage = ideaErr.message
       }
     }
 
@@ -1110,10 +1155,11 @@ export async function publishToBufferAction(formData: {
         .eq('id', formData.postId)
     }
 
+    const destName = successResponse?.target || channelName || 'Buffer'
     return {
       success: true,
       simulated: false,
-      message: 'Post inviato e registrato con successo nel tuo account Buffer!',
+      message: `Post inviato con successo a Buffer su "${destName}"!`,
       data: successResponse,
     }
   } catch (err: any) {
