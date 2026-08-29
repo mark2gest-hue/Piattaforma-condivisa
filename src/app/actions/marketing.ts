@@ -887,9 +887,20 @@ export async function publishToBufferAction(formData: {
     let successResponse: any = null
     let lastErrorMessage = ''
 
-    // Tentativo 1: Nuova API Buffer GraphQL (createIdea / createPost)
+    // Helper per estrarre in sicurezza il JSON o il testo della risposta
+    const safeParseResponse = async (res: Response) => {
+      const rawText = await res.text()
+      if (!rawText || !rawText.trim()) return { ok: res.ok, data: null, rawText: '' }
+      try {
+        const json = JSON.parse(rawText)
+        return { ok: res.ok, data: json, rawText }
+      } catch {
+        return { ok: res.ok, data: null, rawText }
+      }
+    }
+
+    // Tentativo 1: Nuova API Buffer GraphQL (endpoint standard https://api.buffer.com)
     try {
-      // Se abbiamo un channelId reale, usiamo la mutation specifica o creiamo una bozza/idea
       const ideaMutation = {
         query: `
           mutation CreateIdea($input: CreateIdeaInput!) {
@@ -913,22 +924,22 @@ export async function publishToBufferAction(formData: {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(ideaMutation),
       })
 
-      const gqlJson = await gqlRes.json()
-
-      if (gqlRes.ok && gqlJson.data?.createIdea?.idea) {
-        successResponse = gqlJson.data.createIdea.idea
-      } else if (gqlJson.errors && gqlJson.errors.length > 0) {
-        lastErrorMessage = gqlJson.errors[0].message
+      const parsedGql = await safeParseResponse(gqlRes)
+      if (parsedGql.ok && parsedGql.data?.data?.createIdea?.idea) {
+        successResponse = parsedGql.data.data.createIdea.idea
+      } else if (parsedGql.data?.errors && parsedGql.data.errors.length > 0) {
+        lastErrorMessage = parsedGql.data.errors[0].message
       }
     } catch (ideaErr: any) {
       console.warn('[Buffer GraphQL Idea]:', ideaErr)
     }
 
-    // Tentativo 2: Buffer REST API con JSON body (Nuova API)
+    // Tentativo 2: Buffer REST API V1 Posts
     if (!successResponse) {
       try {
         const restJsonPayload = {
@@ -944,27 +955,29 @@ export async function publishToBufferAction(formData: {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify(restJsonPayload),
         })
 
-        const resData = await res.json()
-        if (res.ok && !resData.error && !resData.errors) {
-          successResponse = resData
-        } else {
-          lastErrorMessage = resData?.message || resData?.error || `HTTP ${res.status}`
+        const parsedRest = await safeParseResponse(res)
+        if (parsedRest.ok && parsedRest.data && !parsedRest.data.error && !parsedRest.data.errors) {
+          successResponse = parsedRest.data
+        } else if (parsedRest.data?.message || parsedRest.data?.error) {
+          lastErrorMessage = parsedRest.data?.message || parsedRest.data?.error
         }
       } catch (restJsonErr: any) {
         lastErrorMessage = restJsonErr.message
       }
     }
 
-    // Tentativo 3: Buffer Legacy REST API con urlencoded
+    // Tentativo 3: Buffer REST Updates Create (Endpoint Legacy compatibile con form-urlencoded)
     if (!successResponse) {
       try {
         const bodyParams = new URLSearchParams()
         bodyParams.append('text', formData.text)
         bodyParams.append('now', formData.now ? 'true' : 'false')
+        bodyParams.append('access_token', accessToken)
 
         if (formData.scheduledAt) {
           bodyParams.append('scheduled_at', formData.scheduledAt)
@@ -978,15 +991,18 @@ export async function publishToBufferAction(formData: {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
           },
           body: bodyParams.toString(),
         })
 
-        const legacyData = await legacyRes.json()
-        if (legacyRes.ok && !legacyData.error) {
-          successResponse = legacyData
-        } else {
-          if (!lastErrorMessage) lastErrorMessage = legacyData?.message || `HTTP ${legacyRes.status}`
+        const parsedLegacy = await safeParseResponse(legacyRes)
+        if (parsedLegacy.ok && parsedLegacy.data && !parsedLegacy.data.error) {
+          successResponse = parsedLegacy.data
+        } else if (parsedLegacy.data?.message) {
+          lastErrorMessage = parsedLegacy.data.message
+        } else if (!lastErrorMessage && parsedLegacy.rawText) {
+          lastErrorMessage = parsedLegacy.rawText.slice(0, 150)
         }
       } catch (legacyErr: any) {
         if (!lastErrorMessage) lastErrorMessage = legacyErr.message
