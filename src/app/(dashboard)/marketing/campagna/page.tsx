@@ -332,11 +332,11 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
   }
 
   const stepsList = [
-    { num: 1, title: 'Brief & Diagnosi', icon: Target },
-    { num: 2, title: 'Offerta & Angoli', icon: Flame },
-    { num: 3, title: 'Funnel Map', icon: Layers },
-    { num: 4, title: 'Calendario Social', icon: Calendar },
-    { num: 5, title: 'Lancio & n8n', icon: Rocket },
+    { num: 1, title: '1. Brief & Diagnosi', icon: Target },
+    { num: 2, title: '2. Offerta & Angoli', icon: Flame },
+    { num: 3, title: '3. Landing Page (aiutiamoci.cloud)', icon: Layers },
+    { num: 4, title: '4. 🚀 Calendario Social & Buffer', icon: Calendar },
+    { num: 5, title: '5. Lancio & Checklist', icon: Rocket },
   ]
 
   return (
@@ -782,15 +782,22 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
           </div>
 
           {/* Navigation Step */}
-          <div className="flex justify-between pt-4">
+          <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4">
             <Button variant="outline" onClick={() => setCurrentStep(1)} className="border-slate-700 text-xs">
               <ArrowLeft className="h-3.5 w-3.5 mr-1" />
               Modifica Brief
             </Button>
-            <Button onClick={() => setCurrentStep(3)} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold">
-              Esamina Funnel Blueprint
-              <ArrowRight className="h-3.5 w-3.5 ml-1" />
-            </Button>
+            
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => setCurrentStep(3)} className="border-slate-700 hover:bg-slate-800 text-slate-300 text-xs">
+                Vedi Struttura Landing Page
+                <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              </Button>
+              <Button onClick={() => setCurrentStep(4)} className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-md shadow-purple-600/20">
+                🚀 Vai Subito al Calendario Social
+                <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -800,14 +807,38 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
       {/* ========================================================= */}
       {currentStep === 3 && plan && (
         <div className="space-y-6">
+          {/* Banner Informativo per il Collaboratore */}
+          <div className="p-4 bg-blue-950/40 border border-blue-800/60 rounded-2xl flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">
+                ℹ️
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-blue-200">Guida di Riferimento per la Landing Page (aiutiamoci.cloud)</h4>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Questa sezione è <strong>consultiva</strong>: mostra come è strutturata l'offerta sulla pagina di vendita del corso. Non è richiesta alcuna azione tecnica qui se la landing page è già online. Puoi usare le regole CRO qui sotto per verificare o ottimizzare i testi del sito.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              size="sm"
+              onClick={() => setCurrentStep(4)}
+              className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shrink-0 shadow-sm shadow-purple-500/20"
+            >
+              🚀 Vai ai Post Social
+              <ArrowRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </div>
+
           <Card className="p-6 bg-slate-900/60 border-slate-800 rounded-2xl space-y-6">
             <div className="space-y-1">
               <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
                 <Layers className="h-5 w-5 text-purple-400" />
-                Architettura del Funnel di Vendita
+                Architettura della Pagina & Flusso di Vendita
               </h2>
               <p className="text-xs text-slate-400">
-                Mappa passo-passo per guidare il traffico freddo fino alla conversione e all'upsell.
+                Mappa passo-passo per guidare il traffico dai social alla landing page fino all'iscrizione.
               </p>
             </div>
 
