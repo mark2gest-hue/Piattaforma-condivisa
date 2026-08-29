@@ -243,6 +243,14 @@ function CampaignWizardContent() {
     setPlan({ ...plan, editorialPosts: updatedPosts })
   }
 
+  // Modifica campi dell'angolo (Hook, Body, CTA)
+  const handleUpdateAngleField = (index: number, field: 'hook' | 'bodyCopy' | 'callToAction' | 'title', value: string) => {
+    if (!plan) return
+    const updatedAngles = [...plan.angles]
+    updatedAngles[index] = { ...updatedAngles[index], [field]: value }
+    setPlan({ ...plan, angles: updatedAngles })
+  }
+
   // Esporta Piano in Markdown
   const handleExportMarkdown = () => {
     if (!plan) return
@@ -712,26 +720,55 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                       </Badge>
                     </div>
 
-                    <h4 className="font-bold text-sm text-slate-100">{angle.title}</h4>
+                    <input
+                      type="text"
+                      value={angle.title}
+                      onChange={(e) => handleUpdateAngleField(idx, 'title', e.target.value)}
+                      className="font-bold text-sm text-slate-100 bg-transparent border-b border-transparent hover:border-slate-700 focus:border-blue-500 focus:outline-none w-full py-0.5"
+                    />
 
-                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
-                      <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider block mb-1">
+                    {/* Gancio Modificabile */}
+                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
+                      <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider block">
                         Gancio (Primi 3 Secondi / Hook):
                       </span>
-                      <p className="text-xs text-slate-200 italic font-medium">"{angle.hook}"</p>
+                      <textarea
+                        rows={2}
+                        value={angle.hook}
+                        onChange={(e) => handleUpdateAngleField(idx, 'hook', e.target.value)}
+                        className="text-xs text-slate-200 italic font-medium bg-transparent border-none resize-none focus:outline-none w-full leading-relaxed"
+                        placeholder="Inserisci il gancio iniziale..."
+                      />
                     </div>
 
-                    <div className="text-xs text-slate-300 leading-relaxed max-h-40 overflow-y-auto pr-1">
-                      {angle.bodyCopy}
+                    {/* Corpo Copy Modificabile */}
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                        Script / Corpo del Messaggio:
+                      </span>
+                      <textarea
+                        rows={5}
+                        value={angle.bodyCopy}
+                        onChange={(e) => handleUpdateAngleField(idx, 'bodyCopy', e.target.value)}
+                        className="text-xs text-slate-300 leading-relaxed bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80 resize-none focus:border-blue-500 focus:outline-none w-full font-sans"
+                        placeholder="Inserisci lo script..."
+                      />
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[11px] text-blue-400 font-semibold truncate max-w-[140px]" title={angle.callToAction}>
-                      👉 {angle.callToAction}
-                    </span>
+                  <div className="pt-3 border-t border-slate-800/80 space-y-2">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-blue-400 shrink-0">👉</span>
+                      <input
+                        type="text"
+                        value={angle.callToAction}
+                        onChange={(e) => handleUpdateAngleField(idx, 'callToAction', e.target.value)}
+                        placeholder="Call To Action..."
+                        className="text-[11px] text-blue-300 font-semibold bg-transparent border-b border-transparent hover:border-slate-700 focus:border-blue-500 focus:outline-none w-full py-0.5"
+                      />
+                    </div>
                     
-                    <div className="flex items-center gap-1.5 ml-auto">
+                    <div className="flex flex-wrap items-center justify-end gap-1.5 pt-1">
                       <Button
                         size="sm"
                         variant="ghost"
