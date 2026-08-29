@@ -217,11 +217,11 @@ export default function LandingPage() {
 
             <Link
               href="/login"
-              className="text-slate-400 hover:text-slate-200 px-1 sm:px-2 py-1.5 sm:py-2 transition-colors hidden sm:flex items-center gap-1"
+              className="text-slate-400 hover:text-slate-200 p-1.5 sm:px-2 sm:py-2 transition-colors flex items-center gap-1 border border-slate-800/60 sm:border-transparent rounded-lg bg-slate-900/40 sm:bg-transparent"
               title="Accesso riservato al team di gestione"
             >
-              <Lock className="h-3.5 w-3.5" />
-              <span className="text-[11px]">Team</span>
+              <Lock className="h-3.5 w-3.5 text-slate-400" />
+              <span className="text-[11px] hidden sm:inline">Team</span>
             </Link>
           </div>
         </div>
