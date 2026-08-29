@@ -899,78 +899,121 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // Tentativo 1: Nuova API Buffer GraphQL (endpoint standard https://api.buffer.com)
+    // Tentativo 1: Creazione diretta di Post / Draft nella Coda del Canale Social (createDraft / createPost)
     try {
-      // 1.1 Recupera l'organizationId dall'account
-      let organizationId: string | undefined = undefined
-      try {
-        const orgQuery = {
+      if (targetChannelId && !targetChannelId.startsWith('ig-') && !targetChannelId.startsWith('li-') && !targetChannelId.startsWith('fb-')) {
+        const draftMutation = {
           query: `
-            query {
-              account {
-                organizations {
-                  id
+            mutation CreateDraft($input: CreateDraftInput!) {
+              createDraft(input: $input) {
+                ... on DraftResponse {
+                  __typename
                 }
               }
             }
           `,
+          variables: {
+            input: {
+              channelId: targetChannelId,
+              content: {
+                text: formData.text,
+              },
+            },
+          },
         }
-        const orgRes = await fetch('https://api.buffer.com', {
+
+        const draftRes = await fetch('https://api.buffer.com', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
-          body: JSON.stringify(orgQuery),
+          body: JSON.stringify(draftMutation),
         })
-        const orgData = await orgRes.json()
-        const orgs = orgData?.data?.account?.organizations
-        if (Array.isArray(orgs) && orgs.length > 0 && orgs[0].id) {
-          organizationId = orgs[0].id
-        }
-      } catch (orgErr) {
-        console.warn('[Buffer fetch orgId]:', orgErr)
-      }
 
-      const ideaMutation = {
-        query: `
-          mutation CreateIdea($input: CreateIdeaInput!) {
-            createIdea(input: $input) {
-              ... on IdeaResponse {
-                __typename
+        const parsedDraft = await safeParseResponse(draftRes)
+        if (parsedDraft.ok && parsedDraft.data?.data?.createDraft && !parsedDraft.data?.errors) {
+          successResponse = { id: 'draft_created', type: 'draft', text: formData.text }
+        }
+      }
+    } catch (draftErr) {
+      console.warn('[Buffer createDraft]:', draftErr)
+    }
+
+    // Tentativo 2: Nuova API Buffer GraphQL (createIdea)
+    if (!successResponse) {
+      try {
+        let organizationId: string | undefined = undefined
+        try {
+          const orgQuery = {
+            query: `
+              query {
+                account {
+                  organizations {
+                    id
+                  }
+                }
+              }
+            `,
+          }
+          const orgRes = await fetch('https://api.buffer.com', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orgQuery),
+          })
+          const orgData = await orgRes.json()
+          const orgs = orgData?.data?.account?.organizations
+          if (Array.isArray(orgs) && orgs.length > 0 && orgs[0].id) {
+            organizationId = orgs[0].id
+          }
+        } catch (orgErr) {
+          console.warn('[Buffer fetch orgId]:', orgErr)
+        }
+
+        const ideaMutation = {
+          query: `
+            mutation CreateIdea($input: CreateIdeaInput!) {
+              createIdea(input: $input) {
+                ... on IdeaResponse {
+                  __typename
+                }
               }
             }
-          }
-        `,
-        variables: {
-          input: {
-            organizationId: organizationId || 'default',
-            content: {
-              text: formData.text,
+          `,
+          variables: {
+            input: {
+              organizationId: organizationId || 'default',
+              content: {
+                text: formData.text,
+              },
             },
           },
-        },
-      }
+        }
 
-      const gqlRes = await fetch('https://api.buffer.com', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(ideaMutation),
-      })
+        const gqlRes = await fetch('https://api.buffer.com', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(ideaMutation),
+        })
 
-      const parsedGql = await safeParseResponse(gqlRes)
-      const ideaResult = parsedGql.data?.data?.createIdea
-      if (parsedGql.ok && ideaResult && !parsedGql.data?.errors) {
-        successResponse = ideaResult.id ? ideaResult : { id: 'created', text: formData.text }
-      } else if (parsedGql.data?.errors && parsedGql.data.errors.length > 0) {
-        lastErrorMessage = parsedGql.data.errors[0].message
+        const parsedGql = await safeParseResponse(gqlRes)
+        const ideaResult = parsedGql.data?.data?.createIdea
+        if (parsedGql.ok && ideaResult && !parsedGql.data?.errors) {
+          successResponse = ideaResult.id ? ideaResult : { id: 'created', text: formData.text }
+        } else if (parsedGql.data?.errors && parsedGql.data.errors.length > 0) {
+          lastErrorMessage = parsedGql.data.errors[0].message
+        }
+      } catch (ideaErr: any) {
+        console.warn('[Buffer GraphQL Idea]:', ideaErr)
       }
-    } catch (ideaErr: any) {
-      console.warn('[Buffer GraphQL Idea]:', ideaErr)
     }
 
     // Tentativo 2: Buffer REST API V1 Posts
