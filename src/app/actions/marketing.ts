@@ -852,62 +852,56 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // 1. Recupera Channels e OrganizationId reali tramite GraphQL root query
-    let targetChannelId: string | undefined = undefined
+    // 1. Recupera OrganizationId e info canale tramite BUFFER_CHANNEL_ID (env var)
+    let targetChannelId: string | undefined = process.env.BUFFER_CHANNEL_ID?.trim()
     let channelName: string = 'Buffer'
     let organizationId: string | undefined = undefined
     let orgQueryError: string = ''
 
-    try {
-      const channelsQuery = {
-        query: `
-          query GetChannelsList {
-            channels(input: {}) {
-              id
-              name
-              service
-              organizationId
-            }
-          }
-        `,
-      }
-
-      const chanRes = await fetch('https://api.buffer.com', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(channelsQuery),
-      })
-
-      const rawText = await chanRes.text()
-      let chanData: any = null
+    if (targetChannelId) {
+      // Ottieni organizationId dal channel ID noto
       try {
-        chanData = JSON.parse(rawText)
-      } catch {
-        orgQueryError = `HTTP ${chanRes.status}: ${rawText.slice(0, 100)}`
-      }
+        const channelQuery = {
+          query: `
+            query GetChannel($id: String!) {
+              channel(id: $id) {
+                id
+                name
+                service
+                organizationId
+              }
+            }
+          `,
+          variables: { id: targetChannelId },
+        }
 
-      if (chanData?.errors && chanData.errors.length > 0) {
-        orgQueryError = chanData.errors[0].message
-      }
+        const chanRes = await fetch('https://api.buffer.com', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(channelQuery),
+        })
 
-      const channels = chanData?.data?.channels
-      if (Array.isArray(channels) && channels.length > 0) {
-        // Estrai l'organizationId dal primo canale disponibile
-        organizationId = channels[0].organizationId
-        
-        const matched = formData.platform
-          ? channels.find((c: any) => formData.platform!.toLowerCase().includes(c.service?.toLowerCase() || ''))
-          : null
-        const selected = matched || channels[0]
-        targetChannelId = selected.id
-        channelName = `${selected.name} (${selected.service})`
+        const rawText = await chanRes.text()
+        let chanData: any = null
+        try { chanData = JSON.parse(rawText) } catch { /* ignore */ }
+
+        const ch = chanData?.data?.channel
+        if (ch?.organizationId) {
+          organizationId = ch.organizationId
+          channelName = `${ch.name} (${ch.service})`
+        } else if (chanData?.errors?.length) {
+          orgQueryError = chanData.errors[0].message
+        }
+      } catch (fetchErr: any) {
+        orgQueryError = fetchErr.message
       }
-    } catch (fetchErr: any) {
-      orgQueryError = fetchErr.message
+    } else {
+      // Fallback: tenta channels(input: { organizationId }) solo se disponibile
+      orgQueryError = 'BUFFER_CHANNEL_ID non configurato nelle variabili d\'ambiente'
     }
 
     let successResponse: any = null
