@@ -852,56 +852,15 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // 1. Recupera OrganizationId e info canale tramite BUFFER_CHANNEL_ID (env var)
-    let targetChannelId: string | undefined = process.env.BUFFER_CHANNEL_ID?.trim()
-    let channelName: string = 'Buffer'
-    let organizationId: string | undefined = undefined
-    let orgQueryError: string = ''
+    // 1. Canale target configurato tramite BUFFER_CHANNEL_ID (env var)
+    const targetChannelId = process.env.BUFFER_CHANNEL_ID?.trim()
+    const channelName = 'Facebook (AI utiamoci)'
 
-    if (targetChannelId) {
-      // Ottieni organizationId dal channel ID noto
-      try {
-        const channelQuery = {
-          query: `
-            query GetChannel($id: String!) {
-              channel(id: $id) {
-                id
-                name
-                service
-                organizationId
-              }
-            }
-          `,
-          variables: { id: targetChannelId },
-        }
-
-        const chanRes = await fetch('https://api.buffer.com', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(channelQuery),
-        })
-
-        const rawText = await chanRes.text()
-        let chanData: any = null
-        try { chanData = JSON.parse(rawText) } catch { /* ignore */ }
-
-        const ch = chanData?.data?.channel
-        if (ch?.organizationId) {
-          organizationId = ch.organizationId
-          channelName = `${ch.name} (${ch.service})`
-        } else if (chanData?.errors?.length) {
-          orgQueryError = chanData.errors[0].message
-        }
-      } catch (fetchErr: any) {
-        orgQueryError = fetchErr.message
+    if (!targetChannelId) {
+      return {
+        success: false,
+        error: 'BUFFER_CHANNEL_ID non configurato nelle variabili d\'ambiente di Vercel.',
       }
-    } else {
-      // Fallback: tenta channels(input: { organizationId }) solo se disponibile
-      orgQueryError = 'BUFFER_CHANNEL_ID non configurato nelle variabili d\'ambiente'
     }
 
     let successResponse: any = null
@@ -919,21 +878,13 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // Se non ha trovato l'organizationId, restituisce l'errore di diagnostica iniziale
-    if (!organizationId) {
-      return {
-        success: false,
-        error: `Buffer API (Account Org): ${orgQueryError || 'Nessuna organizzazione trovata associata a questo Token'}.`,
-      }
-    }
-
-    // Tentativo: Creazione Idea su Buffer (createIdea)
+    // Tentativo 1: Creazione Bozza direttamente nel Canale Facebook (createDraft)
     try {
-      const ideaMutation = {
+      const draftMutation = {
         query: `
-          mutation CreateIdea($input: CreateIdeaInput!) {
-            createIdea(input: $input) {
-              ... on IdeaResponse {
+          mutation CreateDraft($input: CreateDraftInput!) {
+            createDraft(input: $input) {
+              ... on DraftResponse {
                 __typename
               }
             }
@@ -941,7 +892,7 @@ export async function publishToBufferAction(formData: {
         `,
         variables: {
           input: {
-            organizationId: organizationId,
+            channelId: targetChannelId,
             content: {
               text: formData.text,
             },
@@ -949,26 +900,69 @@ export async function publishToBufferAction(formData: {
         },
       }
 
-      const gqlRes = await fetch('https://api.buffer.com', {
+      const draftRes = await fetch('https://api.buffer.com', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(ideaMutation),
+        body: JSON.stringify(draftMutation),
       })
 
-      const parsedGql = await safeParseResponse(gqlRes)
-      if (parsedGql.ok && !parsedGql.data?.errors) {
-        successResponse = { id: 'idea_created', type: 'idea', target: `Idee Buffer (${channelName})` }
-      } else if (parsedGql.data?.errors && parsedGql.data.errors.length > 0) {
-        lastErrorMessage = parsedGql.data.errors[0].message
-      } else if (!parsedGql.ok) {
-        lastErrorMessage = `HTTP ${gqlRes.status}: ${parsedGql.rawText.slice(0, 100)}`
+      const parsedDraft = await safeParseResponse(draftRes)
+      if (parsedDraft.ok && !parsedDraft.data?.errors) {
+        successResponse = { id: 'draft_created', type: 'draft', target: channelName }
+      } else if (parsedDraft.data?.errors && parsedDraft.data.errors.length > 0) {
+        lastErrorMessage = parsedDraft.data.errors[0].message
       }
-    } catch (ideaErr: any) {
-      lastErrorMessage = ideaErr.message
+    } catch (draftErr: any) {
+      lastErrorMessage = draftErr.message
+    }
+
+    // Tentativo 2: Creazione Post programmato/immediato nel Canale (createPost)
+    if (!successResponse) {
+      try {
+        const postMutation = {
+          query: `
+            mutation CreatePost($input: CreatePostInput!) {
+              createPost(input: $input) {
+                ... on PostResponse {
+                  __typename
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              channelId: targetChannelId,
+              content: {
+                text: formData.text,
+              },
+              schedulingType: 'draft',
+            },
+          },
+        }
+
+        const postRes = await fetch('https://api.buffer.com', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(postMutation),
+        })
+
+        const parsedPost = await safeParseResponse(postRes)
+        if (parsedPost.ok && !parsedPost.data?.errors) {
+          successResponse = { id: 'post_created', type: 'post', target: channelName }
+        } else if (parsedPost.data?.errors && parsedPost.data.errors.length > 0) {
+          lastErrorMessage = parsedPost.data.errors[0].message
+        }
+      } catch (postErr: any) {
+        lastErrorMessage = postErr.message
+      }
     }
 
     if (!successResponse) {
