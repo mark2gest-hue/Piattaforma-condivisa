@@ -932,97 +932,8 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // Tentativo 1: Creazione diretta di Post / Draft nel Canale Social (createPost)
-    if (targetChannelId) {
-      try {
-        const createPostMutation = {
-          query: `
-            mutation CreatePost($input: CreatePostInput!) {
-              createPost(input: $input) {
-                ... on PostResponse {
-                  __typename
-                }
-              }
-            }
-          `,
-          variables: {
-            input: {
-              channelId: targetChannelId,
-              content: {
-                text: formData.text,
-              },
-              schedulingType: 'draft', // Salva come bozza visibile nella scheda Drafts del canale
-            },
-          },
-        }
-
-        const postRes = await fetch('https://api.buffer.com', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(createPostMutation),
-        })
-
-        const parsedPost = await safeParseResponse(postRes)
-        if (parsedPost.ok && !parsedPost.data?.errors) {
-          successResponse = { id: 'post_created', type: 'post', target: channelName }
-        } else if (parsedPost.data?.errors && parsedPost.data.errors.length > 0) {
-          lastErrorMessage = parsedPost.data.errors[0].message
-        }
-      } catch (postErr: any) {
-        lastErrorMessage = postErr.message
-      }
-    }
-
-    // Tentativo 2: Creazione Draft (createDraft)
-    if (!successResponse && targetChannelId) {
-      try {
-        const draftMutation = {
-          query: `
-            mutation CreateDraft($input: CreateDraftInput!) {
-              createDraft(input: $input) {
-                ... on DraftResponse {
-                  __typename
-                }
-              }
-            }
-          `,
-          variables: {
-            input: {
-              channelId: targetChannelId,
-              content: {
-                text: formData.text,
-              },
-            },
-          },
-        }
-
-        const draftRes = await fetch('https://api.buffer.com', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(draftMutation),
-        })
-
-        const parsedDraft = await safeParseResponse(draftRes)
-        if (parsedDraft.ok && !parsedDraft.data?.errors) {
-          successResponse = { id: 'draft_created', type: 'draft', target: channelName }
-        } else if (parsedDraft.data?.errors && parsedDraft.data.errors.length > 0) {
-          lastErrorMessage = parsedDraft.data.errors[0].message
-        }
-      } catch (draftErr: any) {
-        lastErrorMessage = draftErr.message
-      }
-    }
-
-    // Tentativo 3: Creazione Idea (createIdea)
-    if (!successResponse && organizationId) {
+    // Tentativo 1: Creazione Idea su Buffer (createIdea - compatibile al 100% con Public API Token)
+    if (organizationId) {
       try {
         const ideaMutation = {
           query: `
@@ -1056,7 +967,7 @@ export async function publishToBufferAction(formData: {
 
         const parsedGql = await safeParseResponse(gqlRes)
         if (parsedGql.ok && !parsedGql.data?.errors) {
-          successResponse = { id: 'idea_created', type: 'idea', target: 'Idee Buffer' }
+          successResponse = { id: 'idea_created', type: 'idea', target: `Idee Buffer (${channelName})` }
         } else if (parsedGql.data?.errors && parsedGql.data.errors.length > 0) {
           lastErrorMessage = parsedGql.data.errors[0].message
         }
@@ -1065,80 +976,10 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // Tentativo 2: Buffer REST API V1 Posts
-    if (!successResponse) {
-      try {
-        const restJsonPayload = {
-          text: formData.text,
-          now: formData.now || false,
-          scheduled_at: formData.scheduledAt || undefined,
-          channel_id: targetChannelId,
-          profile_ids: targetChannelId ? [targetChannelId] : undefined,
-        }
-
-        const res = await fetch('https://api.buffer.com/v1/posts', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(restJsonPayload),
-        })
-
-        const parsedRest = await safeParseResponse(res)
-        if (parsedRest.ok && parsedRest.data && !parsedRest.data.error && !parsedRest.data.errors) {
-          successResponse = parsedRest.data
-        } else if (parsedRest.data?.message || parsedRest.data?.error) {
-          lastErrorMessage = parsedRest.data?.message || parsedRest.data?.error
-        }
-      } catch (restJsonErr: any) {
-        lastErrorMessage = restJsonErr.message
-      }
-    }
-
-    // Tentativo 3: Buffer REST Updates Create (Endpoint Legacy compatibile con form-urlencoded)
-    if (!successResponse) {
-      try {
-        const bodyParams = new URLSearchParams()
-        bodyParams.append('text', formData.text)
-        bodyParams.append('now', formData.now ? 'true' : 'false')
-        bodyParams.append('access_token', accessToken)
-
-        if (formData.scheduledAt) {
-          bodyParams.append('scheduled_at', formData.scheduledAt)
-        }
-        if (targetChannelId) {
-          bodyParams.append('profile_ids[]', targetChannelId)
-        }
-
-        const legacyRes = await fetch('https://api.bufferapp.com/1/updates/create.json', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-          },
-          body: bodyParams.toString(),
-        })
-
-        const parsedLegacy = await safeParseResponse(legacyRes)
-        if (parsedLegacy.ok && parsedLegacy.data && !parsedLegacy.data.error) {
-          successResponse = parsedLegacy.data
-        } else if (parsedLegacy.data?.message) {
-          lastErrorMessage = parsedLegacy.data.message
-        } else if (!lastErrorMessage && parsedLegacy.rawText) {
-          lastErrorMessage = parsedLegacy.rawText.slice(0, 150)
-        }
-      } catch (legacyErr: any) {
-        if (!lastErrorMessage) lastErrorMessage = legacyErr.message
-      }
-    }
-
     if (!successResponse) {
       return {
         success: false,
-        error: `Buffer API: ${lastErrorMessage || 'Errore nella creazione del post'}.`,
+        error: `Buffer GraphQL API: ${lastErrorMessage || 'Impossibile completare la richiesta su Buffer'}.`,
       }
     }
 
