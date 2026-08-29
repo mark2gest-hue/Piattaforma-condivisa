@@ -905,7 +905,7 @@ export async function publishToBufferAction(formData: {
         query: `
           mutation CreateIdea($input: CreateIdeaInput!) {
             createIdea(input: $input) {
-              idea {
+              ... on IdeaResponse {
                 id
                 text
               }
@@ -930,8 +930,9 @@ export async function publishToBufferAction(formData: {
       })
 
       const parsedGql = await safeParseResponse(gqlRes)
-      if (parsedGql.ok && parsedGql.data?.data?.createIdea?.idea) {
-        successResponse = parsedGql.data.data.createIdea.idea
+      const ideaResult = parsedGql.data?.data?.createIdea
+      if (parsedGql.ok && ideaResult && !parsedGql.data?.errors) {
+        successResponse = ideaResult.id ? ideaResult : { id: 'created', text: formData.text }
       } else if (parsedGql.data?.errors && parsedGql.data.errors.length > 0) {
         lastErrorMessage = parsedGql.data.errors[0].message
       }
