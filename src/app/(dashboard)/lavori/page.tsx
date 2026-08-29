@@ -500,13 +500,13 @@ export default function KanbanBoardPage() {
   return (
     <div className="space-y-6 flex flex-col min-h-[calc(100vh-8rem)]">
       {/* Header with Switcher */}
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
               {mainView === 'kanban' ? 'Bacheca Lavori & Compiti' : 'Gestione Ambiti & Progetti'}
             </h1>
-            <Badge variant="purple" className="text-[10px] font-mono">
+            <Badge variant="purple" className="text-[10px] font-mono shrink-0">
               Realtime Supabase
             </Badge>
           </div>
@@ -517,61 +517,63 @@ export default function KanbanBoardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Main View Tabs */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0">
             <button
               onClick={() => setMainView('kanban')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                 mainView === 'kanban'
                   ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              <span>Kanban Compiti</span>
+              <span>Kanban</span>
             </button>
 
             <button
               onClick={() => setMainView('projects')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                 mainView === 'projects'
                   ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
-              <span>Ambiti & Progetti ({projects.length})</span>
+              <span>Ambiti ({projects.length})</span>
             </button>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchData(true)}
-            className="h-9 text-xs px-3 rounded-xl border-slate-200 dark:border-slate-700 gap-1.5"
-            title="Ricarica dal Database"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-          </Button>
+          <div className="flex items-center gap-2 ml-auto sm:ml-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchData(true)}
+              className="h-9 w-9 p-0 text-xs rounded-xl border-slate-200 dark:border-slate-700 shrink-0"
+              title="Ricarica dal Database"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </Button>
 
-          {mainView === 'kanban' ? (
-            <Button
-              onClick={() => handleOpenCreateTaskModal('todo')}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold flex items-center gap-2 shadow-xs text-xs h-9 px-4 rounded-xl"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Nuovo Compito</span>
-            </Button>
-          ) : (
-            <Button
-              onClick={handleOpenCreateProjectModal}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold flex items-center gap-2 shadow-xs text-xs h-9 px-4 rounded-xl"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Nuovo Progetto/Ambito</span>
-            </Button>
-          )}
+            {mainView === 'kanban' ? (
+              <Button
+                onClick={() => handleOpenCreateTaskModal('todo')}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold flex items-center gap-1.5 shadow-xs text-xs h-9 px-3 sm:px-4 rounded-xl shrink-0"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Nuovo Compito</span>
+              </Button>
+            ) : (
+              <Button
+                onClick={handleOpenCreateProjectModal}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold flex items-center gap-1.5 shadow-xs text-xs h-9 px-3 sm:px-4 rounded-xl shrink-0"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Nuovo Ambito</span>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -579,21 +581,21 @@ export default function KanbanBoardPage() {
       {mainView === 'kanban' && (
         <div className="space-y-6 flex flex-col flex-1">
           {/* Quick Filter Bar by Project */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 flex-shrink-0 mr-1">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 shrink-0 mr-1">
               <Filter className="h-3.5 w-3.5" />
-              Filtra per Ambito:
+              Filtro:
             </span>
 
             <button
               onClick={() => setSelectedProjectFilter('all')}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all flex-shrink-0 ${
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${
                 selectedProjectFilter === 'all'
                   ? 'bg-indigo-600 text-white shadow-xs'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
               }`}
             >
-              Tutti i Progetti ({tasks.length})
+              Tutti ({tasks.length})
             </button>
 
             {projects.map((p) => {
