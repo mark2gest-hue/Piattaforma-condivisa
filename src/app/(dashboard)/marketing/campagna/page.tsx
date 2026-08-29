@@ -726,16 +726,55 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
-                    <span className="text-[11px] text-blue-400 font-semibold truncate">👉 {angle.callToAction}</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleCopy(`${angle.hook}\n\n${angle.bodyCopy}\n\n${angle.callToAction}`, angle.id)}
-                      className="h-7 px-2 text-xs text-slate-400 hover:text-white"
-                    >
-                      {copiedId === angle.id ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                    </Button>
+                  <div className="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[11px] text-blue-400 font-semibold truncate max-w-[140px]" title={angle.callToAction}>
+                      👉 {angle.callToAction}
+                    </span>
+                    
+                    <div className="flex items-center gap-1.5 ml-auto">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleCopy(`${angle.hook}\n\n${angle.bodyCopy}\n\n${angle.callToAction}`, angle.id)}
+                        className="h-7 px-2 text-xs text-slate-400 hover:text-white"
+                        title="Copia Script Completo"
+                      >
+                        {copiedId === angle.id ? <Check className="h-3.5 w-3.5 text-emerald-400 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+                        Copia
+                      </Button>
+
+                      {/* Tool Video / Script Ad su CapCut */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          handleCopy(`HOOK (3 sec):\n${angle.hook}\n\nCORPO:\n${angle.bodyCopy}\n\nCALL TO ACTION:\n${angle.callToAction}`, angle.id)
+                          window.open('https://www.capcut.com/tools/script-to-video', '_blank')
+                        }}
+                        title="Copia script e crea Video Ad su CapCut AI"
+                        className="h-7 px-2 text-[11px] border-slate-700 bg-slate-950/60 text-slate-300 hover:text-white hover:border-pink-500/60 transition-colors"
+                      >
+                        <Video className="h-3 w-3 mr-1 text-pink-400" />
+                        CapCut Ad
+                        <ExternalLink className="h-2.5 w-2.5 ml-1 text-slate-500" />
+                      </Button>
+
+                      {/* Tool Visual Ad su Canva */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          handleCopy(`${angle.hook}\n\n${angle.bodyCopy}`, angle.id)
+                          window.open('https://www.canva.com', '_blank')
+                        }}
+                        title="Copia copy e apri Canva per creare il visual"
+                        className="h-7 px-2 text-[11px] border-slate-700 bg-slate-950/60 text-slate-300 hover:text-white hover:border-blue-500/60 transition-colors"
+                      >
+                        <Layout className="h-3 w-3 mr-1 text-blue-400" />
+                        Canva
+                        <ExternalLink className="h-2.5 w-2.5 ml-1 text-slate-500" />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -779,18 +818,34 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                   key={step.stepNumber || idx}
                   className="p-5 bg-slate-950/70 border border-slate-800 rounded-xl relative overflow-hidden flex flex-col md:flex-row md:items-start justify-between gap-4"
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-4 flex-1">
                     <div className="w-9 h-9 rounded-xl bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center justify-center font-bold font-mono text-sm shrink-0">
                       0{step.stepNumber}
                     </div>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Badge className="bg-purple-500/15 text-purple-300 border-purple-500/20 text-[10px]">
                           {step.phase}
                         </Badge>
                         <h4 className="font-bold text-sm text-slate-100">{step.assetName}</h4>
                       </div>
                       <p className="text-xs text-slate-300">{step.goal}</p>
+
+                      <div className="pt-2 flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleCopy(`FASE: ${step.phase}\nASSET: ${step.assetName}\nOBIETTIVO: ${step.goal}\n\nCHECKLIST CRO:\n${step.croChecklist.map(c => `- ${c}`).join('\n')}`, `funnel-${idx}`)}
+                          className="h-7 px-2 text-xs text-slate-400 hover:text-white"
+                        >
+                          {copiedId === `funnel-${idx}` ? (
+                            <Check className="h-3.5 w-3.5 text-emerald-400 mr-1" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5 mr-1" />
+                          )}
+                          Copia Specifiche Pagina
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
