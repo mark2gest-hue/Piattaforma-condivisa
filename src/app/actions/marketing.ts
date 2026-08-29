@@ -869,12 +869,14 @@ export async function publishToBufferAction(formData: {
     let targetChannelId: string | undefined = undefined
     let channelName: string = 'Buffer'
     let organizationId: string | undefined = undefined
+    let orgQueryError: string = ''
 
     try {
       const orgQuery = {
         query: `
-          query {
+          query GetOrgAndChannels {
             account {
+              id
               organizations {
                 id
                 name
@@ -894,17 +896,28 @@ export async function publishToBufferAction(formData: {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(orgQuery),
       })
 
-      const orgData = await orgRes.json()
+      const rawText = await orgRes.text()
+      let orgData: any = null
+      try {
+        orgData = JSON.parse(rawText)
+      } catch {
+        orgQueryError = `HTTP ${orgRes.status}: ${rawText.slice(0, 100)}`
+      }
+
+      if (orgData?.errors && orgData.errors.length > 0) {
+        orgQueryError = orgData.errors[0].message
+      }
+
       const orgs = orgData?.data?.account?.organizations
       if (Array.isArray(orgs) && orgs.length > 0) {
         organizationId = orgs[0].id
         const channels = orgs[0].channels || []
         if (Array.isArray(channels) && channels.length > 0) {
-          // Seleziona il canale corrispondente o il primo disponibile (es. Facebook AI utiamoci)
           const matched = formData.platform
             ? channels.find((c: any) => formData.platform!.toLowerCase().includes(c.service?.toLowerCase() || ''))
             : null
@@ -913,8 +926,8 @@ export async function publishToBufferAction(formData: {
           channelName = `${selected.name} (${selected.service})`
         }
       }
-    } catch (fetchErr) {
-      console.warn('[Buffer fetch org/channel]:', fetchErr)
+    } catch (fetchErr: any) {
+      orgQueryError = fetchErr.message
     }
 
     let successResponse: any = null
@@ -932,54 +945,62 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // Tentativo 1: Creazione Idea su Buffer (createIdea - compatibile al 100% con Public API Token)
-    if (organizationId) {
-      try {
-        const ideaMutation = {
-          query: `
-            mutation CreateIdea($input: CreateIdeaInput!) {
-              createIdea(input: $input) {
-                ... on IdeaResponse {
-                  __typename
-                }
+    // Se non ha trovato l'organizationId, restituisce l'errore di diagnostica iniziale
+    if (!organizationId) {
+      return {
+        success: false,
+        error: `Buffer API (Account Org): ${orgQueryError || 'Nessuna organizzazione trovata associata a questo Token'}.`,
+      }
+    }
+
+    // Tentativo: Creazione Idea su Buffer (createIdea)
+    try {
+      const ideaMutation = {
+        query: `
+          mutation CreateIdea($input: CreateIdeaInput!) {
+            createIdea(input: $input) {
+              ... on IdeaResponse {
+                __typename
               }
             }
-          `,
-          variables: {
-            input: {
-              organizationId: organizationId,
-              content: {
-                text: formData.text,
-              },
+          }
+        `,
+        variables: {
+          input: {
+            organizationId: organizationId,
+            content: {
+              text: formData.text,
             },
           },
-        }
-
-        const gqlRes = await fetch('https://api.buffer.com', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(ideaMutation),
-        })
-
-        const parsedGql = await safeParseResponse(gqlRes)
-        if (parsedGql.ok && !parsedGql.data?.errors) {
-          successResponse = { id: 'idea_created', type: 'idea', target: `Idee Buffer (${channelName})` }
-        } else if (parsedGql.data?.errors && parsedGql.data.errors.length > 0) {
-          lastErrorMessage = parsedGql.data.errors[0].message
-        }
-      } catch (ideaErr: any) {
-        lastErrorMessage = ideaErr.message
+        },
       }
+
+      const gqlRes = await fetch('https://api.buffer.com', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(ideaMutation),
+      })
+
+      const parsedGql = await safeParseResponse(gqlRes)
+      if (parsedGql.ok && !parsedGql.data?.errors) {
+        successResponse = { id: 'idea_created', type: 'idea', target: `Idee Buffer (${channelName})` }
+      } else if (parsedGql.data?.errors && parsedGql.data.errors.length > 0) {
+        lastErrorMessage = parsedGql.data.errors[0].message
+      } else if (!parsedGql.ok) {
+        lastErrorMessage = `HTTP ${gqlRes.status}: ${parsedGql.rawText.slice(0, 100)}`
+      }
+    } catch (ideaErr: any) {
+      lastErrorMessage = ideaErr.message
     }
 
     if (!successResponse) {
       return {
         success: false,
-        error: `Buffer GraphQL API: ${lastErrorMessage || 'Impossibile completare la richiesta su Buffer'}.`,
+        error: `Buffer GraphQL API: ${lastErrorMessage || 'Errore durante la creazione del post'}.`,
       }
     }
 
