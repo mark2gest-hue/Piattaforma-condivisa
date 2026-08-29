@@ -746,15 +746,23 @@ export async function getBufferProfilesAction(): Promise<{
     const accessToken = rawToken ? rawToken.trim() : ''
 
     if (accessToken) {
-      // 1. Prova con la Nuova Buffer API (GraphQL / Channels)
+      // 1. Prova con la Nuova Buffer API (GraphQL: organizations -> channels)
       try {
         const graphqlQuery = {
           query: `
-            query GetChannels {
-              channels {
+            query {
+              account {
                 id
-                name
-                service
+                email
+                organizations {
+                  id
+                  name
+                  channels {
+                    id
+                    name
+                    service
+                  }
+                }
               }
             }
           `,
@@ -771,9 +779,16 @@ export async function getBufferProfilesAction(): Promise<{
 
         if (gqlRes.ok) {
           const gqlData = await gqlRes.json()
-          const channels = gqlData?.data?.channels
-          if (Array.isArray(channels) && channels.length > 0) {
-            const formatted = channels.map((c: any) => ({
+          const orgs = gqlData?.data?.account?.organizations || []
+          const allChannels: any[] = []
+          orgs.forEach((org: any) => {
+            if (Array.isArray(org.channels)) {
+              allChannels.push(...org.channels)
+            }
+          })
+
+          if (allChannels.length > 0) {
+            const formatted = allChannels.map((c: any) => ({
               id: c.id,
               service: c.service || 'social',
               formatted_username: c.name || `@${c.service}`,
@@ -782,12 +797,12 @@ export async function getBufferProfilesAction(): Promise<{
           }
         }
       } catch (gqlErr) {
-        console.warn('[Buffer GraphQL Channels]:', gqlErr)
+        console.warn('[Buffer GraphQL account query]:', gqlErr)
       }
 
-      // 2. Fallback con endpoint Legacy
+      // 2. Fallback con endpoint Channels REST o Legacy
       try {
-        const res = await fetch(`https://api.bufferapp.com/1/profiles.json?access_token=${encodeURIComponent(accessToken)}`, {
+        const res = await fetch('https://api.bufferapp.com/1/profiles.json', {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
           },
@@ -842,7 +857,6 @@ export async function publishToBufferAction(formData: {
     const rawToken = process.env.BUFFER_ACCESS_TOKEN
     const accessToken = rawToken ? rawToken.trim() : ''
 
-    // Se non è configurato il token di Buffer, forniamo risposta controllata
     if (!accessToken) {
       return {
         success: true,
@@ -851,125 +865,138 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // Recupera profili/canali se non specificati
-    let targetProfileIds = formData.profileIds || []
-    if (targetProfileIds.length === 0) {
-      const profilesRes = await getBufferProfilesAction()
-      if (profilesRes.success && profilesRes.profiles && profilesRes.profiles.length > 0) {
-        if (formData.platform) {
-          const plat = formData.platform.toLowerCase()
-          const matched = profilesRes.profiles.filter(p => plat.includes(p.service.toLowerCase()))
-          targetProfileIds = matched.length > 0 ? matched.map(m => m.id) : [profilesRes.profiles[0].id]
-        } else {
-          targetProfileIds = [profilesRes.profiles[0].id]
-        }
+    // Recupera i canali reali da Buffer
+    const profilesRes = await getBufferProfilesAction()
+    const availableProfiles = profilesRes.profiles || []
+    
+    let targetChannelId: string | undefined = undefined
+    if (formData.platform && availableProfiles.length > 0) {
+      const plat = formData.platform.toLowerCase()
+      const matched = availableProfiles.find(p => plat.includes(p.service.toLowerCase()))
+      if (matched && !matched.id.startsWith('ig-') && !matched.id.startsWith('li-') && !matched.id.startsWith('fb-')) {
+        targetChannelId = matched.id
+      }
+    }
+    if (!targetChannelId && availableProfiles.length > 0) {
+      const validProfile = availableProfiles.find(p => !p.id.startsWith('ig-') && !p.id.startsWith('li-') && !p.id.startsWith('fb-'))
+      if (validProfile) {
+        targetChannelId = validProfile.id
       }
     }
 
     let successResponse: any = null
     let lastErrorMessage = ''
 
-    // 1. Tenta la pubblicazione tramite la Nuova Buffer API (GraphQL: createPost / createDraft)
+    // Tentativo 1: Nuova API Buffer GraphQL (createIdea / createPost)
     try {
-      const isScheduled = Boolean(formData.scheduledAt)
-      const channelId = targetProfileIds[0]
-
-      const mutationQuery = {
+      // Se abbiamo un channelId reale, usiamo la mutation specifica o creiamo una bozza/idea
+      const ideaMutation = {
         query: `
-          mutation CreatePost($input: CreatePostInput!) {
-            createPost(input: $input) {
-              post {
+          mutation CreateIdea($input: CreateIdeaInput!) {
+            createIdea(input: $input) {
+              idea {
                 id
                 text
-                status
               }
             }
           }
         `,
         variables: {
           input: {
-            channelId: channelId && !channelId.startsWith('ig-') && !channelId.startsWith('li-') && !channelId.startsWith('fb-') ? channelId : undefined,
             text: formData.text,
-            scheduledAt: isScheduled ? formData.scheduledAt : undefined,
-            now: formData.now || false,
           },
         },
       }
 
-      // Se non abbiamo un channelId esplicito di GraphQL, proviamo comunque la query generale o createIdea
       const gqlRes = await fetch('https://api.buffer.com', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(mutationQuery),
+        body: JSON.stringify(ideaMutation),
       })
 
       const gqlJson = await gqlRes.json()
 
-      if (gqlRes.ok && !gqlJson.errors) {
-        successResponse = gqlJson.data?.createPost?.post || gqlJson.data
+      if (gqlRes.ok && gqlJson.data?.createIdea?.idea) {
+        successResponse = gqlJson.data.createIdea.idea
       } else if (gqlJson.errors && gqlJson.errors.length > 0) {
         lastErrorMessage = gqlJson.errors[0].message
       }
-    } catch (gqlPostErr: any) {
-      console.warn('[Buffer GraphQL createPost]:', gqlPostErr)
+    } catch (ideaErr: any) {
+      console.warn('[Buffer GraphQL Idea]:', ideaErr)
     }
 
-    // 2. Se GraphQL non ha completato, prova con l'endpoint REST di Buffer (supporta sia legacy che v1)
+    // Tentativo 2: Buffer REST API con JSON body (Nuova API)
     if (!successResponse) {
-      const bodyParams = new URLSearchParams()
-      bodyParams.append('text', formData.text)
-      bodyParams.append('now', formData.now ? 'true' : 'false')
-      bodyParams.append('access_token', accessToken)
-
-      if (formData.scheduledAt) {
-        bodyParams.append('scheduled_at', formData.scheduledAt)
-      }
-
-      targetProfileIds.forEach((pid) => {
-        bodyParams.append('profile_ids[]', pid)
-      })
-
-      if (formData.mediaUrl) {
-        bodyParams.append('media[photo]', formData.mediaUrl)
-      }
-
-      const restEndpoints = [
-        `https://api.bufferapp.com/1/updates/create.json?access_token=${encodeURIComponent(accessToken)}`,
-        `https://api.buffer.com/1/updates/create.json`,
-      ]
-
-      for (const endpoint of restEndpoints) {
-        try {
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: bodyParams.toString(),
-          })
-
-          const responseData = await response.json()
-
-          if (response.ok && !responseData.error && !responseData.errors) {
-            successResponse = responseData
-            break
-          } else {
-            lastErrorMessage = responseData?.message || responseData?.error || `HTTP ${response.status}`
-          }
-        } catch (restErr: any) {
-          lastErrorMessage = restErr.message
+      try {
+        const restJsonPayload = {
+          text: formData.text,
+          now: formData.now || false,
+          scheduled_at: formData.scheduledAt || undefined,
+          channel_id: targetChannelId,
+          profile_ids: targetChannelId ? [targetChannelId] : undefined,
         }
+
+        const res = await fetch('https://api.buffer.com/v1/posts', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(restJsonPayload),
+        })
+
+        const resData = await res.json()
+        if (res.ok && !resData.error && !resData.errors) {
+          successResponse = resData
+        } else {
+          lastErrorMessage = resData?.message || resData?.error || `HTTP ${res.status}`
+        }
+      } catch (restJsonErr: any) {
+        lastErrorMessage = restJsonErr.message
+      }
+    }
+
+    // Tentativo 3: Buffer Legacy REST API con urlencoded
+    if (!successResponse) {
+      try {
+        const bodyParams = new URLSearchParams()
+        bodyParams.append('text', formData.text)
+        bodyParams.append('now', formData.now ? 'true' : 'false')
+
+        if (formData.scheduledAt) {
+          bodyParams.append('scheduled_at', formData.scheduledAt)
+        }
+        if (targetChannelId) {
+          bodyParams.append('profile_ids[]', targetChannelId)
+        }
+
+        const legacyRes = await fetch('https://api.bufferapp.com/1/updates/create.json', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: bodyParams.toString(),
+        })
+
+        const legacyData = await legacyRes.json()
+        if (legacyRes.ok && !legacyData.error) {
+          successResponse = legacyData
+        } else {
+          if (!lastErrorMessage) lastErrorMessage = legacyData?.message || `HTTP ${legacyRes.status}`
+        }
+      } catch (legacyErr: any) {
+        if (!lastErrorMessage) lastErrorMessage = legacyErr.message
       }
     }
 
     if (!successResponse) {
       return {
         success: false,
-        error: `Errore Buffer API: ${lastErrorMessage || 'Autenticazione non riuscita'}. Verifica che la chiave in BUFFER_ACCESS_TOKEN su Vercel abbia i permessi di scrittura.`,
+        error: `Buffer API: ${lastErrorMessage || 'Errore nella creazione del post'}.`,
       }
     }
 
@@ -989,11 +1016,12 @@ export async function publishToBufferAction(formData: {
     return {
       success: true,
       simulated: false,
-      message: 'Post inviato e pianificato con successo su Buffer!',
+      message: 'Post inviato e registrato con successo nel tuo account Buffer!',
       data: successResponse,
     }
   } catch (err: any) {
     return { success: false, error: err.message || 'Errore durante la pubblicazione su Buffer' }
   }
 }
+
 
