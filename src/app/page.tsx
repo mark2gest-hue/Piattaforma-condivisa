@@ -184,38 +184,40 @@ export default function LandingPage() {
 
       {/* Header Navigation Bar */}
       <header className="relative z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Sparkles className="h-5 w-5" />
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-extrabold text-lg tracking-tight text-white flex items-center gap-2">
-                aiutiamoci.cloud <span className="text-[10px] font-mono px-2 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-full border border-indigo-500/30">Ti AIuto</span>
+            <div className="flex flex-col min-w-0">
+              <span className="font-extrabold text-sm sm:text-lg tracking-tight text-white flex items-center gap-1.5 truncate">
+                aiutiamoci.cloud <span className="text-[10px] font-mono px-1.5 sm:px-2 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-full border border-indigo-500/30 shrink-0">Ti AIuto</span>
               </span>
-              <span className="text-xs text-slate-400 font-medium">Formazione ed Agenti IA</span>
+              <span className="text-[11px] sm:text-xs text-slate-400 font-medium truncate">Formazione ed Agenti IA</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-xs font-semibold">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs font-semibold shrink-0">
             <button
               onClick={() => setIsStudentModalOpen(true)}
-              className="text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 px-3.5 py-2 border border-slate-800 rounded-xl bg-slate-900/80 hover:bg-slate-800"
+              className="text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 border border-slate-800 rounded-xl bg-slate-900/80 hover:bg-slate-800"
+              title="Hai già il codice? Entra qui"
             >
-              <Key className="h-4 w-4 text-blue-400" />
-              <span>Hai già il codice? Entra qui</span>
+              <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-400 shrink-0" />
+              <span className="hidden md:inline">Hai già il codice? Entra qui</span>
+              <span className="md:hidden">Codice</span>
             </button>
 
             <button
               onClick={() => setIsEnrollModalOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl font-bold transition-all shadow-md shadow-indigo-600/30"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold transition-all shadow-md shadow-indigo-600/30 whitespace-nowrap"
             >
-              <span>Iscriviti Ora</span>
+              <span>Iscriviti<span className="hidden sm:inline"> Ora</span></span>
             </button>
 
             <Link
               href="/login"
-              className="text-slate-400 hover:text-slate-200 px-2 py-2 transition-colors hidden sm:flex items-center gap-1"
+              className="text-slate-400 hover:text-slate-200 px-1 sm:px-2 py-1.5 sm:py-2 transition-colors hidden sm:flex items-center gap-1"
               title="Accesso riservato al team di gestione"
             >
               <Lock className="h-3.5 w-3.5" />
