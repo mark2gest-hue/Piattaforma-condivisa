@@ -886,16 +886,18 @@ export default function PostaCondivisaPage() {
               </div>
 
               {/* Message Content */}
-              <div className="p-6 flex-1 overflow-y-auto">
+              <div className="p-4 sm:p-6 flex-1 overflow-y-auto bg-white dark:bg-slate-900">
                 {viewMode === 'html' && selectedEmail.body_html ? (
-                  <iframe
-                    srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.6;color:#334155;padding:12px;margin:0;word-break:break-word;}a{color:#2563eb;}</style></head><body>${selectedEmail.body_html}</body></html>`}
-                    className="w-full h-full min-h-[260px] border-0 rounded-lg bg-transparent"
-                    sandbox="allow-popups allow-popups-to-escape-sandbox"
-                    title="Email Preview"
-                  />
+                  <div className="rounded-xl overflow-hidden bg-slate-900/60 dark:bg-slate-950 p-2 border border-slate-200 dark:border-slate-800">
+                    <iframe
+                      srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.6;color:#e2e8f0;background-color:transparent;padding:12px;margin:0;word-break:break-word;}a{color:#60a5fa;}p,div,span,td,th,li{color:inherit!important;}h1,h2,h3,h4,h5,h6{color:#f8fafc!important;}</style></head><body>${selectedEmail.body_html}</body></html>`}
+                      className="w-full min-h-[280px] border-0 bg-transparent"
+                      sandbox="allow-popups allow-popups-to-escape-sandbox"
+                      title="Email Preview"
+                    />
+                  </div>
                 ) : (
-                  <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                  <div className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-sans">
                     {selectedEmail.body_text || selectedEmail.body_html?.replace(/<[^>]*>?/gm, '') || 'Nessun contenuto in questo messaggio.'}
                   </div>
                 )}
