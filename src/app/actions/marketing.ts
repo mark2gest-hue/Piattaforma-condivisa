@@ -742,11 +742,16 @@ export async function getBufferProfilesAction(): Promise<{
   error?: string
 }> {
   try {
-    const accessToken = process.env.BUFFER_ACCESS_TOKEN
+    const rawToken = process.env.BUFFER_ACCESS_TOKEN
+    const accessToken = rawToken ? rawToken.trim() : ''
 
     // Se il token è configurato, recupera i profili reali da Buffer API
     if (accessToken) {
-      const res = await fetch(`https://api.bufferapp.com/1/profiles.json?access_token=${accessToken}`)
+      const res = await fetch(`https://api.bufferapp.com/1/profiles.json?access_token=${encodeURIComponent(accessToken)}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
       if (res.ok) {
         const data = await res.json()
         if (Array.isArray(data) && data.length > 0) {
@@ -791,14 +796,15 @@ export async function publishToBufferAction(formData: {
   mediaUrl?: string
 }) {
   try {
-    const accessToken = process.env.BUFFER_ACCESS_TOKEN
+    const rawToken = process.env.BUFFER_ACCESS_TOKEN
+    const accessToken = rawToken ? rawToken.trim() : ''
 
     // Se non è configurato il token di Buffer, forniamo risposta controllata con istruzioni
     if (!accessToken) {
       return {
         success: true,
         simulated: true,
-        message: 'Post pronto per Buffer! Configura BUFFER_ACCESS_TOKEN nelle variabili d’ambiente (.env.local) per inviare direttamente al tuo account Buffer.',
+        message: 'Post pronto per Buffer! Configura BUFFER_ACCESS_TOKEN nelle variabili d’ambiente per inviare direttamente al tuo account Buffer.',
       }
     }
 
@@ -822,6 +828,7 @@ export async function publishToBufferAction(formData: {
     const bodyParams = new URLSearchParams()
     bodyParams.append('text', formData.text)
     bodyParams.append('now', formData.now ? 'true' : 'false')
+    bodyParams.append('access_token', accessToken)
 
     if (formData.scheduledAt) {
       bodyParams.append('scheduled_at', formData.scheduledAt)
@@ -835,18 +842,24 @@ export async function publishToBufferAction(formData: {
       bodyParams.append('media[photo]', formData.mediaUrl)
     }
 
-    const response = await fetch(`https://api.bufferapp.com/1/updates/create.json?access_token=${accessToken}`, {
+    const response = await fetch(`https://api.bufferapp.com/1/updates/create.json?access_token=${encodeURIComponent(accessToken)}`, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: bodyParams.toString(),
     })
 
-    const responseData = await response.json()
+    let responseData: any = null
+    try {
+      responseData = await response.json()
+    } catch {
+      responseData = { message: `Risposta non-JSON da Buffer (HTTP ${response.status})` }
+    }
 
     if (!response.ok) {
-      const errorMsg = responseData?.message || `Errore Buffer API: HTTP ${response.status}`
+      const errorMsg = responseData?.message || `Errore Buffer API (${response.status}): ${response.statusText}. Verifica la validità del token BUFFER_ACCESS_TOKEN su https://buffer.com/developers/apps.`
       return {
         success: false,
         error: errorMsg,
