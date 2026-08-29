@@ -878,17 +878,28 @@ export async function publishToBufferAction(formData: {
       }
     }
 
-    // Tentativo 1: Creazione Bozza direttamente nel Canale Facebook (createDraft)
+    // Creazione Post nel Canale Facebook (createPost) — schema verificato via introspection
+    // createDraft NON ESISTE nello schema Buffer. Si usa createPost con saveToDraft: true
+    // Campi obbligatori: channelId!, assets!, mode!, needsApproval!, schedulingType!
+    // text è opzionale e va direttamente nell'input (NON dentro content)
     try {
-      const draftMutation = {
+      const postMutation = {
         query: `
-          mutation CreateDraft($input: CreateDraftInput!) {
-            createDraft(input: $input) {
-              ... on Response {
+          mutation CreatePost($input: CreatePostInput!) {
+            createPost(input: $input) {
+              ... on PostActionSuccess {
+                post {
+                  id
+                }
+              }
+              ... on InvalidInputError {
                 message
               }
-              ... on IdeaResponse {
-                __typename
+              ... on UnauthorizedError {
+                message
+              }
+              ... on UnexpectedError {
+                message
               }
             }
           }
@@ -896,79 +907,37 @@ export async function publishToBufferAction(formData: {
         variables: {
           input: {
             channelId: targetChannelId,
-            content: {
-              text: formData.text,
-            },
+            text: formData.text,
+            assets: [],
+            mode: 'addToQueue',
+            needsApproval: false,
+            schedulingType: 'automatic',
+            saveToDraft: false,
           },
         },
       }
 
-      const draftRes = await fetch('https://api.buffer.com', {
+      const postRes = await fetch('https://api.buffer.com', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(draftMutation),
+        body: JSON.stringify(postMutation),
       })
 
-      const parsedDraft = await safeParseResponse(draftRes)
-      if (parsedDraft.ok && !parsedDraft.data?.errors) {
-        successResponse = { id: 'draft_created', type: 'draft', target: channelName }
-      } else if (parsedDraft.data?.errors && parsedDraft.data.errors.length > 0) {
-        lastErrorMessage = parsedDraft.data.errors[0].message
+      const parsedPost = await safeParseResponse(postRes)
+      const postData = parsedPost.data?.data?.createPost
+      if (parsedPost.ok && !parsedPost.data?.errors && postData?.post) {
+        successResponse = { id: postData.post.id, type: 'post', target: channelName }
+      } else if (postData?.message) {
+        lastErrorMessage = postData.message
+      } else if (parsedPost.data?.errors && parsedPost.data.errors.length > 0) {
+        lastErrorMessage = parsedPost.data.errors[0].message
       }
-    } catch (draftErr: any) {
-      lastErrorMessage = draftErr.message
-    }
-
-    // Tentativo 2: Creazione Post programmato/immediato nel Canale (createPost)
-    if (!successResponse) {
-      try {
-        const postMutation = {
-          query: `
-            mutation CreatePost($input: CreatePostInput!) {
-              createPost(input: $input) {
-                ... on Response {
-                  message
-                }
-                ... on PostsResults {
-                  __typename
-                }
-              }
-            }
-          `,
-          variables: {
-            input: {
-              channelId: targetChannelId,
-              content: {
-                text: formData.text,
-              },
-              schedulingType: 'draft',
-            },
-          },
-        }
-
-        const postRes = await fetch('https://api.buffer.com', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(postMutation),
-        })
-
-        const parsedPost = await safeParseResponse(postRes)
-        if (parsedPost.ok && !parsedPost.data?.errors) {
-          successResponse = { id: 'post_created', type: 'post', target: channelName }
-        } else if (parsedPost.data?.errors && parsedPost.data.errors.length > 0) {
-          lastErrorMessage = parsedPost.data.errors[0].message
-        }
-      } catch (postErr: any) {
-        lastErrorMessage = postErr.message
-      }
+    } catch (postErr: any) {
+      lastErrorMessage = postErr.message
     }
 
     if (!successResponse) {
