@@ -207,7 +207,7 @@ function CampaignWizardContent() {
     setIsSaving(false)
   }
 
-  // Dispatch post direttamente a Buffer (senza passare da n8n)
+  // Dispatch post direttamente a Buffer (con supporto re-invio e cambio canale)
   const handlePublishPostToBuffer = async (post: MarketingEditorialPost, index: number) => {
     const targetKey = post.id || `temp-${index}`
     setIsPublishingPostId(targetKey)
@@ -215,7 +215,7 @@ function CampaignWizardContent() {
     const res = await publishToBufferAction({
       postId: post.id,
       text: post.fullCopy,
-      platform: post.platform || 'Instagram',
+      platform: post.platform || 'Facebook',
       now: false, // Inserimento nella coda programmata di Buffer
     })
 
@@ -233,6 +233,14 @@ function CampaignWizardContent() {
     }
 
     setIsPublishingPostId(null)
+  }
+
+  // Modifica piattaforma o formato del post
+  const handleUpdatePostField = (index: number, field: 'platform' | 'postType' | 'status', value: string) => {
+    if (!plan) return
+    const updatedPosts = [...plan.editorialPosts]
+    updatedPosts[index] = { ...updatedPosts[index], [field]: value }
+    setPlan({ ...plan, editorialPosts: updatedPosts })
   }
 
   // Esporta Piano in Markdown
@@ -858,22 +866,48 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                   }`}
                 >
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <Badge className="bg-blue-600 text-white font-mono text-[11px]">{post.day}</Badge>
-                        <Badge variant="outline" className="text-[11px] border-slate-700 text-slate-300">
-                          {post.postType}
-                        </Badge>
+                        
+                        {/* Selettore Formato Post */}
+                        <select
+                          value={post.postType || 'carosello'}
+                          onChange={(e) => handleUpdatePostField(idx, 'postType', e.target.value)}
+                          className="bg-slate-950 border border-slate-800 text-slate-300 rounded-md text-[11px] px-2 py-0.5 outline-none cursor-pointer hover:border-slate-700 transition-colors"
+                        >
+                          <option value="carosello">Carosello</option>
+                          <option value="reel">Reel</option>
+                          <option value="statico">Statico</option>
+                          <option value="lead-magnet">Lead Magnet</option>
+                          <option value="storia">Storia</option>
+                        </select>
                       </div>
-                      <Badge
-                        className={`text-[10px] ${
-                          isPublished
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                            : 'bg-slate-800 text-slate-400'
-                        }`}
-                      >
-                        {isPublished ? 'Pubblicato' : post.platform}
-                      </Badge>
+
+                      {/* Selettore Canale Social */}
+                      <div className="flex items-center gap-1">
+                        <select
+                          value={post.platform || 'Facebook'}
+                          onChange={(e) => handleUpdatePostField(idx, 'platform', e.target.value)}
+                          className="bg-slate-950 border border-slate-800 text-slate-200 rounded-md text-[11px] font-semibold px-2 py-0.5 outline-none cursor-pointer hover:border-purple-500/50 transition-colors"
+                        >
+                          <option value="Facebook">📘 Facebook</option>
+                          <option value="Instagram">📸 Instagram</option>
+                          <option value="LinkedIn">💼 LinkedIn</option>
+                          <option value="TikTok">🎵 TikTok</option>
+                        </select>
+
+                        {isPublished && (
+                          <button
+                            type="button"
+                            title="Clicca per reimpostare su 'Da inviare'"
+                            onClick={() => handleUpdatePostField(idx, 'status', 'draft')}
+                            className="text-[10px] bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/30 px-1.5 py-0.5 rounded border border-emerald-500/30 transition-colors"
+                          >
+                            ✓ Inviato
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <h4 className="font-bold text-sm text-slate-100">{post.title}</h4>
@@ -903,23 +937,25 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                       Copia Testo
                     </Button>
 
-                    <Button
-                      size="sm"
-                      disabled={isPublishing}
-                      onClick={() => handlePublishPostToBuffer(post, idx)}
-                      className={`text-xs font-semibold flex items-center gap-1.5 ${
-                        isPublished
-                          ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/30'
-                          : 'bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-500/20'
-                      }`}
-                    >
-                      {isPublishing ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Send className="h-3.5 w-3.5" />
-                      )}
-                      <span>{isPublished ? 'Pianificato' : 'Invia a Buffer'}</span>
-                    </Button>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        size="sm"
+                        disabled={isPublishing}
+                        onClick={() => handlePublishPostToBuffer(post, idx)}
+                        className={`text-xs font-semibold flex items-center gap-1.5 ${
+                          isPublished
+                            ? 'bg-slate-800 hover:bg-purple-600 text-slate-300 hover:text-white border border-slate-700'
+                            : 'bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-500/20'
+                        }`}
+                      >
+                        {isPublishing ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Send className="h-3.5 w-3.5" />
+                        )}
+                        <span>{isPublished ? 'Re-invia a Buffer' : 'Invia a Buffer'}</span>
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               )
