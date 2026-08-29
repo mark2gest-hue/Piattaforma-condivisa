@@ -804,9 +804,9 @@ export default function PostaCondivisaPage() {
                   <span>← Torna alla lista email</span>
                 </button>
 
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight break-words">
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug break-words">
                       {selectedEmail.subject || '(Nessun oggetto)'}
                     </h2>
 
@@ -832,8 +832,8 @@ export default function PostaCondivisaPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[11px] text-slate-400 font-medium">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0 pt-1 sm:pt-0">
+                    <span className="text-[11px] text-slate-400 font-medium mr-1">
                       {selectedEmail.created_at ? formatDate(selectedEmail.created_at) : ''}
                     </span>
 
@@ -849,12 +849,12 @@ export default function PostaCondivisaPage() {
                         {isAnalyzing ? (
                           <>
                             <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-600" />
-                            <span>Analisi in corso...</span>
+                            <span>Analisi...</span>
                           </>
                         ) : (
                           <>
                             <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                            <span>{aiAnalysisMap[selectedEmail.id] ? 'Rianalizza con AI' : 'Analizza con AI'}</span>
+                            <span>{aiAnalysisMap[selectedEmail.id] ? 'Rianalizza AI' : 'Analizza con AI'}</span>
                           </>
                         )}
                       </Button>
@@ -868,7 +868,7 @@ export default function PostaCondivisaPage() {
                         className="h-8 px-2 text-xs text-slate-600 dark:text-slate-300"
                         title="Cambia vista HTML/Testo"
                       >
-                        {viewMode === 'html' ? 'Visualizza Testo' : 'Visualizza HTML'}
+                        {viewMode === 'html' ? 'Testo' : 'HTML'}
                       </Button>
                     )}
 
