@@ -906,8 +906,7 @@ export async function publishToBufferAction(formData: {
           mutation CreateIdea($input: CreateIdeaInput!) {
             createIdea(input: $input) {
               ... on IdeaResponse {
-                id
-                text
+                __typename
               }
             }
           }
