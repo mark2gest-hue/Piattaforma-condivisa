@@ -2,6 +2,8 @@
 
 import { createAdminClient } from '@/lib/supabase/server'
 import { TaskStatus, TaskPriority } from '@/types/database.types'
+import { sendTelegramMessage, escapeHtml } from '@/lib/telegram'
+import { getCurrentUserProfileName } from './notifications'
 
 export interface CreateTaskInput {
   title: string
@@ -79,6 +81,24 @@ export async function createTaskAction(input: CreateTaskInput) {
       return { success: false, error: error.message }
     }
 
+    // Invia notifica Telegram per nuovo task creato
+    const userName = await getCurrentUserProfileName()
+    const projectInfo = data.project?.title ? `\n📁 <b>Progetto:</b> ${escapeHtml(data.project.title)}` : ''
+    const priorityLabels: Record<string, string> = {
+      low: '🟢 Bassa',
+      medium: '🟡 Media',
+      high: '🟠 Alta',
+      urgent: '🔴 Urgente',
+    }
+    const priorityText = priorityLabels[data.priority] || data.priority
+
+    sendTelegramMessage(
+      `📋 <b>Nuovo Task Creato</b>\n\n` +
+      `📌 <b>Titolo:</b> ${escapeHtml(cleanTitle)}${projectInfo}\n` +
+      `⚡ <b>Priorità:</b> ${priorityText}\n` +
+      `👤 <b>Creato da:</b> ${escapeHtml(userName)}`
+    ).catch((e) => console.error('Errore notifica Telegram nuovo task:', e))
+
     return { success: true, task: data }
   } catch (error: any) {
     console.error('Errore createTaskAction:', error)
@@ -89,6 +109,14 @@ export async function createTaskAction(input: CreateTaskInput) {
 export async function updateTaskStatusAction(taskId: string, status: TaskStatus, position?: number) {
   try {
     const supabase = createAdminClient()
+
+    // Recupera lo stato attuale del task prima dell'aggiornamento
+    const { data: currentTask } = await (supabase as any)
+      .from('tasks')
+      .select('title, status, project:projects(title)')
+      .eq('id', taskId)
+      .single()
+
     const updatePayload: any = { status }
     if (typeof position === 'number') {
       updatePayload.position = position
@@ -102,6 +130,28 @@ export async function updateTaskStatusAction(taskId: string, status: TaskStatus,
     if (error) {
       console.error('Errore updateTaskStatusAction:', error)
       return { success: false, error: error.message }
+    }
+
+    // Se lo stato è cambiato, invia notifica Telegram
+    if (currentTask && currentTask.status !== status) {
+      const userName = await getCurrentUserProfileName()
+      const statusLabels: Record<string, string> = {
+        backlog: '📦 Backlog',
+        todo: '⏳ Da Fare',
+        in_progress: '⚡ In Corso',
+        review: '👀 In Revisione',
+        done: '✅ Completato',
+      }
+      const newStatusLabel = statusLabels[status] || status
+      const oldStatusLabel = statusLabels[currentTask.status] || currentTask.status
+      const projectInfo = currentTask.project?.title ? ` [${escapeHtml(currentTask.project.title)}]` : ''
+
+      sendTelegramMessage(
+        `🔄 <b>Stato Task Aggiornato</b>${projectInfo}\n\n` +
+        `📌 <b>Task:</b> ${escapeHtml(currentTask.title)}\n` +
+        `📊 <b>Passaggio:</b> ${oldStatusLabel} ➔ <b>${newStatusLabel}</b>\n` +
+        `👤 <b>Modificato da:</b> ${escapeHtml(userName)}`
+      ).catch((e) => console.error('Errore notifica Telegram cambio stato task:', e))
     }
 
     return { success: true }
@@ -188,6 +238,14 @@ export async function createProjectAction(title: string, description?: string) {
     if (error) {
       return { success: false, error: error.message }
     }
+
+    // Invia notifica Telegram per nuovo progetto
+    const userName = await getCurrentUserProfileName()
+    sendTelegramMessage(
+      `🚀 <b>Nuovo Progetto Creato</b>\n\n` +
+      `📁 <b>Titolo:</b> ${escapeHtml(cleanTitle)}\n` +
+      `👤 <b>Creato da:</b> ${escapeHtml(userName)}`
+    ).catch((e) => console.error('Errore notifica Telegram nuovo progetto:', e))
 
     return { success: true, project: data }
   } catch (error: any) {

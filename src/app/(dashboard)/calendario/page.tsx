@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound } from '@/lib/notifications'
+import { notifyCalendarEventCreatedAction } from '@/app/actions/notifications'
 
 interface CalendarEvent {
   id: string
@@ -164,6 +165,15 @@ export default function CalendarioPage() {
       }
 
       playNotificationSound('chat')
+      
+      // Invia notifica Telegram asincrona al gruppo
+      notifyCalendarEventCreatedAction({
+        title: eventTitle.trim(),
+        date: selectedDateStr,
+        time: eventTime,
+        category: eventCategory,
+      }).catch((e) => console.error('Errore notifica Telegram evento calendario:', e))
+
       alert(`Evento "${eventTitle}" aggiunto con successo al Calendario!`)
 
       setIsEventModalOpen(false)

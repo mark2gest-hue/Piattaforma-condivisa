@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
+import { sendTelegramMessage, escapeHtml } from '@/lib/telegram'
 
 // Webhook endpoint server-to-server con privilegi admin per inserimento email in entrata
 export async function POST(request: Request) {
@@ -116,6 +117,15 @@ export async function POST(request: Request) {
       console.error('[Resend Inbound] Errore inserimento email Supabase:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // Invia notifica Telegram al gruppo soci
+    await sendTelegramMessage(
+      `📧 <b>Nuova Email Ricevuta</b>\n\n` +
+      `👤 <b>Da:</b> ${escapeHtml(fromAddress)}\n` +
+      `📩 <b>A:</b> ${escapeHtml(toAddresses.join(', '))}\n` +
+      `📝 <b>Oggetto:</b> ${escapeHtml(subject)}\n\n` +
+      `<i>Visualizza i dettagli nella sezione Posta della piattaforma</i>`
+    )
 
     return NextResponse.json({ success: true, message: 'Email salvata con successo' })
   } catch (err: any) {

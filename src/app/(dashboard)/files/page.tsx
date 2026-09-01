@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { formatBytes, formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { notifyFileUploadAction } from '@/app/actions/notifications'
 import { FileItem, Profile } from '@/types/index'
 
 type FileWithUploader = FileItem & { uploader?: Profile; parent_folder_id?: string | null }
@@ -107,6 +108,11 @@ export default function FilesManagerPage() {
       setFiles((prev) => [dbFolder as any, ...prev])
       setIsFolderModalOpen(false)
       setNewFolderName('')
+      
+      // Notifica Telegram creazione cartella
+      notifyFileUploadAction(dbFolder.name, true).catch((e) =>
+        console.error('Errore notifica Telegram cartella:', e)
+      )
     }
 
     setIsCreatingFolder(false)
@@ -161,6 +167,11 @@ export default function FilesManagerPage() {
           alert(`Errore registrazione database per "${selectedFile.name}": ${dbError.message}`)
         } else if (dbFile) {
           newItems.push(dbFile as any)
+          
+          // Notifica Telegram caricamento singolo file
+          notifyFileUploadAction(selectedFile.name, false).catch((e) =>
+            console.error('Errore notifica Telegram file:', e)
+          )
         }
       }
 
