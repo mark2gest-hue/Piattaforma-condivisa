@@ -44,7 +44,7 @@ import { useRouter } from 'next/navigation'
 
 type EmailWithSender = Email & { senderProfile?: Profile }
 type FolderFilter = 'inbox' | 'sent' | 'unread' | 'all'
-type AccountFilter = 'all' | 'info@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mar2.cloud' | 'support@mar2.cloud'
+type AccountFilter = 'all' | 'team@aiutiamoci.cloud' | 'info@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mar2.cloud' | 'support@mar2.cloud'
 
 function getToArray(to_address: any): string[] {
   if (!to_address) return []
@@ -590,6 +590,16 @@ export default function PostaCondivisaPage() {
                 }`}
               >
                 Tutte ({emails.length})
+              </button>
+              <button
+                onClick={() => setAccountFilter('team@aiutiamoci.cloud')}
+                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${
+                  accountFilter === 'team@aiutiamoci.cloud'
+                    ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                    : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
+                }`}
+              >
+                team@aiutiamoci
               </button>
               <button
                 onClick={() => setAccountFilter('info@aiutiamoci.cloud')}

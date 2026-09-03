@@ -31,3 +31,5 @@ yarn-error.log*
 # Supabase temp
 supabase/.temp/
 
+# IDE extensions / Sidekick
+.sidekick/

@@ -42,6 +42,11 @@ import {
   Filter,
   CheckSquare,
   BarChart3,
+  Bot,
+  Play,
+  Eye,
+  Check,
+  MessageSquare,
 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -62,10 +67,17 @@ import {
   updateProjectAction,
   deleteProjectAction,
 } from '@/app/actions/tasks'
+import {
+  executeAgentTaskAction,
+  approveAgentTaskRunAction,
+  rejectAgentTaskRunAction,
+  getTaskAgentRunsAction,
+} from '@/app/actions/agent-tasks'
 
-const COLUMNS: { id: TaskStatus; title: string; color: string; badgeVariant: 'secondary' | 'warning' | 'success' }[] = [
+const COLUMNS: { id: TaskStatus; title: string; color: string; badgeVariant: 'secondary' | 'warning' | 'purple' | 'success' }[] = [
   { id: 'todo', title: 'Da Fare', color: 'border-amber-500/30 text-amber-500', badgeVariant: 'secondary' },
   { id: 'in_progress', title: 'In Corso', color: 'border-indigo-500/30 text-indigo-500', badgeVariant: 'warning' },
+  { id: 'review', title: 'In Revisione (AI / Team)', color: 'border-purple-500/30 text-purple-500', badgeVariant: 'purple' },
   { id: 'done', title: 'Completato', color: 'border-emerald-500/30 text-emerald-500', badgeVariant: 'success' },
 ]
 
@@ -77,11 +89,17 @@ function SortableTaskItem({
   onEdit,
   onDelete,
   onMoveStatus,
+  onExecuteAgent,
+  onOpenReview,
+  isExecutingAgent,
 }: {
   task: TaskWithRelations
   onEdit: (task: TaskWithRelations) => void
   onDelete: (taskId: string, title: string) => void
   onMoveStatus: (taskId: string, newStatus: TaskStatus) => void
+  onExecuteAgent?: (task: TaskWithRelations) => void
+  onOpenReview?: (task: TaskWithRelations) => void
+  isExecutingAgent?: boolean
 }) {
   const {
     attributes,
@@ -98,9 +116,13 @@ function SortableTaskItem({
     opacity: isDragging ? 0.3 : 1,
   }
 
+  const isAgent = task.assignee?.is_agent
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none pb-2 group">
-      <Card className="border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-500/50 transition-all cursor-grab active:cursor-grabbing bg-white dark:bg-slate-900 overflow-hidden rounded-xl">
+      <Card className={`border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition-all cursor-grab active:cursor-grabbing bg-white dark:bg-slate-900 overflow-hidden rounded-xl ${
+        task.status === 'review' ? 'border-purple-400/80 dark:border-purple-500/60 ring-1 ring-purple-400/30' : 'hover:border-indigo-400 dark:hover:border-indigo-500/50'
+      }`}>
         <CardHeader className="p-3.5 pb-2">
           <div className="flex items-start justify-between gap-2">
             <div className="space-y-1 w-full">
@@ -148,6 +170,7 @@ function SortableTaskItem({
             </p>
           )}
 
+          {/* Tags & Assignee */}
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
             {task.priority === 'urgent' && (
               <Badge variant="destructive" className="text-[9px] px-1.5 py-0">🚨 Urgente</Badge>
@@ -161,7 +184,71 @@ function SortableTaskItem({
             {task.priority === 'low' && (
               <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-slate-400">Bassa</Badge>
             )}
+
+            {/* Assignee Badge */}
+            {task.assignee && (
+              <Badge
+                variant="outline"
+                className={`text-[9px] px-1.5 py-0 flex items-center gap-1 font-semibold ${
+                  isAgent
+                    ? 'border-purple-400/50 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300'
+                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                }`}
+              >
+                {isAgent ? (
+                  <Bot className="h-2.5 w-2.5 text-purple-600 dark:text-purple-400" />
+                ) : (
+                  <User className="h-2.5 w-2.5 text-slate-400" />
+                )}
+                <span>{task.assignee.full_name || 'Agente'}</span>
+              </Badge>
+            )}
           </div>
+
+          {/* Special Agent Actions */}
+          {isAgent && (task.status === 'todo' || task.status === 'in_progress') && onExecuteAgent && (
+            <div className="pt-1">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isExecutingAgent}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onExecuteAgent(task)
+                }}
+                className="w-full h-7 text-[10px] font-bold border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 bg-purple-50/50 dark:bg-purple-950/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 flex items-center justify-center gap-1.5 rounded-lg shadow-2xs"
+              >
+                {isExecutingAgent ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin text-purple-600" />
+                    <span>Nemotron in elaborazione...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3 w-3 text-purple-600" />
+                    <span>⚡ Esegui con Agente AI</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* Human-in-the-Loop Review CTA */}
+          {task.status === 'review' && onOpenReview && (
+            <div className="pt-1">
+              <Button
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenReview(task)
+                }}
+                className="w-full h-7 text-[10px] font-bold bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center gap-1.5 rounded-lg shadow-xs animate-pulse"
+              >
+                <Eye className="h-3 w-3" />
+                <span>👀 Revisiona Output Agente</span>
+              </Button>
+            </div>
+          )}
 
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 font-mono">
             <div className="flex items-center gap-1">
@@ -193,6 +280,18 @@ function SortableTaskItem({
                   title="Sposta in In Corso"
                 >
                   In Corso
+                </button>
+              )}
+              {task.status !== 'review' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onMoveStatus(task.id, 'review')
+                  }}
+                  className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-purple-100 hover:text-purple-700 text-[9px]"
+                  title="Sposta in Revisione"
+                >
+                  Revisione
                 </button>
               )}
               {task.status !== 'done' && (
@@ -232,10 +331,20 @@ export default function KanbanBoardPage() {
   const [taskTitle, setTaskTitle] = useState('')
   const [taskDesc, setTaskDesc] = useState('')
   const [taskProjectId, setTaskProjectId] = useState('')
+  const [taskAssignedTo, setTaskAssignedTo] = useState('')
   const [taskStatus, setTaskStatus] = useState<TaskStatus>('todo')
   const [taskPriority, setTaskPriority] = useState<TaskPriority>('medium')
   const [taskDueDate, setTaskDueDate] = useState('')
   const [isSubmittingTask, setIsSubmittingTask] = useState(false)
+
+  // Agent Execution & Review State (Human-in-the-Loop)
+  const [executingTaskId, setExecutingTaskId] = useState<string | null>(null)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const [reviewTask, setReviewTask] = useState<TaskWithRelations | null>(null)
+  const [reviewRuns, setReviewRuns] = useState<any[]>([])
+  const [isReviewLoading, setIsReviewLoading] = useState(false)
+  const [rejectFeedback, setRejectFeedback] = useState('')
+  const [isActionSubmitting, setIsActionSubmitting] = useState(false)
 
   // Project Modal State
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false)
@@ -283,6 +392,72 @@ export default function KanbanBoardPage() {
       setProfiles(res.profiles || [])
     }
     setLoading(false)
+  }
+
+  const handleExecuteAgent = async (task: TaskWithRelations) => {
+    setExecutingTaskId(task.id)
+    try {
+      const res = await executeAgentTaskAction(task.id)
+      if (res.success) {
+        playNotificationSound('chat')
+        await fetchData(false)
+        handleOpenReviewModal(task)
+      } else {
+        alert(`Errore esecuzione Agente AI: ${res.error}`)
+      }
+    } catch (err: any) {
+      alert(`Errore imprevisto: ${err?.message}`)
+    } finally {
+      setExecutingTaskId(null)
+    }
+  }
+
+  const handleOpenReviewModal = async (task: TaskWithRelations) => {
+    setReviewTask(task)
+    setIsReviewModalOpen(true)
+    setIsReviewLoading(true)
+    setRejectFeedback('')
+    const res = await getTaskAgentRunsAction(task.id)
+    if (res.success) {
+      setReviewRuns(res.runs || [])
+    }
+    setIsReviewLoading(false)
+  }
+
+  const handleApproveRun = async () => {
+    if (!reviewTask || isActionSubmitting) return
+    setIsActionSubmitting(true)
+    try {
+      const latestRun = reviewRuns[0]
+      const res = await approveAgentTaskRunAction(reviewTask.id, latestRun?.id)
+      if (res.success) {
+        playNotificationSound('chat')
+        setIsReviewModalOpen(false)
+        await fetchData(false)
+      } else {
+        alert(`Errore approvazione: ${res.error}`)
+      }
+    } finally {
+      setIsActionSubmitting(false)
+    }
+  }
+
+  const handleRejectRun = async () => {
+    if (!reviewTask || isActionSubmitting) return
+    setIsActionSubmitting(true)
+    try {
+      const latestRun = reviewRuns[0]
+      const res = await rejectAgentTaskRunAction(reviewTask.id, latestRun?.id, rejectFeedback)
+      if (res.success) {
+        playNotificationSound('chat')
+        setIsReviewModalOpen(false)
+        await fetchData(false)
+      } else {
+        alert(`Errore rifiuto: ${res.error}`)
+      }
+    } finally {
+      setIsActionSubmitting(false)
+    }
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -353,6 +528,7 @@ export default function KanbanBoardPage() {
     setTaskTitle('')
     setTaskDesc('')
     setTaskProjectId(selectedProjectFilter !== 'all' ? selectedProjectFilter : '')
+    setTaskAssignedTo('')
     setTaskStatus(colStatus)
     setTaskPriority('medium')
     setTaskDueDate(new Date().toISOString().split('T')[0])
@@ -365,6 +541,7 @@ export default function KanbanBoardPage() {
     setTaskTitle(task.title)
     setTaskDesc(task.description || '')
     setTaskProjectId(task.project_id || '')
+    setTaskAssignedTo(task.assigned_to || '')
     setTaskStatus(task.status)
     setTaskPriority(task.priority || 'medium')
     setTaskDueDate(task.due_date ? task.due_date.split('T')[0] : '')
@@ -387,6 +564,7 @@ export default function KanbanBoardPage() {
           priority: taskPriority,
           projectId: taskProjectId || null,
           dueDate: taskDueDate || null,
+          assignedTo: taskAssignedTo || null,
         })
 
         if (res.success && res.task) {
@@ -403,6 +581,7 @@ export default function KanbanBoardPage() {
           priority: taskPriority,
           projectId: taskProjectId || null,
           dueDate: taskDueDate || null,
+          assignedTo: taskAssignedTo || null,
         })
 
         if (res.success && res.task) {
@@ -416,6 +595,7 @@ export default function KanbanBoardPage() {
       setIsTaskModalOpen(false)
       setTaskTitle('')
       setTaskDesc('')
+      setTaskAssignedTo('')
     } finally {
       setIsSubmittingTask(false)
     }
@@ -617,7 +797,7 @@ export default function KanbanBoardPage() {
           </div>
 
           {/* KPI Riassuntivi */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
               <div>
                 <span className="text-xs font-semibold text-slate-400">Da Fare</span>
@@ -636,6 +816,19 @@ export default function KanbanBoardPage() {
                 </p>
               </div>
               <Sparkles className="h-6 w-6 text-indigo-500/40" />
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800/60 bg-purple-50/20 dark:bg-purple-950/10 shadow-xs flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                  <Bot className="h-3 w-3" />
+                  In Revisione
+                </span>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 font-mono mt-1">
+                  {filteredTasks.filter((t) => t.status === 'review').length}
+                </p>
+              </div>
+              <Eye className="h-6 w-6 text-purple-500/40" />
             </div>
 
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
@@ -664,14 +857,18 @@ export default function KanbanBoardPage() {
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
               >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-w-[750px] items-start">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 min-w-[900px] items-start">
                   {COLUMNS.map((col) => {
                     const columnTasks = filteredTasks.filter((t) => t.status === col.id)
 
                     return (
                       <div
                         key={col.id}
-                        className="flex flex-col bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden"
+                        className={`flex flex-col bg-slate-50 dark:bg-slate-900/60 rounded-2xl border shadow-xs overflow-hidden ${
+                          col.id === 'review'
+                            ? 'border-purple-300 dark:border-purple-800/80 bg-purple-50/10'
+                            : 'border-slate-200 dark:border-slate-800'
+                        }`}
                       >
                         {/* Column Header */}
                         <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900">
@@ -682,6 +879,8 @@ export default function KanbanBoardPage() {
                                   ? 'bg-amber-500'
                                   : col.id === 'in_progress'
                                   ? 'bg-indigo-500'
+                                  : col.id === 'review'
+                                  ? 'bg-purple-500'
                                   : 'bg-emerald-500'
                               }`}
                             />
@@ -701,6 +900,9 @@ export default function KanbanBoardPage() {
                           onEdit={handleOpenEditTaskModal}
                           onDelete={handleDeleteTask}
                           onMoveStatus={handleMoveStatus}
+                          onExecuteAgent={handleExecuteAgent}
+                          onOpenReview={handleOpenReviewModal}
+                          executingTaskId={executingTaskId}
                         />
 
                         {/* Add Task Button at bottom of column */}
@@ -749,82 +951,73 @@ export default function KanbanBoardPage() {
                   key={proj.id}
                   className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-indigo-400 dark:hover:border-indigo-500/50 transition-all"
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-9 w-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                          <Layers className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-sm text-slate-900 dark:text-white leading-tight">
-                            {proj.title}
-                          </h3>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            Creato: {new Date(proj.created_at).toLocaleDateString('it-IT')}
-                          </span>
-                        </div>
-                      </div>
-
-                      <Badge
-                        variant={proj.status === 'completed' ? 'success' : 'purple'}
-                        className="text-[9px] uppercase font-mono"
-                      >
-                        {proj.status === 'active' ? 'Attivo' : proj.status === 'completed' ? 'Completato' : 'In Corso'}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <Badge variant="purple" className="text-[10px] uppercase font-bold">
+                        {proj.status === 'active' ? 'Attivo' : proj.status === 'completed' ? 'Completato' : 'Archiviato'}
                       </Badge>
+                      <span className="text-xs font-mono text-slate-400">
+                        {completedCount}/{projTasks.length} compiti
+                      </span>
                     </div>
 
-                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
-                      {proj.description || 'Nessuna descrizione specificata per questo ambito.'}
-                    </p>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                      {proj.title}
+                    </h3>
 
-                    {/* Task Progress Bar */}
-                    <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-500 font-medium">Avanzamento Compiti</span>
-                        <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                          {completedCount} / {projTasks.length} ({progressPct}%)
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-                        <div
-                          className="bg-indigo-600 h-2 rounded-full transition-all"
-                          style={{ width: `${progressPct}%` }}
-                        />
-                      </div>
-                    </div>
+                    {proj.description && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                        {proj.description}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <button
-                      onClick={() => {
-                        setSelectedProjectFilter(proj.id)
-                        setMainView('kanban')
-                      }}
-                      className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
-                    >
-                      <span>Vedi nel Kanban</span>
-                      <ArrowRight className="h-3 w-3" />
-                    </button>
+                  <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="text-slate-500">Avanzamento</span>
+                      <span className="font-mono text-indigo-600 dark:text-indigo-400">{progressPct}%</span>
+                    </div>
 
-                    <div className="flex items-center gap-1">
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-indigo-600 h-full rounded-full transition-all duration-300"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
                       <Button
                         size="sm"
-                        variant="ghost"
-                        onClick={() => handleOpenEditProjectModal(proj)}
-                        className="h-7 w-7 p-0 text-slate-400 hover:text-indigo-600"
-                        title="Modifica Ambito"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedProjectFilter(proj.id)
+                          setMainView('kanban')
+                        }}
+                        className="text-xs h-7 px-2.5 rounded-lg text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/50"
                       >
-                        <Edit2 className="h-3.5 w-3.5" />
+                        Vedi compiti
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteProject(proj.id, proj.title)}
-                        className="h-7 w-7 p-0 text-slate-400 hover:text-red-600"
-                        title="Elimina Ambito"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleOpenEditProjectModal(proj)}
+                          className="h-7 w-7 p-0 text-slate-400 hover:text-slate-600"
+                          title="Modifica Ambito"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteProject(proj.id, proj.title)}
+                          className="h-7 w-7 p-0 text-slate-400 hover:text-red-600"
+                          title="Elimina Ambito"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -864,19 +1057,39 @@ export default function KanbanBoardPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione & Note (Opzionale)</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione & Note Operative</label>
                 <textarea
                   rows={3}
                   value={taskDesc}
                   onChange={(e) => setTaskDesc(e.target.value)}
-                  placeholder="Dettagli operativi, link a documenti, checklist..."
+                  placeholder="Dettagli operativi, link a documenti, checklist o istruzioni per l'Agente AI..."
                   className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-xs text-slate-900 dark:text-white shadow-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo-500"
                 />
               </div>
 
+              {/* Assegnatario (Membro Team o Agente AI) */}
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5 text-indigo-600" />
+                  Assegna a (Membro Team o Agente AI)
+                </label>
+                <select
+                  value={taskAssignedTo}
+                  onChange={(e) => setTaskAssignedTo(e.target.value)}
+                  className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs text-slate-900 dark:text-white shadow-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo-500"
+                >
+                  <option value="">Nessun assegnatario (Non assegnato)</option>
+                  {profiles.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.is_agent ? `🤖 ${p.full_name || 'AI Agent'} (Agente Autonomo)` : `👤 ${p.full_name || p.email}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Stato Iniziale</label>
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Stato</label>
                   <select
                     value={taskStatus}
                     onChange={(e) => setTaskStatus(e.target.value as TaskStatus)}
@@ -884,6 +1097,7 @@ export default function KanbanBoardPage() {
                   >
                     <option value="todo">🟡 Da Fare</option>
                     <option value="in_progress">🔵 In Corso</option>
+                    <option value="review">🟣 In Revisione (AI / Team)</option>
                     <option value="done">🟢 Completato</option>
                   </select>
                 </div>
@@ -1066,6 +1280,161 @@ export default function KanbanBoardPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL 3: Human-in-the-Loop Review Drawer/Modal */}
+      {isReviewModalOpen && reviewTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-2xl border border-purple-200 dark:border-purple-800/80 overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-purple-100 dark:border-purple-900/50 flex items-center justify-between bg-purple-50/60 dark:bg-purple-950/40">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-purple-600 text-white shadow-xs">
+                  <Bot className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>Revisione Output Agente AI</span>
+                    <Badge variant="purple" className="text-[10px] uppercase font-mono">
+                      Human-in-the-loop
+                    </Badge>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-md">
+                    Task: <b>{reviewTask.title}</b>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsReviewModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
+              {isReviewLoading ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400">
+                  <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
+                  <span>Caricamento esecuzioni dell'Agente...</span>
+                </div>
+              ) : reviewRuns.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                  <p>Nessun output registrato per questo task.</p>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setIsReviewModalOpen(false)
+                      handleExecuteAgent(reviewTask)
+                    }}
+                    className="mt-3 bg-purple-600 hover:bg-purple-700 text-white text-xs gap-1.5"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Lancia ora l'Agente Nemotron</span>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviewRuns.map((run, idx) => (
+                    <div
+                      key={run.id}
+                      className={`p-4 rounded-2xl border transition-all ${
+                        idx === 0
+                          ? 'border-purple-300 dark:border-purple-700 bg-purple-50/20 dark:bg-purple-950/20'
+                          : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 opacity-70'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-purple-100 dark:border-purple-900/40 text-[11px] text-slate-500 font-mono">
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={run.status === 'approved' ? 'success' : run.status === 'rejected' ? 'destructive' : 'purple'}
+                            className="text-[9px] uppercase font-bold"
+                          >
+                            {run.status === 'approved' ? '✓ Approvato' : run.status === 'rejected' ? '✕ Rifiutato' : 'In Revisione'}
+                          </Badge>
+                          <span>{run.agent?.full_name || 'Nemotron Lead Agent'}</span>
+                        </div>
+                        <span>{new Date(run.created_at).toLocaleString('it-IT')}</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        <span className="font-bold text-slate-700 dark:text-slate-300 block text-[11px]">
+                          Output Generato dall'Agente:
+                        </span>
+                        <div className="p-3.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-sans leading-relaxed text-xs max-h-60 overflow-y-auto">
+                          {run.output_response || 'Nessun testo generato'}
+                        </div>
+                      </div>
+
+                      {run.tokens_used > 0 && (
+                        <div className="pt-2 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                          <span>Token utilizzati: <b>{run.tokens_used}</b></span>
+                          <span>Modello: <b>NVIDIA Nemotron</b></span>
+                        </div>
+                      )}
+
+                      {run.user_feedback && (
+                        <div className="mt-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-[11px]">
+                          <b>Nota di revisione:</b> {run.user_feedback}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Feedback form for reject */}
+                  <div className="pt-2 space-y-1.5">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
+                      Note o Feedback per l'Agente (opzionale se approvi, utile se richiedi modifiche):
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={rejectFeedback}
+                      onChange={(e) => setRejectFeedback(e.target.value)}
+                      placeholder="Es. Riduci la lunghezza del testo / Correggi il punto 2..."
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-xs shadow-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-500"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsReviewModalOpen(false)}
+                className="text-xs"
+              >
+                Chiudi
+              </Button>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isActionSubmitting || isReviewLoading}
+                  onClick={handleRejectRun}
+                  className="text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/50 text-xs"
+                >
+                  {isActionSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                  <span>🔄 Richiedi Modifiche</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  disabled={isActionSubmitting || isReviewLoading || reviewRuns.length === 0}
+                  onClick={handleApproveRun}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1.5 shadow-xs"
+                >
+                  {isActionSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5" />}
+                  <span>✅ Approva & Completa Task</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1077,12 +1446,18 @@ function SortableColumn({
   onEdit,
   onDelete,
   onMoveStatus,
+  onExecuteAgent,
+  onOpenReview,
+  executingTaskId,
 }: {
   colId: TaskStatus
   tasks: TaskWithRelations[]
   onEdit: (task: TaskWithRelations) => void
   onDelete: (taskId: string, title: string) => void
   onMoveStatus: (taskId: string, newStatus: TaskStatus) => void
+  onExecuteAgent?: (task: TaskWithRelations) => void
+  onOpenReview?: (task: TaskWithRelations) => void
+  executingTaskId?: string | null
 }) {
   const { setNodeRef } = useDroppable({
     id: colId,
@@ -1104,6 +1479,9 @@ function SortableColumn({
               onEdit={onEdit}
               onDelete={onDelete}
               onMoveStatus={onMoveStatus}
+              onExecuteAgent={onExecuteAgent}
+              onOpenReview={onOpenReview}
+              isExecutingAgent={executingTaskId === task.id}
             />
           ))}
         </SortableContext>

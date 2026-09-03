@@ -19,6 +19,11 @@ import {
   ImageIcon,
   ChevronRight,
   Home,
+  Sparkles,
+  Bot,
+  ListPlus,
+  CheckCircle2,
+  Copy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +31,7 @@ import { Input } from '@/components/ui/input'
 import { formatBytes, formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { notifyFileUploadAction } from '@/app/actions/notifications'
+import { analyzeFileWithAIAction, convertFileAnalysisToTaskAction, FileAnalysisResult } from '@/app/actions/file-ai'
 import { FileItem, Profile } from '@/types/index'
 
 type FileWithUploader = FileItem & { uploader?: Profile; parent_folder_id?: string | null }
@@ -56,6 +62,14 @@ export default function FilesManagerPage() {
   const [previewFile, setPreviewFile] = useState<FileWithUploader | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
+
+  // AI Document Analysis State (Nemotron NIM)
+  const [selectedFileForAi, setSelectedFileForAi] = useState<FileWithUploader | null>(null)
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false)
+  const [aiAnalyzing, setAiAnalyzing] = useState(false)
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<FileAnalysisResult | null>(null)
+  const [isCreatingTaskFromAi, setIsCreatingTaskFromAi] = useState(false)
+  const [taskCreatedSuccess, setTaskCreatedSuccess] = useState(false)
 
   const supabase = createClient()
 
@@ -265,6 +279,42 @@ export default function FilesManagerPage() {
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
+  }
+
+  const handleStartAiAnalysis = async (file: FileWithUploader) => {
+    setSelectedFileForAi(file)
+    setIsAiModalOpen(true)
+    setAiAnalyzing(true)
+    setAiAnalysisResult(null)
+    setTaskCreatedSuccess(false)
+
+    const res = await analyzeFileWithAIAction(file.id)
+    if (res.success && res.analysis) {
+      setAiAnalysisResult(res.analysis)
+    } else {
+      alert(`Errore durante l'analisi AI: ${res.error || 'Errore sconosciuto'}`)
+      setIsAiModalOpen(false)
+    }
+    setAiAnalyzing(false)
+  }
+
+  const handleCreateTaskFromAi = async () => {
+    if (!selectedFileForAi || !aiAnalysisResult || isCreatingTaskFromAi) return
+
+    setIsCreatingTaskFromAi(true)
+    const res = await convertFileAnalysisToTaskAction({
+      title: aiAnalysisResult.suggestedTaskTitle,
+      description: `${aiAnalysisResult.summary}\n\n📌 Punti Chiave:\n${aiAnalysisResult.keyPoints.map((p) => `- ${p}`).join('\n')}\n\n👉 Azione Proposta:\n${aiAnalysisResult.suggestedTaskDesc}`,
+      fileId: selectedFileForAi.id,
+      fileName: selectedFileForAi.name,
+    })
+
+    if (res.success) {
+      setTaskCreatedSuccess(true)
+    } else {
+      alert(`Errore creazione compito: ${res.error}`)
+    }
+    setIsCreatingTaskFromAi(false)
   }
 
   const getFileIcon = (mime: string) => {
@@ -488,6 +538,16 @@ export default function FilesManagerPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-7 w-7 text-purple-600 hover:text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30"
+                            title="Sintetizza / Analizza con AI"
+                            onClick={() => handleStartAiAnalysis(f)}
+                          >
+                            <Sparkles className="h-4 w-4" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-7 w-7 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
                             title="Visualizza / Anteprima"
                             onClick={() => handlePreviewFile(f)}
@@ -603,6 +663,16 @@ export default function FilesManagerPage() {
               </div>
 
               <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleStartAiAnalysis(previewFile)}
+                  className="text-xs gap-1.5 h-8 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-100 font-semibold"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-purple-600" />
+                  Sintetizza con AI
+                </Button>
+
                 {previewUrl && (
                   <Button
                     variant="outline"
@@ -677,6 +747,150 @@ export default function FilesManagerPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Analisi Documentale AI (Nemotron NIM) */}
+      {isAiModalOpen && selectedFileForAi && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-purple-200 dark:border-purple-900/60 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 border-b border-purple-100 dark:border-purple-900/40 bg-purple-50/50 dark:bg-purple-950/20 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs">
+                  <Bot className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                    Analisi Documentale Nemotron AI
+                    <Badge variant="purple" className="text-[9px]">550B NIM</Badge>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-sm">
+                    {selectedFileForAi.name}
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsAiModalOpen(false)}
+                className="h-8 w-8 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 overflow-y-auto space-y-4 text-xs">
+              {aiAnalyzing ? (
+                <div className="py-16 flex flex-col items-center justify-center text-center space-y-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                  <div>
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      Nemotron sta analizzando il documento...
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Estrazione concetti, punti salienti e proposte operative per il team.
+                    </p>
+                  </div>
+                </div>
+              ) : aiAnalysisResult ? (
+                <div className="space-y-4">
+                  {/* Sintesi */}
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Sintesi Esecutiva
+                    </span>
+                    <p className="text-xs leading-relaxed text-slate-800 dark:text-slate-200">
+                      {aiAnalysisResult.summary}
+                    </p>
+                  </div>
+
+                  {/* Punti Chiave */}
+                  {aiAnalysisResult.keyPoints.length > 0 && (
+                    <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        📌 Punti Salienti & Dati Rilevanti
+                      </span>
+                      <ul className="space-y-1.5">
+                        {aiAnalysisResult.keyPoints.map((pt, i) => (
+                          <li key={i} className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0" />
+                            <span className="leading-normal">{pt}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Proposta Compito per /lavori */}
+                  <div className="p-4 rounded-xl bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-800/50 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                        <ListPlus className="h-3.5 w-3.5" />
+                        Compito Consigliato per il Team
+                      </span>
+                      <Badge variant="purple" className="text-[9px]">Priorità Alta</Badge>
+                    </div>
+                    <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-purple-100 dark:border-purple-900/40">
+                      <h4 className="font-bold text-slate-900 dark:text-white text-xs">
+                        {aiAnalysisResult.suggestedTaskTitle}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                        {aiAnalysisResult.suggestedTaskDesc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Footer */}
+            {aiAnalysisResult && (
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${aiAnalysisResult.summary}\n\n${aiAnalysisResult.keyPoints.join('\n')}`)
+                    alert('Sintesi copiata negli appunti!')
+                  }}
+                  className="text-xs gap-1.5"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  Copia Sintesi
+                </Button>
+
+                {taskCreatedSuccess ? (
+                  <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-xs bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-lg border border-emerald-200">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Compito creato su /lavori!
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={isCreatingTaskFromAi}
+                    onClick={handleCreateTaskFromAi}
+                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs gap-1.5 shadow-xs font-semibold"
+                  >
+                    {isCreatingTaskFromAi ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Creazione compito...
+                      </>
+                    ) : (
+                      <>
+                        <ListPlus className="h-3.5 w-3.5" />
+                        Crea Compito su /lavori
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

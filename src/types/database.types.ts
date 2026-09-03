@@ -25,6 +25,9 @@ export interface Database {
           avatar_url: string | null
           role: UserRole
           is_active: boolean
+          is_agent?: boolean
+          agent_model?: string | null
+          agent_system_prompt?: string | null
           created_at: string
           updated_at: string
         }
@@ -35,6 +38,9 @@ export interface Database {
           avatar_url?: string | null
           role?: UserRole
           is_active?: boolean
+          is_agent?: boolean
+          agent_model?: string | null
+          agent_system_prompt?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -45,6 +51,9 @@ export interface Database {
           avatar_url?: string | null
           role?: UserRole
           is_active?: boolean
+          is_agent?: boolean
+          agent_model?: string | null
+          agent_system_prompt?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -334,6 +343,44 @@ export interface Database {
           approved_at?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      task_agent_runs: {
+        Row: {
+          id: string
+          task_id: string
+          agent_id: string
+          prompt_sent: string
+          output_response: string | null
+          tokens_used: number
+          status: 'running' | 'success' | 'failed' | 'approved' | 'rejected'
+          user_feedback: string | null
+          created_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          agent_id: string
+          prompt_sent: string
+          output_response?: string | null
+          tokens_used?: number
+          status?: 'running' | 'success' | 'failed' | 'approved' | 'rejected'
+          user_feedback?: string | null
+          created_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          agent_id?: string
+          prompt_sent?: string | null
+          output_response?: string | null
+          tokens_used?: number
+          status?: 'running' | 'success' | 'failed' | 'approved' | 'rejected'
+          user_feedback?: string | null
+          created_at?: string
+          completed_at?: string | null
         }
       }
     }

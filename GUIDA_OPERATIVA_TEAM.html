@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Guida Operativa Team Hub - Piattaforma & Agenti AI</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+    
+    @page {
+      size: A4;
+      margin: 16mm 14mm;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1e293b;
+      line-height: 1.55;
+      font-size: 12.5px;
+      margin: 0;
+      padding: 20px;
+      background: #ffffff;
+    }
+
+    .header-box {
+      border-bottom: 2px solid #4f46e5;
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #4338ca;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #64748b;
+      margin: 0;
+    }
+
+    h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e1b4b;
+      border-left: 4px solid #4f46e5;
+      padding-left: 8px;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      page-break-after: avoid;
+    }
+
+    p, ul, ol {
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    ul, ol {
+      padding-left: 18px;
+    }
+
+    li {
+      margin-bottom: 3px;
+    }
+
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      page-break-inside: avoid;
+    }
+
+    .flow-steps {
+      display: flex;
+      gap: 6px;
+      margin: 10px 0;
+      font-weight: 600;
+      font-size: 10.5px;
+    }
+
+    .flow-step {
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      color: #3730a3;
+      padding: 5px 8px;
+      border-radius: 6px;
+      flex: 1;
+      text-align: center;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .highlight {
+      background: #faf5ff;
+      border-left: 4px solid #a855f7;
+      padding: 8px 12px;
+      border-radius: 0 6px 6px 0;
+      margin: 10px 0;
+    }
+
+    .footer {
+      margin-top: 24px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 10px;
+      font-size: 11px;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-box">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h1>📘 Guida Operativa Team Hub</h1>
+        <p class="subtitle">Manuale d'uso e linee guida operative per i soci del team (Versione 2026)</p>
+      </div>
+      <span class="badge">Team & Agenti AI</span>
+    </div>
+  </div>
+
+  <div class="no-print" style="background: #e0f2fe; border: 1px solid #bae6fd; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: #0369a1; display: flex; justify-content: space-between; align-items: center;">
+    <span>💡 <b>Per salvare in PDF:</b> Premi <code>Cmd + P</code> (su Mac) o <code>Ctrl + P</code> (su Windows) e seleziona <i>"Salva come PDF"</i>.</span>
+    <button onclick="window.print()" style="background: #0284c7; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px;">🖨️ Stampa / Salva PDF</button>
+  </div>
+
+  <h2>1. Bacheca Lavori & Compiti (<code>/lavori</code>)</h2>
+  <p>Gestione operativa delle attività del team e degli agenti AI attraverso 4 colonne:</p>
+  
+  <div class="flow-steps">
+    <div class="flow-step">1. Da Fare</div>
+    <div class="flow-step">2. In Corso</div>
+    <div class="flow-step" style="background: #faf5ff; border-color: #e9d5ff; color: #6b21a8;">3. 🟣 In Revisione (AI / Team)</div>
+    <div class="flow-step" style="background: #f0fdf4; border-color: #bbf7d0; color: #166534;">4. ✅ Completato</div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">⚡ Flusso con Agente AI (Human-in-the-Loop)</h3>
+    <ol>
+      <li><b>Assegnazione:</b> Assegna il compito a <code>🤖 Nemotron Lead Agent</code>.</li>
+      <li><b>Avvio:</b> Clicca sul pulsante <code>⚡ Esegui con Agente AI</code> sulla card.</li>
+      <li><b>Revisione:</b> L'agente genera il lavoro e sposta il task in <i>"In Revisione"</i>.</li>
+      <li><b>Validazione:</b> Clicca su <code>👀 Revisiona Output Agente</code> per approvare (<code>✅ Approva & Completa</code>) o chiedere modifiche (<code>🔄 Richiedi Modifiche</code>). L'output approvato viene salvato in automatico nel <i>Secondo Cervello</i>.</li>
+    </ol>
+  </div>
+
+  <h2>2. Marketing & Campagne (<code>/marketing</code>)</h2>
+  <p>Hub strategico per la crescita, le sponsorizzate e la gestione dei lanci secondo il framework <b>APEX Growth</b>:</p>
+  <ul>
+    <li><b>Simulatore ROI & Ricavi:</b> Calcolo interattivo di budget pubblicitario, lead attesi, tassi di conversione (%) e fatturato lordo stimato.</li>
+    <li><b>Piani di Lancio & Campagne:</b> Monitoraggio campagne per canali (Meta Ads, Instagram, LinkedIn, Email) e stati (<i>Bozza</i>, <i>In Corso</i>, <i>Completata</i>).</li>
+  </ul>
+
+  <h2>3. Ecosistema Agenti AI & Piattaforma Esterna</h2>
+  <ul>
+    <li><b>Suite Esterna (<code>agenti-aiutiamoci.vercel.app</code>):</b> Accesso diretto alla piattaforma esterna dedicata allo sviluppo e testing di agenti autonomi per clienti e consulenze.</li>
+    <li><b>Motore Interno (NVIDIA Nemotron):</b> Motore server-side (550B NIM) integrato nel Team Hub per elaborare compiti, sintetizzare file e generare email.</li>
+  </ul>
+
+  <h2>4. Posta Condivisa (<code>/posta</code>)</h2>
+  <p>Gestione unificata delle caselle: <code>team@aiutiamoci.cloud</code>, <code>info@</code>, <code>assistenza@</code> e <code>mar2.cloud</code>.</p>
+  <div class="highlight">
+    <b>✨ Assistente AI per le Email:</b> Cliccando su <i>"Analizza con AI"</i> su qualsiasi messaggio, il sistema genera un riassunto rapido in 2 frasi, stima la priorità e produce una <b>bozza di risposta professionale</b> da incollare e inviare con 1 click.
+  </div>
+
+  <h2>5. Documenti & File Cloud (<code>/files</code>)</h2>
+  <ul>
+    <li><b>Archivio & Anteprima:</b> Cartelle, breadcrumb e visualizzazione istantanea di PDF e immagini.</li>
+    <li><b>✨ Sintesi Documentale AI:</b> Analisi del testo con estrazione di punti chiave e <b>creazione diretta di un compito</b> su <code>/lavori</code>.</li>
+    <li><b>Indicizzazione:</b> Tutte le sintesi confluiscono automaticamente nel <i>Secondo Cervello</i>.</li>
+  </ul>
+
+  <h2>6. Secondo Cervello & Vault Conoscenza (<code>/cervello</code>)</h2>
+  <p>Archivio centrale ricercabile della conoscenza aziendale:</p>
+  <ul>
+    <li><b>📁 Documenti & File AI:</b> Sintesi e note estratte dai file caricati.</li>
+    <li><b>🤖 Agenti & Automazioni:</b> Deliverable e report approvati generati da Nemotron.</li>
+    <li><b>🎯 Prompting, Copy B2B & Dati:</b> Formule prompt RCCF, template di copy e formule Excel.</li>
+    <li><b>Knowledge Graph:</b> Mappa visuale interattiva delle relazioni logiche.</li>
+  </ul>
+
+  <h2>7. Corsi & Gestione Studenti (<code>/corsi</code>)</h2>
+  <ul>
+    <li><b>Approvazione:</b> Convalida delle registrazioni arrivate da <code>aiutiamoci.cloud</code> con un click.</li>
+    <li><b>Invio Codice Automatico:</b> Generazione del codice studente (es. <code>AI-START-XXXX</code>) e <b>invio immediato dell'email di benvenuto</b>.</li>
+  </ul>
+
+  <h2>8. Chat Interna (<code>/chat</code>) & Notifiche Telegram</h2>
+  <ul>
+    <li><b>Chat di Team:</b> Spazio esclusivo riservato ai soli membri del team per comunicazioni rapide nei canali <code>#generale</code> e <code>#progetti</code>.</li>
+    <li><b>Bot Telegram:</b> Notifiche in tempo reale su nuovi task, approvazioni AI, file caricati e nuovi studenti.</li>
+  </ul>
+
+  <div class="footer">
+    <span>Team Hub • Piattaforma Condivisa</span>
+    <span>Documento riservato ad uso interno del team</span>
+  </div>
+
+</body>
+</html>

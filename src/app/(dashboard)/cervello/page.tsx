@@ -26,6 +26,7 @@ import {
   Info,
   LayoutGrid,
   Network,
+  FileText,
 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -44,11 +45,12 @@ import {
 
 const CATEGORIES = [
   { id: 'all', label: 'Tutte le Risorse', icon: Layers, color: 'text-indigo-400' },
+  { id: 'course_notes', label: '📁 Documenti & File AI', icon: FileText, color: 'text-cyan-400' },
+  { id: 'agents_workflows', label: '🤖 Agenti & Automazioni', icon: Bot, color: 'text-pink-400' },
   { id: 'prompting', label: '🎯 Prompting & RCCF', icon: Terminal, color: 'text-amber-400' },
   { id: 'copywriting', label: '✉️ Copy & Email B2B', icon: BookOpen, color: 'text-blue-400' },
   { id: 'excel_data', label: '📊 Excel & Analisi Dati', icon: FileSpreadsheet, color: 'text-emerald-400' },
   { id: 'visual_media', label: '🎨 Immagini & Slide', icon: Palette, color: 'text-purple-400' },
-  { id: 'agents_workflows', label: '🤖 Agenti & Automazioni', icon: Bot, color: 'text-pink-400' },
 ]
 
 export default function CervelloKnowledgePage() {

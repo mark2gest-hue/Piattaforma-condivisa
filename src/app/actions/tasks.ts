@@ -169,6 +169,7 @@ export async function updateTaskDetailsAction(
     status?: TaskStatus
     projectId?: string | null
     dueDate?: string | null
+    assignedTo?: string | null
   }
 ) {
   try {
@@ -180,6 +181,7 @@ export async function updateTaskDetailsAction(
     if (payload.status) updateData.status = payload.status
     if (payload.projectId !== undefined) updateData.project_id = payload.projectId || null
     if (payload.dueDate !== undefined) updateData.due_date = payload.dueDate || null
+    if (payload.assignedTo !== undefined) updateData.assigned_to = payload.assignedTo || null
 
     const { data, error } = await (supabase as any)
       .from('tasks')

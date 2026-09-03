@@ -61,7 +61,10 @@ export default function ChatPage() {
       }
 
       const { data: profiles } = await supabase.from('profiles').select('*')
-      if (profiles) setTeamMembers(profiles)
+      if (profiles) {
+        // Mostra solo i membri umani del team nella lista chat
+        setTeamMembers(profiles.filter((p: any) => !p.is_agent))
+      }
 
       await fetchMessages(activeChannel)
       setLoading(false)
