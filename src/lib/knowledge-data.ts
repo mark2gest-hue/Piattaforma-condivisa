@@ -131,6 +131,47 @@ Tono: Professionale, autorevole ma umano e diretto.`,
     is_featured: true,
   },
   {
+    id: 'k-aiutiamoci-manifesto',
+    title: 'Manifesto Copywriting AIutiamoci: Tono Umano & Anti-Marketer',
+    category: 'copywriting',
+    tags: ['aiutiamoci', 'manifesto', 'tono-di-voce', 'anti-marketer', 'empatia', 'posizionamento'],
+    description: 'Linee guida fondamentali per la comunicazione di AIutiamoci: empatia, rassicurazione e abbattimento dell\'ansia da tecnologia.',
+    content: `### 🧭 Manifesto di Comunicazione AIutiamoci ("Umani nel pensiero. Smart nell'azione.")
+
+#### ❌ Cosa NON fare mai (Linguaggio da Marketer da bandire):
+- **Niente formule fredde o aggressive:** "perdere ore preziose", "task quotidiane", "produttività aziendale", "ti costa il triplo".
+- **Niente promesse irrealistiche:** "raddoppiare il fatturato in 5 minuti", "diventa milionario con l'AI".
+- **Non vendere subito il corso al primo contatto:** il primo obiettivo è far sentire la persona compresa, non venderle un prodotto.
+
+#### 🎯 La vera psicologia del nostro target (Non-nativi digitali, professionisti, over 40-50):
+- Il pubblico **non ha paura di perdere produttività**: ha paura di **rimanere indietro, non capire, sentirsi fuori posto e buttare soldi in cose complicate**.
+- **La prima conversione è la fiducia:** Far scattare la convinzione: *"Posso farcela anch'io. Finalmente qualcuno che non mi tratta da incapace."*
+
+#### 💡 Formula Hook e Copy Esemplare:
+> **NON SEI IN RITARDO. TI HANNO SOLO SPIEGATO L’AI NEL MODO SBAGLIATO.**
+>
+> Ogni giorno esce un nuovo strumento, un nuovo video, qualcuno che promette di rivoluzionarti il lavoro in cinque minuti.
+> 
+> Risultato? Più cerchi di capire, più rischi di sentirti confuso.
+> 
+> E magari pensi:  
+> *“Non fa per me.”*  
+> *“Ormai sono troppo indietro.”*  
+> *“Devo essere bravo con la tecnologia.”*
+> 
+> **No.**  
+> Per iniziare non devi diventare un tecnico e non devi imparare cento strumenti.  
+> Devi capire quali poche cose possono esserti davvero utili nella vita e nel lavoro e imparare a usarle con calma, facendo pratica.
+> 
+> È esattamente da qui che nasce **AIutiamoci**.  
+> Un percorso pensato soprattutto per chi non è nato digitale, ma non ha nessuna intenzione di restare a guardare.
+> 
+> *Umani nel pensiero. Smart nell’azione.*  
+> Se vuoi capire da dove iniziare, scrivimi.`,
+    lesson_id: 1,
+    is_featured: true,
+  },
+  {
     id: 'k-7',
     title: 'Riformulazione Testi Complessi con Metodo ELI5',
     category: 'copywriting',

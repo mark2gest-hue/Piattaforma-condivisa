@@ -75,8 +75,15 @@ export async function generateMarketingCampaignAction(brief: MarketingBriefInput
   error?: string
 }> {
   try {
-    const systemPrompt = `Sei APEX Growth Architect, l'agente di intelligenza artificiale d'élite specializzato nell'ingegneria del marketing a risposta diretta (Hormozi, Brunson, Schwartz, Kennedy, Hopkins).
-Il tuo obiettivo è elaborare una strategia di marketing scientifica, persuasiva, ad altissima conversione e pronta all'uso a partire dal brief fornito.
+    const systemPrompt = `Sei l'architetto strategico di marketing di AIutiamoci ("Umani nel pensiero. Smart nell'azione.").
+Il tuo compito è elaborare una strategia di comunicazione profondamente UMANA, empatica, rassicurante e ad altissima fiducia.
+
+REGOLE FONDAMENTALI DI TONO E COPYWRITING PER AIUTIAMOCI:
+1. NO AL LINGUAGGIO DA "MARKETER": bandite formule fredde o aggressive ("perdere ore preziose", "task quotidiane", "produttività aziendale", "ti costa il triplo", "raddoppiare il fatturato").
+2. COMPRENDI LA VERA PAURA DEL TARGET (non-nativi digitali, professionisti, over 40-50): non hanno paura della "produttività", hanno paura di rimanere indietro, sentirsi esclusi, fare figure di non capire o buttare soldi in strumenti inutili.
+3. POSIZIONAMENTO DI AIUTIAMOCI: semplicità, accompagnamento passo-passo, calma, rispetto, zero gergo tecnico, "finalmente qualcuno che non mi tratta da incapace".
+4. LA PRIMA CONVERSIONE È LA FIDUCIA: la prima cosa da trasmettere NON è la vendita di un corso, ma la convinzione: "Non sei in ritardo. Ti hanno solo spiegato l'AI nel modo sbagliato. Posso farcela anch'io."
+5. GANCIO FORTE E DIRETTO: usa hook come "NON SEI IN RITARDO. TI HANNO SOLO SPIEGATO L'AI NEL MODO SBAGLIATO." oppure "L'AI ti incuriosisce, ma ogni volta che provi a capirci qualcosa ti senti già in ritardo?".
 
 DEVI RESTITUIRE ESCLUSIVAMENTE UN JSON VALIDO (senza markdown o testo extra) con questa struttura esatta:
 {
@@ -290,29 +297,29 @@ DEVI RESTITUIRE ESCLUSIVAMENTE UN JSON VALIDO (senza markdown o testo extra) con
       angles: [
         {
           id: 'angle-1',
-          title: 'Angolo 1: Dolore Viscerale & Frustrazione Attuale',
-          hook: `Stai ancora perdendo ore preziose a lottare con ${brief.corePain}?`,
+          title: 'Angolo 1: Rassicurazione & Rottura Falso Mito ("Non sei in ritardo")',
+          hook: 'NON SEI IN RITARDO. TI HANNO SOLO SPIEGATO L’AI NEL MODO SBAGLIATO.',
           creativeType: 'UGC Video',
-          bodyCopy: `La verità è che continuare con il vecchio metodo ti costa il triplo del tempo e del budget. Con ${brief.productName} abbiamo isolato esattamente la causa del blocco per farti ottenere ${brief.coreDesire} senza complicazioni.`,
-          callToAction: `Scopri la soluzione definitiva a soli €${brief.price}`,
+          bodyCopy: `Ogni giorno esce un nuovo strumento, un nuovo video, qualcuno che promette di rivoluzionarti il lavoro in cinque minuti.\n\nRisultato? Più cerchi di capire, più rischi di sentirti confuso ed escluso.\n\nE magari pensi:\n“Non fa per me.”\n“Ormai sono troppo indietro.”\n“Devo essere un programmatore.”\n\nNo. Per iniziare non devi diventare un tecnico e non devi imparare cento strumenti. Devi solo capire quali poche cose ti servono davvero e imparare a usarle con calma e con una guida umana al tuo fianco.\n\nUmani nel pensiero. Smart nell'azione.`,
+          callToAction: 'Se vuoi capire da dove iniziare con calma, scrivici in privato o commenta "GUIDA".',
           framework: 'PAS'
         },
         {
           id: 'angle-2',
-          title: 'Angolo 2: Il Meccanismo Contro-Intuitivo',
-          hook: `Ecco perché il 90% di chi cerca di ottenere ${brief.coreDesire} sbaglia approccio...`,
+          title: 'Angolo 2: Accompagnamento & Pratica Guidata',
+          hook: 'L’AI ti incuriosisce, ma ogni volta che provi a capirci qualcosa ti sembra tutto troppo complicato?',
           creativeType: 'Carosello',
-          bodyCopy: `Non è colpa tua: i metodi tradizionali ignorano l'ingegneria del risultato. Scopri il nostro meccanismo proprietario implementato in ${brief.productName}.`,
-          callToAction: `Accedi al sistema passo-passo`,
+          bodyCopy: `Non è colpa tua: la maggior parte dei corsi parla una lingua per soli tecnici. In AIutiamoci abbiamo creato un metodo passo-passo pensato per professionisti che vogliono risultati concreti senza stress.`,
+          callToAction: 'Scopri il metodo semplice e umano di AIutiamoci',
           framework: 'AIDA'
         },
         {
           id: 'angle-3',
-          title: 'Angolo 3: Riprova Sociale & Trasformazione',
-          hook: `Da zero a risultati tangibili in 14 giorni: ecco la roadmap esatta.`,
+          title: 'Angolo 3: Trasformazione Concreta ("Posso farcela anch\'io")',
+          hook: '“Pensavo fosse troppo tardi per imparare: mi sbagliavo.”',
           creativeType: 'Immagine Statica',
-          bodyCopy: `Guarda come la nostra community sta trasformando il proprio flusso di lavoro con ${brief.productName}. Prezzo di lancio speciale: €${brief.price}.`,
-          callToAction: `Unisciti ora con tutti i bonus inclusi`,
+          bodyCopy: `La storia di chi è partito da zero senza alcuna base tecnica e oggi usa l'Intelligenza Artificiale ogni giorno per risparmiare tempo e lavorare meglio.`,
+          callToAction: 'Unisciti alla nostra community',
           framework: 'Hormozi Value'
         }
       ],
@@ -320,46 +327,46 @@ DEVI RESTITUIRE ESCLUSIVAMENTE UN JSON VALIDO (senza markdown o testo extra) con
         {
           stepNumber: 1,
           phase: 'Top of Funnel (Attraction)',
-          assetName: 'Landing Page di Presentazione e Cattura',
-          goal: `Catturare l'attenzione dell'avatar (${brief.targetAvatar}) ed evidenziare ${brief.coreDesire}`,
+          assetName: 'Landing Page Empatica & Questionario',
+          goal: `Rassicurare l'utente (${brief.targetAvatar}) ed eliminare la paura di non farcela`,
           croChecklist: [
-            'Headline sopra la piega con beneficio immediato',
-            'Call to Action chiara a forte contrasto visivo',
-            'Badge di sicurezza e testimonianze ben visibili'
+            'Headline focalizzata su chiarezza, calma e zero gergo tecnico',
+            'Questionario guidato per capire il livello di partenza',
+            'Testimonianze reali di colleghi partiti da zero'
           ]
         },
         {
           stepNumber: 2,
           phase: 'Middle of Funnel (Indoctrination)',
-          assetName: 'VSL & Demo Interattiva',
-          goal: `Dimostrare il funzionamento di ${brief.productName} e abbattere l'obiezione sul prezzo (€${brief.price})`,
+          assetName: 'Video Accoglienza & Dimostrazione Pratica',
+          goal: `Dimostrare con esempi quotidiani che chiunque può usare l'AI`,
           croChecklist: [
-            'Video esplicativo da 5-10 minuti focalizzato sulla trasformazione',
-            'Pulsante di sblocco offerta sincronizzato con la call to action',
-            'Dettaglio completo dei 3 bonus inclusi'
+            'Video caloroso da 5 minuti con linguaggio semplice e chiaro',
+            'Esempi pratici immediati su email, documenti ed Excel',
+            'Supporto umano del team ben evidenziato'
           ]
         },
         {
           stepNumber: 3,
           phase: 'Bottom of Funnel (Conversion)',
-          assetName: 'Checkout a Bassa Frizione & Order Bump',
-          goal: 'Finalizzare la transazione e incrementare il valore medio del carrello',
+          assetName: 'Iscrizione Protetta con Garanzia Rassicurante',
+          goal: 'Offrire un percorso sereno con garanzia totale e supporto',
           croChecklist: [
-            'Opzioni di pagamento flessibili (Stripe / Carta / Rate)',
-            'Order bump complementare a €17-€37',
-            'Garanzia 30 giorni evidenziata accanto al totale'
+            'Processo di iscrizione in 1 minuto',
+            'Assistenza diretta via chat con persone reali',
+            'Garanzia soddisfatti o rimborsati senza condizioni'
           ]
         }
       ],
       editorialPosts: [
         {
           day: 'Giorno 1',
-          postType: 'carosello',
-          title: `3 Errori che ti Impediscono di Ottenere ${brief.coreDesire}`,
-          summary: 'Carosello didattico per educare il pubblico sul problema principale',
-          fullCopy: `❌ Stai ancora facendo questi 3 errori?\n\n1. Ignorare il costo di ${brief.corePain}\n2. Usare strumenti non automatizzati\n3. Non avere un protocollo chiaro\n\n👉 Scopri come invertire la rotta nei commenti!`,
-          tag: 'Educazione',
-          cta: 'Salva il post per non perderlo',
+          postType: 'mindset',
+          title: 'Non sei in ritardo. Ti hanno solo spiegato l’AI nel modo sbagliato.',
+          summary: 'Post manifesto per abbattere l’ansia e posizionare AIutiamoci come guida umana',
+          fullCopy: `NON SEI IN RITARDO.\nTI HANNO SOLO SPIEGATO L’AI NEL MODO SBAGLIATO.\n\nOgni giorno esce un nuovo strumento, un nuovo video, qualcuno che promette di rivoluzionarti il lavoro in cinque minuti.\n\nRisultato?\nPiù cerchi di capire, più rischi di sentirti confuso.\n\nE magari pensi:\n“Non fa per me.”\n“Ormai sono troppo indietro.”\n“Devo essere bravo con la tecnologia.”\n\nNo.\n\nPer iniziare non devi diventare un tecnico e non devi imparare cento strumenti.\n\nDevi capire quali poche cose possono esserti davvero utili nella vita e nel lavoro e imparare a usarle con calma, facendo pratica.\n\nÈ esattamente da qui che nasce AIutiamoci.\nUn percorso pensato soprattutto per chi non è nato digitale, ma non ha nessuna intenzione di restare a guardare.\n\nUmani nel pensiero. Smart nell’azione.\n\nSe vuoi capire da dove iniziare, scrivimi nei messaggi o lascia un commento.`,
+          tag: 'Manifesto & Fiducia',
+          cta: 'Scrivici in privato per iniziare con calma',
           platform: 'Instagram'
         },
         {
