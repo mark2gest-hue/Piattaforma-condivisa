@@ -23,16 +23,19 @@ import {
   Trash2,
   ExternalLink,
   Bot,
+  Palette,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { LocandinaGeneratorModal } from '@/components/marketing/locandina-generator-modal'
 import { getMarketingCampaignsAction, deleteMarketingCampaignAction } from '@/app/actions/marketing'
 
 export default function MarketingHubPage() {
   const [campaigns, setCampaigns] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isPosterModalOpen, setIsPosterModalOpen] = useState(false)
 
   // Calcolatore Economico APEX Growth
   const [simTargetFollowers, setSimTargetFollowers] = useState(5000)
@@ -96,6 +99,15 @@ export default function MarketingHubPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <Button
+              onClick={() => setIsPosterModalOpen(true)}
+              variant="outline"
+              className="border-blue-400/40 bg-blue-950/60 text-blue-300 hover:text-white hover:border-blue-400 font-semibold px-4 py-6 rounded-xl flex items-center gap-2"
+            >
+              <Palette className="h-5 w-5 text-blue-400" />
+              <span>Crea Locandina Social</span>
+            </Button>
+
             <Link href="/marketing/campagna">
               <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-lg shadow-blue-500/25 px-5 py-6 rounded-xl flex items-center gap-2">
                 <PlusCircle className="h-5 w-5" />
@@ -365,6 +377,12 @@ export default function MarketingHubPage() {
           </Card>
         </div>
       </div>
+
+      {/* Modal Generatore Locandine Social */}
+      <LocandinaGeneratorModal
+        isOpen={isPosterModalOpen}
+        onClose={() => setIsPosterModalOpen(false)}
+      />
     </div>
   )
 }

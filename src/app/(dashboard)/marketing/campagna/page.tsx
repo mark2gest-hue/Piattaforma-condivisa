@@ -31,11 +31,13 @@ import {
   Layout,
   ExternalLink,
   Target,
+  Palette,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { LocandinaGeneratorModal } from '@/components/marketing/locandina-generator-modal'
 import {
   generateMarketingCampaignAction,
   saveMarketingCampaignAction,
@@ -71,6 +73,13 @@ function CampaignWizardContent() {
   const [isPublishingPostId, setIsPublishingPostId] = useState<string | null>(null)
   const [customWebhookUrl, setCustomWebhookUrl] = useState('')
   const [savedSuccessMsg, setSavedSuccessMsg] = useState<string | null>(null)
+  const [isPosterModalOpen, setIsPosterModalOpen] = useState(false)
+  const [posterData, setPosterData] = useState<{ title: string; hook: string; body: string; cta: string }>({
+    title: '',
+    hook: '',
+    body: '',
+    cta: '',
+  })
 
   // 1. Brief State
   const [brief, setBrief] = useState<MarketingBriefInput>({
@@ -1093,6 +1102,26 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                         Crea Reel (CapCut)
                         <ExternalLink className="h-2.5 w-2.5 ml-1 text-slate-500" />
                       </Button>
+
+                      {/* Tool Generatore Locandina Grafica */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setPosterData({
+                            title: post.title,
+                            hook: plan.bigIdea || 'Umani nel pensiero. Smart nell’azione.',
+                            body: post.summary || post.fullCopy.slice(0, 180),
+                            cta: post.cta || 'Scrivici nei messaggi per iniziare',
+                          })
+                          setIsPosterModalOpen(true)
+                        }}
+                        title="Genera ed esporta la locandina grafica PNG per questo post"
+                        className="h-7 px-2 text-[11px] border-slate-700 bg-slate-950/60 text-blue-300 hover:text-white hover:border-blue-500/60 transition-colors"
+                      >
+                        <Palette className="h-3 w-3 mr-1 text-blue-400" />
+                        Crea Locandina PNG
+                      </Button>
                     </div>
 
                     {/* Invio a Buffer */}
@@ -1208,6 +1237,16 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
           </Card>
         </div>
       )}
+
+      {/* Modal Generatore di Locandine Grafiche PNG */}
+      <LocandinaGeneratorModal
+        isOpen={isPosterModalOpen}
+        onClose={() => setIsPosterModalOpen(false)}
+        initialTitle={posterData.title}
+        initialHook={posterData.hook}
+        initialBody={posterData.body}
+        initialCta={posterData.cta}
+      />
     </div>
   )
 }
