@@ -2,6 +2,7 @@
 
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
+import { autoIndexToSecondBrain } from '@/app/actions/knowledge'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -202,6 +203,28 @@ Rispondi ESCLUSIVAMENTE con un JSON valido (senza markdown o altro testo):
       .trim()
 
     const parsedData: EmailAIAnalysis = JSON.parse(cleanJson)
+
+    // Inserimento automatico nel Secondo Cervello per ricerca e consultazione
+    autoIndexToSecondBrain({
+      title: `[Email] ${emailData.subject || 'Senza Oggetto'} (${emailData.fromAddress || 'Mittente'})`,
+      category: 'copywriting',
+      description: `Analisi AI Email: Categoria ${parsedData.category.toUpperCase()} • Priorità ${parsedData.priority}/5`,
+      content: `### ✉️ Email Ricevuta
+**Da:** ${emailData.fromAddress}
+**A:** ${emailData.toAddress || 'Team'}
+**Oggetto:** ${emailData.subject}
+
+**Testo originale:**
+${emailData.body}
+
+---
+### 🎯 Sintesi AI
+${parsedData.summary}
+
+### 💡 Bozza di Risposta Consigliata
+${parsedData.suggestedReply}`,
+      tags: ['email', 'posta', parsedData.category, `priorita-${parsedData.priority}`],
+    }).catch((e) => console.warn('Errore auto-index email:', e))
 
     return {
       success: true,

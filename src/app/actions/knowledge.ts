@@ -52,10 +52,10 @@ export async function getKnowledgeItemsAction(category?: string, search?: string
   }
 }
 
-// 2. Crea un nuovo Prompt / Nota
-export async function createKnowledgeItemAction(payload: {
+// 2. Inserimento Automatico / Universale nel Secondo Cervello
+export async function autoIndexToSecondBrain(payload: {
   title: string
-  category: KnowledgeItem['category']
+  category?: KnowledgeItem['category'] | string
   content: string
   description?: string
   tags?: string[]
@@ -67,10 +67,10 @@ export async function createKnowledgeItemAction(payload: {
       .from('knowledge_items')
       .insert({
         title: payload.title.trim(),
-        category: payload.category || 'prompting',
+        category: payload.category || 'course_notes',
         content: payload.content.trim(),
         description: payload.description?.trim() || null,
-        tags: payload.tags || [],
+        tags: payload.tags || ['piattaforma', 'auto-indicizzato'],
         lesson_id: payload.lesson_id || null,
         is_featured: false,
       })
@@ -78,13 +78,26 @@ export async function createKnowledgeItemAction(payload: {
       .single()
 
     if (error) {
+      console.warn('[Second Brain Ingestion Warning]:', error.message)
       return { success: false, error: error.message }
     }
-
     return { success: true, item: data }
-  } catch (error: any) {
-    return { success: false, error: error.message }
+  } catch (err: any) {
+    console.warn('[Second Brain Ingestion Error]:', err.message)
+    return { success: false, error: err.message }
   }
+}
+
+// 2b. Crea un nuovo Prompt / Nota da interfaccia utente
+export async function createKnowledgeItemAction(payload: {
+  title: string
+  category: KnowledgeItem['category']
+  content: string
+  description?: string
+  tags?: string[]
+  lesson_id?: number | null
+}) {
+  return await autoIndexToSecondBrain(payload)
 }
 
 // 3. Elimina un Knowledge Item

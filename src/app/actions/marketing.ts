@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { callGemini } from './ai'
+import { autoIndexToSecondBrain } from './knowledge'
 
 export interface MarketingBriefInput {
   title: string
@@ -555,6 +556,44 @@ export async function saveMarketingCampaignAction(
         console.warn('Errore salvataggio post marketing:', postsError)
       }
     }
+
+    // Inserimento automatico nel Secondo Cervello (knowledge_items)
+    const strategyContent = `### 🚀 Campagna: ${brief.title || brief.productName}
+**Prodotto/Offerta:** ${brief.productName} (€${brief.price})
+**Target:** ${brief.targetAvatar}
+**Livello Consapevolezza:** ${brief.awarenessLevel}
+
+---
+### 💡 Big Idea & Posizionamento
+${plan.bigIdea}
+
+### ⚙️ Meccanismo Unico
+${plan.uniqueMechanism}
+
+---
+### 🎁 Offerta Irresistibile (Grand Slam Offer)
+- **Risultato Desiderato:** ${plan.grandSlamOffer.dreamOutcome}
+- **Riprova e Certezza:** ${plan.grandSlamOffer.perceivedLikelihood}
+- **Riduzione Fatiche:** ${plan.grandSlamOffer.effortSacrificeReduction}
+- **Garanzia:** ${plan.grandSlamOffer.guarantee}
+- **Bonus Inclusi:**
+${plan.grandSlamOffer.bonuses.map((b) => `  - ${b}`).join('\n')}
+
+---
+### 📢 Angoli Pubblicitari & Copy
+${plan.angles.map((a) => `#### ${a.title} (${a.creativeType})\n**Hook:** ${a.hook}\n**Body:**\n${a.bodyCopy}\n**CTA:** ${a.callToAction}\n`).join('\n---\n')}
+
+---
+### 📅 Post Editoriali Generati (${plan.editorialPosts.length})
+${plan.editorialPosts.map((p) => `- **${p.day} (${p.platform} - ${p.postType})**: ${p.title}\n  *CTA:* ${p.cta}`).join('\n')}`
+
+    autoIndexToSecondBrain({
+      title: `[Marketing] ${brief.title || brief.productName}`,
+      category: 'copywriting',
+      description: `Strategia Marketing & Funnel: ${brief.targetAvatar} • Prezzo €${brief.price}`,
+      content: strategyContent,
+      tags: ['marketing', 'campagna', 'copywriting', 'funnel', 'apex'],
+    }).catch((e) => console.warn('Errore auto-index marketing:', e))
 
     return { success: true, campaignId: targetCampaignId }
   } catch (err: any) {

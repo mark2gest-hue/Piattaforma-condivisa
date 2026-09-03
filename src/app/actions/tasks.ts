@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { TaskStatus, TaskPriority } from '@/types/database.types'
 import { sendTelegramMessage, escapeHtml } from '@/lib/telegram'
 import { getCurrentUserProfileName } from './notifications'
+import { autoIndexToSecondBrain } from './knowledge'
 
 export interface CreateTaskInput {
   title: string
@@ -152,6 +153,20 @@ export async function updateTaskStatusAction(taskId: string, status: TaskStatus,
         `📊 <b>Passaggio:</b> ${oldStatusLabel} ➔ <b>${newStatusLabel}</b>\n` +
         `👤 <b>Modificato da:</b> ${escapeHtml(userName)}`
       ).catch((e) => console.error('Errore notifica Telegram cambio stato task:', e))
+
+      if (status === 'done') {
+        autoIndexToSecondBrain({
+          title: `[Lavoro Completato] ${currentTask.title}`,
+          category: 'course_notes',
+          description: `Task completato da ${userName} nel progetto ${currentTask.project?.title || 'Generale'}`,
+          content: `### ✅ Lavoro Portato a Termine
+**Task:** ${currentTask.title}
+**Progetto:** ${currentTask.project?.title || 'Generale'}
+**Completato da:** ${userName}
+**Data:** ${new Date().toLocaleDateString('it-IT')}`,
+          tags: ['lavori', 'completato', 'team'],
+        }).catch((e) => console.warn('Errore auto-index task done:', e))
+      }
     }
 
     return { success: true }
