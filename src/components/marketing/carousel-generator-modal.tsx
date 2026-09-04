@@ -4,13 +4,9 @@ import React, { useState, useRef, useEffect } from 'react'
 import {
   Download,
   X,
-  Sparkles,
-  Check,
-  Palette,
   ChevronLeft,
   ChevronRight,
   Layers,
-  Copy,
   FolderDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -78,7 +74,6 @@ export function CarouselGeneratorModal({
   const [theme, setTheme] = useState<ThemeStyle>('dark-aiutiamoci')
   const [authorName, setAuthorName] = useState('AIutiamoci')
   const [isDownloadingAll, setIsDownloadingAll] = useState(false)
-  const [copiedSlide, setCopiedSlide] = useState(false)
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
@@ -174,7 +169,7 @@ export function CarouselGeneratorModal({
     ctx.font = 'bold 24px monospace'
     ctx.fillStyle = textColorSecondary
     ctx.textAlign = 'right'
-    ctx.fillText(`0${slideIdx + 1} / 0${totalSlides}`, CANVAS_WIDTH - marginX, cursorY + 32)
+    ctx.fillText(`${String(slideIdx + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`, CANVAS_WIDTH - marginX, cursorY + 32)
     ctx.textAlign = 'left'
     ctx.restore()
 

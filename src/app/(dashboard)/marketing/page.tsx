@@ -19,8 +19,22 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { getMarketingCampaignsAction, deleteMarketingCampaignAction } from '@/app/actions/marketing'
 
+export interface MarketingCampaignItem {
+  id: string
+  user_id?: string | null
+  title: string
+  product_name?: string
+  price?: number
+  target_avatar?: string | null
+  awareness_level?: string | null
+  big_idea?: string | null
+  budget_daily?: number
+  created_at: string
+  marketing_posts?: Array<{ count: number }>
+}
+
 export default function MarketingHubPage() {
-  const [campaigns, setCampaigns] = useState<any[]>([])
+  const [campaigns, setCampaigns] = useState<MarketingCampaignItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   // Calcolatore Economico APEX Growth

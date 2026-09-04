@@ -5,14 +5,8 @@ import {
   Palette,
   Download,
   X,
-  Sparkles,
-  Check,
-  ImageIcon,
-  Type,
   Layout,
   Layers,
-  Sliders,
-  Copy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

@@ -89,6 +89,7 @@ export function ReelVideoGeneratorModal({
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const animFrameRef = useRef<number | null>(null)
+  const currentTimeRef = useRef<number>(0)
 
   // Durata totale Reel animato (18 secondi di video compatto)
   const TOTAL_DURATION = 18
@@ -98,6 +99,7 @@ export function ReelVideoGeneratorModal({
 
   useEffect(() => {
     if (isOpen) {
+      currentTimeRef.current = 0
       setCurrentTime(0)
       setIsPlaying(true)
       setBufferSuccessMsg(null)
@@ -116,16 +118,15 @@ export function ReelVideoGeneratorModal({
     const loop = (timestamp: number) => {
       if (isPlaying) {
         const delta = (timestamp - lastTimestamp) / 1000
-        setCurrentTime((prev) => {
-          const next = prev + delta
-          if (next >= TOTAL_DURATION) {
-            return 0 // loop continuo dell'anteprima
-          }
-          return next
-        })
+        let next = currentTimeRef.current + delta
+        if (next >= TOTAL_DURATION) {
+          next = 0 // loop continuo dell'anteprima
+        }
+        currentTimeRef.current = next
+        setCurrentTime(next)
       }
       lastTimestamp = timestamp
-      drawFrame(currentTime)
+      drawFrame(currentTimeRef.current)
       animFrameRef.current = requestAnimationFrame(loop)
     }
 
@@ -133,7 +134,7 @@ export function ReelVideoGeneratorModal({
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
     }
-  }, [isOpen, isPlaying, currentTime, aiTheme])
+  }, [isOpen, isPlaying, aiTheme])
 
   // Disegna l'animazione di sfondo a tema AI
   const drawAiBackground = (ctx: CanvasRenderingContext2D, time: number) => {
@@ -571,6 +572,7 @@ export function ReelVideoGeneratorModal({
                 size="sm"
                 variant="outline"
                 onClick={() => {
+                  currentTimeRef.current = 0
                   setCurrentTime(0)
                   setIsPlaying(true)
                 }}

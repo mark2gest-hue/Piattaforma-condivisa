@@ -41,7 +41,6 @@ import {
   generateMarketingCampaignAction,
   saveMarketingCampaignAction,
   getMarketingCampaignByIdAction,
-  publishPostViaN8nAction,
   publishToBufferAction,
   generateExpressSocialPostAction,
   MarketingBriefInput,
@@ -72,7 +71,6 @@ function CampaignWizardContent() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [activePostEditingIndex, setActivePostEditingIndex] = useState<number | null>(null)
   const [isPublishingPostId, setIsPublishingPostId] = useState<string | null>(null)
-  const [customWebhookUrl, setCustomWebhookUrl] = useState('')
   const [savedSuccessMsg, setSavedSuccessMsg] = useState<string | null>(null)
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false)
   const [posterData, setPosterData] = useState<{ title: string; hook: string; body: string; cta: string }>({
@@ -1580,16 +1578,6 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
               <p className="text-xs text-slate-400 mt-0.5">
                 Pianificazione organica e di retargeting per Instagram, Facebook e LinkedIn.
               </p>
-            </div>
-
-            {/* Custom Webhook URL input opzionale */}
-            <div className="flex items-center gap-2 max-w-sm w-full">
-              <Input
-                placeholder="URL Webhook n8n (opzionale)"
-                value={customWebhookUrl}
-                onChange={(e) => setCustomWebhookUrl(e.target.value)}
-                className="text-[11px] h-8 bg-slate-950 border-slate-700 text-slate-100 placeholder:text-slate-500"
-              />
             </div>
           </div>
 

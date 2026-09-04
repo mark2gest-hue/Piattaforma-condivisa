@@ -78,6 +78,12 @@ export async function generateMarketingCampaignAction(brief: MarketingBriefInput
   error?: string
 }> {
   try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Non autorizzato: effettua il login per generare campagne' }
+    }
+
     const systemPrompt = `Sei l'architetto strategico di marketing di AIutiamoci ("Umani nel pensiero. Smart nell'azione.").
 Il tuo compito è elaborare una strategia di comunicazione profondamente UMANA, empatica, rassicurante e ad altissima fiducia.
 
@@ -462,11 +468,15 @@ export async function saveMarketingCampaignAction(
 ) {
   try {
     const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Non autorizzato: effettua il login per salvare la campagna' }
+    }
 
     let targetCampaignId = campaignId
 
     if (targetCampaignId) {
-      // Aggiornamento campagna esistente
+      // Aggiornamento campagna esistente (solo se proprietario o legacy orfana)
       const { error: updateError } = await (supabase as any)
         .from('marketing_campaigns')
         .update({
@@ -494,15 +504,18 @@ export async function saveMarketingCampaignAction(
           updated_at: new Date().toISOString(),
         })
         .eq('id', targetCampaignId)
+        .or(`user_id.eq.${user.id},user_id.is.null`)
 
       if (updateError) {
         console.warn('Errore aggiornamento campagna marketing:', updateError)
+        return { success: false, error: 'Impossibile aggiornare la campagna: permessi insufficienti o errore server' }
       }
     } else {
-      // Creazione nuova campagna
+      // Creazione nuova campagna con user_id
       const { data: newCampaign, error: insertError } = await (supabase as any)
         .from('marketing_campaigns')
         .insert({
+          user_id: user.id,
           title: brief.title || `Campagna: ${brief.productName}`,
           product_name: brief.productName,
           price: brief.price,
@@ -531,6 +544,7 @@ export async function saveMarketingCampaignAction(
 
       if (insertError) {
         console.warn('Errore inserimento nuova campagna marketing:', insertError)
+        return { success: false, error: 'Errore durante la creazione della campagna' }
       } else if (newCampaign) {
         targetCampaignId = (newCampaign as any).id
       }
@@ -607,9 +621,15 @@ ${plan.editorialPosts.map((p) => `- **${p.day} (${p.platform} - ${p.postType})**
 export async function getMarketingCampaignsAction() {
   try {
     const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Non autorizzato', campaigns: [] }
+    }
+
     const { data, error } = await (supabase as any)
       .from('marketing_campaigns')
       .select('*, marketing_posts(count)')
+      .or(`user_id.eq.${user.id},user_id.is.null`)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -631,14 +651,20 @@ export async function getMarketingCampaignByIdAction(campaignId: string): Promis
 }> {
   try {
     const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Non autorizzato' }
+    }
+
     const { data: campaign, error: cError } = await (supabase as any)
       .from('marketing_campaigns')
       .select('*')
       .eq('id', campaignId)
+      .or(`user_id.eq.${user.id},user_id.is.null`)
       .single()
 
     if (cError || !campaign) {
-      return { success: false, error: cError?.message || 'Campagna non trovata' }
+      return { success: false, error: cError?.message || 'Campagna non trovata o non autorizzata' }
     }
 
     const { data: posts, error: pError } = await (supabase as any)
@@ -665,17 +691,19 @@ export async function publishPostViaN8nAction(formData: {
   platform: string
   scheduledAt?: string
   mediaUrl?: string
-  customWebhookUrl?: string
 }) {
   try {
-    const n8nWebhookUrl =
-      formData.customWebhookUrl ||
-      process.env.N8N_MARKETING_WEBHOOK_URL ||
-      process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL ||
-      ''
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Non autorizzato' }
+    }
+
+    const n8nWebhookUrl = process.env.N8N_MARKETING_WEBHOOK_URL?.trim() || ''
 
     const payload = {
       event: 'publish_marketing_post',
+      userId: user.id,
       postId: formData.postId,
       title: formData.title,
       text: formData.copy,
@@ -717,7 +745,6 @@ export async function publishPostViaN8nAction(formData: {
     }
 
     if (formData.postId) {
-      const supabase = await createClient()
       await (supabase as any)
         .from('marketing_posts')
         .update({
@@ -743,7 +770,17 @@ export async function publishPostViaN8nAction(formData: {
 export async function deleteMarketingCampaignAction(campaignId: string) {
   try {
     const supabase = await createClient()
-    const { error } = await (supabase as any).from('marketing_campaigns').delete().eq('id', campaignId)
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Non autorizzato' }
+    }
+
+    const { error } = await (supabase as any)
+      .from('marketing_campaigns')
+      .delete()
+      .eq('id', campaignId)
+      .or(`user_id.eq.${user.id},user_id.is.null`)
+
     if (error) {
       return { success: false, error: error.message }
     }
@@ -889,6 +926,12 @@ export async function publishToBufferAction(formData: {
   mediaUrl?: string
 }) {
   try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Non autorizzato: effettua il login per pubblicare su Buffer' }
+    }
+
     const rawToken = process.env.BUFFER_ACCESS_TOKEN
     const accessToken = rawToken ? rawToken.trim() : ''
 
@@ -1079,6 +1122,12 @@ export async function generateExpressSocialPostAction(params: {
   error?: string
 }> {
   try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: 'Non autorizzato: effettua il login per generare post' }
+    }
+
     const userPromptText = params.prompt?.trim() || 'Superare la paura di non capire l\'AI e imparare a usarla nel quotidiano'
     const targetFocus = params.targetFocus || 'studenti'
     const includeSecondBrain = params.includeSecondBrain !== false
