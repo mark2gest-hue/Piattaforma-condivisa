@@ -97,6 +97,8 @@ function CampaignWizardContent() {
   const [isCarouselModalOpen, setIsCarouselModalOpen] = useState(false)
   const [isReelVideoModalOpen, setIsReelVideoModalOpen] = useState(false)
   const [showAdvancedWizard, setShowAdvancedWizard] = useState(false)
+  const [isSavingExpressToLibrary, setIsSavingExpressToLibrary] = useState(false)
+  const [expressSavedToLibrary, setExpressSavedToLibrary] = useState(false)
 
   // 1. Brief State
   const [brief, setBrief] = useState<MarketingBriefInput>({
@@ -259,6 +261,66 @@ function CampaignWizardContent() {
     }
 
     setIsPublishingPostId(null)
+  }
+
+  // Salva il contenuto Express nella libreria campagne (Supabase)
+  const handleSaveExpressToLibrary = async () => {
+    if (!expressResult || isSavingExpressToLibrary) return
+    setIsSavingExpressToLibrary(true)
+
+    const expressBrief: MarketingBriefInput = {
+      title: expressResult.topic,
+      productName: 'AI Start: Percorso Completo',
+      price: 97,
+      targetAvatar: expressResult.targetAudience,
+      awarenessLevel: 'Problem-Aware',
+      coreDesire: '',
+      corePain: '',
+      budgetDaily: 0,
+      platforms: ['Meta Ads (Facebook)', 'Instagram'],
+      kpiCpaTarget: 0,
+      kpiRoasTarget: 0,
+    }
+
+    const expressMinimalPlan = {
+      bigIdea: expressResult.topic,
+      uniqueMechanism: '',
+      grandSlamOffer: {
+        dreamOutcome: '',
+        perceivedLikelihood: '',
+        timeDelayReduction: '',
+        effortSacrificeReduction: '',
+        bonuses: [],
+        guarantee: '',
+      },
+      angles: [],
+      funnelSteps: [],
+      editorialPosts: [
+        {
+          id: undefined,
+          day: new Date().toLocaleDateString('it-IT'),
+          postType: 'statico' as const,
+          title: expressResult.topic,
+          summary: expressResult.facebookPost.hook,
+          fullCopy: editableExpressFbCopy || expressResult.facebookPost.fullCopy,
+          tag: expressResult.targetAudience,
+          cta: expressResult.facebookPost.cta,
+          platform: 'Meta Ads (Facebook)',
+          status: 'draft' as const,
+        },
+      ],
+      launchChecklist: [],
+      stopLossRules: [],
+    }
+
+    const res = await saveMarketingCampaignAction(expressBrief, expressMinimalPlan)
+    if (res.success) {
+      setExpressSavedToLibrary(true)
+      setExpressSuccessMsg('✅ Post salvato nella libreria campagne — lo ritrovi in Marketing Hub.')
+    } else {
+      alert(`Errore salvataggio: ${res.error}`)
+    }
+    setIsSavingExpressToLibrary(false)
   }
 
   // Genera Contenuti Express (Second Brain + Web Grounding + Corso AI Start)
@@ -824,20 +886,44 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                         Copia Testo
                       </Button>
 
-                      {/* CTA Invio a Buffer */}
-                      <Button
-                        size="sm"
-                        disabled={isPublishingExpressBuffer}
-                        onClick={handlePublishExpressToBuffer}
-                        className="h-8 px-3.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/20 flex items-center gap-1.5"
-                      >
-                        {isPublishingExpressBuffer ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Send className="h-3.5 w-3.5" />
-                        )}
-                        <span>Autorizza e Pubblica su Buffer</span>
-                      </Button>
+                      <div className="flex items-center gap-1.5">
+                        {/* Salva nella libreria */}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isSavingExpressToLibrary || expressSavedToLibrary}
+                          onClick={handleSaveExpressToLibrary}
+                          className={`h-8 px-3 text-xs font-semibold border flex items-center gap-1.5 transition-all ${
+                            expressSavedToLibrary
+                              ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10 cursor-default'
+                              : 'border-slate-700 text-slate-300 hover:border-emerald-500/50 hover:text-emerald-300 hover:bg-emerald-500/10'
+                          }`}
+                        >
+                          {isSavingExpressToLibrary ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : expressSavedToLibrary ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                          ) : (
+                            <Save className="h-3.5 w-3.5" />
+                          )}
+                          <span>{expressSavedToLibrary ? 'Salvato' : 'Salva nella libreria'}</span>
+                        </Button>
+
+                        {/* CTA Invio a Buffer */}
+                        <Button
+                          size="sm"
+                          disabled={isPublishingExpressBuffer}
+                          onClick={handlePublishExpressToBuffer}
+                          className="h-8 px-3.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/20 flex items-center gap-1.5"
+                        >
+                          {isPublishingExpressBuffer ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Send className="h-3.5 w-3.5" />
+                          )}
+                          <span>Pubblica su Buffer</span>
+                        </Button>
+                      </div>
                     </div>
                   </Card>
 

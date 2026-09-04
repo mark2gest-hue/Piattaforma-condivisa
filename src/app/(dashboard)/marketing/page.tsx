@@ -91,18 +91,11 @@ export default function MarketingHubPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Colonna Sinistra (2/3): Campagne Salva / Recenti */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-slate-100">Le Tue Campagne</h2>
-              <Badge variant="outline" className="text-xs font-mono border-slate-700 text-slate-300">
-                {campaigns.length} totali
-              </Badge>
-            </div>
-            <Link href="/marketing/campagna">
-              <Button variant="outline" size="sm" className="border-slate-700 hover:bg-slate-800 text-xs">
-                Crea con Wizard AI
-              </Button>
-            </Link>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold text-slate-100">Campagne & Post Salvati</h2>
+            <Badge variant="outline" className="text-xs font-mono border-slate-700 text-slate-300">
+              {campaigns.length} totali
+            </Badge>
           </div>
 
           {isLoading ? (
@@ -115,16 +108,10 @@ export default function MarketingHubPage() {
               <div className="mx-auto w-14 h-14 rounded-2xl bg-blue-600/10 text-blue-400 flex items-center justify-center mb-4">
                 <Rocket className="h-7 w-7" />
               </div>
-              <h3 className="text-lg font-bold text-slate-200">Nessuna campagna attiva</h3>
+              <h3 className="text-lg font-bold text-slate-200">Nessun post salvato ancora</h3>
               <p className="text-sm text-slate-400 max-w-md mx-auto mt-1.5 mb-6">
-                Avvia il Wizard a 5 Fasi per generare una strategia completa con l'Agente APEX: dal brief alla Grand Slam Offer, fino al piano editoriale e alla pubblicazione su n8n.
+                Genera il tuo primo post dal generatore express e clicca <strong className="text-slate-200">"Salva nella libreria"</strong> per ritrovarlo qui, modificarlo e ripubblicarlo su Buffer quando serve.
               </p>
-              <Link href="/marketing/campagna">
-                <Button className="bg-blue-600 hover:bg-blue-500 text-white font-semibold">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Avvia la Prima Campagna
-                </Button>
-              </Link>
             </Card>
           ) : (
             <div className="space-y-3">
