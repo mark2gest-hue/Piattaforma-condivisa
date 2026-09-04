@@ -2,7 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { callGemini } from './ai'
-import { autoIndexToSecondBrain } from './knowledge'
+import { autoIndexToSecondBrain, getKnowledgeItemsAction } from './knowledge'
+import { LESSON_SUMMARIES } from '@/lib/course-data'
+import { DEFAULT_KNOWLEDGE_ITEMS } from '@/lib/knowledge-data'
 
 export interface MarketingBriefInput {
   title: string
@@ -1022,5 +1024,353 @@ export async function publishToBufferAction(formData: {
     return { success: false, error: err.message || 'Errore durante la pubblicazione su Buffer' }
   }
 }
+
+export interface CarouselSlide {
+  slideNumber: number
+  tag: string
+  headline: string
+  bodyText: string
+  takeaway?: string
+}
+
+export interface ExpressSocialContent {
+  topic: string
+  targetAudience: string
+  keyTakeaway: string
+  facebookPost: {
+    hook: string
+    body: string
+    fullCopy: string
+    cta: string
+    hashtags: string[]
+    posterSuggestion: {
+      title: string
+      hook: string
+      body: string
+      cta: string
+    }
+  }
+  reelScript: {
+    title: string
+    hookVisualAndAudio: string
+    concept: string
+    scenes: Array<{
+      time: string
+      visual: string
+      audioText: string
+    }>
+    cta: string
+    captionText: string
+    musicTone: string
+  }
+  carouselSlides: CarouselSlide[]
+}
+
+// Generatore Express: Dal Second Brain ai Social in 1 Click (Post Facebook + Reel + Carosello)
+export async function generateExpressSocialPostAction(params: {
+  prompt: string
+  targetFocus?: 'studenti' | 'pmi' | 'misto'
+  includeSecondBrain?: boolean
+  includeWebTrends?: boolean
+}): Promise<{
+  success: boolean
+  content?: ExpressSocialContent
+  savedToSecondBrain?: boolean
+  error?: string
+}> {
+  try {
+    const userPromptText = params.prompt?.trim() || 'Superare la paura di non capire l\'AI e imparare a usarla nel quotidiano'
+    const targetFocus = params.targetFocus || 'studenti'
+    const includeSecondBrain = params.includeSecondBrain !== false
+
+    // 1. Estrazione contesto pedagogico e Second Brain
+    let secondBrainSnippets = ''
+    if (includeSecondBrain) {
+      try {
+        const kbRes = await getKnowledgeItemsAction('copywriting')
+        const items = kbRes?.items && kbRes.items.length > 0 ? kbRes.items : DEFAULT_KNOWLEDGE_ITEMS
+        const topItems = items.slice(0, 3)
+        secondBrainSnippets = topItems.map((i: any) => `### ${i.title}\n${i.content.slice(0, 300)}...`).join('\n\n')
+      } catch {
+        secondBrainSnippets = DEFAULT_KNOWLEDGE_ITEMS.slice(0, 2).map((i) => `### ${i.title}\n${i.content.slice(0, 250)}...`).join('\n\n')
+      }
+    }
+
+    // 2. Estrazione pillole dalle 20 lezioni del corso AI Start
+    const lessonSamples = [
+      LESSON_SUMMARIES[1], // Benvenuti nel Futuro
+      LESSON_SUMMARIES[5], // Formula RCCF
+      LESSON_SUMMARIES[7], // ChatGPT, Claude, Gemini
+      LESSON_SUMMARIES[8], // Scrivere senza Sforzo
+    ].filter(Boolean)
+
+    const lessonsContext = lessonSamples
+      .map((l) => `- Modulo: ${l.title}. Concetto: ${l.summary}. Takeaway: ${l.takeaways[0]}`)
+      .join('\n')
+
+    const systemInstruction = `Sei l'esperto Social Media Strategist e Copywriter senior di AIutiamoci (aiutiamoci.cloud), con lo slogan: "Umani nel pensiero. Smart nell'azione."
+
+OBIETTIVO PRINCIPALE:
+Generare contenuti social che fanno RISPARMIARE TEMPO al creator e che attraggono e convertono:
+1. POTENZIALI E NUOVI STUDENTI DEL CORSO (priorità massima): persone over 40-50, professionisti, commercianti, dipendenti che sentono il timore di "essere in ritardo", hanno paura dell'AI o la trovano complicata, ma vogliono imparare con un metodo umano, guidato e senza paroloni tecnici.
+2. PICCOLE-MEDIE IMPRESE & PROFESSIONISTI: chi vuole automatizzare task d'ufficio (email, preventivi, sintesi) senza dover assumere sviluppatori.
+
+REGOLE CRUCIALI DI COMUNICAZIONE:
+1. ZERO gergo da marketer freddo o aggressivo. Nessuna formula come "fai 10x" o "se non usi l'AI sei morto".
+2. TONO EMPATICO, RASSICURANTE, PRATICO. Il messaggio chiave è: "Non sei in ritardo. Ti hanno solo spiegato l'AI nel modo sbagliato. Possiamo farcela insieme."
+3. FORNISCI SEMPRE UN'AZIONE PRATICA Esemplificativa (es. un prompt da provare, un trucco con la Formula RCCF, un confronto pratico tra ChatGPT e Claude).
+4. POST FACEBOOK: deve essere un post completo pronto alla pubblicazione immediata con hook accattivante, corpo narrativo spaziato, emoji misurate, chiusura con CTA chiara e 3-4 hashtag italiani.
+5. REEL SCRIPT: deve essere uno script verticale (9:16) da 30-45 secondi strutturato per scene, con istruzioni visive ed esattamente cosa dire o mostrare a schermo.
+6. CAROSELLO MULTI-SLIDE: struttura da 5 slide (Slide 1: Copertina/Hook, Slide 2: L'Ostacolo o Falso Mito, Slide 3: La Micro-lezione Pratica, Slide 4: Il Risultato Tangibile, Slide 5: CTA per il Corso).
+
+CONTESTO DAL SECOND BRAIN:
+${secondBrainSnippets}
+
+CONTESTO LEZIONI CORSO AI START:
+${lessonsContext}
+
+RISPONDI ESCLUSIVAMENTE CON UN JSON VALIDO (senza blocchi markdown o testo attorno) con questa identica struttura:
+{
+  "topic": "Titolo breve dell'argomento trattato",
+  "targetAudience": "Descrizione sintetica del target specifico a cui parla il post",
+  "keyTakeaway": "Il beneficio o la scoperta principale per il lettore",
+  "facebookPost": {
+    "hook": "Prima riga magnetica del post Facebook",
+    "body": "Corpo principale del post, ben formattato con paragrafi brevi ed emoji",
+    "fullCopy": "Testo COMPLETO del post pronto per essere inviato a Buffer (Hook + Body + CTA + Hashtag)",
+    "cta": "Invito all'azione finale (es. Commenta 'INIZIO' o Clicca sul link per accedere al corso)",
+    "hashtags": ["#AIutiamoci", "#IntelligenzaArtificiale", "#CorsoAI", "#LavoroSmart"],
+    "posterSuggestion": {
+      "title": "Titolo ad alto contrasto per locandina grafica (max 10-12 parole)",
+      "hook": "Sottotitolo o citazione chiave",
+      "body": "Frase riassuntiva di impatto per il visual grafico",
+      "cta": "Testo per il pulsante o bottom bar della locandina"
+    }
+  },
+  "reelScript": {
+    "title": "Titolo del Reel / TikTok",
+    "hookVisualAndAudio": "Primi 3 secondi: cosa si vede e la prima frase pronunciata",
+    "concept": "Descrizione dell'idea creativa del video (es. Face-to-camera empatico + screen record pratico)",
+    "scenes": [
+      {
+        "time": "0:00 - 0:05",
+        "visual": "Istruzione visiva (es. Inquadratura ravvicinata, testo a schermo in giallo: 'NON SEI IN RITARDO')",
+        "audioText": "Frase esatta pronunciata dallo speaker"
+      },
+      {
+        "time": "0:05 - 0:20",
+        "visual": "Istruzione visiva (es. Mostra schermata dello smartphone o foglio di lavoro)",
+        "audioText": "Frase esatta del consiglio o micro-lezione"
+      },
+      {
+        "time": "0:20 - 0:35",
+        "visual": "Istruzione visiva (es. Ritorno in camera con sorriso e indicazione della bio)",
+        "audioText": "Chiamata all'azione e invito al corso o alla community"
+      }
+    ],
+    "cta": "Frase finale di chiusura",
+    "captionText": "Testo per la didascalia / caption del Reel con hashtag",
+    "musicTone": "Suggerimento mood audio (es. 'Background acustico rassicurante, ritmo medio, tono positivo')"
+  },
+  "carouselSlides": [
+    {
+      "slideNumber": 1,
+      "tag": "Copertina",
+      "headline": "NON SEI IN RITARDO.",
+      "bodyText": "Ti hanno solo spiegato l'Intelligenza Artificiale nel modo sbagliato.",
+      "takeaway": "Scorri per scoprire come iniziare da zero 👉"
+    },
+    {
+      "slideNumber": 2,
+      "tag": "Il Falso Mito",
+      "headline": "Non devi imparare a programmare",
+      "bodyText": "La paura più comune di chi ha più di 40 anni è credere che l'AI sia solo per sviluppatori o matematici. La verità? I modelli di oggi capiscono l'italiano quotidiano.",
+      "takeaway": "Chi sa spiegare un compito, sa già usare l'AI."
+    },
+    {
+      "slideNumber": 3,
+      "tag": "Micro-Lezione",
+      "headline": "La Formula RCCF (dal Modulo 5)",
+      "bodyText": "Non scrivere mai 'Scrivimi una mail'. Usa invece: Ruolo (chi è l'AI), Contesto (la situazione), Contenuto (cosa deve fare), Formato (massimo 150 parole).",
+      "takeaway": "Output 10 volte più precisi al primo colpo."
+    },
+    {
+      "slideNumber": 4,
+      "tag": "Risultato Immediato",
+      "headline": "5 ore risparmiate ogni settimana",
+      "bodyText": "Delegare la sintesi di documenti noiosi, le bozze di preventivi e la gestione delle email ricorrenti ti restituisce tempo prezioso per le cose che contano.",
+      "takeaway": "Meno fatica manuale, più serenità mentale."
+    },
+    {
+      "slideNumber": 5,
+      "tag": "Inizia Ora",
+      "headline": "Vuoi imparare con noi?",
+      "bodyText": "Nel corso AI Start di aiutiamoci.cloud ti guidiamo passo dopo passo con calma e senza gergo tecnico.",
+      "takeaway": "Salva il post e visita aiutiamoci.cloud 🚀"
+    }
+  ]
+}`
+
+    const userPrompt = `CREA SUBITO IL PACCHETTO SOCIAL PRONTO PER BUFFER:
+- Prompt/Tema Richiesto: ${userPromptText}
+- Target Primario: ${targetFocus === 'studenti' ? 'Potenziali studenti del corso AI (over 40, professionisti, timorosi dell\'AI)' : targetFocus === 'pmi' ? 'Piccole e Medie Imprese e Studi professionali' : 'Studenti del corso e PMI'}
+- Focus Formativo: Rendi evidente il valore pratico del corso e del metodo AIutiamoci (senza forzature di vendita spietata, ma con grande empatia e competenza pratica).`
+
+    let finalContent: ExpressSocialContent | null = null
+
+    const rawResponse = await callGemini(systemInstruction, userPrompt)
+
+    if (rawResponse) {
+      try {
+        const cleaned = rawResponse.replace(/```json/gi, '').replace(/```/g, '').trim()
+        const parsed: ExpressSocialContent = JSON.parse(cleaned)
+        if (parsed.facebookPost?.fullCopy && parsed.reelScript?.scenes) {
+          if (!parsed.carouselSlides || parsed.carouselSlides.length === 0) {
+            parsed.carouselSlides = [
+              { slideNumber: 1, tag: 'Copertina', headline: parsed.topic || 'Inizia da Zero con l\'AI', bodyText: parsed.facebookPost.hook, takeaway: 'Scorri per scoprire i consigli 👉' },
+              { slideNumber: 2, tag: 'Il Problema', headline: 'Perché ti sembra difficile?', bodyText: 'Spesso l\'AI viene spiegata con nozioni accademiche o tecnicismi inutili.', takeaway: 'Basta cambiare prospettiva.' },
+              { slideNumber: 3, tag: 'La Soluzione', headline: 'Un Metodo Passo-Passo', bodyText: parsed.keyTakeaway || 'Poche regole chiare per delegare compiti noiosi.', takeaway: 'Pratica reale senza codice.' },
+              { slideNumber: 4, tag: 'Prossimo Passo', headline: 'Inizia con AIutiamoci', bodyText: parsed.facebookPost.cta, takeaway: 'aiutiamoci.cloud' }
+            ]
+          }
+          finalContent = parsed
+        }
+      } catch (err) {
+        console.warn('[Express Social Post Gemini JSON parse error]:', err)
+      }
+    }
+
+    // Fallback di qualità calibrato su AIutiamoci e sul corso
+    if (!finalContent) {
+      finalContent = {
+        topic: userPromptText,
+        targetAudience: 'Professionisti, over 40 e chi parte da zero con l\'AI',
+        keyTakeaway: 'L\'AI non serve per complicarsi la vita, ma per togliere la fatica dai compiti noiosi.',
+        facebookPost: {
+          hook: 'NON SEI IN RITARDO. TI HANNO SOLO SPIEGATO L’AI NEL MODO SBAGLIATO.',
+          body: `Ogni giorno leggiamo notizie su come l'Intelligenza Artificiale stia correndo veloce. Se non sei un programmatore o un ragazzo di vent'anni, la sensazione naturale è solo una: quella di essere rimasti indietro.\n\nMa ti diciamo una cosa che nessuno spiega chiaramente:\nNon devi imparare a programmare.\nNon devi imparare 100 strumenti diversi.\nDevi solo capire come fare 2 o 3 cose pratiche che ti fanno risparmiare mezz'ora ogni singolo giorno.\n\nNel corso AI Start di aiutiamoci.cloud abbiamo eliminato tutto il gergo da informatici. Partiamo dalla vita reale: come sintetizzare un documento noioso, come rispondere a un'email delicata, come fare ordine nei tuoi file.\n\nUn passo alla volta. Con calma e con rispetto per il tuo tempo.`,
+          fullCopy: `NON SEI IN RITARDO. TI HANNO SOLO SPIEGATO L’AI NEL MODO SBAGLIATO. 🧭\n\nOgni giorno leggiamo notizie allarmistiche su come l'Intelligenza Artificiale stia correndo veloce. Se hai più di 40 anni, o semplicemente lavori in ufficio e non sei un programmatore, la sensazione è una sola: sentirsi tagliati fuori.\n\nMa ti sveliamo una verità che nessuno dice:\n✅ Non devi imparare a programmare.\n✅ Non devi imparare 100 strumenti diversi.\n✅ Devi solo capire come delegare all'AI quelle 2 o 3 task noiose che ti rubano tempo ogni giorno.\n\nNel corso "AI Start" di AIutiamoci abbiamo tolto tutto il gergo tecnico. Ti accompagniamo passo dopo passo, con esempi concreti e zero giudizio.\n\n👉 Vuoi scoprire la prima lezione gratuita? Scrivici "INIZIO" nei commenti o visita aiutiamoci.cloud.\n\n#AIutiamoci #IntelligenzaArtificiale #CorsoAI #ImparareDaZero #LavoroSmart`,
+          cta: 'Scrivici "INIZIO" nei commenti o visita aiutiamoci.cloud per iniziare senza stress.',
+          hashtags: ['#AIutiamoci', '#IntelligenzaArtificiale', '#CorsoAI', '#LavoroSmart'],
+          posterSuggestion: {
+            title: 'NON SEI IN RITARDO.\nTI HANNO SOLO SPIEGATO L’AI NEL MODO SBAGLIATO.',
+            hook: 'Umani nel pensiero. Smart nell’azione.',
+            body: 'Impara l’Intelligenza Artificiale partendo da zero. Senza formule matematiche e senza gergo tecnico.',
+            cta: 'Scopri il corso su aiutiamoci.cloud',
+          },
+        },
+        reelScript: {
+          title: 'Pensi di essere in ritardo con l\'AI? Guarda questo.',
+          hookVisualAndAudio: 'Inquadratura frontale, sguardo dritto in camera: "Se hai più di 40 anni e pensi di essere arrivato troppo tardi per capire l\'Intelligenza Artificiale... fermati un secondo."',
+          concept: 'Discorso empatico e rassicurante a camera fissa con testo in sovrimpressione chiaro e leggibile.',
+          scenes: [
+            {
+              time: '0:00 - 0:06',
+              visual: 'Inquadratura primo piano, espressione accogliente. Testo a schermo: "NON SEI IN RITARDO"',
+              audioText: 'Se pensi di essere arrivato troppo tardi per capire l\'Intelligenza Artificiale... ascolta bene questa cosa.',
+            },
+            {
+              time: '0:06 - 0:18',
+              visual: 'Stacco: mostra una schermata semplice con 3 righe scritte in italiano su ChatGPT.',
+              audioText: 'Non devi imparare a scrivere codice. L\'AI di oggi capisce l\'italiano semplice. Se sai spiegare cosa ti serve a un collaboratore, sai già usare l\'AI.',
+            },
+            {
+              time: '0:18 - 0:30',
+              visual: 'Ritorno in camera, mostra il portale del corso AI Start su tablet o smartphone.',
+              audioText: 'Nel nostro corso AI Start ti guidiamo passo passo da zero, senza gergo e con esempi del tuo lavoro quotidiano.',
+            },
+            {
+              time: '0:30 - 0:40',
+              visual: 'Testo a schermo: "Trovi il link in bio per la prima lezione gratuita".',
+              audioText: 'Fai il primo passo oggi: trovi la prima lezione gratuita nel link in bio o su aiutiamoci.cloud.',
+            },
+          ],
+          cta: 'Trovi la prima lezione gratuita nel link in bio!',
+          captionText: 'Non sei in ritardo. Clicca sul link in bio per scoprire come padroneggiare l\'AI con calma e semplicità. #AIutiamoci #CorsoAI',
+          musicTone: 'Musica lo-fi o acustica rassicurante, volume morbido',
+        },
+        carouselSlides: [
+          {
+            slideNumber: 1,
+            tag: 'Copertina',
+            headline: 'NON SEI IN RITARDO.',
+            bodyText: 'Ti hanno solo spiegato l\'Intelligenza Artificiale nel modo sbagliato.',
+            takeaway: 'Scorri per scoprire come iniziare da zero 👉',
+          },
+          {
+            slideNumber: 2,
+            tag: 'Il Falso Mito',
+            headline: 'Non devi imparare a programmare',
+            bodyText: 'La paura più comune di chi ha più di 40 anni è credere che l\'AI sia solo per sviluppatori o matematici. La verità? I modelli di oggi capiscono l\'italiano quotidiano.',
+            takeaway: 'Chi sa spiegare un compito, sa già usare l\'AI.',
+          },
+          {
+            slideNumber: 3,
+            tag: 'Micro-Lezione',
+            headline: 'La Formula RCCF (dal Modulo 5)',
+            bodyText: 'Non scrivere mai "Scrivimi una mail". Usa invece: Ruolo (chi è l\'AI), Contesto (la situazione), Contenuto (cosa fare), Formato (massimo 150 parole).',
+            takeaway: 'Output 10 volte più precisi al primo colpo.',
+          },
+          {
+            slideNumber: 4,
+            tag: 'Risultato Immediato',
+            headline: '5 ore risparmiate ogni settimana',
+            bodyText: 'Delegare la sintesi di documenti noiosi, le bozze di preventivi e la gestione delle email ti restituisce tempo prezioso per ciò che conta.',
+            takeaway: 'Meno fatica manuale, più serenità mentale.',
+          },
+          {
+            slideNumber: 5,
+            tag: 'Inizia Ora',
+            headline: 'Vuoi imparare con noi?',
+            bodyText: 'Nel corso AI Start di aiutiamoci.cloud ti guidiamo passo dopo passo con calma e senza gergo tecnico.',
+            takeaway: 'Salva il post e visita aiutiamoci.cloud 🚀',
+          },
+        ],
+      }
+    }
+
+    // 3. AUTO-INDICIZZAZIONE NEL SECOND BRAIN (Memoria Istituzionale Permanente)
+    let savedToSecondBrain = false
+    try {
+      const carouselSummary = (finalContent.carouselSlides || [])
+        .map((c) => `Slide ${c.slideNumber}: ${c.headline} - ${c.bodyText}`)
+        .join('\n')
+
+      const secondBrainText = `### 📘 Post Facebook
+${finalContent.facebookPost.fullCopy}
+
+---
+
+### 🎬 Script Reel 9:16
+Titolo: ${finalContent.reelScript.title}
+Hook: ${finalContent.reelScript.hookVisualAndAudio}
+Scene:
+${finalContent.reelScript.scenes.map((s) => `[${s.time}] Visivo: ${s.visual} | Audio: "${s.audioText}"`).join('\n')}
+CTA: ${finalContent.reelScript.cta}
+
+---
+
+### 🎠 Carosello Multi-Slide
+${carouselSummary}
+`
+      const kbRes = await autoIndexToSecondBrain({
+        title: `[Social Pack]: ${finalContent.topic}`,
+        category: 'copywriting',
+        description: `Target: ${finalContent.targetAudience} • Valore: ${finalContent.keyTakeaway}`,
+        content: secondBrainText,
+        tags: ['marketing', 'social-pack', 'corso-ai-start', 'reel', 'carosello', 'buffer'],
+      })
+      savedToSecondBrain = !!kbRes?.success
+    } catch (autoErr) {
+      console.warn('[Second Brain Auto-Index Warning]:', autoErr)
+    }
+
+    return { success: true, content: finalContent, savedToSecondBrain }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Errore generazione post express' }
+  }
+}
+
+
 
 

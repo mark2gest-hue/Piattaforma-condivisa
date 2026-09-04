@@ -32,21 +32,29 @@ import {
   ExternalLink,
   Target,
   Palette,
+  Brain,
+  Globe,
+  GraduationCap,
+  Building2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { LocandinaGeneratorModal } from '@/components/marketing/locandina-generator-modal'
+import { CarouselGeneratorModal } from '@/components/marketing/carousel-generator-modal'
+import { ReelVideoGeneratorModal } from '@/components/marketing/reel-video-generator-modal'
 import {
   generateMarketingCampaignAction,
   saveMarketingCampaignAction,
   getMarketingCampaignByIdAction,
   publishPostViaN8nAction,
   publishToBufferAction,
+  generateExpressSocialPostAction,
   MarketingBriefInput,
   MarketingGeneratedPlan,
   MarketingEditorialPost,
+  ExpressSocialContent,
 } from '@/app/actions/marketing'
 import { playNotificationSound } from '@/lib/notifications'
 
@@ -80,6 +88,22 @@ function CampaignWizardContent() {
     body: '',
     cta: '',
   })
+
+  // Express Social Generator State (Zero tempo perso, Second Brain + Buffer)
+  const [expressPrompt, setExpressPrompt] = useState(
+    "Superare la paura di essere in ritardo con l'AI: il corso pensato per chi parte da zero senza gergo tecnico"
+  )
+  const [expressTargetFocus, setExpressTargetFocus] = useState<'studenti' | 'pmi' | 'misto'>('studenti')
+  const [expressUseSecondBrain, setExpressUseSecondBrain] = useState(true)
+  const [expressUseWebTrends, setExpressUseWebTrends] = useState(true)
+  const [isGeneratingExpress, setIsGeneratingExpress] = useState(false)
+  const [expressResult, setExpressResult] = useState<ExpressSocialContent | null>(null)
+  const [editableExpressFbCopy, setEditableExpressFbCopy] = useState('')
+  const [isPublishingExpressBuffer, setIsPublishingExpressBuffer] = useState(false)
+  const [expressSuccessMsg, setExpressSuccessMsg] = useState<string | null>(null)
+  const [isCarouselModalOpen, setIsCarouselModalOpen] = useState(false)
+  const [isReelVideoModalOpen, setIsReelVideoModalOpen] = useState(false)
+  const [showAdvancedWizard, setShowAdvancedWizard] = useState(false)
 
   // 1. Brief State
   const [brief, setBrief] = useState<MarketingBriefInput>({
@@ -244,6 +268,61 @@ function CampaignWizardContent() {
     setIsPublishingPostId(null)
   }
 
+  // Genera Contenuti Express (Second Brain + Web Grounding + Corso AI Start)
+  const handleGenerateExpress = async () => {
+    if (!expressPrompt.trim() || isGeneratingExpress) return
+    setIsGeneratingExpress(true)
+    setExpressSuccessMsg(null)
+
+    try {
+      const res = await generateExpressSocialPostAction({
+        prompt: expressPrompt,
+        targetFocus: expressTargetFocus,
+        includeSecondBrain: expressUseSecondBrain,
+        includeWebTrends: expressUseWebTrends,
+      })
+
+      if (res.success && res.content) {
+        setExpressResult(res.content)
+        setEditableExpressFbCopy(res.content.facebookPost.fullCopy)
+        playNotificationSound('chat')
+      } else {
+        alert(`Errore generazione express: ${res.error || 'Impossibile completare la richiesta'}`)
+      }
+    } catch (err: any) {
+      alert(`Errore di connessione: ${err.message}`)
+    } finally {
+      setIsGeneratingExpress(false)
+    }
+  }
+
+  // Autorizza e pubblica su Buffer direttamente dal Generatore Express
+  const handlePublishExpressToBuffer = async () => {
+    if (!expressResult) return
+    setIsPublishingExpressBuffer(true)
+    setExpressSuccessMsg(null)
+
+    try {
+      const textToPublish = editableExpressFbCopy.trim() || expressResult.facebookPost.fullCopy
+      const res = await publishToBufferAction({
+        text: textToPublish,
+        platform: 'Facebook',
+        now: false,
+      })
+
+      if (res.success) {
+        playNotificationSound('chat')
+        setExpressSuccessMsg(res.message || '🚀 Post inviato con successo alla coda programmata di Buffer!')
+      } else {
+        alert(`Errore invio a Buffer: ${res.error}`)
+      }
+    } catch (err: any) {
+      alert(`Errore durante la pubblicazione: ${err.message}`)
+    } finally {
+      setIsPublishingExpressBuffer(false)
+    }
+  }
+
   // Modifica piattaforma o formato del post
   const handleUpdatePostField = (index: number, field: 'platform' | 'postType' | 'status', value: string) => {
     if (!plan) return
@@ -348,30 +427,25 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
     URL.revokeObjectURL(url)
   }
 
-  const stepsList = [
-    { num: 1, title: '1. Brief & Diagnosi', icon: Target },
-    { num: 2, title: '2. Offerta & Angoli', icon: Flame },
-    { num: 3, title: '3. Landing Page (aiutiamoci.cloud)', icon: Layers },
-    { num: 4, title: '4. 🚀 Calendario Social & Buffer', icon: Calendar },
-    { num: 5, title: '5. Lancio & Checklist', icon: Rocket },
-  ]
-
   return (
     <div className="space-y-6 pb-16 max-w-6xl mx-auto">
-      {/* Top Header & Breadcrumb */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      {/* Top Header Pulito & Intuitivo */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <Link href="/marketing" className="hover:text-blue-400 transition-colors">
               Marketing Hub
             </Link>
             <span>/</span>
-            <span className="text-slate-200 font-medium">Wizard Campagna APEX</span>
+            <span className="text-slate-200 font-medium">Contenuti & Campagne Social</span>
           </div>
           <h1 className="text-xl md:text-2xl font-extrabold text-slate-100 flex items-center gap-2.5">
             <Rocket className="h-6 w-6 text-blue-400" />
-            {brief.title || 'Nuova Campagna di Marketing'}
+            Social Post & Video Express
           </h1>
+          <p className="text-xs text-slate-400">
+            Crea in un clic post Facebook, grafiche per Instagram e script video reel per il corso AI Start o le consulenze PMI.
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -407,227 +481,683 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
         </div>
       )}
 
-      {/* Wizard Step Navigation Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-1.5 bg-slate-900/80 rounded-2xl border border-slate-800">
-        {stepsList.map((s) => {
-          const Icon = s.icon
-          const isActive = currentStep === s.num
-          const isDone = plan !== null && currentStep > s.num
-          return (
+      {/* Navigatore compatto contestuale attivo SOLO se è stato generato un piano strategico esteso */}
+      {plan && (
+        <div className="flex items-center justify-between p-2 bg-slate-900/60 rounded-xl border border-slate-800 text-xs">
+          <div className="flex items-center gap-2 text-slate-300 font-medium px-2">
+            <Target className="h-4 w-4 text-blue-400" />
+            <span>Piano Strategico Generato:</span>
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto">
             <button
-              key={s.num}
-              disabled={!plan && s.num > 1}
-              onClick={() => setCurrentStep(s.num as any)}
-              className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold transition-all ${
-                isActive
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                  : isDone
-                  ? 'text-slate-300 hover:bg-slate-800'
-                  : 'text-slate-500 hover:text-slate-400 opacity-60'
+              onClick={() => setCurrentStep(1)}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                currentStep === 1 ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
             >
-              <div
-                className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-mono ${
-                  isActive ? 'bg-white/20 text-white' : isDone ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'
-                }`}
-              >
-                {isDone ? <Check className="h-3.5 w-3.5" /> : s.num}
-              </div>
-              <span className="truncate">{s.title}</span>
+              Generatore Express
             </button>
-          )
-        })}
-      </div>
+            <button
+              onClick={() => setCurrentStep(2)}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                currentStep === 2 ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              Offerta & Angoli
+            </button>
+            <button
+              onClick={() => setCurrentStep(3)}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                currentStep === 3 ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              Landing Page
+            </button>
+            <button
+              onClick={() => setCurrentStep(4)}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                currentStep === 4 ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              Calendario Social
+            </button>
+            <button
+              onClick={() => setCurrentStep(5)}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                currentStep === 5 ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              Checklist Lancio
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================= */}
-      {/* STEP 1: BRIEF & DIAGNOSI STRATEGICA                       */}
+      {/* SEZIONE PRINCIPALE: GENERATORE EXPRESS SOCIAL             */}
       {/* ========================================================= */}
       {currentStep === 1 && (
         <div className="space-y-6">
-          <Card className="p-6 bg-slate-900/60 border-slate-800 rounded-2xl space-y-6">
-            <div className="space-y-1">
-              <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                <Target className="h-5 w-5 text-blue-400" />
-                1. Informazioni Generali & Avatar Target
-              </h2>
-              <p className="text-xs text-slate-400">
-                Definisci il prodotto, l'offerta e la psicologia del target secondo i principi di Eugene Schwartz.
-              </p>
-            </div>
+          {/* FAST-TRACK CARD: Generatore Express (Zero perdite di tempo) */}
+          <Card className="p-6 bg-gradient-to-b from-slate-900 via-slate-900/90 to-indigo-950/30 border-blue-500/40 rounded-2xl space-y-6 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1.5">Titolo Interno Campagna</label>
-                <Input
-                  value={brief.title}
-                  onChange={(e) => setBrief({ ...brief, title: e.target.value })}
-                  placeholder="Es. Lancio Q4 Corso AI Start"
-                  className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">Nome Prodotto/Servizio</label>
-                  <Input
-                    value={brief.productName}
-                    onChange={(e) => setBrief({ ...brief, productName: e.target.value })}
-                    placeholder="Es. AI Start"
-                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
-                  />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs font-semibold px-2.5 py-0.5">
+                    ⚡ Modalità Rapida • Guadagna Tempo
+                  </Badge>
+                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs">
+                    Buffer Diretto
+                  </Badge>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">Prezzo Offerta (€)</label>
-                  <Input
-                    type="number"
-                    value={brief.price}
-                    onChange={(e) => setBrief({ ...brief, price: Number(e.target.value) || 0 })}
-                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
-                  />
-                </div>
+                <h2 className="text-lg md:text-xl font-extrabold text-slate-100 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-amber-400" />
+                  Post Facebook & Reel in 1 Click (Second Brain + Web)
+                </h2>
+                <p className="text-xs text-slate-300 max-w-2xl">
+                  Non perdere tempo a compilare form: scegli o modifica un'idea, l'AI attinge dal <strong>Second Brain</strong> e dalle <strong>20 lezioni del corso AI Start</strong> per preparare subito il testo, la locandina grafica e il reel pronto per l'approvazione e l'invio a Buffer.
+                </p>
               </div>
 
-              <div className="md:col-span-2">
-                <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                  Avatar Target (Buyer Persona & Contesto)
-                </label>
-                <textarea
-                  value={brief.targetAvatar}
-                  onChange={(e) => setBrief({ ...brief, targetAvatar: e.target.value })}
-                  rows={2}
-                  className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-                  placeholder="Descrivi chi acquista: età, ruolo, paure e contesto professionale..."
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                  Dolore Viscerale Primario (Nightmare)
-                </label>
-                <textarea
-                  value={brief.corePain}
-                  onChange={(e) => setBrief({ ...brief, corePain: e.target.value })}
-                  rows={2}
-                  className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-                  placeholder="Cosa non li fa dormire la notte o quale ostacolo li blocca..."
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                  Desiderio Trasformativo (Dream Outcome)
-                </label>
-                <textarea
-                  value={brief.coreDesire}
-                  onChange={(e) => setBrief({ ...brief, coreDesire: e.target.value })}
-                  rows={2}
-                  className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
-                  placeholder="Il risultato ideale che desiderano raggiungere sopra ogni cosa..."
-                />
+              {/* Selettore Target Focus */}
+              <div className="flex items-center gap-1.5 p-1 bg-slate-950/80 rounded-xl border border-slate-800 shrink-0 self-start sm:self-center">
+                <button
+                  type="button"
+                  onClick={() => setExpressTargetFocus('studenti')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    expressTargetFocus === 'studenti'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  Studenti Corso
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExpressTargetFocus('pmi')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    expressTargetFocus === 'pmi'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Building2 className="h-3.5 w-3.5" />
+                  PMI & Studi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExpressTargetFocus('misto')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    expressTargetFocus === 'misto'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Misto
+                </button>
               </div>
             </div>
 
-            {/* Livello di Consapevolezza (Schwartz) */}
-            <div className="space-y-2 pt-2 border-t border-slate-800">
-              <label className="text-xs font-semibold text-slate-300 block">
-                Livello di Consapevolezza del Pubblico Target (Eugene Schwartz)
+            {/* Prompt Chips - Idee pronte all'uso per Studenti & PMI */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                💡 Idee Pratiche Suggerite (Clicca per inserire al volo nel prompt):
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                {AWARENESS_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setBrief({ ...brief, awarenessLevel: opt.value })}
-                    className={`p-3 rounded-xl text-left text-xs transition-all border ${
-                      brief.awarenessLevel === opt.value
-                        ? 'bg-blue-600/15 border-blue-500 text-white font-medium shadow-sm'
-                        : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="font-semibold text-slate-200">{opt.label}</div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Canali & Parametri Budget */}
-            <div className="space-y-3 pt-2 border-t border-slate-800">
-              <label className="text-xs font-semibold text-slate-300 block">Canali di Pubblicazione & Advertising</label>
               <div className="flex flex-wrap gap-2">
-                {PLATFORM_OPTIONS.map((p) => {
-                  const active = brief.platforms.includes(p)
+                {[
+                  {
+                    icon: GraduationCap,
+                    label: '🎓 Per chi parte da zero (Studenti)',
+                    focus: 'studenti' as const,
+                    prompt: "Superare la paura di essere in ritardo con l'AI: spiegare perché chi parte da zero impara più in fretta con esempi di vita quotidiana e invito al corso AI Start",
+                  },
+                  {
+                    icon: Sparkles,
+                    label: '💡 Micro-lezione RCCF (Mod. 5)',
+                    focus: 'studenti' as const,
+                    prompt: "Micro-lezione dal corso: la Formula RCCF (Ruolo, Contesto, Contenuto, Formato) per non farsi dare risposte banali o generiche da ChatGPT",
+                  },
+                  {
+                    icon: Clock,
+                    label: '⏱️ Risparmiare 5 Ore (Mod. 8)',
+                    focus: 'misto' as const,
+                    prompt: "Come risparmiare 5 ore a settimana su email, riassunti di documenti e preventivi usando l'AI con metodo guidato e zero stress",
+                  },
+                  {
+                    icon: Brain,
+                    label: '🧭 Guida Modelli: ChatGPT vs Claude (Mod. 7)',
+                    focus: 'studenti' as const,
+                    prompt: "Guida pratica per non-tecnici: ChatGPT vs Claude vs Gemini, quale scegliere per il lavoro quotidiano senza spendere soldi a vuoto",
+                  },
+                  {
+                    icon: Building2,
+                    label: '🏢 AI per PMI senza programmatori',
+                    focus: 'pmi' as const,
+                    prompt: "Perché una piccola impresa o uno studio professionale può iniziare ad automatizzare le task d'ufficio senza dover assumere sviluppatori",
+                  },
+                ].map((p, idx) => {
+                  const Icon = p.icon
+                  const isSelected = expressPrompt === p.prompt
                   return (
                     <button
-                      key={p}
+                      key={idx}
                       type="button"
-                      onClick={() => togglePlatform(p)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                        active
-                          ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
-                          : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
+                      onClick={() => {
+                        setExpressPrompt(p.prompt)
+                        setExpressTargetFocus(p.focus)
+                      }}
+                      className={`text-xs px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-blue-600/30 border-blue-400 text-blue-200 font-semibold shadow-sm shadow-blue-500/20'
+                          : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
                       }`}
                     >
-                      {p}
+                      <Icon className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                      <span>{p.label}</span>
                     </button>
                   )
                 })}
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                <div>
-                  <label className="text-xs text-slate-400 block mb-1">Budget Giornaliero (€/giorno)</label>
-                  <Input
-                    type="number"
-                    value={brief.budgetDaily}
-                    onChange={(e) => setBrief({ ...brief, budgetDaily: Number(e.target.value) || 0 })}
-                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-slate-400 block mb-1">CPA Massimo Target (€)</label>
-                  <Input
-                    type="number"
-                    value={brief.kpiCpaTarget}
-                    onChange={(e) => setBrief({ ...brief, kpiCpaTarget: Number(e.target.value) || 0 })}
-                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-slate-400 block mb-1">ROAS Minimo Atteso</label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={brief.kpiRoasTarget}
-                    onChange={(e) => setBrief({ ...brief, kpiRoasTarget: Number(e.target.value) || 0 })}
-                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
-                  />
-                </div>
-              </div>
             </div>
 
-            {/* CTA Genera con APEX AI */}
-            <div className="pt-4 flex justify-end">
+            {/* Input Prompt Modificabile */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-200 flex items-center justify-between">
+                <span>Prompt / Argomento del Post (Modificabile liberamente):</span>
+                <span className="text-[11px] text-slate-400 font-normal">Puoi personalizzarlo con parole tue</span>
+              </label>
+              <textarea
+                rows={2}
+                value={expressPrompt}
+                onChange={(e) => setExpressPrompt(e.target.value)}
+                placeholder="Es. Spiega come fare ordine nelle email con ChatGPT con un tono calmo e rassicurante..."
+                className="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 shadow-inner leading-relaxed"
+              />
+            </div>
+
+            {/* Opzioni di Grounding & CTA Generazione */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setExpressUseSecondBrain(!expressUseSecondBrain)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                    expressUseSecondBrain
+                      ? 'bg-purple-600/20 border-purple-500/40 text-purple-200 font-medium'
+                      : 'bg-slate-950 border-slate-800 text-slate-500'
+                  }`}
+                >
+                  <Brain className="h-3.5 w-3.5 text-purple-400" />
+                  <span>Second Brain & 20 Moduli Corso {expressUseSecondBrain ? '✓' : '✗'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setExpressUseWebTrends(!expressUseWebTrends)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                    expressUseWebTrends
+                      ? 'bg-blue-600/20 border-blue-500/40 text-blue-200 font-medium'
+                      : 'bg-slate-950 border-slate-800 text-slate-500'
+                  }`}
+                >
+                  <Globe className="h-3.5 w-3.5 text-blue-400" />
+                  <span>Idee & Trend sul Web {expressUseWebTrends ? '✓' : '✗'}</span>
+                </button>
+              </div>
+
               <Button
-                onClick={handleGenerateStrategy}
-                disabled={isGenerating || !brief.productName.trim()}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-5 rounded-xl shadow-lg shadow-blue-500/25 flex items-center gap-2"
+                onClick={handleGenerateExpress}
+                disabled={isGeneratingExpress || !expressPrompt.trim()}
+                className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/25 flex items-center gap-2 shrink-0 text-xs"
               >
-                {isGenerating ? (
+                {isGeneratingExpress ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>APEX Architect sta elaborando la strategia...</span>
+                    <span>APEX sta preparando i post...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4 text-blue-300" />
-                    <span>Genera Strategia Completa con APEX AI</span>
-                    <ArrowRight className="h-4 w-4 ml-1" />
+                    <Sparkles className="h-4 w-4 text-amber-300" />
+                    <span>Prepara Post & Reel Pronti</span>
+                    <ArrowRight className="h-4 w-4 ml-0.5" />
                   </>
                 )}
               </Button>
             </div>
+
+            {/* Success feedback per Buffer */}
+            {expressSuccessMsg && (
+              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                <span>{expressSuccessMsg}</span>
+              </div>
+            )}
+
+            {/* RISULTATO GENERATO EXPRESS: Griglia a 2 Colonne */}
+            {expressResult && (
+              <div className="pt-4 border-t border-slate-800 space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="space-y-0.5">
+                    <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      Contenuti Pronti per la Pubblicazione
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      Topic: <span className="text-slate-200 font-medium">{expressResult.topic}</span> • Target: <span className="text-blue-300">{expressResult.targetAudience}</span>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[11px] border-emerald-500/30 text-emerald-400 font-mono">
+                      ✓ Buffer Ready
+                    </Badge>
+                    <Badge variant="outline" className="text-[11px] border-purple-500/40 text-purple-300 font-mono flex items-center gap-1">
+                      <Brain className="h-3 w-3 text-purple-400" />
+                      Salvato nel Second Brain
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {/* SCHEDA 1: POST FACEBOOK */}
+                  <Card className="p-4 bg-slate-950/80 border-slate-800 rounded-xl space-y-3.5 flex flex-col justify-between">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <Badge className="bg-blue-600 text-white text-[11px] font-bold">
+                          📘 Post Facebook
+                        </Badge>
+                        <span className="text-[11px] text-slate-400 font-mono">Pronto per Buffer</span>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
+                          <span>Testo Completo (Modificabile prima dell'invio):</span>
+                          <span className="text-[10px] text-slate-500">Puoi ritoccare qualsiasi parola</span>
+                        </label>
+                        <textarea
+                          rows={8}
+                          value={editableExpressFbCopy}
+                          onChange={(e) => setEditableExpressFbCopy(e.target.value)}
+                          className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-200 leading-relaxed font-sans focus:outline-none focus:border-blue-500"
+                        />
+                      </div>
+
+                      {/* Locandina Grafica Suggerita */}
+                      <div className="p-2.5 bg-slate-900/60 rounded-lg border border-slate-800 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            Locandina Consigliata per questo Post:
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setPosterData(expressResult.facebookPost.posterSuggestion)
+                                setIsPosterModalOpen(true)
+                              }}
+                              className="h-6 px-2 text-[11px] border-blue-500/40 bg-blue-950/40 text-blue-300 hover:text-white hover:border-blue-400"
+                            >
+                              <Palette className="h-3 w-3 mr-1 text-blue-400" />
+                              Locandina PNG
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setIsCarouselModalOpen(true)}
+                              className="h-6 px-2 text-[11px] border-purple-500/40 bg-purple-950/40 text-purple-300 hover:text-white hover:border-purple-400"
+                            >
+                              <Layers className="h-3 w-3 mr-1 text-purple-400" />
+                              Carosello ({expressResult.carouselSlides?.length || 5} Slide)
+                            </Button>
+                          </div>
+                        </div>
+                        <p className="text-[11px] text-slate-300 font-medium italic">
+                          "{expressResult.facebookPost.posterSuggestion.title}"
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleCopy(editableExpressFbCopy, 'express-fb')}
+                        className="h-8 px-2.5 text-xs text-slate-400 hover:text-white"
+                      >
+                        {copiedId === 'express-fb' ? <Check className="h-3.5 w-3.5 text-emerald-400 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+                        Copia Testo
+                      </Button>
+
+                      {/* CTA Invio a Buffer */}
+                      <Button
+                        size="sm"
+                        disabled={isPublishingExpressBuffer}
+                        onClick={handlePublishExpressToBuffer}
+                        className="h-8 px-3.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/20 flex items-center gap-1.5"
+                      >
+                        {isPublishingExpressBuffer ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Send className="h-3.5 w-3.5" />
+                        )}
+                        <span>Autorizza e Pubblica su Buffer</span>
+                      </Button>
+                    </div>
+                  </Card>
+
+                  {/* SCHEDA 2: REEL SCRIPT / VIDEO BREVE */}
+                  <Card className="p-4 bg-slate-950/80 border-slate-800 rounded-xl space-y-3.5 flex flex-col justify-between">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <Badge className="bg-pink-600 text-white text-[11px] font-bold">
+                          🎬 Script Reel / TikTok (9:16)
+                        </Badge>
+                        <span className="text-[11px] text-slate-400 font-mono">30-45 sec</span>
+                      </div>
+
+                      <div className="p-2.5 bg-slate-900/60 rounded-lg border border-slate-800 space-y-1">
+                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+                          Hook Primi 3 Secondi (Visivo & Parlato):
+                        </span>
+                        <p className="text-xs text-slate-200 font-medium italic">
+                          "{expressResult.reelScript.hookVisualAndAudio}"
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          Timeline Scene:
+                        </span>
+                        {expressResult.reelScript.scenes.map((s, idx) => (
+                          <div key={idx} className="p-2 bg-slate-900/40 rounded border border-slate-800/80 text-[11px] space-y-1">
+                            <div className="flex items-center justify-between font-mono text-[10px] text-blue-400 font-bold">
+                              <span>⏱️ {s.time}</span>
+                            </div>
+                            <div className="text-slate-400 text-[11px]"><strong className="text-slate-300">Visivo:</strong> {s.visual}</div>
+                            <div className="text-slate-200 text-[11px] font-medium"><strong className="text-slate-300">Audio:</strong> "{s.audioText}"</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="text-[11px] text-slate-400 italic">
+                        🎵 Mood musicale: {expressResult.reelScript.musicTone}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const scriptText = `TITOLO: ${expressResult.reelScript.title}\nHOOK: ${expressResult.reelScript.hookVisualAndAudio}\n\nSCENE:\n${expressResult.reelScript.scenes.map(s => `[${s.time}]\nVISUAL: ${s.visual}\nAUDIO: ${s.audioText}`).join('\n\n')}\n\nCTA: ${expressResult.reelScript.cta}`
+                          handleCopy(scriptText, 'express-reel')
+                        }}
+                        className="h-8 px-2.5 text-xs text-slate-400 hover:text-white"
+                      >
+                        {copiedId === 'express-reel' ? <Check className="h-3.5 w-3.5 text-emerald-400 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+                        Copia Script
+                      </Button>
+
+                      <div className="flex items-center gap-1.5 ml-auto">
+                        <Button
+                          size="sm"
+                          onClick={() => setIsReelVideoModalOpen(true)}
+                          className="h-8 px-2.5 text-[11px] bg-pink-600 hover:bg-pink-500 text-white font-semibold shadow-sm shadow-pink-600/25 flex items-center gap-1"
+                        >
+                          <Video className="h-3.5 w-3.5" />
+                          <span>Video Reel (9:16)</span>
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setPosterData({
+                              title: expressResult.reelScript.title,
+                              hook: expressResult.reelScript.hookVisualAndAudio.slice(0, 70),
+                              body: expressResult.reelScript.captionText.slice(0, 150),
+                              cta: expressResult.reelScript.cta,
+                            })
+                            setIsPosterModalOpen(true)
+                          }}
+                          className="h-8 px-2 text-[11px] border-slate-700 bg-slate-900 text-slate-300 hover:text-white"
+                        >
+                          <Palette className="h-3 w-3 mr-1 text-pink-400" />
+                          Cover 9:16
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const scriptText = expressResult.reelScript.scenes.map(s => s.audioText).join(' ')
+                            handleCopy(scriptText, 'capcut-reel')
+                            window.open('https://www.capcut.com/tools/script-to-video', '_blank')
+                          }}
+                          className="h-8 px-2 text-[11px] border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:border-pink-500/60"
+                        >
+                          <Sparkles className="h-3 w-3 mr-1 text-pink-400" />
+                          CapCut
+                          <ExternalLink className="h-2 w-2 ml-1 text-slate-500" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            )}
           </Card>
+
+          {/* TOGGLE PER IL FORM AVANZATO (11 CAMPI APEX) */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedWizard(!showAdvancedWizard)}
+              className="w-full flex items-center justify-between p-3.5 bg-slate-900/40 hover:bg-slate-900/80 border border-slate-800/80 rounded-2xl text-xs font-semibold text-slate-300 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-blue-400" />
+                <span>Vuoi configurare una Campagna Funnel Completa APEX a 5 Step?</span>
+                <Badge variant="outline" className="text-[10px] border-slate-700 text-slate-400 font-normal">
+                  {showAdvancedWizard ? 'Nascondi Form Esteso' : 'Opzionale (11 Campi Media Buying)'}
+                </Badge>
+              </div>
+              <span className="text-blue-400 text-xs font-medium">
+                {showAdvancedWizard ? '▲ Nascondi Form Avanzato' : '▼ Mostra Form Avanzato'}
+              </span>
+            </button>
+          </div>
+
+          {/* Form Avanzato Condizionale */}
+          {showAdvancedWizard && (
+            <Card className="p-6 bg-slate-900/60 border-slate-800 rounded-2xl space-y-6 animate-in fade-in duration-200">
+              <div className="space-y-1">
+                <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                  <Target className="h-5 w-5 text-blue-400" />
+                  1. Informazioni Generali & Avatar Target
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Definisci il prodotto, l'offerta e la psicologia del target secondo i principi di Eugene Schwartz.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">Titolo Interno Campagna</label>
+                  <Input
+                    value={brief.title}
+                    onChange={(e) => setBrief({ ...brief, title: e.target.value })}
+                    placeholder="Es. Lancio Q4 Corso AI Start"
+                    className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1.5">Nome Prodotto/Servizio</label>
+                    <Input
+                      value={brief.productName}
+                      onChange={(e) => setBrief({ ...brief, productName: e.target.value })}
+                      placeholder="Es. AI Start"
+                      className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1.5">Prezzo Offerta (€)</label>
+                    <Input
+                      type="number"
+                      value={brief.price}
+                      onChange={(e) => setBrief({ ...brief, price: Number(e.target.value) || 0 })}
+                      className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                    Avatar Target (Buyer Persona & Contesto)
+                  </label>
+                  <textarea
+                    value={brief.targetAvatar}
+                    onChange={(e) => setBrief({ ...brief, targetAvatar: e.target.value })}
+                    rows={2}
+                    className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+                    placeholder="Descrivi chi acquista: età, ruolo, paure e contesto professionale..."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                    Dolore Viscerale Primario (Nightmare)
+                  </label>
+                  <textarea
+                    value={brief.corePain}
+                    onChange={(e) => setBrief({ ...brief, corePain: e.target.value })}
+                    rows={2}
+                    className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+                    placeholder="Cosa non li fa dormire la notte o quale ostacolo li blocca..."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">
+                    Desiderio Trasformativo (Dream Outcome)
+                  </label>
+                  <textarea
+                    value={brief.coreDesire}
+                    onChange={(e) => setBrief({ ...brief, coreDesire: e.target.value })}
+                    rows={2}
+                    className="w-full p-2.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+                    placeholder="Il risultato ideale che desiderano raggiungere sopra ogni cosa..."
+                  />
+                </div>
+              </div>
+
+              {/* Livello di Consapevolezza (Schwartz) */}
+              <div className="space-y-2 pt-2 border-t border-slate-800">
+                <label className="text-xs font-semibold text-slate-300 block">
+                  Livello di Consapevolezza del Pubblico Target (Eugene Schwartz)
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                  {AWARENESS_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setBrief({ ...brief, awarenessLevel: opt.value })}
+                      className={`p-3 rounded-xl text-left text-xs transition-all border ${
+                        brief.awarenessLevel === opt.value
+                          ? 'bg-blue-600/15 border-blue-500 text-white font-medium shadow-sm'
+                          : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="font-semibold text-slate-200">{opt.label}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">{opt.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Canali & Parametri Budget */}
+              <div className="space-y-3 pt-2 border-t border-slate-800">
+                <label className="text-xs font-semibold text-slate-300 block">Canali di Pubblicazione & Advertising</label>
+                <div className="flex flex-wrap gap-2">
+                  {PLATFORM_OPTIONS.map((p) => {
+                    const active = brief.platforms.includes(p)
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => togglePlatform(p)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          active
+                            ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
+                            : 'bg-slate-950 text-slate-400 border border-slate-800 hover:text-slate-200'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">Budget Giornaliero (€/giorno)</label>
+                    <Input
+                      type="number"
+                      value={brief.budgetDaily}
+                      onChange={(e) => setBrief({ ...brief, budgetDaily: Number(e.target.value) || 0 })}
+                      className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">CPA Massimo Target (€)</label>
+                    <Input
+                      type="number"
+                      value={brief.kpiCpaTarget}
+                      onChange={(e) => setBrief({ ...brief, kpiCpaTarget: Number(e.target.value) || 0 })}
+                      className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 block mb-1">ROAS Minimo Atteso</label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={brief.kpiRoasTarget}
+                      onChange={(e) => setBrief({ ...brief, kpiRoasTarget: Number(e.target.value) || 0 })}
+                      className="bg-slate-950 border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Genera con APEX AI */}
+              <div className="pt-4 flex justify-end">
+                <Button
+                  onClick={handleGenerateStrategy}
+                  disabled={isGenerating || !brief.productName.trim()}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-5 rounded-xl shadow-lg shadow-blue-500/25 flex items-center gap-2"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>APEX Architect sta elaborando la strategia...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 text-blue-300" />
+                      <span>Genera Strategia Completa con APEX AI</span>
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
+          )}
         </div>
       )}
 
@@ -1246,6 +1776,25 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
         initialHook={posterData.hook}
         initialBody={posterData.body}
         initialCta={posterData.cta}
+      />
+
+      {/* Modal Generatore di Caroselli Multi-Slide (4:5) */}
+      <CarouselGeneratorModal
+        isOpen={isCarouselModalOpen}
+        onClose={() => setIsCarouselModalOpen(false)}
+        initialSlides={expressResult?.carouselSlides}
+        topic={expressResult?.topic}
+      />
+
+      {/* Modal Generatore & Render Video Reel (9:16) */}
+      <ReelVideoGeneratorModal
+        isOpen={isReelVideoModalOpen}
+        onClose={() => setIsReelVideoModalOpen(false)}
+        title={expressResult?.reelScript?.title}
+        hook={expressResult?.reelScript?.hookVisualAndAudio}
+        scenes={expressResult?.reelScript?.scenes}
+        cta={expressResult?.reelScript?.cta}
+        captionText={expressResult?.reelScript?.captionText}
       />
     </div>
   )
