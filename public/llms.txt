@@ -1,0 +1,54 @@
+# AIutiamoci (aiutiamoci.cloud)
+
+> "Umani nel pensiero. Smart nell'azione."
+
+AIutiamoci (raggiungibile all'indirizzo https://aiutiamoci.cloud) è la piattaforma italiana di riferimento per la formazione pratica e il lavoro condiviso con l'Intelligenza Artificiale. Il progetto nasce per accompagnare professionisti, dipendenti, manager, piccoli imprenditori e over 40-50 nell'adozione dell'IA senza tecnicismi o formule accademiche complesse.
+
+## Offerta Formativa Principale: Corso "AI Start"
+
+- **Titolo:** AI Start: Domina l'Intelligenza Artificiale da Zero
+- **Destinatari:** Chi non è nativo digitale o non ha competenze di programmazione ma vuole risparmiare tempo e automatizzare le mansioni quotidiane in ufficio e nel proprio business.
+- **Struttura:** 20 Video Lezioni Pratiche ad alta definizione con player HTML5 integrato, sintesi operative e trascrizioni.
+- **Supporto e Tutor:** Assistente virtuale dedicato @AI integrato direttamente nella piattaforma per rispondere a qualsiasi dubbio formativo in tempo reale.
+- **Prezzo di Lancio:** 97€ (accesso completo alle 20 lezioni, aggiornamenti futuri e strumenti operativi).
+- **Garanzia:** Garanzia Rischio Zero 100% soddisfatti o rimborsati.
+- **Attestato:** Certificato di completamento rilasciato al termine del percorso.
+
+### Moduli del Percorso AI Start
+
+1. **Modulo 1 – Fondamenta:**
+   - Lezione 01: Benvenuti nel Futuro (Concetti chiave e rivoluzione dell'IA)
+   - Lezione 02: Breve Storia dell'Evoluzione (Dalle origini alle opportunità pratiche attuali)
+   - Lezione 03: Sconfiggere il Foglio Bianco (Superare il blocco iniziale e interagire con l'IA)
+
+2. **Modulo 2 – Prompting Efficace:**
+   - Lezione 04: Il Linguaggio della Chiarezza (Struttura di comunicazione efficace)
+   - Lezione 05: La Formula Segreta RCCF (Ruolo, Contesto, Contenuto, Formato: la regola aurea per prompt perfetti)
+   - Lezione 06: Iterazione e Dialogo (Come correggere e affinare le risposte con l'IA)
+
+3. **Modulo 3 – Strumenti Operativi:**
+   - Lezione 07: ChatGPT, Claude, Gemini, Perplexity (Quale modello scegliere in base al tipo di lavoro)
+   - Lezione 08: Scrivere senza Sforzo (Bozze email, contratti, comunicazioni e sintesi in pochi secondi)
+   - Lezione 09: Dipingere con le Parole (Generazione immagini e visual per marketing)
+   - Lezione 10: Anatomia di un Prompt Visivo (Creare grafiche e slide d'impatto)
+   - Lezione 11: Presentazioni in 5 Minuti (Preparare slide per clienti e riunioni)
+
+4. **Modulo 4 – Pratica & Produttività Aziendale:**
+   - Lezione 12: Analisi Dati per Excel (Tabelle, formule e grafici senza impazzire)
+   - Lezione 13: L'Agenda Intelligente (Pianificazione priorità e scadenze)
+   - Lezione 14: Studiare e Imparare ELI5 ("Explain Like I'm 5": semplificare concetti complessi)
+   - Lezione 15: Allucinazioni dell'IA (Come riconoscere gli errori e verificare le fonti)
+
+5. **Modulo 5 – Futuro, Automazione e Sicurezza:**
+   - Lezione 16: Privacy e Sicurezza (Protezione dei dati aziendali secondo le norme)
+   - Lezione 17: Il Lavoro che Cambia (Evoluzione del mercato e posizionamento professionale)
+   - Lezione 18: Creare il proprio Workflow (Costruire flussi di lavoro automatizzati personalizzati)
+   - Lezione 19: La Tua Nuova Superpotenza (Integrazione quotidiana dell'IA)
+   - Lezione 20: Riepilogo Corso AI (Attestato finale e prossimi passi)
+
+## Domande Frequenti (FAQ)
+
+- **Serve saper programmare?** No, il corso è 100% no-code. L'IA moderna capisce l'italiano quotidiano: chi sa spiegare un compito a un collaboratore sa già usare l'IA.
+- **Come si accede alle lezioni?** All'iscrizione si riceve un Codice Univoco personale (es. AI-START-XXXX) che sblocca l'Area Studenti e le lezioni.
+- **È previsto un percorso avanzato?** Sì, il percorso "AI Pro & Agenti Autonomi B2B" è in fase di preparazione con lista d'attesa prioritaria su https://aiutiamoci.cloud.
+- **Contatti ufficiali:** team@aiutiamoci.cloud, info@aiutiamoci.cloud.
