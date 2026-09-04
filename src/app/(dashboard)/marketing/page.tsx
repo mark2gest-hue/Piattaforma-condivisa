@@ -3,39 +3,25 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
-  Megaphone,
-  Sparkles,
   Rocket,
   PlusCircle,
-  TrendingUp,
-  Target,
   Calendar,
-  Layers,
-  Zap,
-  CheckCircle2,
   ArrowRight,
   Share2,
   DollarSign,
   BarChart3,
-  Flame,
   ShieldCheck,
-  Clock,
   Trash2,
-  ExternalLink,
-  Bot,
-  Palette,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { LocandinaGeneratorModal } from '@/components/marketing/locandina-generator-modal'
 import { getMarketingCampaignsAction, deleteMarketingCampaignAction } from '@/app/actions/marketing'
 
 export default function MarketingHubPage() {
   const [campaigns, setCampaigns] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isPosterModalOpen, setIsPosterModalOpen] = useState(false)
 
   // Calcolatore Economico APEX Growth
   const [simTargetFollowers, setSimTargetFollowers] = useState(5000)
@@ -75,90 +61,30 @@ export default function MarketingHubPage() {
   const estimatedRoas = totalAdSpend > 0 ? (grossRevenue / totalAdSpend).toFixed(2) : '0'
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Top Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 p-6 md:p-8 text-white border border-blue-800/40 shadow-xl">
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 flex items-center gap-1.5 px-3 py-1 font-semibold">
-                <Sparkles className="h-3.5 w-3.5 text-blue-400" />
-                APEX Growth Engine & Multi-Channel
-              </Badge>
-              <Badge className="bg-purple-500/20 text-purple-300 border-purple-400/30 font-mono text-xs">
-                Buffer API Diretto
-              </Badge>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              Marketing & Campagne dalla A alla Z
+    <div className="space-y-6 pb-12">
+      {/* Header Pulito & Diretto */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl md:text-2xl font-extrabold text-slate-100 flex items-center gap-2.5">
+              <Rocket className="h-6 w-6 text-blue-400" />
+              Marketing & Campagne Social
             </h1>
-            <p className="text-slate-300 text-sm md:text-base max-w-2xl">
-              Progetta offerte irresistibili, genera angoli pubblicitari ad alta conversione, struttura funnel scientifici e pubblica sui social media con integrazione diretta su Buffer.
-            </p>
+            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
+              Buffer & Second Brain
+            </Badge>
           </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-            <Button
-              onClick={() => setIsPosterModalOpen(true)}
-              variant="outline"
-              className="border-blue-400/40 bg-blue-950/60 text-blue-300 hover:text-white hover:border-blue-400 font-semibold px-4 py-6 rounded-xl flex items-center gap-2"
-            >
-              <Palette className="h-5 w-5 text-blue-400" />
-              <span>Crea Locandina Social</span>
-            </Button>
-
-            <Link href="/marketing/campagna">
-              <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-lg shadow-blue-500/25 px-5 py-6 rounded-xl flex items-center gap-2">
-                <PlusCircle className="h-5 w-5" />
-                <span>Nuova Campagna</span>
-              </Button>
-            </Link>
-          </div>
+          <p className="text-xs text-slate-400">
+            Pianificazione contenuti per il corso AI Start, simulazione economica ROAS e generazione post Facebook, Reel e caroselli.
+          </p>
         </div>
-      </div>
 
-      {/* 4 Pilastri APEX Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-slate-900/60 border-slate-800 flex items-start gap-3.5">
-          <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 shrink-0">
-            <Target className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-sm text-slate-100">1. Media Buying 3:2:2</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Meta, Google, TikTok, LinkedIn con testing continuo di hook e formati.</p>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-slate-900/60 border-slate-800 flex items-start gap-3.5">
-          <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 shrink-0">
-            <Layers className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-sm text-slate-100">2. Funnel Ingegnerizzati</h3>
-            <p className="text-xs text-slate-400 mt-0.5">High-Ticket, Tripwire, VSL e E-commerce con CRO e Order Bump.</p>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-slate-900/60 border-slate-800 flex items-start gap-3.5">
-          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0">
-            <Flame className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-sm text-slate-100">3. Direct Copywriting</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Grand Slam Offers Hormozi, Soap Opera sequences e ganci magnetici.</p>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-slate-900/60 border-slate-800 flex items-start gap-3.5">
-          <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 shrink-0">
-            <Share2 className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-sm text-slate-100">4. Social Publishing</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Automazione webhook con n8n e Buffer per Instagram, FB e LinkedIn.</p>
-          </div>
-        </Card>
+        <Link href="/marketing/campagna">
+          <Button className="bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/20 text-xs px-4 py-2 rounded-xl flex items-center gap-2">
+            <PlusCircle className="h-4 w-4" />
+            <span>Nuova Campagna / Post Express</span>
+          </Button>
+        </Link>
       </div>
 
       {/* Sezione Principale: Elenco Campagne + Simulatore Economico */}
@@ -377,12 +303,6 @@ export default function MarketingHubPage() {
           </Card>
         </div>
       </div>
-
-      {/* Modal Generatore Locandine Social */}
-      <LocandinaGeneratorModal
-        isOpen={isPosterModalOpen}
-        onClose={() => setIsPosterModalOpen(false)}
-      />
     </div>
   )
 }
