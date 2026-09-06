@@ -23,6 +23,7 @@ import {
   Tag,
   Share2,
   FolderDown,
+  RefreshCw,
   Info,
   LayoutGrid,
   Network,
@@ -41,6 +42,7 @@ import {
   createKnowledgeItemAction,
   deleteKnowledgeItemAction,
   generateObsidianVaultBundleAction,
+  syncLocalObsidianVaultAction,
 } from '@/app/actions/knowledge'
 
 const CATEGORIES = [
@@ -158,6 +160,29 @@ export default function CervelloKnowledgePage() {
     await deleteKnowledgeItemAction(id)
   }
 
+    const [isSyncingLocal, setIsSyncingLocal] = useState(false)
+  const [syncModalOpen, setSyncModalOpen] = useState(false)
+  const [syncedCount, setSyncedCount] = useState(0)
+
+  const handleSyncLocalObsidian = async () => {
+    setIsSyncingLocal(true)
+    try {
+      const res = await syncLocalObsidianVaultAction()
+      if (res && res.success) {
+        setSyncedCount(res.count || 0)
+        setSyncModalOpen(true)
+        playNotificationSound("chat")
+      } else {
+        alert(res?.error || "Errore durante la sincronizzazione con Obsidian")
+      }
+    } catch (err: any) {
+      console.error("Errore sync locale Obsidian:", err)
+      alert("Errore di sincronizzazione: " + (err.message || "Server non raggiungibile"))
+    } finally {
+      setIsSyncingLocal(false)
+    }
+  }
+
   const handleDownloadObsidianVault = async () => {
     setIsExporting(true)
     try {
@@ -238,6 +263,17 @@ export default function CervelloKnowledgePage() {
               <span>20 PDF Corsi (Proton Drive)</span>
             </Button>
           </a>
+
+                    <Button
+            onClick={handleSyncLocalObsidian}
+            disabled={isSyncingLocal}
+            variant="outline"
+            className="h-10 px-4 text-xs font-bold rounded-xl border-emerald-500/30 bg-emerald-950/30 hover:bg-emerald-900/50 text-emerald-200 gap-2 shadow-sm"
+            title="Sincronizza direttamente nel Vault Obsidian locale su Mac e iCloud"
+          >
+            {isSyncingLocal ? <Loader2 className="h-4 w-4 animate-spin text-emerald-400" /> : <RefreshCw className="h-4 w-4 text-emerald-400" />}
+            <span>Sincronizza su Obsidian</span>
+          </Button>
 
           <Button
             onClick={handleDownloadObsidianVault}
@@ -535,6 +571,46 @@ export default function CervelloKnowledgePage() {
       )}
 
       {/* MODAL: Guida all'uso di Obsidian & Proton Drive */}
+            {syncModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
+                <Check className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Vault Obsidian Sincronizzato!</h3>
+                <span className="text-[10px] text-slate-400 font-mono">{syncedCount} note aggiornate in tempo reale</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 space-y-2 leading-relaxed">
+              <p className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Info className="h-4 w-4 text-emerald-400" />
+                Aggiornamento Diretto su Mac & iCloud
+              </p>
+              <p>
+                Tutte le note del Secondo Cervello sono state scritte nella cartella:
+                <br />
+                <code className="text-[10px] bg-slate-200 dark:bg-slate-950 px-1 py-0.5 rounded font-mono text-emerald-400">
+                  KnowledgeBase/07_Secondo_Cervello_Aiutiamoci/
+                </code>
+              </p>
+              <p className="text-[11px] text-slate-400">
+                I file sono visibili e sincronizzati istantaneamente su Obsidian (Mac, iPad e iPhone).
+              </p>
+            </div>
+
+            <Button
+              onClick={() => setSyncModalOpen(false)}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 rounded-xl"
+            >
+              Ottimo, ho capito!
+            </Button>
+          </div>
+        </div>
+      )}
+
       {exportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 p-6 space-y-4">

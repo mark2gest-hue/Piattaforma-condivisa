@@ -1,5 +1,8 @@
 'use server'
 
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
 import { createAdminClient } from '@/lib/supabase/server'
 import { KnowledgeItem, DEFAULT_KNOWLEDGE_ITEMS } from '@/lib/knowledge-data'
 
@@ -183,6 +186,40 @@ ${item.content}
 
     return { success: true, files: vaultFiles }
   } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+
+// 5. Sincronizza direttamente il Vault Locale Obsidian sul filesystem Mac (e iCloud)
+export async function syncLocalObsidianVaultAction() {
+  try {
+    const bundleRes = await generateObsidianVaultBundleAction()
+    if (!bundleRes.success || !bundleRes.files) {
+      return { success: false, error: bundleRes.error || "Impossibile generare il bundle del Vault" }
+    }
+
+    const primaryDir = "/Users/marco/Sviluppo/KnowledgeBase/07_Secondo_Cervello_Aiutiamoci"
+    const fallbackDir = path.join(os.homedir(), "Library/Mobile Documents/iCloud~md~obsidian/Documents/KnowledgeBase/07_Secondo_Cervello_Aiutiamoci")
+
+    let targetDir = primaryDir
+    if (!fs.existsSync("/Users/marco/Sviluppo/KnowledgeBase") && fs.existsSync(path.dirname(fallbackDir))) {
+      targetDir = fallbackDir
+    }
+
+    fs.mkdirSync(targetDir, { recursive: true })
+
+    let count = 0
+    for (const file of bundleRes.files) {
+      const fullPath = path.join(targetDir, file.path)
+      fs.mkdirSync(path.dirname(fullPath), { recursive: true })
+      fs.writeFileSync(fullPath, file.content, "utf-8")
+      count++
+    }
+
+    return { success: true, count, targetDir }
+  } catch (error: any) {
+    console.error("Errore syncLocalObsidianVaultAction:", error)
     return { success: false, error: error.message }
   }
 }

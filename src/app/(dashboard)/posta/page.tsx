@@ -107,13 +107,18 @@ export default function PostaCondivisaPage() {
   }, [])
 
   useEffect(() => {
-    // Carica configurazione IMAP da localStorage se presente
+    // Carica configurazione IMAP da localStorage ed esegue il merge con DEFAULT_IMAP_ACCOUNTS
     const saved = localStorage.getItem('piattaforma_imap_accounts')
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
         if (Array.isArray(parsed)) {
-          setImapAccounts(parsed)
+          const merged = DEFAULT_IMAP_ACCOUNTS.map((def) => {
+            const found = parsed.find((p: ArubaMailboxConfig) => p.email?.toLowerCase() === def.email.toLowerCase())
+            return found ? { ...def, password: found.password || '' } : def
+          })
+          setImapAccounts(merged)
+          return
         }
       } catch (e) {
         console.error('Errore parsing accounts IMAP salvati', e)
@@ -446,7 +451,7 @@ export default function PostaCondivisaPage() {
               <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                 Posta Condivisa
                 <Badge variant="outline" className="text-[11px] font-mono font-medium text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/60">
-                  4 Caselle Aruba
+                  5 Caselle Aruba
                 </Badge>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -478,7 +483,27 @@ export default function PostaCondivisaPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsImapModalOpen(true)}
+            onClick={() => {
+              // Assicura il merge immediato prima di aprire il modale
+              try {
+                const saved = localStorage.getItem('piattaforma_imap_accounts')
+                if (saved) {
+                  const parsed = JSON.parse(saved)
+                  if (Array.isArray(parsed)) {
+                    const merged = DEFAULT_IMAP_ACCOUNTS.map((def) => {
+                      const found = parsed.find((p: ArubaMailboxConfig) => p.email?.toLowerCase() === def.email.toLowerCase())
+                      return found ? { ...def, password: found.password || '' } : def
+                    })
+                    setImapAccounts(merged)
+                  }
+                } else {
+                  setImapAccounts(DEFAULT_IMAP_ACCOUNTS)
+                }
+              } catch (e) {
+                setImapAccounts(DEFAULT_IMAP_ACCOUNTS)
+              }
+              setIsImapModalOpen(true)
+            }}
             className="text-xs border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 h-9 px-2.5 sm:px-3 gap-1.5"
             title="Configura password e caselle Aruba"
           >
@@ -1390,9 +1415,24 @@ export default function PostaCondivisaPage() {
               </div>
 
               <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
-                <Button type="button" variant="outline" size="sm" onClick={() => setIsImapModalOpen(false)}>
-                  Annulla
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsImapModalOpen(false)}>
+                    Annulla
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      localStorage.removeItem('piattaforma_imap_accounts')
+                      setImapAccounts(DEFAULT_IMAP_ACCOUNTS)
+                    }}
+                    className="text-[11px] text-slate-500 hover:text-red-500"
+                    title="Reimposta la lista completa delle 5 caselle predefinite"
+                  >
+                    Ripristina 5 Caselle
+                  </Button>
+                </div>
                 <Button
                   type="submit"
                   size="sm"

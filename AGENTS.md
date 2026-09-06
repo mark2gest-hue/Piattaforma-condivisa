@@ -1,5 +1,7 @@
 # Regole operative del progetto
 
+- **Memoria persistente (SESSION_STATE.md)**: All'avvio di ogni sessione o dopo ogni interruzione, consulta immediatamente `SESSION_STATE.md` nella root per riprendere il contesto esatto e aggiornalo a ogni avanzamento significativo.
+
 - **Analizza prima di modificare**: Esamina con attenzione il codice, il contesto e le dipendenze prima di apportare qualsiasi modifica.
 - **Minimizza i file modificati**: Non cambiare più file del necessario; limita il raggio di modifica al minimo indispensabile.
 - **Edits mirati**: Non riscrivere file interi; applica modifiche chirurgiche e localizzate.
