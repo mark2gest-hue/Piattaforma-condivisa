@@ -1,7 +1,7 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-06 20:12
-Stato corrente: In produzione / Sincronizzazione 5 caselle Aruba & Obsidian
+Ultimo aggiornamento: 2026-09-06 21:48
+Stato corrente: In produzione / Centralino n8n 5 caselle attivo + Funnel Lead Corso Agenti AI (Gemini, Supabase waitlist_leads, Autoresponder Aruba, Alert Telegram) + Filtri Avanzati Studenti Corso 1 & Corso 2
 
 ---
 
@@ -47,10 +47,24 @@ Stato corrente: In produzione / Sincronizzazione 5 caselle Aruba & Obsidian
   - Ricerca full-text e filtri per categorie.
   - Visualizzatore interattivo Knowledge Graph su canvas (`knowledge-graph-view.tsx`).
   - Sincronizzazione diretta con Vault locale Obsidian (Mac & iCloud) e script dedicato `npm run sync:vault`.
+- [x] **Gestione Studenti & Corsi Formativi (`/corsi`)**:
+  - Filtri rapidi per categoria accreditamento: `Tutti`, `Corso 1: AI Start` (badge blu), `Corso 2: AI Pro (Agenti)` (badge viola) e `Bundle Completo` (badge dorato).
+  - Ricerca istantanea full-text per nome studente, email e codice univoco.
+  - Workflow approvazione nuove iscrizioni e conversione lead da lista d'attesa in corsisti abilitati.
+- [x] **Centralino 24/7 & Funnel Lead Corso Agenti AI (n8n v2.8.4 su Oracle VPS)**:
+  - **Monitoraggio 5 caselle aziendali**: `assistenza@aiutiamoci.cloud`, `info@aiutiamoci.cloud`, `team@aiutiamoci.cloud`, `info@mark2.cloud`, `support@mark2.cloud`.
+  - **Triage con Gemini 2.5 Flash**: classificazione multi-categoria (`CORSO_AGENTI_AI`, `ASSISTENZA`, `INFO_GENERALI`, `TEAM_INTERNO`, `SPAM`) con estrazione strutturata (nome, email, WhatsApp, livello tecnico, quesito).
+  - **Filtro Logico Anti-Spam & Switch routing**: segregazione email operative da lead formativi.
+  - **Archiviazione automatica Lead**: nodo HTTP Request verso Supabase REST API (tabella `waitlist_leads`).
+  - **Autoresponder email istantaneo**: invio automatico da `info@aiutiamoci.cloud` (SMTP Aruba porta 465 SSL) con presentazione corso, programma e orientamento.
+  - **Alert Telegram Prioritario Team**: scheda ricca per contatto immediato dei lead qualificati.
+  - **Webhook Trigger dedicato**: canale `Iscrizione-corso-ai` per intercettare in tempo reale le iscrizioni provenienti dalla landing page.
 
 ---
 
 ## 3. File Coinvolti di Recente
+- [src/app/(dashboard)/corsi/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/corsi/page.tsx) — Filtri per livello corso (AI Start vs AI Pro), ricerca e approvazione studenti.
+- [src/app/actions/student.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/student.ts) — Server actions per gestione codici studente, waitlist e conversioni.
 - [src/app/(dashboard)/lavori/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/lavori/page.tsx) — Bacheca Kanban con dnd-kit e workflow Human-in-the-Loop.
 - [src/app/(dashboard)/marketing/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/marketing/page.tsx) — Hub marketing APEX con simulatore ROI e gestione campagne.
 - [src/app/actions/agent-tasks.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/agent-tasks.ts) — Orchestrazione esecuzione agenti AI con NVIDIA Nemotron e notifiche Telegram.

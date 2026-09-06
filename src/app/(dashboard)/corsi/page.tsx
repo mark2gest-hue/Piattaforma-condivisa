@@ -459,6 +459,8 @@ function CorsiInnerContent() {
 
   // Registrazioni Studenti (Codici Attivi nel Database)
   const [registrations, setRegistrations] = useState<StudentRegistration[]>([])
+  const [activeTierFilter, setActiveTierFilter] = useState<'all' | 'ai-start' | 'ai-pro' | 'both'>('all')
+  const [activeSearchQuery, setActiveSearchQuery] = useState('')
 
 
   // Chat Studenti con Assistente @AI
@@ -2247,28 +2249,125 @@ function CorsiInnerContent() {
 
           {/* TABELLA 2: STUDENTI ATTIVI ACCREDITATI */}
           {studentSubTab === 'active' && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase">
-                    <tr>
-                      <th className="py-3 px-4">Codice Accesso</th>
-                      <th className="py-3 px-4">Nome Studente</th>
-                      <th className="py-3 px-4">Email</th>
-                      <th className="py-3 px-4">Corso Formativo</th>
-                      <th className="py-3 px-4">Stato Iscrizione</th>
-                      <th className="py-3 px-4 text-right">Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                    {registrations.map((reg) => (
-                      <tr key={reg.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="py-3.5 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                          {reg.code}
-                        </td>
-                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                          {reg.studentName}
-                        </td>
+            <div className="space-y-4">
+              {/* Barra Filtri Rapidi Corso 1 / Corso 2 e Ricerca */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="relative w-full sm:w-80">
+                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    value={activeSearchQuery}
+                    onChange={(e) => setActiveSearchQuery(e.target.value)}
+                    placeholder="Cerca studente per nome, email o codice..."
+                    className="pl-9 text-xs h-9 bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-xl"
+                  />
+                  {activeSearchQuery && (
+                    <button
+                      onClick={() => setActiveSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
+                  <button
+                    onClick={() => setActiveTierFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      activeTierFilter === 'all'
+                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    Tutti ({registrations.length})
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTierFilter('ai-start')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                      activeTierFilter === 'ai-start'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>📘 Corso 1: AI Start</span>
+                    <span className="px-1.5 py-0.2 bg-blue-500/30 rounded-full text-[10px] font-bold">
+                      {registrations.filter(r => !r.accessTier || r.accessTier === 'ai-start' || r.code.startsWith('AI-START-') || (!r.code.startsWith('AI-PRO-') && !r.code.startsWith('AI-ALL-'))).length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTierFilter('ai-pro')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                      activeTierFilter === 'ai-pro'
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>🚀 Corso 2: AI Pro (Agenti)</span>
+                    <span className="px-1.5 py-0.2 bg-purple-500/30 rounded-full text-[10px] font-bold">
+                      {registrations.filter(r => r.accessTier === 'ai-pro' || r.code.startsWith('AI-PRO-')).length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTierFilter('both')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                      activeTierFilter === 'both'
+                        ? 'bg-amber-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>🌟 Bundle Completo</span>
+                    <span className="px-1.5 py-0.2 bg-amber-500/30 rounded-full text-[10px] font-bold">
+                      {registrations.filter(r => r.accessTier === 'both' || r.code.startsWith('AI-ALL-')).length}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase">
+                      <tr>
+                        <th className="py-3 px-4">Codice Accesso</th>
+                        <th className="py-3 px-4">Nome Studente</th>
+                        <th className="py-3 px-4">Email</th>
+                        <th className="py-3 px-4">Corso Formativo</th>
+                        <th className="py-3 px-4">Stato Iscrizione</th>
+                        <th className="py-3 px-4 text-right">Azioni</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {registrations
+                        .filter((reg) => {
+                          // Filtro di ricerca
+                          if (activeSearchQuery.trim()) {
+                            const q = activeSearchQuery.toLowerCase()
+                            const matchesName = reg.studentName.toLowerCase().includes(q)
+                            const matchesEmail = reg.studentEmail.toLowerCase().includes(q)
+                            const matchesCode = reg.code.toLowerCase().includes(q)
+                            if (!matchesName && !matchesEmail && !matchesCode) return false
+                          }
+                          // Filtro per Corso
+                          const isPro = reg.accessTier === 'ai-pro' || reg.code.startsWith('AI-PRO-')
+                          const isBoth = reg.accessTier === 'both' || reg.code.startsWith('AI-ALL-')
+                          const isStart = !isPro && !isBoth
+
+                          if (activeTierFilter === 'ai-start') return isStart
+                          if (activeTierFilter === 'ai-pro') return isPro
+                          if (activeTierFilter === 'both') return isBoth
+                          return true
+                        })
+                        .map((reg) => (
+                          <tr key={reg.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                            <td className="py-3.5 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                              {reg.code}
+                            </td>
+                            <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                              {reg.studentName}
+                            </td>
                         <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400 font-mono">
                           {reg.studentEmail}
                         </td>
@@ -2341,6 +2440,7 @@ function CorsiInnerContent() {
                   </tbody>
                 </table>
               </div>
+            </div>
             </div>
           )}
 
