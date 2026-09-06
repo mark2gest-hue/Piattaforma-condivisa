@@ -1,7 +1,7 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-06 21:48
-Stato corrente: In produzione / Centralino n8n 5 caselle attivo + Funnel Lead Corso Agenti AI (Gemini, Supabase waitlist_leads, Autoresponder Aruba, Alert Telegram) + Filtri Avanzati Studenti Corso 1 & Corso 2
+Ultimo aggiornamento: 2026-09-06 22:10
+Stato corrente: In produzione / Ottimizzazione Hub Marketing APEX (Preset 1-Click Corsi 1 & 2, Metriche Reali Funnel da Supabase) + Centralino n8n 5 caselle attivo
 
 ---
 
@@ -30,8 +30,11 @@ Stato corrente: In produzione / Centralino n8n 5 caselle attivo + Funnel Lead Co
   - Workflow *Human-in-the-Loop*: esecuzione con AI (`executeAgentTaskAction`), invio in revisione, approvazione o richiesta modifiche con feedback.
 - [x] **Marketing & Campagne (`/marketing`)**:
   - Framework APEX Growth con tracciamento metriche, budget e stato campagne.
+  - **Metriche Reali Funnel**: estrazione diretta da Supabase (`waitlist_leads` e `student_codes`) con conteggio leads raccolti, studenti attivi e calcolo automatico CVR reale.
+  - **Preset 1-Click Corsi**: compilazione istantanea del brief di campagna per `Corso 1: AI Start` (€97) e `Corso 2: AI Pro (Agenti Autonomi)` (€297) sia nel generatore avanzato sia nelle chips rapide del generatore express.
   - Simulatore economico e calcolatore ROI in tempo reale (Ad Spend, nuovi clienti, fatturato stimato).
   - Generatori modali interattivi per asset social: Caroselli (`carousel-generator-modal.tsx`), Locandine promozionali (`locandina-generator-modal.tsx`) e Reel/Storyboard video (`reel-video-generator-modal.tsx`).
+  - Integrazione diretta con Buffer per programmazione post e auto-indicizzazione nel Secondo Cervello.
 - [x] **Posta Condivisa (`/posta`)**:
   - Webmail centralizzata multi-inbox con 5 caselle Aruba (`team@aiutiamoci.cloud`, `info@aiutiamoci.cloud`, `assistenza@aiutiamoci.cloud`, `info@mar2.cloud`, `support@mar2.cloud`).
   - Sincronizzazione IMAP server-side con `imapflow` e `mailparser` (`/api/email/imap-sync`) con merge automatico credenziali e ripristino predefiniti.
@@ -63,8 +66,12 @@ Stato corrente: In produzione / Centralino n8n 5 caselle attivo + Funnel Lead Co
 ---
 
 ## 3. File Coinvolti di Recente
+- [src/app/(dashboard)/marketing/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/marketing/page.tsx) — Card metriche reali funnel (leads e corsisti da Supabase) e simulatore economico.
+- [src/app/(dashboard)/marketing/campagna/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/marketing/campagna/page.tsx) — Preset 1-click Corso 1 vs Corso 2 e chips avanzate per Agenti AI.
+- [src/app/actions/marketing.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/marketing.ts) — Server action `getMarketingRealMetricsAction` per estrazione metriche live.
 - [src/app/(dashboard)/corsi/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/corsi/page.tsx) — Filtri per livello corso (AI Start vs AI Pro), ricerca e approvazione studenti.
 - [src/app/actions/student.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/student.ts) — Server actions per gestione codici studente, waitlist e conversioni.
+
 - [src/app/(dashboard)/lavori/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/lavori/page.tsx) — Bacheca Kanban con dnd-kit e workflow Human-in-the-Loop.
 - [src/app/(dashboard)/marketing/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/marketing/page.tsx) — Hub marketing APEX con simulatore ROI e gestione campagne.
 - [src/app/actions/agent-tasks.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/agent-tasks.ts) — Orchestrazione esecuzione agenti AI con NVIDIA Nemotron e notifiche Telegram.

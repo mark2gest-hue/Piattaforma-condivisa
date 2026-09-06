@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { getMarketingCampaignsAction, deleteMarketingCampaignAction } from '@/app/actions/marketing'
+import { getMarketingCampaignsAction, deleteMarketingCampaignAction, getMarketingRealMetricsAction } from '@/app/actions/marketing'
 
 export interface MarketingCampaignItem {
   id: string
@@ -36,6 +36,21 @@ export interface MarketingCampaignItem {
 export default function MarketingHubPage() {
   const [campaigns, setCampaigns] = useState<MarketingCampaignItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [realMetrics, setRealMetrics] = useState<{
+    totalLeads: number
+    convertedLeads: number
+    totalStudents: number
+    aiStartStudents: number
+    aiProStudents: number
+    conversionRate: string
+  }>({
+    totalLeads: 0,
+    convertedLeads: 0,
+    totalStudents: 0,
+    aiStartStudents: 0,
+    aiProStudents: 0,
+    conversionRate: '0',
+  })
 
   // Calcolatore Economico APEX Growth
   const [simTargetFollowers, setSimTargetFollowers] = useState(5000)
@@ -45,7 +60,15 @@ export default function MarketingHubPage() {
 
   useEffect(() => {
     loadCampaigns()
+    loadRealMetrics()
   }, [])
+
+  const loadRealMetrics = async () => {
+    const res = await getMarketingRealMetricsAction()
+    if (res.success && res.metrics) {
+      setRealMetrics(res.metrics)
+    }
+  }
 
   const loadCampaigns = async () => {
     setIsLoading(true)
@@ -183,8 +206,52 @@ export default function MarketingHubPage() {
           )}
         </div>
 
-        {/* Colonna Destra (1/3): Simulatore Economico ROI & Conversioni */}
+        {/* Colonna Destra (1/3): Metriche Reali Lead + Simulatore Economico ROI & Conversioni */}
         <div className="space-y-6">
+          {/* Card Metriche Reali (da Database Supabase) */}
+          <Card className="p-5 bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-purple-950/20 border-slate-800 rounded-2xl shadow-lg relative overflow-hidden">
+            <div className="flex items-center justify-between mb-3.5">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-100">Metriche Reali Funnel</h3>
+                  <p className="text-[11px] text-slate-400">Dati diretti da Landing & Database</p>
+                </div>
+              </div>
+              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px] font-mono">
+                Supabase
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 mb-3.5">
+              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
+                <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Leads Raccolti</span>
+                <span className="text-xl font-black text-purple-400 font-mono">{realMetrics.totalLeads}</span>
+                <span className="text-[10px] text-slate-500 block mt-0.5">dalla lista d'attesa</span>
+              </div>
+
+              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
+                <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Corsisti Attivi</span>
+                <span className="text-xl font-black text-emerald-400 font-mono">{realMetrics.totalStudents}</span>
+                <span className="text-[10px] text-slate-500 block mt-0.5">studenti abilitati</span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-950/40 rounded-xl border border-slate-800/60 flex items-center justify-between text-xs">
+              <div className="flex flex-col">
+                <span className="text-slate-400 text-[11px]">Conversione Lead ➔ Studente</span>
+                <span className="font-semibold text-slate-200 text-xs mt-0.5">
+                  {realMetrics.convertedLeads} convertiti su {realMetrics.totalLeads} lead
+                </span>
+              </div>
+              <Badge variant="outline" className="font-mono font-bold text-emerald-400 border-emerald-500/30 bg-emerald-500/10 text-xs px-2.5 py-1">
+                {realMetrics.conversionRate}% CVR
+              </Badge>
+            </div>
+          </Card>
+
           <Card className="p-6 bg-slate-900/80 border-slate-800 rounded-2xl shadow-lg relative overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">

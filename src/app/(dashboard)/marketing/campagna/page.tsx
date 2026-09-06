@@ -674,6 +674,18 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                     prompt: "Micro-lezione dal corso: la Formula RCCF (Ruolo, Contesto, Contenuto, Formato) per non farsi dare risposte banali o generiche da ChatGPT",
                   },
                   {
+                    icon: Rocket,
+                    label: '🚀 Corso 2: Agenti AI Autonomi & n8n (Nuovo)',
+                    focus: 'studenti' as const,
+                    prompt: "Presentazione Corso Avanzato: come costruire Agenti AI autonomi collegati a n8n, Telegram e database per automatizzare il lavoro senza codice e farsi assumere o scalare il business",
+                  },
+                  {
+                    icon: Flame,
+                    label: '🤖 Centralino & Triage Email con Agente (Caso Studio)',
+                    focus: 'pmi' as const,
+                    prompt: "Caso studio reale: come abbiamo creato un assistente AI che legge 5 caselle email aziendali, filtra lo spam ed estrae i lead su Telegram in tempo reale",
+                  },
+                  {
                     icon: Clock,
                     label: '⏱️ Risparmiare 5 Ore (Mod. 8)',
                     focus: 'misto' as const,
@@ -1051,14 +1063,68 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
           {/* Form Avanzato Condizionale */}
           {showAdvancedWizard && (
             <Card className="p-6 bg-slate-900/60 border-slate-800 rounded-2xl space-y-6 animate-in fade-in duration-200">
-              <div className="space-y-1">
-                <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
-                  <Target className="h-5 w-5 text-blue-400" />
-                  1. Informazioni Generali & Avatar Target
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Definisci il prodotto, l'offerta e la psicologia del target secondo i principi di Eugene Schwartz.
-                </p>
+              <div className="space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                      <Target className="h-5 w-5 text-blue-400" />
+                      1. Informazioni Generali & Avatar Target
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      Definisci il prodotto, l'offerta e la psicologia del target secondo i principi di Eugene Schwartz.
+                    </p>
+                  </div>
+
+                  {/* Preset 1-Click per velocizzare la compilazione */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">⚡ Preset Rapidi:</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBrief({
+                          title: 'Campagna ADV: Corso AI Start (Domina l\'IA da Zero)',
+                          productName: 'AI Start: Percorso Completo in 20 Video',
+                          price: 97,
+                          targetAvatar: 'Professionisti, commercianti e curiosi che vogliono usare ChatGPT e l\'AI per il lavoro senza gergo tecnico',
+                          awarenessLevel: 'Problem-Aware',
+                          coreDesire: 'Automatizzare email, fogli di calcolo e presentazioni risparmiando 5 ore a settimana',
+                          corePain: 'Paura di rimanere indietro rispetto ai competitor e sentirsi sopraffatti dalla tecnologia',
+                          budgetDaily: 25,
+                          platforms: ['Instagram', 'Meta Ads (Facebook)', 'TikTok'],
+                          kpiCpaTarget: 15,
+                          kpiRoasTarget: 3.5,
+                        })
+                      }
+                      className="px-2.5 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-semibold transition-all flex items-center gap-1"
+                    >
+                      <GraduationCap className="h-3 w-3" />
+                      <span>Corso 1: AI Start</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBrief({
+                          title: 'Campagna B2B: Corso AI Pro & Agenti Autonomi',
+                          productName: 'AI Pro: Agenti Autonomi & Sistemi n8n',
+                          price: 297,
+                          targetAvatar: 'Sviluppatori, consulenti e imprenditori che vogliono costruire agenti software autonomi e automazioni 24/7',
+                          awarenessLevel: 'Solution-Aware',
+                          coreDesire: 'Creare agenti capaci di gestire email, database e notifiche Telegram in autonomia',
+                          corePain: 'Colli di bottiglia nei processi aziendali e dipendenza da lavoro manuale ripetitivo',
+                          budgetDaily: 50,
+                          platforms: ['LinkedIn', 'Meta Ads (Facebook)', 'YouTube'],
+                          kpiCpaTarget: 40,
+                          kpiRoasTarget: 4.0,
+                        })
+                      }
+                      className="px-2.5 py-1 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 rounded-lg text-xs font-semibold transition-all flex items-center gap-1"
+                    >
+                      <Rocket className="h-3 w-3" />
+                      <span>Corso 2: AI Pro</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

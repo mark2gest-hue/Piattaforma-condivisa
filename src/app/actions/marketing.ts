@@ -1420,6 +1420,57 @@ ${carouselSummary}
   }
 }
 
+export async function getMarketingRealMetricsAction() {
+  try {
+    const supabase = await createClient()
+
+    // 1. Leads da waitlist_leads
+    const { data: leads, error: leadsErr } = await (supabase as any)
+      .from('waitlist_leads')
+      .select('id, converted_to_student, created_at, course_interest')
+
+    // 2. Studenti accreditati da student_codes
+    const { data: students, error: studentsErr } = await (supabase as any)
+      .from('student_codes')
+      .select('id, code, access_tier, created_at')
+
+    const totalLeads = leads?.length || 0
+    const convertedLeads = leads?.filter((l: any) => l.converted_to_student)?.length || 0
+    const totalStudents = students?.length || 0
+    const aiStartStudents = students?.filter((s: any) => !s.access_tier || s.access_tier === 'ai-start' || s.code.startsWith('AI-START-'))?.length || 0
+    const aiProStudents = students?.filter((s: any) => s.access_tier === 'ai-pro' || s.code.startsWith('AI-PRO-'))?.length || 0
+
+    // Calcolo conversion rate reale
+    const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : '0'
+
+    return {
+      success: true,
+      metrics: {
+        totalLeads,
+        convertedLeads,
+        totalStudents,
+        aiStartStudents,
+        aiProStudents,
+        conversionRate,
+      },
+    }
+  } catch (error: any) {
+    console.error('Errore getMarketingRealMetricsAction:', error)
+    return {
+      success: false,
+      error: error.message || 'Errore recupero metriche reali marketing',
+      metrics: {
+        totalLeads: 0,
+        convertedLeads: 0,
+        totalStudents: 0,
+        aiStartStudents: 0,
+        aiProStudents: 0,
+        conversionRate: '0',
+      },
+    }
+  }
+}
+
 
 
 
