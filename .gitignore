@@ -33,3 +33,36 @@ supabase/.temp/
 
 # IDE extensions / Sidekick
 .sidekick/
+
+# Python cache & virtualenvs
+__pycache__/
+*.pyc
+
+# Video rendering artifacts & raw media
+public/*.mp4
+public/*.wav
+public/*.mp3
+public/*.opus
+public/*.aiff
+public/*_frames/
+public/scan_dual/
+public/scan_frames/
+public/audio_pro/
+public/kanban_frames/
+public/n8n_frames/
+public/obs_frames/
+public/screencast_frames/
+public/tiktok_subs/
+public/subs_stefano/
+public/subs_stefano_clean/
+public/overlays/
+public/overlays_pro/
+public/check_*.png
+public/frame_*.png
+public/frame_*.jpg
+public/preview_*.jpg
+public/pro_frame_*.jpg
+public/sample_frame*.jpg
+public/kanban_base_frame.png
+public/test_screencast_frame.jpg
+public/tiktok_thumb_*.png

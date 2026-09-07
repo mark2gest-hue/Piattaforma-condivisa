@@ -1,7 +1,7 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-06 22:10
-Stato corrente: In produzione / Ottimizzazione Hub Marketing APEX (Preset 1-Click Corsi 1 & 2, Metriche Reali Funnel da Supabase) + Centralino n8n 5 caselle attivo
+Ultimo aggiornamento: 2026-09-07 19:44
+Stato corrente: In produzione / Video Pilota Corso 2 V2 COMPLETATO: Voce reale Stefano + Screencast reale operativo della piattaforma (Bacheca Kanban Agente Nemotron + Terminale daemon + Architettura Supabase) + Sottotitoli cinematografici (public/pro_stefano_pilot.mp4)
 
 ---
 
@@ -62,6 +62,50 @@ Stato corrente: In produzione / Ottimizzazione Hub Marketing APEX (Preset 1-Clic
   - **Autoresponder email istantaneo**: invio automatico da `info@aiutiamoci.cloud` (SMTP Aruba porta 465 SSL) con presentazione corso, programma e orientamento.
   - **Alert Telegram Prioritario Team**: scheda ricca per contatto immediato dei lead qualificati.
   - **Webhook Trigger dedicato**: canale `Iscrizione-corso-ai` per intercettare in tempo reale le iscrizioni provenienti dalla landing page.
+- [x] **Automazione n8n "Video Factory Free" (Marketing Autonomo 100% Free)**:
+  - **Gemini 2.5 Flash**: Generazione copy persuasivo, hook, sottotitoli e prompt di ricerca video.
+  - **Workflow n8n "Video Factory Free" (100% Funzionante & Testato End-to-End)**:
+    - **Trigger**: manuale o schedulato a tempo.
+    - **Gemini 2.5 Flash**: copy persuasivo, hook, sottotitoli e query per video.
+    - **Pexels API**: estrazione video verticale Full HD / 4K commerciale gratuito.
+    - **Telegram Preview & Human-in-the-Loop**: invio anteprima con video e testo nel gruppo team con inline keyboard.
+    - **Nodo Wait (Resume on Webhook)**: sblocco 1-click tramite pulsante Telegram su URL pubblico HTTPS (`https://n8n.mark2.cloud`).
+    - **Ponte Storage Supabase**:
+      - Nodo `Download video`: download binario MP4 in memoria (filtro `>= 960px` per requisiti Reel).
+      - Nodo `Upload supabase`: caricamento REST multipart su bucket pubblico `marketing-media` (`video-reel.mp4`).
+    - **Buffer GraphQL Integration (`Create a post`)**: prelievo del video da Supabase Storage e pubblicazione automatica del vero Video/Reel sui canali social (Facebook, Instagram, LinkedIn).
+  - **Evoluzione: "Weekly Content Factory" (100% OPERATIVA, ATTIVA & PUBBLICATA IN PRODUZIONE)**:
+    - **Trigger**: `Schedule Trigger` schedulato attivo in produzione 24/7 + Manual trigger per run estemporanee.
+    - **Workflow Status**: **PUBLISHED** (attivo in background su n8n.mark2.cloud).
+    - **Gemini**: generazione automatica del piano editoriale settimanale a 7 slot tematici (Lunedì-Domenica) con `Retry On Fail` attivo.
+    - **Telegram Human-in-the-Loop**: recap aggregato dei 7 post con pulsante 1-click pubblico HTTPS per approvazione globale da parte del team.
+    - **Ponte Supabase Storage Multi-Item**: caricamento indicizzato `video-reel-{{ $itemIndex }}.mp4` su bucket pubblico `marketing-media` (7 video distinti in Full HD/9:16).
+    - **Buffer Queue & Multi-Channel**: accodamento automatico dei 7 Reel con testi, hook e video unici distribuiti negli slot orari del calendario settimanale.
+- [x] **Video Corsi Dinamici & Cinematic Batch Pipeline (In Sviluppo / Pilota Pronto)**:
+  - **Problema originario**: 20 video del Corso 1 (AI Start) con avatar statico frontale da 10 minuti ("noiosi e poco dinamici").
+  - **Soluzione Zero-Manual-Work & 100% Free**: script Python + FFmpeg locale per montaggio automatico procedurale ad alto ritmo visivo:
+    - **Inquadratura 3/4 Dinamica**: crop e posizionamento asimmetrico cinematografico sulla regola dei terzi, lasciando spazio a sinistra per grafiche e slide riassuntive.
+    - **Overlay Cyber Glass**: card capitolo in alto a sinistra e bullet point informativi sincronizzati (senza dipendere da freetype/drawtext).
+    - **B-Roll Dark Tech / Cyber**: sequenze B-roll ad alta definizione (Matrix binary code e flussi dati neurali) scaricate da Pexels.
+    - **Picture-in-Picture (PiP)**: video concettuale a schermo intero con l'avatar miniaturizzato in basso a destra contornato da neon ciano (audio originale ininterrotto).
+    - **Stato Video Pilota Corso 2**:
+      - Video V5 (High Realism) renderizzato con successo (`public/pro_stefano_pilot.mp4`) e inviato nel gruppo Telegram.
+      - Risolti jitter video tramite rendering sub-pixel (Pillow LANCZOS) e aggiunto screencast dinamico con cursore spotlight.
+      - Sdoppiato il nodo finale Buffer su n8n per pubblicazione cross-channel (Facebook + Instagram Reels).
+      - Creata e collegata la nota tecnica nel Vault Obsidian (`06_Corso_Agenti_AI/Workflows_Operativi/Workflow_Video_Factory_n8n_Buffer.md`) con wikilinks bidirezionali a Lezione 11, Lezione 3, Lezione 6 e Home.md.
+      - **Corso 2 (AI Pro - Agenti Autonomi)**: Video Pilota V4 inviato con successo sul gruppo Telegram dei soci.
+        - File: `public/pro_stefano_pilot.mp4` (Full HD 1080p, 39.8s).
+        - Audio: Voce reale registrata da Stefano in Mixcraft (`public/stefano_corso2.wav`).
+        - Struttura video a 4 scene:
+          1. **0s - 9s**: Team al lavoro su laptop (Intro Corso 2).
+          2. **9s - 18s**: **Canvas n8n a tutto schermo** con pipeline (*Webhook Trigger ➔ Switch Triage ➔ Nemotron AI Agent ➔ Supabase DB ➔ Dispatch Telegram/Resend*).
+          3. **18s - 29s**: **Vista Grafo Obsidian reale** con zoom progressivo (Secondo Cervello & Knowledge Vault).
+          4. **29s - 40s**: **Bacheca Operativa Kanban** (*Nemotron Lead Agent* live) + Terminale daemon log.
+        - Inviato sul gruppo Telegram dei soci in attesa di pareri e feedback.
+      - **TikTok Reel 9:16 Virale**: Generato e renderizzato video verticale pronto da pubblicare (`public/tiktok_ai_pro_viral.mp4`, 1080x1920, 29s).
+        - Hook: Stop a usare l'AI come chatbot.
+        - Sequenza dinamica: Vista Grafo Obsidian ➔ Canvas n8n ➔ Secondo Cervello ➔ Bacheca Kanban ➔ CTA Link in bio.
+        - Grafiche e font giga-impact in overlay per il feed social.
 
 ---
 

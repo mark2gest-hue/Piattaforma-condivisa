@@ -142,17 +142,12 @@ export default function CalendarioPage() {
         .single()
 
       if (error) {
-        console.warn('Errore salvataggio evento su DB, fallback locale:', error.message)
-        const fallbackEvent: CalendarEvent = {
-          id: `ev-${Date.now()}`,
-          title: eventTitle.trim(),
-          date: selectedDateStr,
-          time: eventTime,
-          category: eventCategory,
-          description: eventDesc,
-        }
-        setEvents([fallbackEvent, ...events])
-      } else if (newRow) {
+        console.error('Errore salvataggio evento su DB:', error.message)
+        alert(`Attenzione: Impossibile salvare l'evento sul database: ${error.message}`)
+        return
+      }
+
+      if (newRow) {
         const createdEvent: CalendarEvent = {
           id: newRow.id,
           title: newRow.title,
