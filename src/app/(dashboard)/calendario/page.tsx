@@ -52,7 +52,10 @@ export default function CalendarioPage() {
     },
   ])
 
-  const [selectedDateStr, setSelectedDateStr] = useState<string>(new Date().toISOString().split('T')[0])
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const [eventTitle, setEventTitle] = useState('')
   const [eventTime, setEventTime] = useState('09:00')
@@ -310,9 +313,10 @@ export default function CalendarioPage() {
             {/* Giorni Effettivi */}
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const dayNum = i + 1
-              const dateObj = new Date(year, month, dayNum)
-              const dateStr = dateObj.toISOString().split('T')[0]
-              const isToday = dateStr === new Date().toISOString().split('T')[0]
+              const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
+              const todayObj = new Date()
+              const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`
+              const isToday = dateStr === todayStr
               const isSelected = dateStr === selectedDateStr
               const dayEvs = events.filter((e) => e.date === dateStr)
 
@@ -378,7 +382,10 @@ export default function CalendarioPage() {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
               <div>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                  Eventi per il {new Date(selectedDateStr).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  Eventi per il {(() => {
+                    const [y, m, d] = selectedDateStr.split('-').map(Number)
+                    return new Date(y, m - 1, d).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+                  })()}
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {dayEvents.length} {dayEvents.length === 1 ? 'evento in programma' : 'eventi in programma'}
