@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Area Riservata Clienti - Portale Self-Service & Gate Certificazioni</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --blue-deep: #0B1B3D;
+      --blue-action: #0052CC;
+      --blue-light: #EBF3FF;
+      --bg: #F4F6F8;
+      --panel: #FFFFFF;
+      --border: #D1D7E0;
+      --text: #1A2332;
+      --text-dim: #5B6675;
+      --green: #059669;
+      --green-bg: #ECFDF5;
+      --green-border: #A7F3D0;
+      --amber: #D97706;
+      --amber-bg: #FFFBEB;
+      --amber-border: #FDE68A;
+      --red: #DC2626;
+      --red-bg: #FEF2F2;
+      --red-border: #FECACA;
+      --radius: 6px;
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: 'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============ INTERACTIVE DEMO CONTROLLER BAR ============ */
+    .demo-bar {
+      background: #1E293B;
+      color: #E2E8F0;
+      padding: 8px 24px;
+      font-size: 11.5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #334155;
+    }
+
+    .demo-bar .ctrls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .demo-bar .ctrl-btn {
+      background: #334155;
+      color: #fff;
+      border: 1px solid #475569;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 11px;
+      transition: all .15s ease;
+    }
+
+    .demo-bar .ctrl-btn.active {
+      background: var(--blue-action);
+      border-color: #38BDF8;
+      font-weight: 600;
+    }
+
+    /* ============ PORTAL NAVBAR ============ */
+    .portal-nav {
+      background: var(--blue-deep);
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid var(--blue-action);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-logo {
+      width: 34px;
+      height: 34px;
+      border: 1.5px solid var(--blue-action);
+      background: rgba(0, 82, 204, 0.2);
+      display: grid;
+      place-items: center;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 13px;
+      border-radius: 4px;
+    }
+
+    .nav-title {
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .3px;
+    }
+
+    .nav-sub {
+      font-size: 11px;
+      color: #94A3B8;
+      font-family: var(--mono);
+    }
+
+    .nav-tenant {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .tenant-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tenant-pill .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .sec-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ============ CONTAINER & LAYOUT ============ */
+    .container {
+      max-width: 1200px;
+      margin: 24px auto 40px;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+    }
+
+    /* ============ GATE BANNER ============ */
+    .gate-banner {
+      grid-column: 1 / -1;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      transition: all .2s ease;
+    }
+
+    .gate-banner.locked {
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+      color: #92400E;
+    }
+
+    .gate-banner.unlocked {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      color: #065F46;
+    }
+
+    .gate-text {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .gate-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .gate-title {
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .gate-desc {
+      font-size: 12px;
+      opacity: .95;
+    }
+
+    .pay-btn {
+      background: var(--blue-action);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s ease;
+    }
+
+    .pay-btn:hover {
+      background: #0040A8;
+    }
+
+    /* ============ CARD STYLES ============ */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: #FAFBFD;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--blue-deep);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title .icon {
+      color: var(--blue-action);
+    }
+
+    .card-body {
+      padding: 18px;
+    }
+
+    /* ============ CERTIFICATES LIST ============ */
+    .cert-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: #FFFFFF;
+      transition: all .15s ease;
+    }
+
+    .cert-item:hover {
+      border-color: #94A3B8;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    }
+
+    .cert-item.current {
+      border-left: 4px solid var(--blue-action);
+      background: #FAFBFD;
+    }
+
+    .cert-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .cert-badge-pdf {
+      width: 36px;
+      height: 40px;
+      background: #FEE2E2;
+      color: var(--red);
+      border: 1px solid #FECACA;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+    }
+
+    .cert-info h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .cert-sub {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .dl-btn {
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+      transition: all .15s ease;
+      text-decoration: none;
+    }
+
+    .dl-btn.ready {
+      background: var(--blue-action);
+      color: #fff;
+      border-color: var(--blue-action);
+    }
+
+    .dl-btn.ready:hover {
+      background: #0040A8;
+    }
+
+    .dl-btn.locked-btn {
+      background: #F1F5F9;
+      color: #94A3B8;
+      border-color: #CBD5E1;
+      cursor: not-allowed;
+    }
+
+    /* ============ EXPIRATION COUNTDOWN WIDGET ============ */
+    .expiry-box {
+      background: linear-gradient(135deg, var(--blue-deep) 0%, #1E3A8A 100%);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .expiry-header {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-family: var(--mono);
+      color: #93C5FD;
+      letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+
+    .expiry-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .expiry-timer {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .timer-segment {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 6px 10px;
+      text-align: center;
+      flex: 1;
+    }
+
+    .timer-val {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      color: #FCD34D;
+    }
+
+    .timer-lbl {
+      font-size: 9px;
+      text-transform: uppercase;
+      color: #CBD5E1;
+    }
+
+    /* ============ AUTOMATION ALERT TIMELINE ============ */
+    .timeline-steps {
+      position: relative;
+      padding-left: 18px;
+      border-left: 2px solid var(--border);
+      margin-top: 10px;
+    }
+
+    .t-step {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .t-step:last-child {
+      margin-bottom: 0;
+    }
+
+    .t-dot {
+      position: absolute;
+      left: -24px;
+      top: 3px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #CBD5E1;
+      border: 2px solid #fff;
+    }
+
+    .t-step.done .t-dot {
+      background: var(--green);
+    }
+
+    .t-step.current .t-dot {
+      background: var(--blue-action);
+      box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.25);
+    }
+
+    .t-step.future .t-dot {
+      background: #CBD5E1;
+    }
+
+    .t-label {
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .t-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* ============ AUDIT TRAIL LOG MODAL / TOAST ============ */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--blue-deep);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 6px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      border-left: 4px solid var(--green);
+      font-size: 12px;
+      display: none;
+      animation: slideUp .3s ease;
+      z-index: 999;
+      max-width: 360px;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* ============ FOOTER ============ */
+    .portal-foot {
+      text-align: center;
+      padding: 24px;
+      font-size: 11px;
+      color: var(--text-dim);
+      border-top: 1px solid var(--border);
+      background: #fff;
+      font-family: var(--mono);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ============ DEMO CONTROLLER (SIMULATORE GATE) ============ -->
+  <div class="demo-bar">
+    <div style="font-weight: 600;">
+      <span>&#9881; DEMO CONTROLLER (MODULO 3 - LEVA INCASSI &amp; GATE DOWNLOAD):</span>
+    </div>
+    <div class="ctrls">
+      <button class="ctrl-btn active" id="btn-unpaid" onclick="setPaymentState(false)">
+        Stato: Fattura Insoluta (Gate Attivo)
+      </button>
+      <button class="ctrl-btn" id="btn-paid" onclick="setPaymentState(true)">
+        Stato: Fattura Saldata (Download Sbloccato)
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ PORTAL HEADER ============ -->
+  <header class="portal-nav">
+    <div class="nav-brand">
+      <div class="nav-logo">CCI</div>
+      <div>
+        <div class="nav-title">Portale Self-Service Certificazioni</div>
+        <div class="nav-sub">Area Riservata Clienti &middot; Accesso RLS Protetto</div>
+      </div>
+    </div>
+    <div class="nav-tenant">
+      <div class="tenant-pill">
+        <span class="status-dot"></span>
+        <span><b>Acme Impianti S.r.l.</b> (ID: #CLI-2849)</span>
+      </div>
+      <div class="sec-badge">
+        <span>&#128274; Crittografia RLS Attiva</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ============ DYNAMIC GATE BANNER ============ -->
+    <div class="gate-banner locked" id="gateBanner">
+      <div class="gate-text">
+        <div class="gate-icon" id="gateIcon">&#9888;</div>
+        <div>
+          <div class="gate-title" id="gateTitle">Fattura di Rinnovo in Attesa di Saldo &middot; Certificato 2026/2027 Protetto</div>
+          <div class="gate-desc" id="gateDesc">
+            La quota di rinnovo annuale per la certificazione risulta emessa (Fattura #FATT-2026-881). Il download dell'attestato ufficiale sarà sbloccato istantaneamente a seguito del riscontro del pagamento.
+          </div>
+        </div>
+      </div>
+      <button class="pay-btn" id="gateActionBtn" onclick="simulatePayment()">
+        Salda &amp; Sblocca Certificato
+      </button>
+    </div>
+
+    <!-- ============ MAIN COLUMN: CERTIFICATES & DOCS ============ -->
+    <div class="main-col">
+
+      <!-- CERTIFICATI ATTIVI & GATE -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="icon">&#128196;</span> Certificazioni e Attestati di Conformit&agrave;
+          </div>
+          <span style="font-family: var(--mono); font-size: 11px; color: var(--text-dim);">Object Storage Cifrato</span>
+        </div>
+        <div class="card-body">
+
+          <!-- Current Year Cert (Gate dependent) -->
+          <div class="cert-item current" id="cert2026">
+            <div class="cert-meta">
+              <div class="cert-badge-pdf">
+                <span>PDF</span>
+                <span style="font-size: 7px; color: var(--blue-action);">2026</span>
+              </div>
+              <div class="cert-info">
+                <h4>Certificato di Conformit&agrave; Impianti &middot; Edizione 2026/2027</h4>
+                <div class="cert-sub">
+                  <span>Codice: <b>CERT-2026-9931</b></span>
+                  <span>Scadenza: <b>15 Ottobre 2027</b></span>
+                  <span id="cert2026-status-tag" style="color: var(--amber); font-weight: 600;">&#9888; Saldo Richiesto</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <button class="dl-btn locked-btn" id="btn-dl-2026" onclick="handleDownloadAttempt()">
+                <span>&#128274;</span> Sblocco Vincolato
+              </button>
+            </div>
+          </div>
+
+          <!-- Historic Archive Migrated from Dropbox -->
+          <div class="cert-item">
+            <div class="cert-meta">
+              <div class="cert-badge-pdf">
+                <span>PDF</span>
+                <span style="font-size: 7px; color: var(--text-dim);">2025</span>
+              </div>
+              <div class="cert-info">
+                <h4>Certificato di Conformit&agrave; Impianti &middot; Edizione 2025/2026</h4>
+                <div class="cert-sub">
+                  <span>Codice: <b>CERT-2025-8812</b></span>
+                  <span>Rilascio: <b>14 Ottobre 2025</b></span>
+                  <span style="color: var(--green); font-weight: 600;">Archivio Storico</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <button class="dl-btn ready" onclick="downloadSecureFile('CERT-2025-8812')">
+                <span>&#8681;</span> Scarica (URL Firmato)
+              </button>
+            </div>
+          </div>
+
+          <!-- Historic Archive 2024 -->
+          <div class="cert-item">
+            <div class="cert-meta">
+              <div class="cert-badge-pdf">
+                <span>PDF</span>
+                <span style="font-size: 7px; color: var(--text-dim);">2024</span>
+              </div>
+              <div class="cert-info">
+                <h4>Verbale di Collaudo e Sorveglianza Triennale</h4>
+                <div class="cert-sub">
+                  <span>Codice: <b>VERB-2024-3011</b></span>
+                  <span>Rilascio: <b>22 Maggio 2024</b></span>
+                  <span style="color: var(--green); font-weight: 600;">Archivio Storico</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <button class="dl-btn ready" onclick="downloadSecureFile('VERB-2024-3011')">
+                <span>&#8681;</span> Scarica (URL Firmato)
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FATTURE & POSIZIONE AMMINISTRATIVA -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="icon">&#128179;</span> Posizione Amministrativa &amp; Fatture Rinnovo
+          </div>
+          <span style="font-family: var(--mono); font-size: 11px; color: var(--text-dim);">Aggiornato in Tempo Reale</span>
+        </div>
+        <div class="card-body">
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border); text-align: left; color: var(--text-dim); font-family: var(--mono); font-size: 10px;">
+                <th style="padding: 8px;">NUMERO</th>
+                <th style="padding: 8px;">DESCRIZIONE</th>
+                <th style="padding: 8px;">IMPORTO</th>
+                <th style="padding: 8px;">SCADENZA</th>
+                <th style="padding: 8px;">STATO</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid #EDF0F5;" id="invoiceRow">
+                <td style="padding: 10px 8px; font-family: var(--mono);"><b>#FATT-2026-881</b></td>
+                <td style="padding: 10px 8px;">Rinnovo Quota Annuale Certificazione 2026/2027</td>
+                <td style="padding: 10px 8px; font-family: var(--mono); font-weight: 600;">&euro; 1.450,00</td>
+                <td style="padding: 10px 8px; font-family: var(--mono);">30 Set 2026</td>
+                <td style="padding: 10px 8px;" id="invoiceStatusCell">
+                  <span style="background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); padding: 3px 7px; border-radius: 3px; font-family: var(--mono); font-size: 10px; font-weight: 600;">IN ATTESA</span>
+                </td>
+              </tr>
+              <tr style="border-bottom: 1px solid #EDF0F5;">
+                <td style="padding: 10px 8px; font-family: var(--mono);">#FATT-2025-712</td>
+                <td style="padding: 10px 8px;">Sorveglianza Periodica e Mantenimento ISO</td>
+                <td style="padding: 10px 8px; font-family: var(--mono); font-weight: 600;">&euro; 1.450,00</td>
+                <td style="padding: 10px 8px; font-family: var(--mono);">30 Set 2025</td>
+                <td style="padding: 10px 8px;">
+                  <span style="background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); padding: 3px 7px; border-radius: 3px; font-family: var(--mono); font-size: 10px; font-weight: 600;">SALDATA</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============ SIDEBAR: SCADENZE & TIMELINE AUTOMAZIONI ============ -->
+    <div class="side-col">
+
+      <!-- COUNTDOWN WIDGET -->
+      <div class="expiry-box">
+        <div class="expiry-header">Motore Rinnovi &middot; Modulo 2</div>
+        <div class="expiry-title">Prossima Scadenza Certificato</div>
+        <div class="expiry-timer">
+          <div class="timer-segment">
+            <div class="timer-val">46</div>
+            <div class="timer-lbl">Giorni</div>
+          </div>
+          <div class="timer-segment">
+            <div class="timer-val">14</div>
+            <div class="timer-lbl">Ore</div>
+          </div>
+          <div class="timer-segment">
+            <div class="timer-val">00</div>
+            <div class="timer-lbl">Min</div>
+          </div>
+        </div>
+        <div style="font-size: 11px; color: #E2E8F0; line-height: 1.4;">
+          Scadenza ufficiale: <b>15 Ottobre 2026</b>.<br/>
+          Rinnovo contrattuale in gestione automatizzata.
+        </div>
+      </div>
+
+      <!-- WORKFLOW NOTIFICHE 60/30/15 GG -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="icon">&#128340;</span> Workflow Alert Rinnovo
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="timeline-steps">
+            <div class="t-step done">
+              <div class="t-dot"></div>
+              <div class="t-label">Alert 60 Giorni (Inviato)</div>
+              <div class="t-desc">Notifica preliminare e bozza rinnovo trasmessa il 15 Agosto.</div>
+            </div>
+            <div class="t-step current">
+              <div class="t-dot"></div>
+              <div class="t-label">Alert 30 Giorni (In Programmazione)</div>
+              <div class="t-desc">Scansione cron schedulata per il 15 Settembre ore 08:00.</div>
+            </div>
+            <div class="t-step future">
+              <div class="t-dot"></div>
+              <div class="t-label">Alert 15 Giorni (Escalation)</div>
+              <div class="t-desc">Sollecito finale prima della scadenza contrattuale.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANAGRAFICA & PRIVACY -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="icon">&#128100;</span> Dati Anagrafici &amp; RLS
+          </div>
+        </div>
+        <div class="card-body" style="font-size: 11.5px; line-height: 1.6;">
+          <div>Ragione Sociale: <b>Acme Impianti S.r.l.</b></div>
+          <div>P.IVA: <b>IT08923480912</b></div>
+          <div>Referente Tecnico: <b>Ing. M. Rossi</b></div>
+          <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-family: var(--mono); font-size: 10px; color: var(--green);">
+            &#10004; Consensi GDPR Verificati<br/>
+            &#10004; Isolamento Tenant RLS Attivo
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast" id="toast">
+    <div id="toast-title" style="font-weight: 700; margin-bottom: 2px;">Download Avviato</div>
+    <div id="toast-body" style="color: #CBD5E1;">Generato URL crittografato temporaneo valido per 15 minuti.</div>
+  </div>
+
+  <footer class="portal-foot">
+    PIATTAFORMA CENTRALIZZATA DI GESTIONE &middot; MODULO 3 PORTALE SELF-SERVICE &middot; ZERO CHURN &amp; LEVA INCASSI
+  </footer>
+
+  <script>
+    let isPaid = false;
+
+    function setPaymentState(paid) {
+      isPaid = paid;
+      
+      const btnUnpaid = document.getElementById('btn-unpaid');
+      const btnPaid = document.getElementById('btn-paid');
+      const gateBanner = document.getElementById('gateBanner');
+      const gateIcon = document.getElementById('gateIcon');
+      const gateTitle = document.getElementById('gateTitle');
+      const gateDesc = document.getElementById('gateDesc');
+      const gateActionBtn = document.getElementById('gateActionBtn');
+      const btnDl2026 = document.getElementById('btn-dl-2026');
+      const tag2026 = document.getElementById('cert2026-status-tag');
+      const invoiceStatusCell = document.getElementById('invoiceStatusCell');
+
+      btnUnpaid.classList.toggle('active', !paid);
+      btnPaid.classList.toggle('active', paid);
+
+      if (paid) {
+        gateBanner.className = 'gate-banner unlocked';
+        gateIcon.innerHTML = '&#10004;';
+        gateTitle.innerText = 'Posizione Amministrativa Regolare · Certificato 2026 Sbloccato';
+        gateDesc.innerText = 'La fattura di rinnovo #FATT-2026-881 risulta regolarmente saldata. Puoi effettuare il download del certificato di conformità ufficiale.';
+        gateActionBtn.style.display = 'none';
+
+        btnDl2026.className = 'dl-btn ready';
+        btnDl2026.innerHTML = '<span>&#8681;</span> Scarica Certificato (URL Firmato)';
+        
+        tag2026.innerHTML = '&#10004; Saldata &amp; Disponibile';
+        tag2026.style.color = 'var(--green)';
+
+        invoiceStatusCell.innerHTML = '<span style="background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); padding: 3px 7px; border-radius: 3px; font-family: var(--mono); font-size: 10px; font-weight: 600;">SALDATA</span>';
+      } else {
+        gateBanner.className = 'gate-banner locked';
+        gateIcon.innerHTML = '&#9888;';
+        gateTitle.innerText = 'Fattura di Rinnovo in Attesa di Saldo · Certificato 2026/2027 Protetto';
+        gateDesc.innerText = 'La quota di rinnovo annuale per la certificazione risulta emessa (Fattura #FATT-2026-881). Il download dell\'attestato ufficiale sarà sbloccato istantaneamente a seguito del riscontro del pagamento.';
+        gateActionBtn.style.display = 'inline-block';
+
+        btnDl2026.className = 'dl-btn locked-btn';
+        btnDl2026.innerHTML = '<span>&#128274;</span> Sblocco Vincolato';
+
+        tag2026.innerHTML = '&#9888; Saldo Richiesto';
+        tag2026.style.color = 'var(--amber)';
+
+        invoiceStatusCell.innerHTML = '<span style="background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); padding: 3px 7px; border-radius: 3px; font-family: var(--mono); font-size: 10px; font-weight: 600;">IN ATTESA</span>';
+      }
+    }
+
+    function simulatePayment() {
+      setPaymentState(true);
+      showToast('Pagamento Confermato!', 'Fattura saldata con successo. Il gate di download ha sbloccato il Certificato 2026.');
+    }
+
+    function handleDownloadAttempt() {
+      if (!isPaid) {
+        showToast('Download Bloccato dal Gate', 'È necessario saldare la fattura di rinnovo per scaricare il documento ufficiale.', true);
+      } else {
+        downloadSecureFile('CERT-2026-9931');
+      }
+    }
+
+    function downloadSecureFile(certCode) {
+      showToast('URL Pre-Firmato Generato', `Download autorizzato per ${certCode}. Token di sicurezza valido per 15 minuti.`);
+    }
+
+    function showToast(title, body, isWarn = false) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-title').innerText = title;
+      document.getElementById('toast-body').innerText = body;
+      t.style.borderLeftColor = isWarn ? 'var(--red)' : 'var(--green)';
+      t.style.display = 'block';
+      setTimeout(() => {
+        t.style.display = 'none';
+      }, 4000);
+    }
+  </script>
+</body>
+
+</html>

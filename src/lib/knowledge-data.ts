@@ -311,4 +311,36 @@ Domanda: [Scrivi la tua domanda]`,
     lesson_id: 15,
     is_featured: true,
   },
+  {
+    id: 'k-14',
+    title: 'Workflow n8n: Video Factory Free & Social Auto-Publishing (Reel 9:16 + Buffer)',
+    category: 'agents_workflows',
+    tags: ['n8n', 'video-factory', 'reels', 'buffer', 'pexels', 'supabase-storage'],
+    description: 'Pipeline autonoma per creare Reel 9:16 con Gemini 2.5 Flash, B-roll Pexels, Supabase Storage e pubblicazione automatica su Buffer.',
+    content: `### 🎬 Video Factory n8n (Modulo 18)
+1. **Schedule Trigger**: Esecuzione programmata 7/7 secondo piano editoriale.
+2. **Gemini 2.5 Flash**: Genera hook, copy Facebook/Instagram e query video per Pexels.
+3. **Pexels API**: Download B-roll verticale HD/4K (filtro >= 960px).
+4. **Supabase Storage**: Upload multipart nel bucket marketing-media.
+5. **Telegram Human-in-the-Loop**: Anteprima nel canale team con pulsante di approvazione.
+6. **Buffer GraphQL**: Pubblicazione automatica del Reel su Instagram e Facebook.`,
+    lesson_id: 18,
+    is_featured: true,
+  },
+  {
+    id: 'k-15',
+    title: 'Workflow n8n: Centralino Email 24/7 con Gemini 2.5 Flash & Triage Aruba',
+    category: 'agents_workflows',
+    tags: ['n8n', 'email', 'triage', 'aruba', 'supabase', 'telegram'],
+    description: 'Centralino 24/7 su 5 caselle Aruba con classificazione automatica, estrazione lead JSON, autoresponder e alert Telegram.',
+    content: `### ⚡ Centralino Email 24/7 n8n (Modulo 17)
+1. **IMAP Trigger**: Polling continuo su 5 caselle aziendali Aruba.
+2. **Gemini 2.5 Flash**: Classifica l'email (CORSO_AGENTI_AI, ASSISTENZA, INFO, SPAM) ed estrae nome, email, telefono e livello tecnico in JSON.
+3. **Switch Router**: Instradamento logico per categoria.
+4. **Supabase REST**: Inserimento del lead qualificato nella tabella waitlist_leads.
+5. **SMTP Aruba**: Invio autoresponder istantaneo con programma corso da info@aiutiamoci.cloud.
+6. **Telegram Alert**: Notifica prioritaria con scheda contatto ai soci.`,
+    lesson_id: 17,
+    is_featured: true,
+  },
 ]

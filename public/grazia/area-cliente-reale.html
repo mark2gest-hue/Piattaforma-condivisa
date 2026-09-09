@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portale Clienti - Area Riservata Acme Impianti S.r.l.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0B1B3D;
+      --blue: #0052CC;
+      --blue-hover: #0041a8;
+      --blue-subtle: #EBF3FF;
+      --bg: #F8FAFC;
+      --card: #FFFFFF;
+      --border: #E2E8F0;
+      --border-strong: #CBD5E1;
+      --text: #0F172A;
+      --text-muted: #64748B;
+      --green: #059669;
+      --green-bg: #ECFDF5;
+      --green-border: #A7F3D0;
+      --amber: #D97706;
+      --amber-bg: #FFFBEB;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+      --sans: 'Inter', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--sans);
+      background-color: var(--bg);
+      color: var(--text);
+      font-size: 13.5px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      background: var(--navy);
+      color: #fff;
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid var(--blue);
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #0052CC, #2563EB);
+      color: #fff;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      padding: 6px 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 82, 204, 0.4);
+    }
+
+    .brand-text h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: #94A3B8;
+    }
+
+    .top-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .top-nav a {
+      color: #CBD5E1;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .top-nav a.active, .top-nav a:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 5px 12px 5px 8px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-size: 12px;
+    }
+
+    .user-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 10px;
+    }
+
+    /* CONTAINER */
+    .container {
+      max-width: 1240px;
+      margin: 28px auto 60px;
+      padding: 0 24px;
+    }
+
+    /* HERO BANNER: CONFORMITÀ ATTIVA */
+    .hero-banner {
+      background: linear-gradient(135deg, #0B1B3D 0%, #172B4D 100%);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-banner::before {
+      content: "";
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(0, 82, 204, 0.35) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-info {
+      space-y: 6px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(5, 150, 105, 0.2);
+      color: #34D399;
+      border: 1px solid rgba(5, 150, 105, 0.4);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      margin-bottom: 8px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: #34D399;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #34D399;
+    }
+
+    .hero-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .hero-subtitle {
+      font-size: 12.5px;
+      color: #94A3B8;
+      max-width: 620px;
+      margin-top: 4px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 6px rgba(0, 82, 204, 0.4);
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: var(--blue-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    /* STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--blue);
+      transform: translateY(-2px);
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.blue { background: #EFF6FF; color: #2563EB; }
+    .stat-icon.green { background: #ECFDF5; color: #059669; }
+    .stat-icon.purple { background: #F3E8FF; color: #7C3AED; }
+    .stat-icon.amber { background: #FFFBEB; color: #D97706; }
+
+    .stat-body .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .stat-body .stat-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      margin-top: 2px;
+    }
+
+    .stat-body .stat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* MAIN GRID (2 COLS: 8 / 4) */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1.1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #FAFAFC;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    /* CERTIFICATE CARD LIST */
+    .cert-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      background: #fff;
+      transition: all 0.15s;
+    }
+
+    .cert-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .cert-item.active-cert {
+      border-left: 4px solid var(--green);
+      background: #FCFDFD;
+    }
+
+    .cert-item-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .pdf-badge {
+      background: #FEE2E2;
+      color: #DC2626;
+      border: 1px solid #FECACA;
+      font-weight: 800;
+      font-size: 10px;
+      font-family: var(--mono);
+      padding: 6px 8px;
+      border-radius: 6px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .cert-text h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .cert-text p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .cert-text span.badge-pill {
+      font-size: 10px;
+      font-family: var(--mono);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .badge-pill.green {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid var(--green-border);
+    }
+
+    .btn-download {
+      background: #F1F5F9;
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-download:hover {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    /* AUDIT TIMELINE */
+    .timeline {
+      position: relative;
+      padding-left: 20px;
+      margin-top: 8px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .t-node {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .t-node:last-child {
+      margin-bottom: 0;
+    }
+
+    .t-bullet {
+      position: absolute;
+      left: -20px;
+      top: 3px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--border-strong);
+    }
+
+    .t-bullet.done {
+      border-color: var(--green);
+      background: var(--green);
+    }
+
+    .t-bullet.active {
+      border-color: var(--blue);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.2);
+    }
+
+    .t-content h5 {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .t-content p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* UPLOAD ZONE */
+    .upload-box {
+      border: 2px dashed var(--border-strong);
+      background: #F8FAFC;
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upload-box:hover {
+      border-color: var(--blue);
+      background: #F0F7FF;
+    }
+
+    .upload-icon {
+      font-size: 24px;
+      color: var(--blue);
+      margin-bottom: 6px;
+    }
+
+    .upload-text {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .upload-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* AUDITOR CONTACT CARD */
+    .auditor-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .auditor-pic {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0B1B3D, #0052CC);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .auditor-info h5 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .auditor-info p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      background: #fff;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PORTAL TOPBAR -->
+  <header class="topbar">
+    <div class="brand-wrap">
+      <div class="logo-badge">IMQ CERT</div>
+      <div class="brand-text">
+        <h1>Portale Clienti Certificati</h1>
+        <p>Area Riservata &middot; Servizi di Conformit&agrave; e Sorveglianza</p>
+      </div>
+    </div>
+
+    <nav class="top-nav">
+      <a href="#panoramica" class="active">Panoramica</a>
+      <a href="#certificati">I Miei Certificati</a>
+      <a href="#sorveglianza">Verifiche &amp; Audit</a>
+      <a href="#documenti">Documenti</a>
+      <a href="#assistenza">Assistenza</a>
+    </nav>
+
+    <div class="user-pill">
+      <div class="user-avatar">AC</div>
+      <span><b>Acme Impianti S.r.l.</b></span>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- HERO: STATO CONFORMITÀ ATTIVA CLIENTE -->
+    <div class="hero-banner" id="panoramica">
+      <div class="hero-info">
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span>CERTIFICAZIONE VALIDA &middot; IN REGOLA</span>
+        </div>
+        <h2 class="hero-title">Certificato di Conformit&agrave; Impianti Industriali</h2>
+        <p class="hero-subtitle">
+          Azienda: <b>Acme Impianti S.r.l.</b> &middot; Codice Registrazione: <span style="font-family: var(--mono); color: #fff;">CERT-2026-9931</span><br/>
+          Validit&agrave; ufficiale in vigore fino al <b>15 Ottobre 2027</b>. Sorveglianza periodica programmata per Ottobre 2026.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="alert('Download in corso: CERT-2026-9931-Acme-Impianti.pdf (con firma digitale ed hash)')">
+          <span>&#8681;</span> Scarica Attestato Ufficiale
+        </button>
+        <button class="btn-secondary" onclick="alert('Codice QR di verifica generato: https://certificati.ente.it/verify/CERT-2026-9931')">
+          <span>&#128279;</span> QR Code Verifica
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 KPI PRINCIPALI CLIENTE -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon green">&#10003;</div>
+        <div class="stat-body">
+          <div class="stat-label">Stato Conformit&agrave;</div>
+          <div class="stat-val" style="color: var(--green);">Conforme</div>
+          <div class="stat-sub">Zero rilievi pendenti</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon blue">&#128196;</div>
+        <div class="stat-body">
+          <div class="stat-label">Certificati Attivi</div>
+          <div class="stat-val">2 in vigore</div>
+          <div class="stat-sub">Edizioni 2026/2027</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon amber">&#128340;</div>
+        <div class="stat-body">
+          <div class="stat-label">Prossimo Audit</div>
+          <div class="stat-val">14 Ottobre 2026</div>
+          <div class="stat-sub">Tra 35 giorni &middot; Sorveglianza</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon purple">&#128179;</div>
+        <div class="stat-body">
+          <div class="stat-label">Stato Amministrativo</div>
+          <div class="stat-val" style="color: var(--green);">Regolare</div>
+          <div class="stat-sub">Tutte le quote saldate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRID CONTENUTI -->
+    <div class="main-grid">
+
+      <!-- COLONNA SINISTRA: CERTIFICATI & STORICO -->
+      <div>
+
+        <!-- CERTIFICATI ATTIVI -->
+        <div class="card" id="certificati">
+          <div class="card-header">
+            <div class="card-title">
+              <span>&#128220;</span> I Tuoi Certificati e Attestati di Conformit&agrave;
+            </div>
+            <span style="font-size: 11px; color: var(--text-muted); font-family: var(--mono);">2 Documenti Attivi</span>
+          </div>
+          <div class="card-body">
+            
+            <!-- Certificato 1 -->
+            <div class="cert-item active-cert">
+              <div class="cert-item-left">
+                <div class="pdf-badge">PDF<br/><span style="font-size: 8px;">2026</span></div>
+                <div class="cert-text">
+                  <h4>Certificato di Conformit&agrave; Impianti Industriali</h4>
+                  <p>Numero: <b style="font-family: var(--mono);">CERT-2026-9931</b> &middot; Scadenza: <b>15 Ottobre 2027</b></p>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge-pill green">&#10003; In Vigore</span>
+                <button class="btn-download" onclick="alert('Download certificato ufficiale avviato!')">
+                  <span>&#8681;</span> Scarica
+                </button>
+              </div>
+            </div>
+
+            <!-- Certificato 2 -->
+            <div class="cert-item active-cert">
+              <div class="cert-item-left">
+                <div class="pdf-badge">PDF<br/><span style="font-size: 8px;">2026</span></div>
+                <div class="cert-text">
+                  <h4>Attestato di Taratura Strumenti di Misura &middot; Linea A</h4>
+                  <p>Numero: <b style="font-family: var(--mono);">TAR-2026-4410</b> &middot; Scadenza: <b>30 Maggio 2027</b></p>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge-pill green">&#10003; In Vigore</span>
+                <button class="btn-download" onclick="alert('Download attestato taratura avviato!')">
+                  <span>&#8681;</span> Scarica
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CARICAMENTO DOCUMENTAZIONE DI AUDIT -->
+        <div class="card" id="documenti">
+          <div class="card-header">
+            <div class="card-title">
+              <span>&#128193;</span> Consegna Documentale per Prossima Ispezione
+            </div>
+            <span style="font-size: 11px; color: var(--text-muted);">Checklist pre-audit</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+              Carica i verbali interni e i registri aggiornati prima del <b>30 Settembre</b> per consentire al team ispettore l'analisi preliminare documentale.
+            </p>
+
+            <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+              <input type="file" id="fileInput" style="display: none;" onchange="alert('File ' + this.files[0].name + ' caricato con successo nel portale!')" />
+              <div class="upload-icon">&#8682;</div>
+              <div class="upload-text">Trascina qui i tuoi documenti o clicca per sfogliare</div>
+              <div class="upload-sub">Formati ammessi: PDF, DOCX, ZIP &middot; Fino a 50 MB per file</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COLONNA DESTRA: ISPETTORE REFERENTE & TIMELINE -->
+      <div>
+
+        <!-- AUDITOR REFERENTE -->
+        <div class="card" id="assistenza">
+          <div class="card-header">
+            <div class="card-title">
+              <span>&#128100;</span> Il Tuo Ispettore Referente
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="auditor-card">
+              <div class="auditor-pic">RF</div>
+              <div class="auditor-info">
+                <h5>Ing. Roberto Ferrari</h5>
+                <p>Lead Auditor Certificato &middot; Settore Impianti</p>
+                <p style="font-family: var(--mono); color: var(--blue); margin-top: 2px;">r.ferrari@ente-cert.it</p>
+              </div>
+            </div>
+
+            <button class="btn-secondary" style="width: 100%; justify-content: center; color: var(--text); border-color: var(--border-strong);" onclick="alert('Apertura modulo richiesta informazioni al Lead Auditor...')">
+              <span>&#9993;</span> Contatta l'Ispettore
+            </button>
+          </div>
+        </div>
+
+        <!-- TIMELINE ISPEZIONI -->
+        <div class="card" id="sorveglianza">
+          <div class="card-header">
+            <div class="card-title">
+              <span>&#128340;</span> Cronoprogramma Verifiche
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="timeline">
+              <div class="t-node">
+                <div class="t-bullet done"></div>
+                <div class="t-content">
+                  <h5>Audit Iniziale di Certificazione</h5>
+                  <p>15 Ottobre 2024 &middot; Superato con esito positivo</p>
+                </div>
+              </div>
+
+              <div class="t-node">
+                <div class="t-bullet done"></div>
+                <div class="t-content">
+                  <h5>1&deg; Sorveglianza Annuale</h5>
+                  <p>14 Ottobre 2025 &middot; Mantenimento confermato</p>
+                </div>
+              </div>
+
+              <div class="t-node">
+                <div class="t-bullet active"></div>
+                <div class="t-content">
+                  <h5 style="color: var(--blue);">2&deg; Sorveglianza Annuale (In Arrivo)</h5>
+                  <p><b>14 Ottobre 2026</b> &middot; Ispezione in stabilimento pianificata</p>
+                </div>
+              </div>
+
+              <div class="t-node">
+                <div class="t-bullet"></div>
+                <div class="t-content">
+                  <h5>Rinnovo Triennale del Ciclo</h5>
+                  <p>Ottobre 2027 &middot; Scadenza programmata</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <footer>
+    &copy; 2026 IMQ Certificazioni &middot; Portale Riservato Clienti &middot; Accesso Protetto a Norma ISO 27001
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anteprima Prototipi HTML - Cartella Grazia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      z-index: 10;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-badge {
+      background: linear-gradient(135deg, #6366f1, #3b82f6);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+    .brand h1 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0f172a;
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tab-btn.active {
+      background: #3b82f6;
+      color: white;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .open-ext-btn {
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .open-ext-btn:hover {
+      background: #475569;
+      color: white;
+    }
+    .viewer-container {
+      flex: 1;
+      width: 100%;
+      height: calc(100vh - 60px);
+      position: relative;
+      background: #ffffff;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-badge">GRAZIA PROTOTYPES</span>
+      <h1>Anteprima Risultato Pagine Web</h1>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="setDoc('/grazia/come-funziona-sistema.html', this)">
+        <span>📖 Come Funziona (Guida Cliente)</span>
+      </button>
+      <button class="tab-btn" onclick="setDoc('/grazia/area-cliente-reale.html', this)">
+        <span>✨ Dashboard Cliente (Reale)</span>
+      </button>
+      <button class="tab-btn" onclick="setDoc('/grazia/audit-journey-tracker.html', this)">
+        <span>📊 Audit Journey Tracker</span>
+      </button>
+      <button class="tab-btn" onclick="setDoc('/grazia/client-portal-preview.html', this)">
+        <span>⚙️ Simulatore Gate Pagamenti</span>
+      </button>
+      <button class="tab-btn" onclick="setDoc('/grazia/landing-test.html', this)">
+        <span>🚀 Landing Test IMQ</span>
+      </button>
+    </div>
+
+    <div class="actions">
+      <a id="externalLink" href="/grazia/come-funziona-sistema.html" target="_blank" rel="noopener noreferrer" class="open-ext-btn">
+        <span>Apri a tutto schermo ↗</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="viewer-container">
+    <iframe id="previewFrame" src="/grazia/come-funziona-sistema.html"></iframe>
+  </div>
+
+  <script>
+    function setDoc(url, btn) {
+      document.getElementById('previewFrame').src = url;
+      document.getElementById('externalLink').href = url;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>

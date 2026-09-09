@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMQ Digital Core · Piattaforma di Automazione & Certificazione</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+        rel="stylesheet">
+    <!-- Three.js via CDN ufficiale -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --bg: #F8FAFC;
+            --surface: rgba(255, 255, 255, 0.85);
+            --surface-card: #FFFFFF;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --blue-brand: #0052CC;
+            --blue-cobalt: #1E40AF;
+            --blue-light: #EFF6FF;
+            --border: #E2E8F0;
+            --emerald: #059669;
+            --amber: #D97706;
+            --font: 'Plus Jakarta Sans', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: var(--font);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* ============ 3D CANVAS BACKGROUND CONTAINER ============ */
+        #webgl-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* ============ HEADER MINIMAL ============ */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(12px);
+            background: rgba(248, 250, 252, 0.8);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 16px;
+            letter-spacing: -0.3px;
+            color: var(--text-main);
+        }
+
+        .brand-badge {
+            font-family: var(--mono);
+            font-size: 10px;
+            background: var(--blue-light);
+            color: var(--blue-brand);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #BFDBFE;
+        }
+
+        .nav-btn {
+            background: var(--text-main);
+            color: #fff;
+            padding: 9px 18px;
+            border-radius: 6px;
+            font-size: 12.5px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: var(--blue-brand);
+            transform: translateY(-1px);
+        }
+
+        /* ============ CONTENT OVERLAY SECTIONS ============ */
+        .content-layer {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .hero-view {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-width: 620px;
+            padding-top: 60px;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--blue-brand);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .hero-h1 {
+            font-size: clamp(38px, 4.5vw, 56px);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -1.2px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+
+        .hero-h1 span {
+            background: linear-gradient(135deg, var(--blue-brand) 0%, #38BDF8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .hero-p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--blue-brand);
+            color: #fff;
+            border: 1px solid var(--blue-brand);
+            box-shadow: 0 4px 12px rgba(0, 82, 204, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: var(--blue-cobalt);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 82, 204, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(8px);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--blue-brand);
+            color: var(--blue-brand);
+            transform: translateY(-2px);
+        }
+
+        .hero-kpis {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 16px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .k-val {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--blue-brand);
+            font-family: var(--mono);
+        }
+
+        .k-lbl {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        /* ============ SCROLL-TRIGGERED 3D STATIONS ============ */
+        .station {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 60px 0;
+        }
+
+        .station.left {
+            justify-content: flex-start;
+        }
+
+        .station.right {
+            justify-content: flex-end;
+        }
+
+        .station-card {
+            width: 480px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 36px;
+            border-radius: 12px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .station-card:hover {
+            border-color: var(--blue-brand);
+            box-shadow: 0 25px 50px -12px rgba(0, 82, 204, 0.12);
+        }
+
+        .st-badge {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--blue-brand);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .st-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            color: var(--text-main);
+            letter-spacing: -0.4px;
+        }
+
+        .st-desc {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .st-feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            padding-top: 18px;
+        }
+
+        .st-feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .st-feature-list li span.dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--blue-brand);
+        }
+
+        /* ============ FOOTER ============ */
+        .foot-bar {
+            position: relative;
+            z-index: 2;
+            border-top: 1px solid var(--border);
+            background: #FFFFFF;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 900px) {
+            .station {
+                justify-content: center !important;
+            }
+
+            .station-card {
+                width: 100%;
+            }
+
+            .hero-kpis {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- THREE.JS 3D CANVAS -->
+    <div id="webgl-container"></div>
+
+    <!-- NAVIGATION -->
+    <header class="nav">
+        <div class="brand">
+            <span>IMQ</span>
+            <span style="font-weight: 400; color: var(--text-muted);">|</span>
+            <span>Enterprise Cloud</span>
+            <span class="brand-badge">RLS AUDITED</span>
+        </div>
+        <button class="nav-btn" onclick="window.scrollTo({top: window.innerHeight, behavior: 'smooth'})">Esplora
+            Moduli</button>
+    </header>
+
+    <!-- CONTENT LAYER -->
+    <div class="content-layer">
+
+        <!-- HERO SECTION -->
+        <section class="hero-view">
+            <div class="hero-tag">
+                <span>&#9670;</span> Piattaforma Centralizzata di Gestione
+            </div>
+            <h1 class="hero-h1">
+                L'automazione che protegge il <span>valore normativo.</span>
+            </h1>
+            <p class="hero-p">
+                Un'architettura integrata ex novo: portale self-service con gate incassi, monitoraggio delle scadenze e
+                migrazione sicura per 3.000 clienti.
+            </p>
+            <div class="hero-btns">
+                <a href="#" class="btn btn-primary">Area Personale</a>
+                <a href="#" class="btn btn-secondary">Area Clienti</a>
+            </div>
+            <div class="hero-kpis">
+                <div>
+                    <div class="k-val">&gt; 75%</div>
+                    <div class="k-lbl">Ore/Mese Risparmiate</div>
+                </div>
+                <div>
+                    <div class="k-val">0%</div>
+                    <div class="k-lbl">Rinnovi Dimenticati</div>
+                </div>
+                <div>
+                    <div class="k-val">3.000</div>
+                    <div class="k-lbl">Tenant Protetti RLS</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3D STATION 01: DASHBOARD DIREZIONALE -->
+        <section class="station right">
+            <div class="station-card">
+                <div class="st-badge">// MODULO 01 &middot; CONTROLLO TOTALE</div>
+                <h2 class="st-title">Dashboard Direzionale & Flussi</h2>
+                <p class="st-desc">
+                    Reportistica automatica mattutina alle 08:00 via email con saldo incassi, crediti insoluti e
+                    contratti in scadenza a 30/60 giorni. Piena autonomia per la Direzione Generale.
+                </p>
+                <ul class="st-feature-list">
+                    <li><span class="dot"></span> Monitoraggio flussi di cassa in tempo reale</li>
+                    <li><span class="dot"></span> Azzeramento della dipendenza da singoli operatori</li>
+                    <li><span class="dot"></span> Accessibilità multi-device crittografata</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 3D STATION 02: MOTORE RINNOVI -->
+        <section class="station left">
+            <div class="station-card">
+                <div class="st-badge" style="color: var(--emerald); font-weight: 700;">// MODULO 02 &middot; ZERO
+                    CHURN</div>
+                <h2 class="st-title">Motore Rinnovi & Alert Schedulati</h2>
+                <p class="st-desc">
+                    Scansione automatizzata giornaliera su database con notifiche progressive a 60, 30 e 15 giorni[cite:
+                    3]. Generazione contestuale della bozza fattura per azzerare i ritardi contabili.
+                </p>
+                <ul class="st-feature-list">
+                    <li><span class="dot" style="background: var(--emerald);"></span> Trigger scaglionati
+                        multi-livello</li>
+                    <li><span class="dot" style="background: var(--emerald);"></span> Nessun cliente o scadenza
+                        persa</li>
+                    <li><span class="dot" style="background: var(--emerald);"></span> Audit trail immutabile delle
+                        comunicazioni</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 3D STATION 03: GATE CERTIFICAZIONI -->
+        <section class="station right">
+            <div class="station-card">
+                <div class="st-badge" style="color: var(--blue-cobalt);">// MODULO 03 &middot; LEVA INCASSI & GDPR[cite:
+                    3]</div>
+                <h2 class="st-title">Portale Self-Service & Gate Incassi</h2>
+                <p class="st-desc">
+                    Area riservata dedicata a ciascun cliente. L'attestato ufficiale è protetto e il download
+                    si sblocca istantaneamente e in totale autonomia solo a fattura saldata.
+                </p>
+                <ul class="st-feature-list">
+                    <li><span class="dot" style="background: var(--blue-cobalt);"></span> Row Level Security (RLS) su
+                        3.000 aziende</li>
+                    <li><span class="dot" style="background: var(--blue-cobalt);"></span> Accelerazione drastica dei
+                        tempi di incasso</li>
+                    <li><span class="dot" style="background: var(--blue-cobalt);"></span> URL pre-firmati temporanei ad
+                        alta sicurezza</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 3D STATION 04: ETL DROPBOX -->
+        <section class="station left">
+            <div class="station-card">
+                <div class="st-badge">// MODULO 04 &middot; EFFICIENZA OPERATIVA</div>
+                <h2 class="st-title">Pipeline ETL & Transizione Dati</h2>
+                <p class="st-desc">
+                    Bonifica automatica del pregresso da Dropbox su Object Storage cifrato, con interfaccia drag & drop
+                    massiva che riduce il carico dell'operatore dall'80% a meno del 10%.
+                </p>
+                <ul class="st-feature-list">
+                    <li><span class="dot"></span> Auto-associazione metadati e documenti</li>
+                    <li><span class="dot"></span> Storage privato conforme alle policy di sicurezza</li>
+                    <li><span class="dot"></span> Continuità operativa garantita durante la migrazione</li>
+                </ul>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="foot-bar">
+        <div><b>IMQ ENTERPRISE</b> &middot; Architettura di Digitalizzazione Aziendale</div>
+        <div style="font-family: var(--mono);">POSTGRESQL RLS &middot; ZERO DEPENDENCY &middot; 2026</div>
+    </footer>
+
+    <!-- ============ THREE.JS INTERACTIVE 3D SCULPTURE SCRIPT ============ -->
+    <script>
+        const container = document.getElementById('webgl-container');
+
+        // 1. Scene, Camera, Renderer
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 8);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // 2. Lighting (Pulita, Istituzionale, Morbida)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0x0052cc, 1.8);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
+
+        const backLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
+        backLight.position.set(-5, -5, -5);
+        scene.add(backLight);
+
+        // 3. 3D Geometric Sculpture (Prisma/Cristallo di Certificazione)
+        const group = new THREE.Group();
+        scene.add(group);
+
+        // Core Octahedron geometrico
+        const geoCore = new THREE.OctahedronGeometry(1.8, 0);
+        const matCore = new THREE.MeshPhysicalMaterial({
+            color: 0x0052cc,
+            metalness: 0.1,
+            roughness: 0.2,
+            transmission: 0.85,
+            thickness: 1.2,
+            transparent: true,
+            opacity: 0.85,
+            reflectivity: 0.9,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.1
+        });
+        const coreMesh = new THREE.Mesh(geoCore, matCore);
+        group.add(coreMesh);
+
+        // Wireframe Cage esterno di protezione (metafora di RLS e sicurezza)
+        const geoWire = new THREE.IcosahedronGeometry(2.5, 1);
+        const wireMat = new THREE.MeshBasicMaterial({
+            color: 0x94a3b8,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.22
+        });
+        const wireMesh = new THREE.Mesh(geoWire, wireMat);
+        group.add(wireMesh);
+
+        // Anelli orbitali coordinati
+        const ringGeo = new THREE.TorusGeometry(3.2, 0.02, 16, 100);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.35 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 3;
+        group.add(ring);
+
+        // 4. Mouse Tracking Interattivo
+        let mouseX = 0, mouseY = 0;
+        let targetX = 0, targetY = 0;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+            mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+        });
+
+        // 5. Scroll-driven 3D Camera Trajectory
+        let scrollProgress = 0;
+        function onScroll() {
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            scrollProgress = window.scrollY / maxScroll;
+        }
+        window.addEventListener('scroll', onScroll);
+
+        // 6. Responsive Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 7. Render Loop fluido a 60fps con interpolazione (LERP)
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const elapsedTime = clock.getElapsedTime();
+
+            // Rotazione naturale continua
+            coreMesh.rotation.y = elapsedTime * 0.25;
+            coreMesh.rotation.x = elapsedTime * 0.15;
+            wireMesh.rotation.y = -elapsedTime * 0.15;
+            ring.rotation.z = elapsedTime * 0.1;
+
+            // Reattività al cursore
+            targetX += (mouseX - targetX) * 0.05;
+            targetY += (mouseY - targetY) * 0.05;
+            group.rotation.y = targetX * 0.5;
+            group.rotation.x = -targetY * 0.5;
+
+            // Traiettoria orbitale legata allo scroll:
+            // In Hero è a destra (x: 1.5), poi oscilla a sinistra/destra seguendo le card
+            const targetGroupX = Math.sin(scrollProgress * Math.PI * 3) * 1.8 + (scrollProgress < 0.2 ? 1.4 : 0);
+            const targetGroupY = (scrollProgress - 0.5) * -1.5;
+            const targetScale = 1 + Math.sin(scrollProgress * Math.PI) * 0.3;
+
+            group.position.x += (targetGroupX - group.position.x) * 0.06;
+            group.position.y += (targetGroupY - group.position.y) * 0.06;
+            group.scale.setScalar(targetScale);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+
+</html>

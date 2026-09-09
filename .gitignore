@@ -38,6 +38,11 @@ supabase/.temp/
 __pycache__/
 *.pyc
 
+# Local scratch / test files
+tmp/
+ca.png
+cb.png
+
 # Video rendering artifacts & raw media
 public/*.mp4
 public/*.wav

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Come Funziona la Piattaforma - Guida Operativa per il Cliente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #0F172A;
+      --primary-light: #1E293B;
+      --accent-blue: #0284C7;
+      --accent-blue-light: #E0F2FE;
+      --accent-green: #059669;
+      --accent-green-light: #ECFDF5;
+      --accent-amber: #D97706;
+      --accent-amber-light: #FFFBEB;
+      --accent-purple: #7C3AED;
+      --accent-purple-light: #F5F3FF;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 0;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* TOP HEADER */
+    .topbar {
+      background: var(--primary);
+      color: white;
+      padding: 18px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid var(--accent-blue);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #0284C7, #2563EB);
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: #94A3B8;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tag-mode {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 40px 24px 80px 24px;
+    }
+
+    /* HERO BANNER */
+    .hero {
+      background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 36px 40px;
+      margin-bottom: 36px;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(2, 132, 199, 0.25) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #38BDF8;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      color: #94A3B8;
+      font-size: 14px;
+      max-width: 780px;
+      line-height: 1.6;
+    }
+
+    /* SUMMARY VALUE PILLARS */
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+
+    .pillar-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .pillar-icon {
+      font-size: 24px;
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+
+    .pillar-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .pillar-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* SECTION TITLE */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-badge {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      background: var(--accent-blue-light);
+      color: var(--accent-blue);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+
+    /* TIMELINE & STEP LIST */
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .step-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 20px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      position: relative;
+    }
+
+    .step-card:hover {
+      border-color: #CBD5E1;
+      box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.06);
+      transform: translateY(-2px);
+    }
+
+    .step-badge-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 4px;
+    }
+
+    .step-number {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: var(--primary);
+      color: white;
+      font-weight: 800;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+    }
+
+    .step-card.active .step-number {
+      background: var(--accent-blue);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    }
+
+    .step-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .step-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tag-blue { background: var(--accent-blue-light); color: var(--accent-blue); }
+    .tag-green { background: var(--accent-green-light); color: var(--accent-green); }
+    .tag-amber { background: var(--accent-amber-light); color: var(--accent-amber); }
+    .tag-purple { background: var(--accent-purple-light); color: var(--accent-purple); }
+
+    .step-desc {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    /* ACTIONS LIST INSIDE STEP */
+    .step-points {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .point-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12.5px;
+      color: #334155;
+    }
+
+    .point-bullet {
+      color: var(--accent-blue);
+      font-weight: 800;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .point-highlight {
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* BENEFIT BOX */
+    .benefit-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--accent-green);
+      font-weight: 600;
+      padding-top: 4px;
+    }
+
+    .benefit-strip span {
+      background: var(--accent-green-light);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    /* FINAL COMPARISON TABLE (PRIMA VS DOPO) */
+    .comparison-section {
+      margin-top: 48px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .comparison-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 18px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .comp-col {
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .comp-col.before {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+    }
+
+    .comp-col.after {
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
+    }
+
+    .comp-col-header {
+      font-weight: 800;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .comp-col.before .comp-col-header { color: #DC2626; }
+    .comp-col.after .comp-col-header { color: #059669; }
+
+    .comp-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .comp-list li {
+      font-size: 12.5px;
+      line-height: 1.45;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .comp-col.before li { color: #991B1B; }
+    .comp-col.after li { color: #065F46; }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    @media (max-width: 768px) {
+      .pillars-grid, .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+      .step-card {
+        grid-template-columns: 1fr;
+      }
+      .step-badge-wrap {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="brand-section">
+      <span class="brand-badge">SISTEMA DI CERTIFICAZIONE</span>
+      <div>
+        <div class="brand-title">Come Funziona la Piattaforma</div>
+        <div class="brand-sub">Guida Chiara e Sintetica del Comportamento del Sistema per il Cliente</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="tag-mode">Workflow Automatizzato &middot; v2.0</span>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- HERO PRESENTAZIONE -->
+    <div class="hero">
+      <div class="hero-eyebrow">
+        <span>⚡ ESPERIENZA AZIENDALE FLUIDA &middot; ZERO ATTRITO</span>
+      </div>
+      <h1>Cosa Fa il Sistema per Te: Dalla Scadenza al Certificato</h1>
+      <p>
+        Questa piattaforma trasforma la gestione della conformità e delle ispezioni periodiche da un processo fatto di telefonate, email disperse e solleciti manuali a un percorso guidato, trasparente e puntuale. Ecco esattamente come si comporterà il sistema in ogni fase del ciclo.
+      </p>
+    </div>
+
+    <!-- 4 PILASTRI CHIAVE -->
+    <div class="pillars-grid">
+      <div class="pillar-card">
+        <div class="pillar-icon">🌅</div>
+        <div class="pillar-title">Report Mattutino Ore 08:00</div>
+        <div class="pillar-desc">Ogni mattina la Direzione riceve il riepilogo automatico: incassi previsti, rinnovi imminenti e crediti senza dipendere da nessuno.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">🔔</div>
+        <div class="pillar-title">Niente più Dimenticanze</div>
+        <div class="pillar-desc">Avvisi scaglionati prima di ogni scadenza (60, 30 e 15 giorni) con checklist precompilata dei documenti necessari.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">📂</div>
+        <div class="pillar-title">Area Riservata Sempre Attiva</div>
+        <div class="pillar-desc">Tutti i certificati, verbali e allegati storici disponibili in cloud 24 ore su 24 con download immediato.</div>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">🛡️</div>
+        <div class="pillar-title">Certificato Anticontraffazione</div>
+        <div class="pillar-desc">Ogni attestato include QR Code e timbro digitale verificabile istantaneamente da enti di controllo e clienti.</div>
+      </div>
+    </div>
+
+    <!-- SEZIONE LISTA COMPORTAMENTO DEL SISTEMA -->
+    <div class="section-header">
+      <div class="section-title">
+        <span>📋 Il Comportamento del Sistema in 7 Passaggi Chiave</span>
+      </div>
+      <span class="section-badge">CICLO COMPLETO &middot; DIREZIONE &amp; CLIENTE</span>
+    </div>
+
+    <div class="steps-list">
+
+      <!-- PASSO 1: REPORT MATTUTINO -->
+      <div class="step-card active">
+        <div class="step-badge-wrap">
+          <div class="step-number">1</div>
+        </div>
+        <div class="step-content">
+          <div class="step-header">
+            <div class="step-name">
+              <span>Il Report Automatico di Ogni Mattina (Ore 08:00)</span>
+            </div>
+            <span class="step-tag tag-purple">REPORT DIREZIONE 08:00</span>
+          </div>
+          <div class="step-desc">
+            Prima ancora che inizi la giornata lavorativa, il sistema aggrega i dati dell'intero parco clienti e invia alla Direzione un briefing sintetico via email e dashboard.
+          </div>
+          <div class="step-points">
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Controllo Incassi &amp; Flussi di Cassa:</span> Riepilogo immediato delle fatture saldate nelle ultime 24 ore, entrate previste del mese e crediti ancora insoluti.</div>
+            </div>
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Quadro Rinnovi &amp; Scadenze a 30/60 gg:</span> Elenco chiaro dei contratti e delle certificazioni che richiedono attenzione o ispezione imminente.</div>
+            </div>
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Totale Indipendenza:</span> Nessun foglio Excel da chiedere all'operatore; il titolare ha il controllo dell'azienda con un semplice clic dallo smartphone.</div>
+            </div>
+          </div>
+          <div class="benefit-strip">
+            <span>VANTAGGIO</span> Controllo finanziario e operativo totale alle 08:00 senza perdite di tempo.
+          </div>
+        </div>
+      </div>
+
+      <!-- PASSO 2 -->
+      <div class="step-card">
+        <div class="step-badge-wrap">
+          <div class="step-number">2</div>
+        </div>
+        <div class="step-content">
+          <div class="step-header">
+            <div class="step-name">
+              <span>Il Sistema Ti Avvisa per Tempo (Scadenziario Intelligente)</span>
+            </div>
+            <span class="step-tag tag-blue">60 - 30 - 15 GIORNI PRIMA</span>
+          </div>
+          <div class="step-desc">
+            Non devi più segnarti le scadenze sul calendario o temere di perdere la validità dell'attestato. Il sistema monitora in autonomia ogni certificazione aziendale.
+          </div>
+          <div class="step-points">
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Notifica Email Automatica:</span> Ricevi una comunicazione chiara con il promemoria della scadenza imminente e la data proposta per l'ispezione.</div>
+            </div>
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Checklist Guidata:</span> Viene fornito l'elenco esatto della documentazione da predisporre prima della visita dell'ispettore (es. DVR, registri manutenzioni).</div>
+            </div>
+          </div>
+          <div class="benefit-strip">
+            <span>VANTAGGIO</span> Nessuna corsa contro il tempo e conformità sempre garantita.
+          </div>
+        </div>
+      </div>
+
+      <!-- PASSO 3 -->
+      <div class="step-card">
+        <div class="step-badge-wrap">
+          <div class="step-number">3</div>
+        </div>
+        <div class="step-content">
+          <div class="step-header">
+            <div class="step-name">
+              <span>Accesso Immediato all'Area Riservata (Senza Password Complesse)</span>
+            </div>
+            <span class="step-tag tag-purple">PORTALE SELF-SERVICE 24/7</span>
+          </div>
+          <div class="step-desc">
+            Attraverso un link protetto o credenziali aziendali riservate, accedi al tuo cruscotto personale dove è raccolta l'intera storia della tua azienda.
+          </div>
+          <div class="step-points">
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Panoramica Istantanea:</span> Vedi a colpo d'occhio lo stato dei tuoi certificati (Attivi, In Rinnovo, Prossima Ispezione).</div>
+            </div>
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Contatto Diretto con l'Ispettore:</span> Nome, telefono ed email del Lead Auditor incaricato per la tua pratica sempre visibili.</div>
+            </div>
+          </div>
+          <div class="benefit-strip">
+            <span>VANTAGGIO</span> Nessun bisogno di telefonare per chiedere informazioni sullo stato della pratica.
+          </div>
+        </div>
+      </div>
+
+      <!-- PASSO 4 -->
+      <div class="step-card">
+        <div class="step-badge-wrap">
+          <div class="step-number">4</div>
+        </div>
+        <div class="step-content">
+          <div class="step-header">
+            <div class="step-name">
+              <span>Caricamento Semplificato dei Documenti (Drag & Drop)</span>
+            </div>
+            <span class="step-tag tag-amber">PRE-AUDIT DIGITALE</span>
+          </div>
+          <div class="step-desc">
+            Invece di inviare pesanti allegati via email (che rischiano di perdersi o non arrivare), carichi i file richiesti direttamente nella tua cartella protetta.
+          </div>
+          <div class="step-points">
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Trascina e Rilascia:</span> Carichi PDF o scansioni in un secondo; il sistema verifica subito che il formato sia corretto.</div>
+            </div>
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Notifica Automatica all'Ispettore:</span> Non appena carichi i documenti, il Lead Auditor riceve l'avviso e può avviare l'esame documentale prima della visita.</div>
+            </div>
+          </div>
+          <div class="benefit-strip">
+            <span>VANTAGGIO</span> Audit in loco molto più veloce perché i documenti sono già stati pre-verificati.
+          </div>
+        </div>
+      </div>
+
+      <!-- PASSO 5 -->
+      <div class="step-card">
+        <div class="step-badge-wrap">
+          <div class="step-number">5</div>
+        </div>
+        <div class="step-content">
+          <div class="step-header">
+            <div class="step-name">
+              <span>Ispezione & Verbale Immediato in Piattaforma</span>
+            </div>
+            <span class="step-tag tag-blue">ESITO TRASPARENTE</span>
+          </div>
+          <div class="step-desc">
+            Al termine dell'audit, il verbale di ispezione viene redatto in formato digitale e archiviato direttamente nella tua cartella.
+          </div>
+          <div class="step-points">
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Esito di Conformità in Tempo Reale:</span> Vedi subito le note dell'auditor, eventuali raccomandazioni di miglioramento e l'approvazione finale.</div>
+            </div>
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Emissione Fattura Contestuale:</span> Ricevi la fattura del servizio con saldo tracciato e tutti i riferimenti contabili.</div>
+            </div>
+          </div>
+          <div class="benefit-strip">
+            <span>VANTAGGIO</span> Massima trasparenza tecnica e amministrativa, tutto in un unico posto.
+          </div>
+        </div>
+      </div>
+
+      <!-- PASSO 6 -->
+      <div class="step-card">
+        <div class="step-badge-wrap">
+          <div class="step-number">6</div>
+        </div>
+        <div class="step-content">
+          <div class="step-header">
+            <div class="step-name">
+              <span>Sblocco Automatico del Certificato Ufficiale (Download Immediato)</span>
+            </div>
+            <span class="step-tag tag-green">ZERO ATTESE POST-PAGAMENTO</span>
+          </div>
+          <div class="step-desc">
+            Appena il saldo amministrativo viene registrato, il sistema sblocca istantaneamente il download del Certificato Ufficiale in alta definizione.
+          </div>
+          <div class="step-points">
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Niente Attese per Spedizioni o Email Manuali:</span> Non devi aspettare che un operatore invii il file via email o posta ordinaria; il pulsante si attiva in tempo reale.</div>
+            </div>
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Download Multiplo Senza Limiti:</span> Tu e i tuoi collaboratori potete scaricare copie dell'attestato ogni volta che serve per gare d'appalto o clienti.</div>
+            </div>
+          </div>
+          <div class="benefit-strip">
+            <span>VANTAGGIO</span> Certificato disponibile nell'esatto momento in cui ne hai bisogno per il tuo business.
+          </div>
+        </div>
+      </div>
+
+      <!-- PASSO 7 -->
+      <div class="step-card">
+        <div class="step-badge-wrap">
+          <div class="step-number">7</div>
+        </div>
+        <div class="step-content">
+          <div class="step-header">
+            <div class="step-name">
+              <span>Verifica Pubblica Istantanea tramite QR Code</span>
+            </div>
+            <span class="step-tag tag-purple">VALORE PER I TUOI CLIENTI</span>
+          </div>
+          <div class="step-desc">
+            Ogni attestato stampato o inviato ai tuoi committenti contiene un QR Code univoco anticontraffazione.
+          </div>
+          <div class="step-points">
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Scansione da Smartphone:</span> Qualsiasi terzo (un tuo cliente, un ente appaltante, un ispettore di sicurezza) inquadra il codice con la fotocamera.</div>
+            </div>
+            <div class="point-item">
+              <span class="point-bullet">✓</span>
+              <div><span class="point-highlight">Conferma Ufficiale a Schermo:</span> Il sistema risponde con la pagina ufficiale certificata che attesta validità, data di scadenza e conformità della tua azienda.</div>
+            </div>
+          </div>
+          <div class="benefit-strip">
+            <span>VANTAGGIO</span> Dimostra autorevolezza immediata verso il mercato e annulla qualsiasi rischio di contestazione.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CONFRONTO PRIMA VS DOPO PER LA PRESENTAZIONE -->
+    <div class="comparison-section">
+      <div class="comparison-title">
+        <span>⚖️ Perché Questa Piattaforma Conviene a Te e alla Tua Azienda: Prima vs Con il Sistema</span>
+      </div>
+      <div class="comparison-grid">
+        <div class="comp-col before">
+          <div class="comp-col-header">
+            <span>❌ Come funzionava prima (Metodo Tradizionale)</span>
+          </div>
+          <ul class="comp-list">
+            <li>• Nessuna visibilità al mattino senza chiedere prospetti all'operatore.</li>
+            <li>• Rischio di dimenticare le scadenze e operare con certificati scaduti.</li>
+            <li>• Ricerca disperata dei file nelle vecchie email o in cartelle locali sparse.</li>
+            <li>• Giorni di attesa al telefono o via email per farsi rimandare una copia smarrita.</li>
+            <li>• Difficoltà a dimostrare l'autenticità immediata del certificato a clienti esigenti.</li>
+            <li>• Tempi lunghi per il rilascio cartaceo dopo aver effettuato il pagamento.</li>
+          </ul>
+        </div>
+        <div class="comp-col after">
+          <div class="comp-col-header">
+            <span>✅ Con la Nuova Piattaforma Digitale</span>
+          </div>
+          <ul class="comp-list">
+            <li>• <strong>Report mattutino alle 08:00:</strong> controllo automatico flussi di cassa, incassi e rinnovi.</li>
+            <li>• Notifiche automatiche scaglionate a 60, 30 e 15 giorni con piano d'azione.</li>
+            <li>• Archivio cloud unico, protetto e accessibile da qualsiasi computer o smartphone.</li>
+            <li>• Download autonomo in 1 clic in qualsiasi momento, giorno o notte.</li>
+            <li>• QR Code anticontraffazione che offre garanzia immediata a qualsiasi committente.</li>
+            <li>• Sblocco istantaneo del PDF firmato digitalmente a conferma del saldo.</li>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Piattaforma Sicura di Certificazione &middot; Conforme GDPR &middot; Tracciamento e Crittografia Dati
+    </footer>
+
+  </main>
+
+</body>
+</html>

@@ -4,6 +4,11 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { generateNvidiaCompletion } from '@/lib/nvidia'
 import { sendTelegramMessage, escapeHtml } from '@/lib/telegram'
 import { getCurrentUserProfileName } from './notifications'
+import {
+  saveLearnedRuleToObsidian,
+  saveApprovedDeliverableToObsidian,
+  getRecentLearnedRules,
+} from '@/lib/obsidian-vault'
 
 export async function executeAgentTaskAction(taskId: string) {
   try {
@@ -29,9 +34,13 @@ export async function executeAgentTaskAction(taskId: string) {
     }
 
     const modelToUse = agent.agent_model || 'nvidia/nemotron-3-ultra-550b-a55b'
-    const systemPrompt =
+    const baseSystemPrompt =
       agent.agent_system_prompt ||
       'Sei un assistente operativo AI specializzato nel supportare il team. Rispondi con soluzioni concrete, bozze o codice pronti all\'uso.'
+    
+    // Iniezione Memoria Persistente Appresa (LifeOS Style) dal Vault Obsidian
+    const learnedRules = getRecentLearnedRules(5)
+    const systemPrompt = `${baseSystemPrompt}${learnedRules}`
 
     // 2. Costruisci il prompt operativo
     const projectInfo = task.project?.title
@@ -158,14 +167,22 @@ export async function approveAgentTaskRunAction(taskId: string, runId?: string) 
           .single()
 
         if (runData?.output_response) {
+          // 3a. Supabase Secondo Cervello
           await supabase.from('knowledge_items').insert({
             title: `[Task AI] ${updatedTask.title}`,
             category: 'agents_workflows',
             description: `Output approvato di Nemotron per: ${updatedTask.title}`,
             content: runData.output_response,
-            tags: ['task-ai', 'nemotron', 'approvato', 'output-agente'],
+            tags: ['task-ai', 'nemotron', 'approvato', 'output-agente', 'lifeos'],
             is_featured: false,
           })
+
+          // 3b. Obsidian Vault Locale & iCloud
+          await saveApprovedDeliverableToObsidian(
+            updatedTask.title,
+            runData.output_response,
+            updatedTask.project?.title
+          )
         }
       } catch (kErr) {
         console.warn('Errore salvataggio output agente nel Secondo Cervello:', kErr)
@@ -207,11 +224,37 @@ export async function rejectAgentTaskRunAction(taskId: string, runId: string | u
       .from('tasks')
       .update({ status: 'in_progress' })
       .eq('id', taskId)
-      .select('*')
+      .select('*, project:projects(*)')
       .single()
 
     if (error) {
       return { success: false, error: error.message }
+    }
+
+    // LEARNING LOOP (LifeOS Style):
+    // Salva il feedback umano sia nel Vault Obsidian sia in Supabase per istruire i futuri task
+    if (feedback && feedback.trim().length > 3) {
+      try {
+        // 1. Vault Obsidian (File Markdown con wikilinks)
+        await saveLearnedRuleToObsidian({
+          taskTitle: updatedTask.title,
+          projectName: updatedTask.project?.title,
+          feedback: feedback.trim(),
+          date: new Date().toISOString(),
+        })
+
+        // 2. Supabase knowledge_items
+        await supabase.from('knowledge_items').insert({
+          title: `[Regola Appresa] ${updatedTask.title}`,
+          category: 'agents_workflows',
+          description: `Correzione e direttiva del team per: ${updatedTask.title}`,
+          content: `**Feedback Umano del Team**:\n${feedback.trim()}\n\n*Direttiva memorizzata dall'agente per non ripetere l'errore.*`,
+          tags: ['regola-appresa', 'lifeos', 'feedback-team', 'apprendimento-agente'],
+          is_featured: false,
+        })
+      } catch (learnErr) {
+        console.warn('Avviso salvataggio feedback in memoria di apprendimento:', learnErr)
+      }
     }
 
     return { success: true, task: updatedTask }

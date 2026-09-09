@@ -1,7 +1,7 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-09 09:35
-Stato corrente: Completata sequenza miglioramenti: 1) Zona Compiti & Certificati integrata in sidebar e middleware per studenti; 2) Secondo Cervello con filtri tag dinamici, ricerca full-text e pillole interattive; 3) Telemetria live Agente Nemotron nel Kanban (token e latenza). Typecheck 0 errori.
+Ultimo aggiornamento: 2026-09-09 21:53
+Stato corrente: Integrato il Canvas Visivo Interattivo n8n (`src/lib/n8n-canvas-widget.ts`) nell'Agente Mira (`/workshop-agenti`) con simulazione live e ispezione JSON. Popolato e collegato l'intero Vault Obsidian in iCloud (`KnowledgeBase`) con schede progetto (3000-3004), workflow n8n e prompt master RCCF. Typecheck 0 errori.
 
 ---
 

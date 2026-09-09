@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Piano di Digitalizzazione e Automazione Aziendale - Tracker Interattivo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --blue-deep: #0B1B3D;
+      --blue-action: #0052CC;
+      --blue-light: #EBF3FF;
+      --bg: #F4F6F8;
+      --panel: #FFFFFF;
+      --border: #D1D7E0;
+      --text: #1A2332;
+      --text-dim: #5B6675;
+      --green: #059669;
+      --green-bg: #ECFDF5;
+      --amber: #D97706;
+      --amber-bg: #FFFBEB;
+      --red: #DC2626;
+      --red-bg: #FEF2F2;
+      --radius: 4px;
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: 'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============ TOP BAR ============ */
+    .topbar {
+      background: var(--blue-deep);
+      color: #E8EDF6;
+      border-bottom: 3px solid var(--blue-action);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .topbar .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar .logo {
+      width: 32px;
+      height: 32px;
+      border: 1.5px solid var(--blue-action);
+      background: rgba(0, 82, 204, 0.15);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+
+    .topbar .title {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: .3px;
+      text-transform: uppercase;
+    }
+
+    .topbar .sub {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: #9FB2D9;
+      letter-spacing: .3px;
+    }
+
+    .topbar .meta {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: #B9C6E0;
+    }
+
+    .topbar .meta .kv b {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* ============ KPI STATS BAR ============ */
+    .kpi-bar {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: #FAFBFD;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: all .15s ease;
+    }
+
+    .kpi-card:hover {
+      border-color: var(--blue-action);
+      background: #fff;
+    }
+
+    .kpi-label {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--text-dim);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .kpi-val {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--blue-deep);
+    }
+
+    .kpi-val.highlight-green {
+      color: var(--green);
+    }
+
+    .kpi-val.highlight-blue {
+      color: var(--blue-action);
+    }
+
+    /* ============ RISKS & CONTEXT ============ */
+    .risks-strip {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .risk-box {
+      border-left: 3px solid var(--red);
+      background: #FAFBFD;
+      padding: 8px 12px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    .risk-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--red);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .risk-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.35;
+    }
+
+    /* ============ STATUS LEGEND ============ */
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      padding: 8px 24px;
+      background: #F0F4F8;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: var(--text-dim);
+    }
+
+    .legend .item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .led.approved {
+      background: var(--green);
+    }
+
+    .led.review {
+      background: var(--amber);
+    }
+
+    .led.blocked {
+      background: var(--red);
+    }
+
+    .led.active {
+      background: var(--blue-action);
+    }
+
+    /* ============ MAIN PANEL ============ */
+    .shell {
+      max-width: 1280px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+
+    .tracker {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    /* ============ TIMELINE ============ */
+    .timeline-wrap {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tl-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 18px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--text-dim);
+      background: #FAFBFD;
+    }
+
+    .tl-head .hint b {
+      color: var(--blue-action);
+    }
+
+    .timeline {
+      position: relative;
+      height: 100px;
+    }
+
+    #connectorSvg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .nodes {
+      position: relative;
+      display: flex;
+      height: 100%;
+    }
+
+    .node {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 20px;
+      cursor: pointer;
+      position: relative;
+      outline: none;
+      border: none;
+      background: none;
+      font-family: var(--sans);
+      text-align: center;
+      transition: all .15s ease;
+    }
+
+    .node-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: #fff;
+      display: grid;
+      place-items: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-dim);
+      position: relative;
+      transition: transform .12s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .node:hover .node-dot {
+      transform: translateY(-2px);
+      border-color: var(--blue-action);
+    }
+
+    .node .node-state {
+      position: absolute;
+      right: -2px;
+      bottom: -2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      background: var(--border);
+    }
+
+    .node .lbl {
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: var(--text);
+    }
+
+    .node .code {
+      margin-top: 2px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--blue-action);
+      font-weight: 600;
+      letter-spacing: .5px;
+    }
+
+    /* node visual states */
+    .node.active .node-dot {
+      border-color: var(--blue-action);
+      box-shadow: 0 0 0 4px rgba(0, 82, 204, .15);
+      color: var(--blue-action);
+      background: var(--blue-light);
+      transform: translateY(-2px);
+    }
+
+    .node.approved .node-dot {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .node.review .node-dot {
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    .node.blocked .node-dot {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .node.approved .node-state {
+      background: var(--green);
+    }
+
+    .node.review .node-state {
+      background: var(--amber);
+      animation: pulse 1.5s infinite;
+    }
+
+    .node.blocked .node-state {
+      background: var(--red);
+      animation: pulse 1.5s infinite;
+    }
+
+    .node.active .node-state {
+      background: var(--blue-action);
+      animation: pulse 1.5s infinite;
+    }
+
+    /* ============ CONNECTORS (SVG) ============ */
+    #connectorSvg line.conn {
+      stroke-width: 2;
+    }
+
+    #connectorSvg line.conn.neutral {
+      stroke: var(--border);
+    }
+
+    #connectorSvg line.conn.approved {
+      stroke: var(--green);
+    }
+
+    #connectorSvg line.conn.review {
+      stroke: var(--amber);
+    }
+
+    #connectorSvg line.conn.blocked {
+      stroke: var(--red);
+    }
+
+    #connectorSvg line.conn.active {
+      stroke: var(--blue-action);
+      stroke-dasharray: 6 5;
+      animation: flow 1s linear infinite;
+    }
+
+    /* ============ PANELS (horizontal scroll) ============ */
+    .panels {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .panels::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .panels::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
+
+    .phase-panel {
+      flex: 0 0 520px;
+      scroll-snap-align: start;
+      border-right: 1px solid var(--border);
+      padding: 0;
+      background: var(--panel);
+      border-left: 3px solid transparent;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phase-panel.active {
+      border-left-color: var(--blue-action);
+      background: #FFFFFF;
+    }
+
+    .pp-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: #FAFBFD;
+    }
+
+    .pp-head .lhs {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pp-head .code {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 11px;
+      color: #fff;
+      background: var(--blue-deep);
+      padding: 4px 8px;
+      letter-spacing: .5px;
+      border-radius: 2px;
+    }
+
+    .pp-head .t1 {
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .pp-head .badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      background: var(--blue-light);
+      color: var(--blue-action);
+      padding: 2px 6px;
+      border-radius: 2px;
+      margin-top: 3px;
+      border: 1px solid rgba(0, 82, 204, 0.2);
+    }
+
+    .pp-head .eta {
+      text-align: right;
+    }
+
+    .pp-head .eta .v {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--blue-deep);
+    }
+
+    .pp-head .eta .k {
+      font-size: 8.5px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--text-dim);
+    }
+
+    .pp-section {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pp-section.highlight-value {
+      background: #F8FAFD;
+    }
+
+    .pp-section .sec-title {
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-dim);
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pp-section .sec-title .n {
+      font-family: var(--mono);
+      color: var(--blue-action);
+      font-weight: 600;
+    }
+
+    /* value proposition card */
+    .val-card {
+      background: #FFFFFF;
+      border: 1px solid #C7D7EC;
+      border-radius: var(--radius);
+      padding: 10px 12px;
+    }
+
+    .val-card .val-head {
+      font-weight: 700;
+      color: var(--blue-action);
+      font-size: 11.5px;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .val-card .val-body {
+      font-size: 11.5px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    /* features / tech list */
+    .feat {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 6px 0;
+      border-bottom: 1px dashed #E3E8EF;
+    }
+
+    .feat:last-child {
+      border-bottom: none;
+    }
+
+    .feat .ic {
+      width: 22px;
+      height: 22px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 22px;
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--blue-deep);
+      background: #F6F8FB;
+    }
+
+    .feat .name {
+      flex: 1;
+      font-size: 11.5px;
+      color: var(--text);
+    }
+
+    .feat .tag {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: .4px;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .feat .tag.core {
+      border-color: #B7E4D3;
+      color: var(--green);
+      background: var(--green-bg);
+      font-weight: 600;
+    }
+
+    /* checklist */
+    .chk {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid #EDF0F5;
+    }
+
+    .chk:last-child {
+      border-bottom: none;
+    }
+
+    .chk .idx {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      color: var(--text-dim);
+      width: 20px;
+      flex: 0 0 20px;
+    }
+
+    .chk .label {
+      flex: 1;
+      font-size: 11.5px;
+      line-height: 1.3;
+    }
+
+    .status-btn {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      background: var(--panel);
+      color: var(--text-dim);
+      padding: 4px 8px;
+      cursor: pointer;
+      flex: 0 0 auto;
+      min-width: 80px;
+      text-align: center;
+      transition: all .12s ease;
+      position: relative;
+    }
+
+    .status-btn:hover {
+      filter: brightness(.96);
+    }
+
+    .status-btn.approved {
+      border-color: var(--green);
+      color: var(--green);
+      background: var(--green-bg);
+    }
+
+    .status-btn.review {
+      border-color: var(--amber);
+      color: var(--amber);
+      background: var(--amber-bg);
+    }
+
+    .status-btn.blocked {
+      border-color: var(--red);
+      color: var(--red);
+      background: var(--red-bg);
+    }
+
+    .status-btn .led {
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .status-btn.review .led,
+    .status-btn.blocked .led {
+      animation: pulse 1.5s infinite;
+    }
+
+    /* roadmap bar */
+    .timebar {
+      display: flex;
+      height: 8px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+
+    .timebar i {
+      background: var(--blue-action);
+      height: 100%;
+    }
+
+    .time-tags {
+      display: flex;
+      gap: 14px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+    }
+
+    .time-tags b {
+      color: var(--blue-deep);
+      font-weight: 600;
+    }
+
+    .pp-foot {
+      padding: 10px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      color: var(--text-dim);
+      letter-spacing: .3px;
+      background: #FAFBFD;
+      margin-top: auto;
+    }
+
+    .pp-foot .prog b {
+      color: var(--blue-action);
+    }
+
+    /* ============ ROADMAP BOTTOM SECTION ============ */
+    .roadmap-section {
+      padding: 16px 24px;
+      background: #FAFBFD;
+      border-top: 1px solid var(--border);
+    }
+
+    .roadmap-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--blue-deep);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .roadmap-step {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      position: relative;
+    }
+
+    .roadmap-step.active {
+      border-color: var(--blue-action);
+      box-shadow: 0 0 0 2px rgba(0, 82, 204, 0.1);
+    }
+
+    .step-num {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--blue-deep);
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 20px;
+      margin-bottom: 6px;
+    }
+
+    .step-name {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .step-detail {
+      font-size: 10.5px;
+      color: var(--text-dim);
+      line-height: 1.35;
+    }
+
+    /* ============ EVENT LOG ============ */
+    .log {
+      border-top: 1px solid var(--border);
+      background: var(--blue-deep);
+      color: #AFC0E3;
+      padding: 10px 20px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      line-height: 1.7;
+      max-height: 75px;
+      overflow-y: auto;
+      letter-spacing: .2px;
+    }
+
+    .log .ln {
+      white-space: pre;
+    }
+
+    .log .ln .t {
+      color: #6C7FA8;
+    }
+
+    .log .ln .p {
+      color: #E4EAF6;
+      font-weight: 600;
+    }
+
+    .log .ln .ok {
+      color: #4ADE80;
+    }
+
+    .log .ln .warn {
+      color: #FBBF24;
+    }
+
+    .log .ln .err {
+      color: #F87171;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .3;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes flow {
+      to {
+        stroke-dashoffset: -22;
+      }
+    }
+
+    /* ============ FOOTNOTE ============ */
+    .footnote {
+      max-width: 1280px;
+      margin: 12px auto 30px;
+      padding: 0 16px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: .3px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .kpi-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .risks-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .roadmap-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        flex-wrap: wrap;
+      }
+
+      .kpi-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .roadmap-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .phase-panel {
+        flex: 0 0 90vw;
+      }
+
+      .node .lbl {
+        font-size: 9.5px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ============ HEADER ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">PDA</div>
+      <div>
+        <div class="title">Piano di Digitalizzazione e Automazione Aziendale</div>
+        <div class="sub">Transizione da gestione manuale a piattaforma centralizzata e protetta</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="kv">Destinatario: <b>Direzione Generale</b></div>
+      <div class="kv">Ambito: <b>3.000 Clienti &amp; Scadenze</b></div>
+      <div class="kv">Data: <b>Agosto 2026</b></div>
+    </div>
+  </header>
+
+  <!-- ============ EXECUTIVE KPI BAR ============ -->
+  <div class="kpi-bar">
+    <div class="kpi-card">
+      <div class="kpi-label">Anagrafiche Coinvolte</div>
+      <div class="kpi-val">3.000 Clienti</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Carico Attuale Operatore</div>
+      <div class="kpi-val" style="color: var(--amber);">80% Full-Time</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Tempo Risparmiato Stimato</div>
+      <div class="kpi-val highlight-blue">&gt; 75% Ore/Mese</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Rischio Perdita Scadenze</div>
+      <div class="kpi-val highlight-green">Azzerato (0%)</div>
+    </div>
+  </div>
+
+  <!-- ============ OPERATIONAL RISKS STRIP ============ -->
+  <div class="risks-strip">
+    <div class="risk-box">
+      <div class="risk-title">&#9888; Key-Person Dependency</div>
+      <div class="risk-desc">La Direzione dipende al 100% da una singola risorsa per conoscere incassi, scadenze contrattuali e stato certificati.</div>
+    </div>
+    <div class="risk-box">
+      <div class="risk-title">&#9888; Perdita di Fatturato Passivo</div>
+      <div class="risk-desc">Scadenze dimenticate generano ritardi nei rinnovi e mancati incassi, con rischio di abbandono clienti.</div>
+    </div>
+    <div class="risk-box">
+      <div class="risk-title">&#9888; Inefficienza del Personale</div>
+      <div class="risk-desc">L'80% del tempo lavorativo di un dipendente è assorbito da compiti a basso valore (invio email, upload e ricerca file).</div>
+    </div>
+  </div>
+
+  <!-- ============ STATUS LEGEND ============ -->
+  <div class="legend">
+    <span class="item"><span class="led approved"></span>Completato / Operativo</span>
+    <span class="item"><span class="led review"></span>In Lavorazione</span>
+    <span class="item"><span class="led blocked"></span>Da Avviare / Bloccante</span>
+    <span class="item"><span class="led active"></span>Modulo Selezionato</span>
+    <span style="margin-left:auto;">CLICCA UN MODULO PER IL DETTAGLIO &middot; <b>‹ / ›</b> TASTIERA</span>
+  </div>
+
+  <div class="shell">
+    <div class="tracker">
+
+      <!-- ============ TIMELINE + CONNECTORS ============ -->
+      <div class="timeline-wrap">
+        <div class="tl-head">
+          <span><b>MODULI FUNZIONALI</b> &middot; ARCHITETTURA DELLA PIATTAFORMA</span>
+          <span>PIANO OPERATIVO 2026 &middot; SISTEMA AUTOMATIZZATO</span>
+        </div>
+        <div class="timeline" id="timeline">
+          <svg id="connectorSvg"></svg>
+          <div class="nodes" id="nodes"></div>
+        </div>
+      </div>
+
+      <!-- ============ PANELS (horizontal scroll) ============ -->
+      <div class="panels" id="panels"></div>
+
+      <!-- ============ ROADMAP DI RILASCIO ============ -->
+      <div class="roadmap-section">
+        <div class="roadmap-title">
+          <span>Piano Operativo di Rilascio (4 Fasi di Deploy)</span>
+          <span style="font-family: var(--mono); font-size: 10px; font-weight: normal; color: var(--text-dim);">TIMELINE DI RILASCIO PROGRESSIVO</span>
+        </div>
+        <div class="roadmap-grid">
+          <div class="roadmap-step" id="step-1">
+            <div class="step-num">1</div>
+            <div class="step-name">Setup Architettura</div>
+            <div class="step-detail">Database relazionale sicuro, permessi RLS e storage documenti cifrato.</div>
+          </div>
+          <div class="roadmap-step" id="step-2">
+            <div class="step-num">2</div>
+            <div class="step-name">ETL &amp; Migrazione</div>
+            <div class="step-detail">Ingestion controllata da Dropbox, normalizzazione anagrafiche e storico file.</div>
+          </div>
+          <div class="roadmap-step" id="step-3">
+            <div class="step-num">3</div>
+            <div class="step-name">Automazioni &amp; Dashboard</div>
+            <div class="step-detail">Attivazione report mattutino, scadenziari e workflow di alert rinnovi.</div>
+          </div>
+          <div class="roadmap-step" id="step-4">
+            <div class="step-num">4</div>
+            <div class="step-name">Portale &amp; Go-Live</div>
+            <div class="step-detail">Apertura area riservata clienti e formazione per il caricamento massivo.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ EVENT LOG ============ -->
+      <div class="log" id="log"></div>
+
+    </div>
+  </div>
+
+  <div class="footnote">
+    <span>DOCUMENTO RISERVATO &middot; PROPOSTA DI AUTOMAZIONE E CONTINUITÀ OPERATIVA</span>
+    <span>PIATTAFORMA CLOUD AUDITABLE &middot; POSTGRESQL RLS &middot; OBJECT STORAGE CIFRATO</span>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+      const SVGNS = 'http://www.w3.org/2000/svg';
+      const C = {
+        approved: { label: 'COMPLETO', cls: 'approved', log: 'ok' },
+        review: { label: 'IN CORSO', cls: 'review', log: 'warn' },
+        blocked: { label: 'SOSPESO', cls: 'blocked', log: 'err' }
+      };
+      const ORDER = ['approved', 'review', 'blocked'];
+
+      /* ============ DATA MODEL ADAPTED TO PROPOSAL ============ */
+      const MODULES = [
+        {
+          id: 'm1',
+          code: 'MODULO 1',
+          title: 'Dashboard & Controllo',
+          sub: 'Controllo Entrate/Uscite',
+          tag: 'Controllo Totale',
+          eta: '10 gg',
+          timeParts: [['Reportistica 08:00', 3], ['Flussi di Cassa', 4], ['Controllo Scadenze', 3]],
+          value: {
+            title: 'Autonomia della Direzione',
+            desc: 'Il titolare ha il polso economico dell\'azienda ogni mattina alle 08:00, senza dover richiedere fogli o dati all\'operatore.'
+          },
+          techFeatures: [
+            { name: 'Reportistica mattutina automatica (ore 08:00 via email / dashboard web)', type: 'CRON', req: 1 },
+            { name: 'Monitoraggio flussi di cassa ed entrate previste del mese', type: 'DASH', req: 1 },
+            { name: 'Controllo fatture emesse, incassate e crediti insoluti', type: 'SQL', req: 1 },
+            { name: 'Riepilogo contratti e certificazioni in scadenza a 30/60 gg', type: 'ALERT', req: 1 }
+          ],
+          checklist: [
+            { label: 'Configurazione template report email mattutino ore 08:00', status: 'approved' },
+            { label: 'Integrazione query aggregazione entrate e fatturato insoluto', status: 'review' },
+            { label: 'Dashboard direzionale responsive per accesso titolare', status: 'approved' },
+            { label: 'Filtro scadenziario contratti/certificati 30-60 gg attivo', status: 'review' }
+          ]
+        },
+        {
+          id: 'm2',
+          code: 'MODULO 2',
+          title: 'Automazione Scadenze',
+          sub: 'Motore Rinnovi & Alert',
+          tag: 'Zero Churn',
+          eta: '12 gg',
+          timeParts: [['Job Schedulato', 4], ['Trigger 60/30/15', 5], ['Bozze Fattura', 3]],
+          value: {
+            title: 'Nessun Rinnovo Perso',
+            desc: 'Azzeramento delle dimenticanze; incremento del tasso di rinnovo contrattuale e regolarità garantita nei flussi di cassa.'
+          },
+          techFeatures: [
+            { name: 'Job schedulato su database centrale con scansione giornaliera date', type: 'CRON', req: 1 },
+            { name: 'Trigger automatico notifiche cliente scaglionate (60 / 30 / 15 gg)', type: 'EMAIL', req: 1 },
+            { name: 'Creazione automatica bozza fattura di rinnovo alla prima notifica', type: 'BILL', req: 1 },
+            { name: 'Log immutabile per audit trail di ogni notifica e rinnovo', type: 'LOG', req: 0 }
+          ],
+          checklist: [
+            { label: 'Attivazione job cron di scansione notturna scadenze', status: 'approved' },
+            { label: 'Template email multicanale per reminder 60/30/15 giorni', status: 'review' },
+            { label: 'Modulo generazione automatica bozze contabili di rinnovo', status: 'review' },
+            { label: 'Test escalation su scadenze critiche non rinnovate', status: 'blocked' }
+          ]
+        },
+        {
+          id: 'm3',
+          code: 'MODULO 3',
+          title: 'Portale Self-Service',
+          sub: 'Gate Certificazioni & GDPR',
+          tag: 'Leva Incassi & GDPR',
+          eta: '14 gg',
+          timeParts: [['Area Riservata', 5], ['Gate Saldata', 5], ['URL Pre-firmati', 4]],
+          value: {
+            title: 'Acceleratore di Incassi',
+            desc: 'Elimina le telefonate/email per i duplicati e riduce a zero i tempi di attesa per i pagamenti: certificato accessibile solo dopo il saldo.'
+          },
+          techFeatures: [
+            { name: 'Area riservata per 3.000 clienti con accesso crittografato (RLS)', type: 'PORTAL', req: 1 },
+            { name: 'Download autonomo attestati e certificati annuali in formato PDF', type: 'DOC', req: 1 },
+            { name: 'URL pre-firmati temporanei ad alta sicurezza (scadenza a minuti)', type: 'SEC', req: 1 },
+            { name: 'Gate di download: certificato sbloccato solo se la fattura risulta saldata', type: 'GATE', req: 1 }
+          ],
+          checklist: [
+            { label: 'Configurazione Row Level Security (RLS) per isolamento tenant', status: 'approved' },
+            { label: 'Implementazione logica Gate di Download su stato pagamento', status: 'review' },
+            { label: 'Generazione URL firmati temporanei per download sicuro', status: 'review' },
+            { label: 'Verifica conformità GDPR e consensi privacy per 3.000 clienti', status: 'approved' }
+          ]
+        },
+        {
+          id: 'm4',
+          code: 'MODULO 4',
+          title: 'Migrazione Dropbox',
+          sub: 'ETL & Caricamento Massivo',
+          tag: 'Efficienza Operativa',
+          eta: '8 gg',
+          timeParts: [['Script Bonifica', 3], ['Upload Object Storage', 3], ['Interfaccia Batch', 2]],
+          value: {
+            title: 'Liberazione del Personale',
+            desc: 'L\'attività manuale dell\'operatore scende dall\'80% a meno del 10% del suo tempo, riallocabile su compiti e relazioni strategiche.'
+          },
+          techFeatures: [
+            { name: 'Script ETL per scansione, indicizzazione e bonifica archivio Dropbox', type: 'ETL', req: 1 },
+            { name: 'Caricamento automatico su Object Storage privato cifrato', type: 'S3', req: 1 },
+            { name: 'Interfaccia batch per operatore con drag & drop di PDF multipli', type: 'UI', req: 1 },
+            { name: 'Auto-associazione documenti all\'anagrafica cliente tramite OCR/metadati', type: 'AUTO', req: 1 }
+          ],
+          checklist: [
+            { label: 'Mappatura ad albero e pulizia cartelle sorgente Dropbox', status: 'approved' },
+            { label: 'Pipeline ETL per ingestione e normalizzazione anagrafiche', status: 'review' },
+            { label: 'Collaudo interfaccia Drag & Drop per upload massivo certificati', status: 'approved' },
+            { label: 'Formazione operatore e riduzione carico al < 10% lavorativo', status: 'review' }
+          ]
+        }
+      ];
+
+      /* ============ STATE ============ */
+      let activeIdx = 0;
+
+      /* ============ DOM refs ============ */
+      const nodesEl = document.getElementById('nodes');
+      const panelsEl = document.getElementById('panels');
+      const svg = document.getElementById('connectorSvg');
+      const logEl = document.getElementById('log');
+      const timelineEl = document.getElementById('timeline');
+
+      /* ============ UTIL ============ */
+      function aggregateStatus(mod) {
+        const c = mod.checklist;
+        if (c.some(i => i.status === 'blocked')) return 'blocked';
+        if (c.some(i => i.status === 'review')) return 'review';
+        if (c.every(i => i.status === 'approved')) return 'approved';
+        return 'neutral';
+      }
+
+      function log(p, msg, cls) {
+        const d = new Date();
+        const t = d.toTimeString().slice(0, 8);
+        const span = document.createElement('div');
+        span.className = 'ln';
+        span.innerHTML = `<span class="t">[${t}]</span> <span class="p">${p}</span> ${msg}`;
+        logEl.appendChild(span);
+        logEl.scrollTop = logEl.scrollHeight;
+        while (logEl.childNodes.length > 50) logEl.removeChild(logEl.firstChild);
+      }
+
+      function cycle(st) { return ORDER[(ORDER.indexOf(st) + 1) % ORDER.length]; }
+
+      /* ============ BUILD NODES ============ */
+      MODULES.forEach((mod, i) => {
+        const b = document.createElement('button');
+        b.className = 'node';
+        b.dataset.idx = i;
+        b.setAttribute('role', 'tab');
+        b.innerHTML =
+          `<span class="node-dot">M${i + 1}</span>` +
+          `<span class="node-state"></span>` +
+          `<span class="lbl">${mod.title}</span>` +
+          `<span class="code">${mod.tag}</span>`;
+        b.addEventListener('click', () => select(i, true));
+        nodesEl.appendChild(b);
+      });
+
+      /* ============ BUILD PANELS ============ */
+      MODULES.forEach((mod, i) => {
+        const p = document.createElement('section');
+        p.className = 'phase-panel';
+        p.dataset.idx = i;
+        p.id = 'panel-' + mod.id;
+
+        const featRows = mod.techFeatures.map(f =>
+          `<div class="feat">
+             <div class="ic">${f.type}</div>
+             <div class="name">${f.name}</div>
+             <div class="tag ${f.req ? 'core' : 'opt'}">${f.req ? 'CORE' : 'AUDIT'}</div>
+           </div>`
+        ).join('');
+
+        const chkRows = mod.checklist.map((c, ci) => `
+          <div class="chk">
+            <div class="idx">${ci + 1}</div>
+            <div class="label">${c.label}</div>
+            <button class="status-btn ${C[c.status].cls}" data-mod="${i}" data-item="${ci}">
+              <span class="led ${C[c.status].cls}"></span>${C[c.status].label}
+            </button>
+          </div>`).join('');
+
+        const maxT = Math.max(...mod.timeParts.map(t => t[1]));
+        const tb = mod.timeParts.map(t =>
+          `<i style="width:${(t[1] / maxT) * 100}%" title="${t[0]}"></i>`).join('');
+
+        p.innerHTML = `
+          <div class="pp-head">
+            <div class="lhs">
+              <div class="code">M${i + 1}</div>
+              <div>
+                <div class="t1">${mod.code}: ${mod.title}</div>
+                <div class="badge">${mod.tag}</div>
+              </div>
+            </div>
+            <div class="eta">
+              <div class="v">${mod.eta}</div>
+              <div class="k">Tempo Stimato</div>
+            </div>
+          </div>
+
+          <div class="pp-section highlight-value">
+            <div class="sec-title">Valore di Business &amp; Riduzione Rischio</div>
+            <div class="val-card">
+              <div class="val-head">&#10004; ${mod.value.title}</div>
+              <div class="val-body">${mod.value.desc}</div>
+            </div>
+          </div>
+
+          <div class="pp-section">
+            <div class="sec-title">Cosa Realizza Tecnicamente <span class="n">${mod.techFeatures.length} COMPONENTI</span></div>
+            ${featRows}
+          </div>
+
+          <div class="pp-section">
+            <div class="sec-title">Checklist di Rilascio &amp; Validazione <span class="n">${mod.checklist.length} TASK</span></div>
+            ${chkRows}
+          </div>
+
+          <div class="pp-section">
+            <div class="sec-title">Ripartizione Tempi Modulo</div>
+            <div class="timebar">${tb}</div>
+            <div class="time-tags">${mod.timeParts.map(t => `<span><b>${t[1]}gg</b> ${t[0]}</span>`).join('')}</div>
+          </div>
+
+          <div class="pp-foot">
+            <span class="prog">STATO COMPLETAMENTO: <b id="prog-${i}">0/4</b></span>
+            <span>STATO MODULO: <span id="nodest-${i}">—</span></span>
+          </div>`;
+
+        p.querySelectorAll('.status-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const mI = +btn.dataset.mod, itI = +btn.dataset.item;
+            const old = MODULES[mI].checklist[itI].status;
+            const next = cycle(old);
+            MODULES[mI].checklist[itI].status = next;
+            btn.className = 'status-btn ' + C[next].cls;
+            btn.innerHTML = `<span class="led ${C[next].cls}"></span>${C[next].label}`;
+            refreshModule(mI);
+            log(`M${mI + 1}`, `&middot; item #${itI + 1} aggiornato &rarr; ${C[next].label}`, C[next].log);
+          });
+        });
+
+        panelsEl.appendChild(p);
+      });
+
+      /* ============ RENDER ============ */
+      function refreshModule(i) {
+        const mod = MODULES[i];
+        const st = aggregateStatus(mod);
+        
+        // node
+        const node = nodesEl.children[i];
+        node.className = 'node' + (st === 'neutral' ? '' : ' ' + st) + (i === activeIdx ? ' active' : '');
+        
+        // progress
+        const done = mod.checklist.filter(x => x.status === 'approved').length;
+        const prog = document.getElementById('prog-' + i);
+        if (prog) prog.textContent = done + '/' + mod.checklist.length;
+        
+        const nodest = document.getElementById('nodest-' + i);
+        if (nodest) {
+          nodest.textContent = st === 'neutral' ? '—' : C[st].label;
+          nodest.style.color = st === 'neutral' ? 'var(--text-dim)' : C[st].cls === 'approved' ? 'var(--green)' : C[st].cls === 'review' ? 'var(--amber)' : 'var(--red)';
+        }
+        
+        drawConnectors();
+      }
+
+      function select(i, byUser) {
+        activeIdx = i;
+        Array.from(panelsEl.children).forEach((p, pi) => {
+          p.classList.toggle('active', pi === i);
+        });
+        
+        // highlight corresponding roadmap step if available
+        [1, 2, 3, 4].forEach(sn => {
+          const el = document.getElementById('step-' + sn);
+          if (el) el.classList.toggle('active', sn === (i + 1));
+        });
+
+        const target = document.getElementById('panel-' + MODULES[i].id);
+        target.scrollIntoView({ behavior: byUser ? 'smooth' : 'auto', inline: 'start', block: 'nearest' });
+        MODULES.forEach((_, k) => refreshModule(k));
+        if (byUser) log(`M${i + 1}`, `&rarr; aperto pannello ${MODULES[i].title.toUpperCase()} [${MODULES[i].tag}]`, 'ok');
+      }
+
+      /* ============ SVG CONNECTORS (dynamic) ============ */
+      function drawConnectors() {
+        svg.innerHTML = '';
+        const wrapRect = timelineEl.getBoundingClientRect();
+        const dots = Array.from(nodesEl.children).map(n => n.querySelector('.node-dot').getBoundingClientRect());
+        if (!dots.length) return;
+        for (let i = 0; i < dots.length - 1; i++) {
+          const y = dots[i].top + dots[i].height / 2 - wrapRect.top;
+          const x1 = dots[i].right - wrapRect.left;
+          const x2 = dots[i + 1].left - wrapRect.left;
+          const srcSt = aggregateStatus(MODULES[i]);
+          const isActiveFlow = (i === activeIdx || i + 1 === activeIdx);
+          const cls = isActiveFlow ? 'active' : (srcSt === 'neutral' ? 'neutral' : srcSt);
+          const line = document.createElementNS(SVGNS, 'line');
+          line.setAttribute('x1', x1); line.setAttribute('y1', y);
+          line.setAttribute('x2', x2); line.setAttribute('y2', y);
+          line.setAttribute('class', 'conn ' + cls);
+          line.setAttribute('data-idx', i);
+          svg.appendChild(line);
+        }
+      }
+      window.addEventListener('resize', drawConnectors);
+
+      /* ============ KEYBOARD ============ */
+      document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' && activeIdx < MODULES.length - 1) select(activeIdx + 1, true);
+        if (e.key === 'ArrowLeft' && activeIdx > 0) select(activeIdx - 1, true);
+      });
+
+      /* ============ INIT ============ */
+      select(0, false);
+      log('SYS', 'Piattaforma inizializzata · Caricati 4 Moduli Funzionali · Gestione 3.000 Clienti', 'ok');
+    })();
+  </script>
+</body>
+
+</html>

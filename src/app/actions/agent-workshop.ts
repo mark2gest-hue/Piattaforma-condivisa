@@ -233,6 +233,37 @@ export async function askOttoFriendlyAction(params: {
     pLower.includes('pdf') ||
     pLower.includes('screenshot')
 
+  const isN8nVisualRequest =
+    (pLower.includes('n8n') || pLower.includes('workflow') || pLower.includes('flusso')) &&
+    (pLower.includes('grafic') ||
+      pLower.includes('canvas') ||
+      pLower.includes('disegn') ||
+      pLower.includes('visiv') ||
+      pLower.includes('schema') ||
+      pLower.includes('interattiv') ||
+      pLower.includes('mostra') ||
+      pLower.includes('fammi vedere') ||
+      pLower.includes('apri') ||
+      pLower.includes('costruisci') ||
+      mode === 'build')
+
+  if (isN8nVisualRequest && (pLower.includes('n8n') || pLower.includes('workflow') || pLower.includes('video factory') || pLower.includes('triage') || pLower.includes('centralino'))) {
+    const { generateN8nCanvasHtml } = await import('@/lib/n8n-canvas-widget')
+    const isVideo = pLower.includes('video') || pLower.includes('reel') || pLower.includes('buffer')
+    const canvasHtml = generateN8nCanvasHtml(isVideo ? 'video_factory' : 'triage_email')
+
+    return {
+      success: true,
+      mode: 'build',
+      speech: isVideo
+        ? "Ecco a schermo il Canvas interattivo del nostro workflow n8n Video Factory! Ho collegato tutti i nodi da Schedule Trigger fino a Buffer: puoi cliccare su ciascun nodo per ispezionare il JSON e premere 'Simula Flusso' per vederlo in azione live."
+        : "Ecco il Canvas visivo del Centralino Email 24/7 su n8n! Mostra come le 5 caselle Aruba passano per Gemini 2.5 Flash, lo Switch anti-spam e salvano i lead su Supabase inviando l'alert Telegram.",
+      title: isVideo ? '⚡ n8n Canvas: Video Factory 9:16 & Buffer' : '⚡ n8n Canvas: Centralino Email 24/7 con Gemini',
+      htmlSnippet: canvasHtml,
+      modelUsed: 'n8n-Visual-Pipeline-Engine',
+    }
+  }
+
   // Se l'utente chiede di trovare/estrarre qualsiasi elemento dal Vault Obsidian:
   if (isExtractionIntent && isVaultSubject) {
     const { DEFAULT_KNOWLEDGE_ITEMS } = await import('@/lib/knowledge-data')
