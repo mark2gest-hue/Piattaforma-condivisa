@@ -43,12 +43,11 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = pathname.startsWith('/login')
   const isApiRoute = pathname.startsWith('/api')
   const isCorsiRoute = pathname.startsWith('/corsi')
-  const isDemoScreencastRoute = pathname.startsWith('/demo-screencast')
   const isN8nScreencastRoute = pathname.startsWith('/n8n-screencast')
   const isRootRoute = pathname === '/'
 
-  // Rotte pubbliche accessibili: Landing ('/'), Corsi ('/corsi'), Login ('/login'), demo screencast e API
-  const isPublicRoute = isRootRoute || isCorsiRoute || isAuthRoute || isApiRoute || isDemoScreencastRoute || isN8nScreencastRoute
+  // Rotte pubbliche accessibili: Landing ('/'), Corsi ('/corsi'), Login ('/login'), n8n screencast e API
+  const isPublicRoute = isRootRoute || isCorsiRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute
 
   // Se l'utente non è autenticato come membro del team e cerca di accedere a rotte riservate (/lavori, /posta, /chat, /files...),
   // viene reindirizzato a /login

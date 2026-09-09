@@ -62,6 +62,7 @@ import {
 import { LESSON_SUMMARIES } from '@/lib/course-data'
 import { askStudentAiAction, generateLessonQuizAction, QuizQuestion } from '@/app/actions/ai'
 import { CourseRegistration } from '@/types/index'
+import { StudentTasksZone } from '@/app/workshop-agenti/components/StudentTasksZone'
 
 interface StudentRegistration {
   id: string
@@ -483,7 +484,7 @@ function CorsiInnerContent() {
   const [chatInput, setChatInput] = useState('')
   const [isAiThinking, setIsAiThinking] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'students' | 'login'>('player')
+  const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'tasks' | 'students' | 'login'>('player')
 
   // Caricamento persistente da localStorage all'avvio
   useEffect(() => {
@@ -625,7 +626,7 @@ function CorsiInnerContent() {
   const loadWaitlistLeads = async () => {
     const res = await getWaitlistLeadsAction()
     if (res.success && res.leads) {
-      setWaitlistLeads(res.leads)
+      setWaitlistLeads((res.leads ?? []).map((l) => ({ ...l, name: l.name ?? undefined })))
     }
   }
 
@@ -672,7 +673,7 @@ function CorsiInnerContent() {
     const student = name || activeStudent?.name || 'Marco (Corsista)'
     const certCode = code || activeStudent?.code || `CERT-${selectedCourseId === 'ai-pro' ? 'PRO' : 'AI'}-${Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase()}`
     const dateStr = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
-    
+
     setCertificateStudentName(student)
     setCertificateCode(certCode)
     const dataUrl = generateCertificateDataUrl(student, dateStr, certCode, selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start')
@@ -784,8 +785,8 @@ function CorsiInnerContent() {
       const defaultCourseTitle = bulkAccessTier === 'ai-pro'
         ? 'AI Pro - Automazioni & Agenti AI'
         : bulkAccessTier === 'both'
-        ? 'Bundle Completo: AI Start + AI Pro'
-        : 'AI Start - Domina l’Intelligenza Artificiale da Zero'
+          ? 'Bundle Completo: AI Start + AI Pro'
+          : 'AI Start - Domina l’Intelligenza Artificiale da Zero'
 
       const newItems: StudentRegistration[] = res.students.map((s, idx) => ({
         id: `reg-bulk-${Date.now()}-${idx}`,
@@ -824,7 +825,15 @@ function CorsiInnerContent() {
 
     if (res.success && res.student) {
       const dbStudent = res.student
-      const tier = dbStudent.access_tier || (dbStudent.code.startsWith('AI-PRO-') ? 'ai-pro' : dbStudent.code.startsWith('AI-ALL-') ? 'both' : 'ai-start')
+      const rawTier = dbStudent.access_tier
+      const tier: 'ai-start' | 'ai-pro' | 'both' =
+        rawTier === 'ai-start' || rawTier === 'ai-pro' || rawTier === 'both'
+          ? rawTier
+          : dbStudent.code.startsWith('AI-PRO-')
+            ? 'ai-pro'
+            : dbStudent.code.startsWith('AI-ALL-')
+              ? 'both'
+              : 'ai-start'
       setActiveStudent({
         name: dbStudent.student_name,
         code: dbStudent.code,
@@ -865,8 +874,8 @@ function CorsiInnerContent() {
     const defaultTitle = enrollAccessTier === 'ai-pro'
       ? 'AI Pro - Automazioni & Agenti AI'
       : enrollAccessTier === 'both'
-      ? 'Bundle Completo: AI Start + AI Pro'
-      : 'AI Start - Domina l’Intelligenza Artificiale da Zero'
+        ? 'Bundle Completo: AI Start + AI Pro'
+        : 'AI Start - Domina l’Intelligenza Artificiale da Zero'
 
     // Esegui iscrizione sicura lato server tramite Server Action (supera RLS)
     const result = await enrollStudentAction({
@@ -931,7 +940,7 @@ function CorsiInnerContent() {
     setZoomRecordings(updatedZoom)
     try {
       localStorage.setItem('ti_aiuto_zoom_recordings', JSON.stringify(updatedZoom))
-    } catch (e) {}
+    } catch (e) { }
 
     setIsAddZoomModalOpen(false)
     setZoomTitleInput('')
@@ -946,7 +955,7 @@ function CorsiInnerContent() {
     setZoomRecordings(updatedZoom)
     try {
       localStorage.setItem('ti_aiuto_zoom_recordings', JSON.stringify(updatedZoom))
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const handleSaveResource = (e: React.FormEvent) => {
@@ -959,13 +968,13 @@ function CorsiInnerContent() {
       updatedResources = resources.map((r) =>
         r.id === editingResourceId
           ? {
-              ...r,
-              title: resTitleInput.trim(),
-              category: resCategoryInput,
-              description: resDescInput.trim(),
-              fileUrl: resUrlInput.trim(),
-              fileSize: resSizeInput.trim() || r.fileSize || '1.5 MB',
-            }
+            ...r,
+            title: resTitleInput.trim(),
+            category: resCategoryInput,
+            description: resDescInput.trim(),
+            fileUrl: resUrlInput.trim(),
+            fileSize: resSizeInput.trim() || r.fileSize || '1.5 MB',
+          }
           : r
       )
     } else {
@@ -984,7 +993,7 @@ function CorsiInnerContent() {
     setResources(updatedResources)
     try {
       localStorage.setItem('ti_aiuto_course_resources', JSON.stringify(updatedResources))
-    } catch (e) {}
+    } catch (e) { }
 
     setIsAddResourceModalOpen(false)
     setEditingResourceId(null)
@@ -1010,7 +1019,7 @@ function CorsiInnerContent() {
     setResources(updatedResources)
     try {
       localStorage.setItem('ti_aiuto_course_resources', JSON.stringify(updatedResources))
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const handleSendStudentChat = async (e: React.FormEvent) => {
@@ -1143,16 +1152,14 @@ function CorsiInnerContent() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
           <button
             onClick={() => setSelectedCourseId('ai-start')}
-            className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between ${
-              selectedCourseId === 'ai-start'
+            className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between ${selectedCourseId === 'ai-start'
                 ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-indigo-500/30'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
-              <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-sm ${
-                selectedCourseId === 'ai-start' ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-              }`}>
+              <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-sm ${selectedCourseId === 'ai-start' ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                }`}>
                 01
               </div>
               <div>
@@ -1169,16 +1176,14 @@ function CorsiInnerContent() {
 
           <button
             onClick={() => setSelectedCourseId('ai-pro')}
-            className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between ${
-              selectedCourseId === 'ai-pro'
+            className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between ${selectedCourseId === 'ai-pro'
                 ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-purple-500/30'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3">
-              <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-sm ${
-                selectedCourseId === 'ai-pro' ? 'bg-purple-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-              }`}>
+              <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-sm ${selectedCourseId === 'ai-pro' ? 'bg-purple-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                }`}>
                 02
               </div>
               <div>
@@ -1199,11 +1204,10 @@ function CorsiInnerContent() {
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-1 overflow-x-auto">
         <button
           onClick={() => setActiveTab('player')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
-            activeTab === 'player'
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${activeTab === 'player'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
+            }`}
         >
           <PlayCircle className="h-4 w-4" />
           <span>Player {selectedCourseId === 'ai-pro' ? 'AI Pro (10 Moduli)' : 'AI Start (20 Lezioni)'}</span>
@@ -1211,11 +1215,10 @@ function CorsiInnerContent() {
 
         <button
           onClick={() => setActiveTab('zoom')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
-            activeTab === 'zoom'
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${activeTab === 'zoom'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
+            }`}
         >
           <VideoIcon className="h-4 w-4" />
           <span>Registrazioni Zoom ({zoomRecordings.length})</span>
@@ -1223,14 +1226,24 @@ function CorsiInnerContent() {
 
         <button
           onClick={() => setActiveTab('bonus')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
-            activeTab === 'bonus'
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${activeTab === 'bonus'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
+            }`}
         >
           <Gift className="h-4 w-4" />
           <span>Risorse & Manuali ({resources.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('tasks')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer ${activeTab === 'tasks'
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+        >
+          <GraduationCap className="h-4 w-4 text-amber-400" />
+          <span>I Miei Compiti & Attestato</span>
         </button>
 
 
@@ -1242,11 +1255,10 @@ function CorsiInnerContent() {
               loadCourseRegistrations()
               loadStudentCodes()
             }}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${
-              activeTab === 'students'
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${activeTab === 'students'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
+              }`}
           >
             <Users className="h-4 w-4" />
             <span>Registro Codici & Studenti ({courseRegistrations.length || registrations.length})</span>
@@ -1425,11 +1437,10 @@ function CorsiInnerContent() {
                       const curr = selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro
                       toggleLessonCompleted(curr.id)
                     }}
-                    className={`w-full h-9 text-xs font-bold gap-2 rounded-xl shadow-xs transition-all ${
-                      (selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).completed
+                    className={`w-full h-9 text-xs font-bold gap-2 rounded-xl shadow-xs transition-all ${(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).completed
                         ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                         : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                    }`}
+                      }`}
                   >
                     <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                     <span className="truncate">{(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).completed ? 'Completata ✓' : 'Segna Completata'}</span>
@@ -1573,13 +1584,12 @@ function CorsiInnerContent() {
                               alert(`Devi prima completare il modulo precedente per sbloccare questo argomento!`)
                             }
                           }}
-                          className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                            !isUnlocked
+                          className={`p-3 rounded-xl border flex items-center justify-between transition-all ${!isUnlocked
                               ? 'opacity-60 bg-slate-100/50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 cursor-not-allowed'
                               : isSelected
-                              ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 font-bold cursor-pointer'
-                              : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer'
-                          }`}
+                                ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40 font-bold cursor-pointer'
+                                : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer'
+                            }`}
                         >
                           <div className="flex items-center gap-3 truncate pr-2">
                             {isUnlocked ? (
@@ -1588,11 +1598,10 @@ function CorsiInnerContent() {
                                   e.stopPropagation()
                                   toggleLessonCompleted(lesson.id)
                                 }}
-                                className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${
-                                  lesson.completed
+                                className={`h-5 w-5 rounded-full border flex items-center justify-center transition-colors shrink-0 ${lesson.completed
                                     ? 'bg-emerald-500 border-emerald-600 text-white'
                                     : 'border-slate-300 dark:border-slate-600'
-                                }`}
+                                  }`}
                               >
                                 {lesson.completed && <CheckCircle2 className="h-3.5 w-3.5" />}
                               </button>
@@ -1657,11 +1666,10 @@ function CorsiInnerContent() {
                 {chatMessages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`p-3 rounded-xl max-w-[88%] space-y-1 ${
-                      msg.isAi
+                    className={`p-3 rounded-xl max-w-[88%] space-y-1 ${msg.isAi
                         ? 'bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-slate-900 dark:text-slate-100 ml-0'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 ml-auto'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between font-bold text-[11px] text-indigo-600 dark:text-indigo-400">
                       <span className="flex items-center gap-1">
@@ -1718,103 +1726,103 @@ function CorsiInnerContent() {
             </div>
           </div>
         ) : (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <VideoIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                Registrazioni Zoom Live ({zoomRecordings.length})
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Sessioni live registrate disponibili per i corsisti. Incolla il link diretto alla registrazione.
-              </p>
-            </div>
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <VideoIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                  Registrazioni Zoom Live ({zoomRecordings.length})
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Sessioni live registrate disponibili per i corsisti. Incolla il link diretto alla registrazione.
+                </p>
+              </div>
 
-            {isTeamMember && (
-              <Button
-                onClick={() => setIsAddZoomModalOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Aggiungi Registrazione</span>
-              </Button>
-            )}
-          </div>
-
-          {/* RIPRODUTTORE VIDEO ZOOM ATTIVO */}
-          {activeZoomVideo && (
-            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 shadow-2xl space-y-3">
-              <div className="flex items-center justify-between text-white border-b border-slate-800 pb-2">
-                <div className="flex items-center gap-2">
-                  <PlayCircle className="h-5 w-5 text-indigo-400" />
-                  <span className="font-bold text-sm">Riproduzione Live: {activeZoomVideo.title} ({activeZoomVideo.date})</span>
-                </div>
-                <Button size="sm" variant="ghost" onClick={() => setActiveZoomVideo(null)} className="text-xs text-slate-400 hover:text-white">
-                  Chiudi Player
+              {isTeamMember && (
+                <Button
+                  onClick={() => setIsAddZoomModalOpen(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Aggiungi Registrazione</span>
                 </Button>
-              </div>
-
-              <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
-                <video
-                  key={activeZoomVideo.id}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  src={activeZoomVideo.videoUrl}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              )}
             </div>
-          )}
 
-          {/* LISTA SCHEDE REGISTRAZIONI ZOOM */}
-          <div className="space-y-3">
-            {zoomRecordings.map((rec) => (
-              <div
-                key={rec.id}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-indigo-500/50 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                    <PlayCircle className="h-6 w-6" />
+            {/* RIPRODUTTORE VIDEO ZOOM ATTIVO */}
+            {activeZoomVideo && (
+              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 shadow-2xl space-y-3">
+                <div className="flex items-center justify-between text-white border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <PlayCircle className="h-5 w-5 text-indigo-400" />
+                    <span className="font-bold text-sm">Riproduzione Live: {activeZoomVideo.title} ({activeZoomVideo.date})</span>
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                      <span>{rec.title}</span>
-                      <span className="text-[10px] font-mono font-normal text-slate-400">({rec.date})</span>
-                    </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Registrazione ufficiale della lezione
-                    </p>
-                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => setActiveZoomVideo(null)} className="text-xs text-slate-400 hover:text-white">
+                    Chiudi Player
+                  </Button>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    size="sm"
-                    onClick={() => setActiveZoomVideo(rec)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4 rounded-xl gap-1.5 shadow-xs"
-                  >
-                    <PlayCircle className="h-4 w-4" />
-                    <span>Guarda Video</span>
-                  </Button>
-
-                  {isTeamMember && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteZoom(rec.id, rec.title)}
-                      className="h-9 w-9 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                      title="Elimina Registrazione"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
+                <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
+                  <video
+                    key={activeZoomVideo.id}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    src={activeZoomVideo.videoUrl}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* LISTA SCHEDE REGISTRAZIONI ZOOM */}
+            <div className="space-y-3">
+              {zoomRecordings.map((rec) => (
+                <div
+                  key={rec.id}
+                  className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-indigo-500/50 transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                      <PlayCircle className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>{rec.title}</span>
+                        <span className="text-[10px] font-mono font-normal text-slate-400">({rec.date})</span>
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Registrazione ufficiale della lezione
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      onClick={() => setActiveZoomVideo(rec)}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4 rounded-xl gap-1.5 shadow-xs"
+                    >
+                      <PlayCircle className="h-4 w-4" />
+                      <span>Guarda Video</span>
+                    </Button>
+
+                    {isTeamMember && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteZoom(rec.id, rec.title)}
+                        className="h-9 w-9 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                        title="Elimina Registrazione"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
         )
       )}
 
@@ -1838,126 +1846,133 @@ function CorsiInnerContent() {
             </div>
           </div>
         ) : (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Gift className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                Risorse Bonus, PDF & Manuali ({resources.length})
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Documenti integrativi, template di prompt pronti all'uso e guide in formato PDF per gli studenti.
-              </p>
-            </div>
-
-            {isTeamMember && (
-              <Button
-                onClick={() => {
-                  setEditingResourceId(null)
-                  setResTitleInput('')
-                  setResUrlInput('')
-                  setResDescInput('')
-                  setResSizeInput('1.5 MB')
-                  setIsAddResourceModalOpen(true)
-                }}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
-              >
-                <Plus className="h-4 w-4" />
-                <span>+ Carica Nuova Risorsa</span>
-              </Button>
-            )}
-          </div>
-
-          {/* Banner Ufficiale Proton Drive 20 PDF */}
-          <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-slate-900 border border-purple-500/30 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-md">
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 rounded-2xl bg-purple-600/20 text-purple-400 border border-purple-500/40 flex items-center justify-center shrink-0 shadow-md">
-                <FileText className="h-7 w-7" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Badge variant="purple" className="text-[9px] uppercase font-mono">Archivio Cloud Crittografato E2E</Badge>
-                  <span className="text-[10px] text-emerald-400 font-mono font-semibold">20/20 PDF Disponibili</span>
-                </div>
-                <h4 className="font-extrabold text-base text-slate-900 dark:text-white">
-                  📚 Archivio Completo 20 Dispense PDF Ufficiali (AI Start)
-                </h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
-                  Scarica tutte le dispense, schemi operativi, checklist e materiali didattici delle 20 video lezioni salvati in modo sicuro su Proton Drive.
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Gift className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                  Risorse Bonus, PDF & Manuali ({resources.length})
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Documenti integrativi, template di prompt pronti all'uso e guide in formato PDF per gli studenti.
                 </p>
               </div>
+
+              {isTeamMember && (
+                <Button
+                  onClick={() => {
+                    setEditingResourceId(null)
+                    setResTitleInput('')
+                    setResUrlInput('')
+                    setResDescInput('')
+                    setResSizeInput('1.5 MB')
+                    setIsAddResourceModalOpen(true)
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>+ Carica Nuova Risorsa</span>
+                </Button>
+              )}
             </div>
 
-            <a
-              href="https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0"
-            >
-              <Button className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs h-11 px-5 rounded-xl gap-2 shadow-lg shadow-purple-600/30">
-                <Download className="h-4 w-4" />
-                <span>Apri Cartella PDF su Proton Drive</span>
-              </Button>
-            </a>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {resources.map((res) => (
-              <div key={res.id} className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between hover:border-indigo-500/50 transition-all">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="purple" className="text-[9px] uppercase">{res.category}</Badge>
-                    <span className="text-[10px] text-slate-400 font-mono">{res.fileSize || 'PDF'}</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <FileText className="h-6 w-6 text-indigo-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">{res.title}</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{res.description}</p>
-                    </div>
-                  </div>
+            {/* Banner Ufficiale Proton Drive 20 PDF */}
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-slate-900 border border-purple-500/30 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-md">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-purple-600/20 text-purple-400 border border-purple-500/40 flex items-center justify-center shrink-0 shadow-md">
+                  <FileText className="h-7 w-7" />
                 </div>
-
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <a href={res.fileUrl} target="_blank" rel="noopener noreferrer" className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full text-xs gap-2 border-slate-200 dark:border-slate-700">
-                      <Download className="h-3.5 w-3.5 text-indigo-600" />
-                      <span>Scarica Documento ({res.fileSize || 'PDF'})</span>
-                    </Button>
-                  </a>
-
-                  {isTeamMember && (
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditResource(res)}
-                        className="h-8 w-8 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400"
-                        title="Modifica Risorsa"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteResource(res.id, res.title)}
-                        className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                        title="Elimina Risorsa"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="purple" className="text-[9px] uppercase font-mono">Archivio Cloud Crittografato E2E</Badge>
+                    <span className="text-[10px] text-emerald-400 font-mono font-semibold">20/20 PDF Disponibili</span>
+                  </div>
+                  <h4 className="font-extrabold text-base text-slate-900 dark:text-white">
+                    📚 Archivio Completo 20 Dispense PDF Ufficiali (AI Start)
+                  </h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
+                    Scarica tutte le dispense, schemi operativi, checklist e materiali didattici delle 20 video lezioni salvati in modo sicuro su Proton Drive.
+                  </p>
                 </div>
               </div>
-            ))}
+
+              <a
+                href="https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0"
+              >
+                <Button className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs h-11 px-5 rounded-xl gap-2 shadow-lg shadow-purple-600/30">
+                  <Download className="h-4 w-4" />
+                  <span>Apri Cartella PDF su Proton Drive</span>
+                </Button>
+              </a>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {resources.map((res) => (
+                <div key={res.id} className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between hover:border-indigo-500/50 transition-all">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="purple" className="text-[9px] uppercase">{res.category}</Badge>
+                      <span className="text-[10px] text-slate-400 font-mono">{res.fileSize || 'PDF'}</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <FileText className="h-6 w-6 text-indigo-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white">{res.title}</h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{res.description}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <a href={res.fileUrl} target="_blank" rel="noopener noreferrer" className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full text-xs gap-2 border-slate-200 dark:border-slate-700">
+                        <Download className="h-3.5 w-3.5 text-indigo-600" />
+                        <span>Scarica Documento ({res.fileSize || 'PDF'})</span>
+                      </Button>
+                    </a>
+
+                    {isTeamMember && (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditResource(res)}
+                          className="h-8 w-8 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400"
+                          title="Modifica Risorsa"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteResource(res.id, res.title)}
+                          className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                          title="Elimina Risorsa"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
         )
       )}
 
-
-
+      {/* TAB: I MIEI COMPITI PERSONALI & ATTESTATO (AREA RISERVATA ALLO STUDENTE) */}
+      {activeTab === 'tasks' && (
+        <div className="py-2">
+          <StudentTasksZone
+            provider="gemini"
+            initialTier={selectedCourseId === 'ai-pro' ? 'ai-pro' : 'ai-start'}
+          />
+        </div>
+      )}
 
       {/* TAB 4: REGISTRO STUDENTI & CODICI & LISTA D'ATTESA */}
       {activeTab === 'students' && isTeamMember && (
@@ -1994,11 +2009,10 @@ function CorsiInnerContent() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setStudentSubTab('registrations')}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-                  studentSubTab === 'registrations'
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'registrations'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
+                  }`}
               >
                 <ClipboardList className="h-4 w-4" />
                 <span>Questionario & Registrazioni ({courseRegistrations.length})</span>
@@ -2011,11 +2025,10 @@ function CorsiInnerContent() {
 
               <button
                 onClick={() => setStudentSubTab('active')}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-                  studentSubTab === 'active'
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'active'
                     ? 'bg-indigo-600 text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
+                  }`}
               >
                 <Users className="h-4 w-4" />
                 <span>Studenti Accreditati ({registrations.length})</span>
@@ -2026,11 +2039,10 @@ function CorsiInnerContent() {
                   setStudentSubTab('waitlist')
                   loadWaitlistLeads()
                 }}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-                  studentSubTab === 'waitlist'
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'waitlist'
                     ? 'bg-purple-600 text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
+                  }`}
               >
                 <Clock className="h-4 w-4" />
                 <span>⏳ Lista d'Attesa AI Pro ({waitlistLeads.length})</span>
@@ -2074,31 +2086,28 @@ function CorsiInnerContent() {
                 <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
                   <button
                     onClick={() => setRegStatusFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      regStatusFilter === 'all'
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${regStatusFilter === 'all'
                         ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     Tutti ({courseRegistrations.length})
                   </button>
                   <button
                     onClick={() => setRegStatusFilter('pending')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      regStatusFilter === 'pending'
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${regStatusFilter === 'pending'
                         ? 'bg-amber-600 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     In Attesa ({courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length})
                   </button>
                   <button
                     onClick={() => setRegStatusFilter('approved')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      regStatusFilter === 'approved'
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${regStatusFilter === 'approved'
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     Approvati ({courseRegistrations.filter(r => r.approved || r.status === 'approved').length})
                   </button>
@@ -2273,22 +2282,20 @@ function CorsiInnerContent() {
                 <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
                   <button
                     onClick={() => setActiveTierFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      activeTierFilter === 'all'
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTierFilter === 'all'
                         ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     Tutti ({registrations.length})
                   </button>
 
                   <button
                     onClick={() => setActiveTierFilter('ai-start')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                      activeTierFilter === 'ai-start'
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTierFilter === 'ai-start'
                         ? 'bg-blue-600 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     <span>📘 Corso 1: AI Start</span>
                     <span className="px-1.5 py-0.2 bg-blue-500/30 rounded-full text-[10px] font-bold">
@@ -2298,11 +2305,10 @@ function CorsiInnerContent() {
 
                   <button
                     onClick={() => setActiveTierFilter('ai-pro')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                      activeTierFilter === 'ai-pro'
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTierFilter === 'ai-pro'
                         ? 'bg-purple-600 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     <span>🚀 Corso 2: AI Pro (Agenti)</span>
                     <span className="px-1.5 py-0.2 bg-purple-500/30 rounded-full text-[10px] font-bold">
@@ -2312,11 +2318,10 @@ function CorsiInnerContent() {
 
                   <button
                     onClick={() => setActiveTierFilter('both')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                      activeTierFilter === 'both'
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTierFilter === 'both'
                         ? 'bg-amber-600 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     <span>🌟 Bundle Completo</span>
                     <span className="px-1.5 py-0.2 bg-amber-500/30 rounded-full text-[10px] font-bold">
@@ -2368,79 +2373,79 @@ function CorsiInnerContent() {
                             <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
                               {reg.studentName}
                             </td>
-                        <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400 font-mono">
-                          {reg.studentEmail}
-                        </td>
-                        <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">
-                          <div className="flex flex-col gap-1">
-                            <span>{reg.courseTitle}</span>
-                            <div className="flex items-center gap-1.5">
-                              {reg.accessTier === 'both' ? (
-                                <Badge variant="purple" className="text-[8px] font-mono">🌟 FULL ACCESS (BASE + PRO)</Badge>
-                              ) : reg.accessTier === 'ai-pro' ? (
-                                <Badge variant="purple" className="text-[8px] font-mono">🚀 SOLO AI PRO</Badge>
-                              ) : (
-                                <Badge variant="info" className="text-[8px] font-mono">📘 SOLO AI START</Badge>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <Badge
-                            variant={
-                              reg.status === 'completed'
-                                ? 'success'
-                                : reg.status === 'in_progress'
-                                ? 'warning'
-                                : 'info'
-                            }
-                            className="text-[9px] uppercase"
-                          >
-                            {reg.status === 'in_progress' ? 'In Corso' : reg.status === 'completed' ? 'Completato' : 'Iscritto'}
-                          </Badge>
-                        </td>
-                        <td className="py-3.5 px-4 text-right flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenCertificate(reg.studentName, reg.code)}
-                            className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 gap-1 h-7 font-semibold"
-                          >
-                            <Award className="h-3.5 w-3.5" />
-                            Attestato
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              sendSharedEmail({
-                                to: reg.studentEmail,
-                                subject: `Il tuo Codice di Accesso al Corso: ${reg.code}`,
-                                body: `Gentile ${reg.studentName},\n\nti ricordiamo che il tuo CODICE DI ACCESSO UNIVOCO per le 20 lezioni video è: ${reg.code}.\n\nCordiali saluti,\nTeam Aiutiamoci Cloud`,
-                              })
-                              alert(`Inviato promemoria codice ${reg.code} via Resend a ${reg.studentEmail}!`)
-                            }}
-                            className="text-xs text-indigo-600 hover:text-indigo-800 dark:hover:text-indigo-300 gap-1 h-7"
-                          >
-                            <Mail className="h-3.5 w-3.5" />
-                            Invia Mail
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteStudent(reg.id, reg.studentName, reg.code)}
-                            className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                            title="Elimina Studente e Codice"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400 font-mono">
+                              {reg.studentEmail}
+                            </td>
+                            <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">
+                              <div className="flex flex-col gap-1">
+                                <span>{reg.courseTitle}</span>
+                                <div className="flex items-center gap-1.5">
+                                  {reg.accessTier === 'both' ? (
+                                    <Badge variant="purple" className="text-[8px] font-mono">🌟 FULL ACCESS (BASE + PRO)</Badge>
+                                  ) : reg.accessTier === 'ai-pro' ? (
+                                    <Badge variant="purple" className="text-[8px] font-mono">🚀 SOLO AI PRO</Badge>
+                                  ) : (
+                                    <Badge variant="info" className="text-[8px] font-mono">📘 SOLO AI START</Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <Badge
+                                variant={
+                                  reg.status === 'completed'
+                                    ? 'success'
+                                    : reg.status === 'in_progress'
+                                      ? 'warning'
+                                      : 'info'
+                                }
+                                className="text-[9px] uppercase"
+                              >
+                                {reg.status === 'in_progress' ? 'In Corso' : reg.status === 'completed' ? 'Completato' : 'Iscritto'}
+                              </Badge>
+                            </td>
+                            <td className="py-3.5 px-4 text-right flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenCertificate(reg.studentName, reg.code)}
+                                className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 gap-1 h-7 font-semibold"
+                              >
+                                <Award className="h-3.5 w-3.5" />
+                                Attestato
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  sendSharedEmail({
+                                    to: reg.studentEmail,
+                                    subject: `Il tuo Codice di Accesso al Corso: ${reg.code}`,
+                                    body: `Gentile ${reg.studentName},\n\nti ricordiamo che il tuo CODICE DI ACCESSO UNIVOCO per le 20 lezioni video è: ${reg.code}.\n\nCordiali saluti,\nTeam Aiutiamoci Cloud`,
+                                  })
+                                  alert(`Inviato promemoria codice ${reg.code} via Resend a ${reg.studentEmail}!`)
+                                }}
+                                className="text-xs text-indigo-600 hover:text-indigo-800 dark:hover:text-indigo-300 gap-1 h-7"
+                              >
+                                <Mail className="h-3.5 w-3.5" />
+                                Invia Mail
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteStudent(reg.id, reg.studentName, reg.code)}
+                                className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                                title="Elimina Studente e Codice"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
             </div>
           )}
 
@@ -2792,7 +2797,7 @@ function CorsiInnerContent() {
                 setActiveLesson({ ...activeLesson, videoUrl: customVideoUrlInput.trim() })
                 try {
                   localStorage.setItem('ti_aiuto_lessons_custom', JSON.stringify(updatedLessons))
-                } catch (e) {}
+                } catch (e) { }
                 setIsEditVideoModalOpen(false)
                 alert(`Video link della Lezione ${activeLesson.id} aggiornato!`)
               }}
@@ -2920,7 +2925,7 @@ function CorsiInnerContent() {
                           const isSelected = quizAnswers[qIdx] === optIdx
                           const isCorrect = q.correctIndex === optIdx
                           let buttonClass = 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                          
+
                           if (quizSubmitted) {
                             if (isCorrect) {
                               buttonClass = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold'

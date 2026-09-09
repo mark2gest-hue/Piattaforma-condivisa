@@ -29,7 +29,7 @@ export async function enrollStudentAction(formData: {
     }
     const supabaseAdmin = createAdminClient()
     const tier: CourseAccessTier = formData.accessTier || 'ai-start'
-    
+
     // Genera codice con prefisso semantico
     const randomHex = Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase()
     const prefix = tier === 'ai-pro' ? 'AI-PRO' : tier === 'both' ? 'AI-ALL' : 'AI-START'
@@ -38,13 +38,13 @@ export async function enrollStudentAction(formData: {
     const defaultTitle = tier === 'ai-pro'
       ? 'AI Pro - Automazioni & Agenti AI'
       : tier === 'both'
-      ? 'Bundle Completo: AI Start + AI Pro'
-      : 'AI Start - Domina l’Intelligenza Artificiale da Zero'
-    
+        ? 'Bundle Completo: AI Start + AI Pro'
+        : 'AI Start - Domina l’Intelligenza Artificiale da Zero'
+
     const finalCourseTitle = formData.courseTitle || defaultTitle
 
     // 1. Inserimento student_codes tramite admin client (supera RLS)
-    const { error: codeError } = await (supabaseAdmin as any).from('student_codes').insert({
+    const { error: codeError } = await supabaseAdmin.from('student_codes').insert({
       code: generatedCode,
       student_name: formData.studentName.trim(),
       student_email: formData.studentEmail.trim(),
@@ -62,12 +62,12 @@ export async function enrollStudentAction(formData: {
     const taskTitle = formData.source === 'landing'
       ? `Nuova Iscrizione Landing: ${formData.studentName.trim()}`
       : `Accoglienza Studente: ${formData.studentName.trim()} (${generatedCode})`
-      
+
     const taskDesc = formData.source === 'landing'
       ? `Studente iscritto da aiutiamoci.cloud. Codice assegnato: ${generatedCode}. Livello: ${tier.toUpperCase()}`
       : `Iscrizione al percorso "${finalCourseTitle}". Codice univoco assegnato: ${generatedCode}.`
 
-    const { error: taskError } = await (supabaseAdmin as any).from('tasks').insert({
+    const { error: taskError } = await supabaseAdmin.from('tasks').insert({
       title: taskTitle,
       description: taskDesc,
       status: 'todo',
@@ -82,8 +82,8 @@ export async function enrollStudentAction(formData: {
     const tierDesc = tier === 'ai-pro'
       ? 'Corso Avanzato "AI Pro: Automazioni & Agenti AI"'
       : tier === 'both'
-      ? 'Percorso Completo "AI Start" + "AI Pro"'
-      : 'Corso Base "AI Start: Domina l’IA da Zero"'
+        ? 'Percorso Completo "AI Start" + "AI Pro"'
+        : 'Corso Base "AI Start: Domina l’IA da Zero"'
 
     const emailSubject = `Il tuo Codice di Accesso a ${tier === 'both' ? 'AI Start & AI Pro' : tier === 'ai-pro' ? 'AI Pro' : 'AI Start'}: ${generatedCode}`
 
@@ -117,8 +117,8 @@ export async function bulkEnrollStudentsAction(
     const defaultTitle = accessTier === 'ai-pro'
       ? 'AI Pro - Automazioni & Agenti AI'
       : accessTier === 'both'
-      ? 'Bundle Completo: AI Start + AI Pro'
-      : 'AI Start - Domina l’Intelligenza Artificiale da Zero'
+        ? 'Bundle Completo: AI Start + AI Pro'
+        : 'AI Start - Domina l’Intelligenza Artificiale da Zero'
 
     for (const student of students) {
       if (!student.email || !student.name) continue
@@ -146,7 +146,7 @@ export async function bulkEnrollStudentsAction(
       return { success: false, error: 'Nessun dato valido da inserire.' }
     }
 
-    const { error } = await (supabaseAdmin as any).from('student_codes').insert(insertRows)
+    const { error } = await supabaseAdmin.from('student_codes').insert(insertRows)
     if (error) {
       return { success: false, error: error.message }
     }
@@ -157,8 +157,8 @@ export async function bulkEnrollStudentsAction(
           const tierDesc = accessTier === 'ai-pro'
             ? 'Corso Avanzato "AI Pro: Automazioni & Agenti AI"'
             : accessTier === 'both'
-            ? 'Percorso Completo "AI Start" + "AI Pro"'
-            : 'Corso Base "AI Start: Domina l’IA da Zero"'
+              ? 'Percorso Completo "AI Start" + "AI Pro"'
+              : 'Corso Base "AI Start: Domina l’IA da Zero"'
 
           await sendSharedEmail({
             to: res.email,
@@ -184,7 +184,7 @@ export async function joinWaitlistAction(email: string, name?: string) {
     const cleanName = (name || cleanEmail.split('@')[0]).trim()
 
     // 1. Inserimento nella tabella waitlist_leads
-    const { error: insertError } = await (supabaseAdmin as any).from('waitlist_leads').insert({
+    const { error: insertError } = await supabaseAdmin.from('waitlist_leads').insert({
       email: cleanEmail,
       name: cleanName,
       course_interest: 'AI Pro - Automazioni & Agenti',
@@ -196,7 +196,7 @@ export async function joinWaitlistAction(email: string, name?: string) {
     }
 
     // 2. Creazione del task automatico per il team
-    await (supabaseAdmin as any).from('tasks').insert({
+    await supabaseAdmin.from('tasks').insert({
       title: `Nuovo Lead in Lista d'Attesa: ${cleanEmail}`,
       description: `L'utente ${cleanName} (${cleanEmail}) si è iscritto alla lista d'attesa del corso "AI Pro: Automazioni & Agenti" dalla landing page.`,
       status: 'todo',
@@ -221,7 +221,7 @@ export async function getWaitlistLeadsAction() {
   try {
     await requireAuthUser()
     const supabaseAdmin = createAdminClient()
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await supabaseAdmin
       .from('waitlist_leads')
       .select('*')
       .order('created_at', { ascending: false })
@@ -240,7 +240,7 @@ export async function convertWaitlistLeadAction(leadId: string, email: string, n
   try {
     await requireAuthUser()
     const supabaseAdmin = createAdminClient()
-    
+
     // 1. Iscrivi lo studente a AI Pro
     const enrollRes = await enrollStudentAction({
       studentName: name || email.split('@')[0],
@@ -255,7 +255,7 @@ export async function convertWaitlistLeadAction(leadId: string, email: string, n
     }
 
     // 2. Segna come convertito nella tabella waitlist_leads
-    await (supabaseAdmin as any)
+    await supabaseAdmin
       .from('waitlist_leads')
       .update({ converted_to_student: true })
       .eq('id', leadId)
@@ -289,7 +289,7 @@ export async function verifyStudentCodeAction(inputCode: string) {
       }
     }
 
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await supabaseAdmin
       .from('student_codes')
       .select('*')
       .ilike('code', cleanCode)
@@ -319,7 +319,7 @@ export async function getCourseRegistrationsAction() {
   try {
     await requireAuthUser()
     const supabaseAdmin = createAdminClient()
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await supabaseAdmin
       .from('course_registrations')
       .select('*')
       .order('created_at', { ascending: false })
@@ -351,7 +351,7 @@ export async function submitCourseRegistrationAction(formData: {
     const cleanName = formData.name.trim()
 
     // Inserisci la nuova registrazione in stato 'pending'
-    const { data, error: insertError } = await (supabaseAdmin as any)
+    const { data, error: insertError } = await supabaseAdmin
       .from('course_registrations')
       .insert({
         name: cleanName,
@@ -373,7 +373,7 @@ export async function submitCourseRegistrationAction(formData: {
     }
 
     // Crea un task operativo per notificare il team
-    await (supabaseAdmin as any).from('tasks').insert({
+    await supabaseAdmin.from('tasks').insert({
       title: `Nuova Richiesta Registrazione Corso: ${cleanName}`,
       description: `L'utente ${cleanName} (${cleanEmail}) ha completato il questionario di iscrizione.\nEsperienza AI: ${formData.ai_experience}\nObiettivo: ${formData.objective}\nBlocco: ${formData.blocker}\nAspettativa: ${formData.expectation}`,
       status: 'todo',
@@ -393,7 +393,7 @@ export async function approveCourseRegistrationAction(registrationId: string) {
     const supabaseAdmin = createAdminClient()
 
     // 1. Recupera i dati della registrazione
-    const { data: reg, error: fetchErr } = await (supabaseAdmin as any)
+    const { data: reg, error: fetchErr } = await supabaseAdmin
       .from('course_registrations')
       .select('*')
       .eq('id', registrationId)
@@ -411,7 +411,7 @@ export async function approveCourseRegistrationAction(registrationId: string) {
     }
 
     // 3. Inserisci o aggiorna nella tabella student_codes
-    const { error: codeErr } = await (supabaseAdmin as any)
+    const { error: codeErr } = await supabaseAdmin
       .from('student_codes')
       .upsert({
         code: accessCode,
@@ -439,7 +439,7 @@ export async function approveCourseRegistrationAction(registrationId: string) {
 
     // 5. Aggiorna lo stato su course_registrations
     const nowIso = new Date().toISOString()
-    const { error: updateErr } = await (supabaseAdmin as any)
+    const { error: updateErr } = await supabaseAdmin
       .from('course_registrations')
       .update({
         status: 'approved',
@@ -465,7 +465,7 @@ export async function getStudentCodesAction() {
   try {
     await requireAuthUser()
     const supabaseAdmin = createAdminClient()
-    const { data, error } = await (supabaseAdmin as any)
+    const { data, error } = await supabaseAdmin
       .from('student_codes')
       .select('*')
       .order('created_at', { ascending: false })
@@ -486,7 +486,7 @@ export async function deleteStudentCodeAction(id: string) {
   try {
     await requireAuthUser()
     const supabaseAdmin = createAdminClient()
-    const { error } = await (supabaseAdmin as any)
+    const { error } = await supabaseAdmin
       .from('student_codes')
       .delete()
       .eq('id', id)
@@ -502,7 +502,7 @@ export async function deleteCourseRegistrationAction(registrationId: string) {
   try {
     await requireAuthUser()
     const supabaseAdmin = createAdminClient()
-    const { error } = await (supabaseAdmin as any)
+    const { error } = await supabaseAdmin
       .from('course_registrations')
       .delete()
       .eq('id', registrationId)

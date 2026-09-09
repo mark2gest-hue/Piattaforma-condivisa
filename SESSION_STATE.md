@@ -1,7 +1,7 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-07 19:44
-Stato corrente: In produzione / Video Pilota Corso 2 V2 COMPLETATO: Voce reale Stefano + Screencast reale operativo della piattaforma (Bacheca Kanban Agente Nemotron + Terminale daemon + Architettura Supabase) + Sottotitoli cinematografici (public/pro_stefano_pilot.mp4)
+Ultimo aggiornamento: 2026-09-09 00:40
+Stato corrente: Sidebar ripulita (rimossa sezione "Sistema / Agenti AI Piattaforma Esterna"); rotta legacy /agenti reindirizzata a /workshop-agenti; eliminato progetto esterno duplicato; typecheck 0 errori.
 
 ---
 
@@ -38,6 +38,7 @@ Stato corrente: In produzione / Video Pilota Corso 2 V2 COMPLETATO: Voce reale S
 - [x] **Posta Condivisa (`/posta`)**:
   - Webmail centralizzata multi-inbox con 5 caselle Aruba (`team@aiutiamoci.cloud`, `info@aiutiamoci.cloud`, `assistenza@aiutiamoci.cloud`, `info@mar2.cloud`, `support@mar2.cloud`).
   - Sincronizzazione IMAP server-side con `imapflow` e `mailparser` (`/api/email/imap-sync`) con merge automatico credenziali e ripristino predefiniti.
+  - Selezione multipla con checkbox (singola o "Seleziona tutte") e barra azioni bulk per eliminazione multipla (`deleteSharedEmailsBulk`) e marcatura in blocco come lette (`markEmailsAsReadBulk`).
   - Copilota AI per analisi email: categorizzazione, priorità e bozza di risposta rapida (`/api/ai/email-agent`).
   - Invio email e risposte via Resend.
 - [x] **Documenti & Cloud Storage (`/files`)**:
@@ -77,10 +78,21 @@ Stato corrente: In produzione / Video Pilota Corso 2 V2 COMPLETATO: Voce reale S
   - **Evoluzione: "Weekly Content Factory" (100% OPERATIVA, ATTIVA & PUBBLICATA IN PRODUZIONE)**:
     - **Trigger**: `Schedule Trigger` schedulato attivo in produzione 24/7 + Manual trigger per run estemporanee.
     - **Workflow Status**: **PUBLISHED** (attivo in background su n8n.mark2.cloud).
-    - **Gemini**: generazione automatica del piano editoriale settimanale a 7 slot tematici (Lunedì-Domenica) con `Retry On Fail` attivo.
-    - **Telegram Human-in-the-Loop**: recap aggregato dei 7 post con pulsante 1-click pubblico HTTPS per approvazione globale da parte del team.
-    - **Ponte Supabase Storage Multi-Item**: caricamento indicizzato `video-reel-{{ $itemIndex }}.mp4` su bucket pubblico `marketing-media` (7 video distinti in Full HD/9:16).
-    - **Buffer Queue & Multi-Channel**: accodamento automatico dei 7 Reel con testi, hook e video unici distribuiti negli slot orari del calendario settimanale.
+    - **Nuova Strategia Editoriale Integrata (Alternanza Reel/Post & Target Privato vs PMI)**:
+      - **Distribuzione Settimanale (1 post/giorno)**:
+        - *Lunedì (Reel 9:16 - Privati/Base)*: Errore comune principianti (italiano semplice, no codice) ➔ CTA Corso 1 (AI Start).
+        - *Martedì (Post Grafico - PMI)*: 3 compiti aziendali noiosi da automatizzare ➔ CTA Corso 2 (Agenti AI Pro).
+        - *Mercoledì (Reel 9:16 - Privati/Base)*: Micro-tutorial pratico (es. riassunto PDF in 10s) ➔ CTA Corso 1 (AI Start).
+        - *Giovedì (Post Grafico - PMI)*: Caso studio / ROI ore risparmiate con n8n ➔ CTA Corso 2 (Agenti AI Pro).
+        - *Venerdì (Reel 9:16 - Privati/Base)*: Prompt semplice (Formula RCCF) ➔ CTA Corso 1 (AI Start).
+        - *Sabato (Post Grafico - Community)*: Falso mito vs Verità sull'impatto dell'AI.
+        - *Domenica (Reel 9:16 - Privati/Crescita)*: Mindset e tempo ritrovato per sé ➔ CTA aiutiamoci.cloud.
+      - **Gemini 2.5 Flash**: Prompt con output JSON differenziato: `facebook_copy` (approfondito con link) e `instagram_copy` (visivo, compatto, CTA bio/DM e hashtag).
+      - **Switch Formato su n8n**: routing condizionale (solo per i Reel esegue chiamata Pexels e upload su Supabase Storage, ottimizzando storage e quote).
+      - **Buffer Cross-Channel Separato**: nodi finali dedicati per Facebook (`BUFFER_CHANNEL_FACEBOOK_ID`) e Instagram (`BUFFER_CHANNEL_INSTAGRAM_ID`).
+    - **Telegram Human-in-the-Loop**: recap aggregato dei post con pulsante 1-click pubblico HTTPS per approvazione globale da parte del team.
+    - **Ponte Supabase Storage**: caricamento su bucket pubblico `marketing-media` solo per i video Reel verticali 9:16.
+    - **Buffer Queue & Multi-Channel**: accodamento automatico sui canali social con copy e asset adatti al rispettivo canale.
 - [x] **Video Corsi Dinamici & Cinematic Batch Pipeline (In Sviluppo / Pilota Pronto)**:
   - **Problema originario**: 20 video del Corso 1 (AI Start) con avatar statico frontale da 10 minuti ("noiosi e poco dinamici").
   - **Soluzione Zero-Manual-Work & 100% Free**: script Python + FFmpeg locale per montaggio automatico procedurale ad alto ritmo visivo:

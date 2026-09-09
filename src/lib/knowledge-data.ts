@@ -1,9 +1,9 @@
 export interface KnowledgeItem {
   id: string
   title: string
-  category: 'prompting' | 'copywriting' | 'excel_data' | 'visual_media' | 'agents_workflows' | 'course_notes'
+  category: string
   tags: string[]
-  description?: string
+  description?: string | null
   content: string
   lesson_id?: number | null
   is_featured?: boolean

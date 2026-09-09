@@ -10,7 +10,7 @@ export async function executeAgentTaskAction(taskId: string) {
     const supabase = createAdminClient()
 
     // 1. Recupera il task con assignee e progetto
-    const { data: task, error: taskError } = await (supabase as any)
+    const { data: task, error: taskError } = await supabase
       .from('tasks')
       .select('*, project:projects(*), assignee:profiles!tasks_assigned_to_fkey(*)')
       .eq('id', taskId)
@@ -42,7 +42,7 @@ export async function executeAgentTaskAction(taskId: string) {
     const userPrompt = `Devi svolgere il seguente task operativo:${projectInfo}\nTitolo Task: ${task.title}${taskDetails}\nPriorità: ${task.priority}\n\nFornisci il risultato completo (bozza, analisi, piano operativo o codice) pronto per essere revisionato e approvato dal team.`
 
     // 3. Crea il record di run nello stato 'running'
-    const { data: run, error: runError } = await (supabase as any)
+    const { data: run, error: runError } = await supabase
       .from('task_agent_runs')
       .insert({
         task_id: taskId,
@@ -69,7 +69,7 @@ export async function executeAgentTaskAction(taskId: string) {
 
     if (!aiResult.success) {
       if (runId) {
-        await (supabase as any)
+        await supabase
           .from('task_agent_runs')
           .update({
             status: 'failed',
@@ -83,7 +83,7 @@ export async function executeAgentTaskAction(taskId: string) {
 
     // 5. Aggiorna la run con l'output e lo stato di successo
     if (runId) {
-      await (supabase as any)
+      await supabase
         .from('task_agent_runs')
         .update({
           status: 'success',
@@ -95,7 +95,7 @@ export async function executeAgentTaskAction(taskId: string) {
     }
 
     // 6. Sposta automaticamente il task in 'review' (Human-in-the-Loop)
-    await (supabase as any)
+    await supabase
       .from('tasks')
       .update({ status: 'review' })
       .eq('id', taskId)
@@ -130,14 +130,14 @@ export async function approveAgentTaskRunAction(taskId: string, runId?: string) 
 
     // 1. Se fornito runId, marca la run come approvata
     if (runId) {
-      await (supabase as any)
+      await supabase
         .from('task_agent_runs')
         .update({ status: 'approved' })
         .eq('id', runId)
     }
 
     // 2. Imposta il task come completato ('done')
-    const { data: updatedTask, error } = await (supabase as any)
+    const { data: updatedTask, error } = await supabase
       .from('tasks')
       .update({ status: 'done' })
       .eq('id', taskId)
@@ -151,14 +151,14 @@ export async function approveAgentTaskRunAction(taskId: string, runId?: string) 
     // 3. Salva l'output approvato nel Secondo Cervello (knowledge_items) per future ricerche
     if (runId) {
       try {
-        const { data: runData } = await (supabase as any)
+        const { data: runData } = await supabase
           .from('task_agent_runs')
           .select('output_response')
           .eq('id', runId)
           .single()
 
         if (runData?.output_response) {
-          await (supabase as any).from('knowledge_items').insert({
+          await supabase.from('knowledge_items').insert({
             title: `[Task AI] ${updatedTask.title}`,
             category: 'agents_workflows',
             description: `Output approvato di Nemotron per: ${updatedTask.title}`,
@@ -193,7 +193,7 @@ export async function rejectAgentTaskRunAction(taskId: string, runId: string | u
     const supabase = createAdminClient()
 
     if (runId) {
-      await (supabase as any)
+      await supabase
         .from('task_agent_runs')
         .update({
           status: 'rejected',
@@ -203,7 +203,7 @@ export async function rejectAgentTaskRunAction(taskId: string, runId: string | u
     }
 
     // Rimanda il task in lavorazione ('in_progress')
-    const { data: updatedTask, error } = await (supabase as any)
+    const { data: updatedTask, error } = await supabase
       .from('tasks')
       .update({ status: 'in_progress' })
       .eq('id', taskId)
@@ -225,7 +225,7 @@ export async function getTaskAgentRunsAction(taskId: string) {
   try {
     const supabase = createAdminClient()
 
-    const { data: runs, error } = await (supabase as any)
+    const { data: runs, error } = await supabase
       .from('task_agent_runs')
       .select('*, agent:profiles!task_agent_runs_agent_id_fkey(*)')
       .eq('task_id', taskId)

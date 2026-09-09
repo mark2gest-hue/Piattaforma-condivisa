@@ -88,6 +88,40 @@ export async function deleteSharedEmail(emailId: string) {
   }
 }
 
+export async function deleteSharedEmailsBulk(emailIds: string[]) {
+  try {
+    if (!emailIds || emailIds.length === 0) return { success: true, count: 0 }
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('emails')
+      .delete()
+      .in('id', emailIds)
+
+    if (error) throw error
+    return { success: true, count: emailIds.length }
+  } catch (err: any) {
+    console.error('Errore deleteSharedEmailsBulk:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+export async function markEmailsAsReadBulk(emailIds: string[]) {
+  try {
+    if (!emailIds || emailIds.length === 0) return { success: true, count: 0 }
+    const supabase = await createClient()
+    const { error } = await (supabase as any)
+      .from('emails')
+      .update({ status: 'read', updated_at: new Date().toISOString() })
+      .in('id', emailIds)
+
+    if (error) throw error
+    return { success: true, count: emailIds.length }
+  } catch (err: any) {
+    console.error('Errore markEmailsAsReadBulk:', err)
+    return { success: false, error: err.message }
+  }
+}
+
 export interface EmailAIAnalysis {
   category: 'urgente' | 'supporto' | 'commerciale' | 'informativo' | 'spam'
   priority: 1 | 2 | 3 | 4 | 5

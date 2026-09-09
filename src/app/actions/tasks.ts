@@ -19,20 +19,20 @@ export interface CreateTaskInput {
 export async function getTasksAction() {
   try {
     const supabase = createAdminClient()
-    
+
     // 1. Prendi i progetti
-    const { data: projects, error: projError } = await (supabase as any)
+    const { data: projects, error: projError } = await supabase
       .from('projects')
       .select('*')
       .order('created_at', { ascending: true })
 
     // 2. Prendi i profili team
-    const { data: profiles } = await (supabase as any)
+    const { data: profiles } = await supabase
       .from('profiles')
       .select('*')
 
     // 3. Prendi i compiti
-    const { data: tasks, error: tasksError } = await (supabase as any)
+    const { data: tasks, error: tasksError } = await supabase
       .from('tasks')
       .select('*, project:projects(*), assignee:profiles!tasks_assigned_to_fkey(*)')
       .order('position', { ascending: true })
@@ -43,9 +43,9 @@ export async function getTasksAction() {
       return { success: false, error: tasksError.message, tasks: [], projects: projects || [] }
     }
 
-    return { 
-      success: true, 
-      tasks: tasks || [], 
+    return {
+      success: true,
+      tasks: tasks || [],
       projects: projects || [],
       profiles: profiles || []
     }
@@ -63,7 +63,7 @@ export async function createTaskAction(input: CreateTaskInput) {
       return { success: false, error: 'Il titolo è obbligatorio' }
     }
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('tasks')
       .insert({
         title: cleanTitle,
@@ -112,7 +112,7 @@ export async function updateTaskStatusAction(taskId: string, status: TaskStatus,
     const supabase = createAdminClient()
 
     // Recupera lo stato attuale del task prima dell'aggiornamento
-    const { data: currentTask } = await (supabase as any)
+    const { data: currentTask } = await supabase
       .from('tasks')
       .select('title, status, project:projects(title)')
       .eq('id', taskId)
@@ -123,7 +123,7 @@ export async function updateTaskStatusAction(taskId: string, status: TaskStatus,
       updatePayload.position = position
     }
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('tasks')
       .update(updatePayload)
       .eq('id', taskId)
@@ -198,7 +198,7 @@ export async function updateTaskDetailsAction(
     if (payload.dueDate !== undefined) updateData.due_date = payload.dueDate || null
     if (payload.assignedTo !== undefined) updateData.assigned_to = payload.assignedTo || null
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('tasks')
       .update(updateData)
       .eq('id', taskId)
@@ -218,7 +218,7 @@ export async function updateTaskDetailsAction(
 export async function deleteTaskAction(taskId: string) {
   try {
     const supabase = createAdminClient()
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('tasks')
       .delete()
       .eq('id', taskId)
@@ -241,7 +241,7 @@ export async function createProjectAction(title: string, description?: string) {
       return { success: false, error: 'Il nome del progetto è obbligatorio' }
     }
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('projects')
       .insert({
         title: cleanTitle,
@@ -282,7 +282,7 @@ export async function updateProjectAction(
     if (payload.status) updateData.status = payload.status
     if (payload.category) updateData.category = payload.category
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('projects')
       .update(updateData)
       .eq('id', projectId)
@@ -302,15 +302,15 @@ export async function updateProjectAction(
 export async function deleteProjectAction(projectId: string) {
   try {
     const supabase = createAdminClient()
-    
+
     // Dissocia i task collegati impostando project_id = null
-    await (supabase as any)
+    await supabase
       .from('tasks')
       .update({ project_id: null })
       .eq('project_id', projectId)
 
     // Elimina il progetto
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('projects')
       .delete()
       .eq('id', projectId)

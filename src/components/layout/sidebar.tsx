@@ -13,11 +13,11 @@ import {
   Users,
   Layers,
   Calendar as CalendarIcon,
-  Bot,
   GraduationCap,
   Network,
   Megaphone,
   ExternalLink,
+  Cpu,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -37,6 +37,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   ])
   const [teamCount, setTeamCount] = useState<number>(3)
   const [teamSubtitle, setTeamSubtitle] = useState<string>('2 Dev • 1 Business')
+  const [isAdmin, setIsAdmin] = useState<boolean>(false)
   const supabase = createClient()
 
   // Chiudi drawer al cambio pagina su mobile
@@ -50,6 +51,17 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
     fetchUnreadEmails()
     fetchProjects()
     fetchTeamMembers()
+
+    // Verifica ruolo utente: Mira è riservata solo a Marco/Admin docenti
+    const checkUserRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const isMarco = user.email?.toLowerCase().includes('gerelmo') || user.email?.toLowerCase().includes('marco')
+        const { data: profile } = await (supabase as any).from('profiles').select('role').eq('id', user.id).maybeSingle()
+        setIsAdmin(isMarco || profile?.role === 'admin' || profile?.role === 'dev')
+      }
+    }
+    checkUserRole()
 
     // Realtime subscription per nuove email e nuovi progetti
     const channel = supabase
@@ -117,147 +129,175 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
     }
   }
 
-  const navItems = [
+  const navGroups = [
     {
-      title: 'Lavori',
-      subtitle: 'Kanban & Attività',
-      href: '/lavori',
-      icon: KanbanSquare,
-      badge: null,
+      label: 'Operatività',
+      items: [
+        {
+          title: 'Lavori',
+          subtitle: 'Kanban & Attività',
+          href: '/lavori',
+          icon: KanbanSquare,
+          badge: null,
+        },
+        {
+          title: 'Calendario',
+          subtitle: 'Scadenze & Eventi',
+          href: '/calendario',
+          icon: CalendarIcon,
+          badge: null,
+        },
+        {
+          title: 'Posta Condivisa',
+          subtitle: 'Email del Dominio',
+          href: '/posta',
+          icon: Mail,
+          badge: unreadEmailCount > 0 ? `${unreadEmailCount} Nuove` : null,
+        },
+        {
+          title: 'Chat',
+          subtitle: 'Messaggi Team',
+          href: '/chat',
+          icon: MessageSquare,
+          badge: null,
+        },
+        {
+          title: 'Videocall',
+          subtitle: 'Stanza WebRTC',
+          href: '/videocall',
+          icon: Video,
+          badge: 'Live',
+        },
+      ],
     },
     {
-      title: 'Corsi & Studenti',
-      subtitle: 'Catalogo & Iscritti',
-      href: '/corsi',
-      icon: GraduationCap,
-      badge: null,
+      label: 'Formazione',
+      items: [
+        {
+          title: 'Corsi Formativi',
+          subtitle: 'Lezioni, Zoom & Compiti',
+          href: '/corsi',
+          icon: GraduationCap,
+          badge: 'Studenti',
+        },
+        ...(isAdmin
+          ? [
+              {
+                title: 'Mira Lab',
+                subtitle: 'Laboratorio Agenti AI',
+                href: '/workshop-agenti',
+                icon: Cpu,
+                badge: 'Docente',
+              },
+            ]
+          : []),
+      ],
     },
     {
-      title: 'Calendario',
-      subtitle: 'Scadenze & Eventi',
-      href: '/calendario',
-      icon: CalendarIcon,
-      badge: null,
+      label: 'Progetti & Marketing',
+      items: [
+        {
+          title: 'Marketing & Campagne',
+          subtitle: 'APEX • Funnel & Social',
+          href: '/marketing',
+          icon: Megaphone,
+          badge: 'Growth',
+        },
+      ],
     },
     {
-      title: 'Posta Condivisa',
-      subtitle: 'Email del Dominio',
-      href: '/posta',
-      icon: Mail,
-      badge: unreadEmailCount > 0 ? `${unreadEmailCount} Nuove` : null,
-    },
-    {
-      title: 'Chat',
-      subtitle: 'Messaggi Team',
-      href: '/chat',
-      icon: MessageSquare,
-      badge: null,
-    },
-    {
-      title: 'File',
-      subtitle: 'Documenti & Risorse',
-      href: '/files',
-      icon: FolderOpen,
-      badge: null,
-    },
-    {
-      title: 'Videocall',
-      subtitle: 'Stanza WebRTC',
-      href: '/videocall',
-      icon: Video,
-      badge: 'Live',
-    },
-    {
-      title: 'Secondo Cervello',
-      subtitle: 'Prompt & Knowledge Hub',
-      href: '/cervello',
-      icon: Network,
-      badge: 'Vault',
-    },
-    {
-      title: 'Marketing & Campagne',
-      subtitle: 'APEX • Funnel & Social',
-      href: '/marketing',
-      icon: Megaphone,
-      badge: 'Growth',
-    },
-    {
-      title: 'Agenti AI',
-      subtitle: 'Piattaforma Esterna',
-      href: 'https://agenti-aiutiamoci.vercel.app/',
-      icon: Bot,
-      badge: 'AI',
+      label: 'Risorse & Hub',
+      items: [
+        {
+          title: 'File',
+          subtitle: 'Documenti & Storage',
+          href: '/files',
+          icon: FolderOpen,
+          badge: null,
+        },
+        {
+          title: 'Secondo Cervello',
+          subtitle: 'Prompt & Knowledge Hub',
+          href: '/cervello',
+          icon: Network,
+          badge: 'Vault',
+        },
+      ],
     },
   ]
 
   const sidebarContent = (
     <div className="flex-1 flex flex-col justify-between px-3 py-4 overflow-y-auto">
-      <div className="space-y-1">
-        <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-          Aree di Lavoro
-        </div>
-        {navItems.map((item) => {
-          const isExternal = item.href.startsWith('http')
-          const isActive = !isExternal && (pathname === item.href || (item.href !== '/lavori' && pathname.startsWith(item.href)))
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              target={isExternal ? '_blank' : undefined}
-              rel={isExternal ? 'noopener noreferrer' : undefined}
-              onClick={() => {
-                if (isOpenMobile && onCloseMobile) onCloseMobile()
-              }}
-              className={cn(
-                'group flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-150',
-                isActive
-                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20 font-semibold'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <Icon
+      <div className="space-y-4">
+        {navGroups.map((group, groupIdx) => (
+          <div key={groupIdx} className="space-y-1">
+            <div className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              {group.label}
+            </div>
+            {group.items.map((item) => {
+              const isExternal = item.href.startsWith('http')
+              const isActive = !isExternal && (pathname === item.href || (item.href !== '/lavori' && pathname.startsWith(item.href)))
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  target={isExternal ? '_blank' : undefined}
+                  rel={isExternal ? 'noopener noreferrer' : undefined}
+                  onClick={() => {
+                    if (isOpenMobile && onCloseMobile) onCloseMobile()
+                  }}
                   className={cn(
-                    'h-5 w-5 shrink-0 transition-colors',
-                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
-                  )}
-                />
-                <div className="flex flex-col text-left">
-                  <span className="text-sm leading-none flex items-center gap-1.5">
-                    {item.title}
-                    {isExternal && <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-slate-200 inline opacity-70" />}
-                  </span>
-                  <span
-                    className={cn(
-                      'text-[10px] mt-0.5 leading-none',
-                      isActive ? 'text-blue-100' : 'text-slate-400'
-                    )}
-                  >
-                    {item.subtitle}
-                  </span>
-                </div>
-              </div>
-
-              {item.badge && (
-                <span
-                  className={cn(
-                    'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase',
-                    item.badge === 'Live'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse'
-                      : item.badge === 'AI'
-                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold'
-                      : isActive
-                      ? 'bg-white text-blue-600'
-                      : 'bg-blue-600 text-white'
+                    'group flex items-center justify-between rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-150',
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20 font-semibold'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                   )}
                 >
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          )
-        })}
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      className={cn(
+                        'h-4 w-4 shrink-0 transition-colors',
+                        isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+                      )}
+                    />
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs leading-none flex items-center gap-1.5 font-semibold">
+                        {item.title}
+                        {isExternal && <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-slate-200 inline opacity-70" />}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-[10px] mt-0.5 leading-none',
+                          isActive ? 'text-blue-100' : 'text-slate-400'
+                        )}
+                      >
+                        {item.subtitle}
+                      </span>
+                    </div>
+                  </div>
+
+                  {item.badge && (
+                    <span
+                      className={cn(
+                        'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase',
+                        item.badge === 'Live'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse'
+                          : item.badge === 'AI'
+                          ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold'
+                          : isActive
+                          ? 'bg-white text-blue-600'
+                          : 'bg-blue-600 text-white'
+                      )}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+        ))}
       </div>
 
       {/* Quick Category Summary */}

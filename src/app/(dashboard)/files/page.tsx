@@ -85,7 +85,7 @@ export default function FilesManagerPage() {
       .order('created_at', { ascending: false })
 
     if (data && !error) {
-      setFiles(data)
+      setFiles((data as Array<any>).map((f) => ({ ...f, uploader: f.uploader ?? undefined })))
     }
     setLoading(false)
   }
@@ -122,7 +122,7 @@ export default function FilesManagerPage() {
       setFiles((prev) => [dbFolder as any, ...prev])
       setIsFolderModalOpen(false)
       setNewFolderName('')
-      
+
       // Notifica Telegram creazione cartella
       notifyFileUploadAction(dbFolder.name, true).catch((e) =>
         console.error('Errore notifica Telegram cartella:', e)
@@ -181,7 +181,7 @@ export default function FilesManagerPage() {
           alert(`Errore registrazione database per "${selectedFile.name}": ${dbError.message}`)
         } else if (dbFile) {
           newItems.push(dbFile as any)
-          
+
           // Notifica Telegram caricamento singolo file
           notifyFileUploadAction(selectedFile.name, false).catch((e) =>
             console.error('Errore notifica Telegram file:', e)
@@ -413,11 +413,10 @@ export default function FilesManagerPage() {
               <button
                 onClick={() => handleNavigateBreadcrumb(idx)}
                 disabled={isLast}
-                className={`font-semibold hover:underline transition-colors ${
-                  isLast
+                className={`font-semibold hover:underline transition-colors ${isLast
                     ? 'text-slate-900 dark:text-white font-bold cursor-default'
                     : 'text-blue-600 dark:text-blue-400'
-                }`}
+                  }`}
               >
                 {crumb.name}
               </button>
@@ -647,7 +646,7 @@ export default function FilesManagerPage() {
       {previewFile && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-5xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]">
-            
+
             {/* Modal Header */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-3">

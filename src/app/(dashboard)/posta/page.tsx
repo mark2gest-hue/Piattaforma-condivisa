@@ -27,8 +27,10 @@ import {
   ExternalLink,
   Sparkles,
   Bot,
-  Zap,
   AlertCircle,
+  CheckSquare,
+  Square,
+  Zap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -38,7 +40,15 @@ import { formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Email, Profile } from '@/types/index'
 import { requestNotificationPermission, sendDesktopNotification } from '@/lib/notifications'
-import { sendSharedEmail, updateEmailStatus, deleteSharedEmail, analyzeEmailWithAI, EmailAIAnalysis } from './actions'
+import {
+  sendSharedEmail,
+  updateEmailStatus,
+  deleteSharedEmail,
+  deleteSharedEmailsBulk,
+  markEmailsAsReadBulk,
+  analyzeEmailWithAI,
+  EmailAIAnalysis,
+} from './actions'
 import { AVAILABLE_FROM_EMAILS, ArubaMailboxConfig, DEFAULT_IMAP_ACCOUNTS } from './constants'
 import { useRouter } from 'next/navigation'
 
@@ -97,6 +107,10 @@ export default function PostaCondivisaPage() {
   const [aiAnalysisMap, setAiAnalysisMap] = useState<Record<string, EmailAIAnalysis>>({})
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
+
+  // Selezione Multipla Email & Azioni Bulk
+  const [selectedEmailIds, setSelectedEmailIds] = useState<Set<string>>(new Set())
+  const [isBulkOperating, setIsBulkOperating] = useState(false)
 
   const supabase = createClient()
 
@@ -175,9 +189,10 @@ export default function PostaCondivisaPage() {
         .order('created_at', { ascending: false })
 
       if (data && !error) {
-        setEmails(data)
-        if (data.length > 0 && !selectedEmail) {
-          setSelectedEmail(data[0])
+        const normalized = (data as Array<any>).map((e) => ({ ...e, senderProfile: e.senderProfile ?? undefined }))
+        setEmails(normalized)
+        if (normalized.length > 0 && !selectedEmail) {
+          setSelectedEmail(normalized[0])
         }
       }
     } catch (err) {
@@ -321,7 +336,7 @@ export default function PostaCondivisaPage() {
     setIsComposing(false)
   }
 
-  // Eliminazione email
+  // Eliminazione email singola
   const handleDeleteEmail = async (emailId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     if (!confirm('Sei sicuro di voler eliminare questa email dal sistema condiviso?')) return
@@ -333,8 +348,99 @@ export default function PostaCondivisaPage() {
       if (selectedEmail?.id === emailId) {
         setSelectedEmail(updated.length > 0 ? updated[0] : null)
       }
+      setSelectedEmailIds((prev) => {
+        const next = new Set(prev)
+        next.delete(emailId)
+        return next
+      })
     } else {
       alert(`Impossibile eliminare l'email: ${result.error}`)
+    }
+  }
+
+  // Selezione singola con checkbox
+  const handleToggleSelect = (emailId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    setSelectedEmailIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(emailId)) {
+        next.delete(emailId)
+      } else {
+        next.add(emailId)
+      }
+      return next
+    })
+  }
+
+  // Seleziona/deseleziona tutte le email visibili nel filtro
+  const handleSelectAllToggle = () => {
+    if (filteredEmails.length === 0) return
+    const allVisibleSelected = filteredEmails.every((em) => selectedEmailIds.has(em.id))
+    if (allVisibleSelected) {
+      setSelectedEmailIds((prev) => {
+        const next = new Set(prev)
+        filteredEmails.forEach((em) => next.delete(em.id))
+        return next
+      })
+    } else {
+      setSelectedEmailIds((prev) => {
+        const next = new Set(prev)
+        filteredEmails.forEach((em) => next.add(em.id))
+        return next
+      })
+    }
+  }
+
+  // Deseleziona tutto
+  const handleClearSelection = () => {
+    setSelectedEmailIds(new Set())
+  }
+
+  // Eliminazione Multipla in blocco
+  const handleDeleteBulk = async () => {
+    const ids = Array.from(selectedEmailIds)
+    if (ids.length === 0) return
+
+    if (!confirm(`Sei sicuro di voler eliminare definitivamente le ${ids.length} email selezionate?`)) {
+      return
+    }
+
+    setIsBulkOperating(true)
+    try {
+      const result = await deleteSharedEmailsBulk(ids)
+      if (result.success) {
+        const updated = emails.filter((em) => !selectedEmailIds.has(em.id))
+        setEmails(updated)
+        if (selectedEmail && selectedEmailIds.has(selectedEmail.id)) {
+          setSelectedEmail(updated.length > 0 ? updated[0] : null)
+        }
+        setSelectedEmailIds(new Set())
+      } else {
+        alert(`Errore durante l'eliminazione multipla: ${result.error}`)
+      }
+    } finally {
+      setIsBulkOperating(false)
+    }
+  }
+
+  // Segna come lette in blocco
+  const handleMarkAsReadBulk = async () => {
+    const ids = Array.from(selectedEmailIds)
+    if (ids.length === 0) return
+
+    setIsBulkOperating(true)
+    try {
+      const result = await markEmailsAsReadBulk(ids)
+      if (result.success) {
+        setEmails((prev) =>
+          prev.map((em) => (selectedEmailIds.has(em.id) ? { ...em, status: 'read' as const } : em))
+        )
+        setSelectedEmailIds(new Set())
+      } else {
+        alert(`Errore aggiornamento: ${result.error}`)
+      }
+    } finally {
+      setIsBulkOperating(false)
     }
   }
 
@@ -551,11 +657,10 @@ export default function PostaCondivisaPage() {
             <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300">
               <button
                 onClick={() => setCurrentFilter('inbox')}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                  currentFilter === 'inbox'
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${currentFilter === 'inbox'
                     ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 <ArrowDownLeft className="h-3.5 w-3.5" />
                 <span>In arrivo</span>
@@ -568,11 +673,10 @@ export default function PostaCondivisaPage() {
 
               <button
                 onClick={() => setCurrentFilter('unread')}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                  currentFilter === 'unread'
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${currentFilter === 'unread'
                     ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 <span>Non lette</span>
                 <span className="text-[10px] opacity-75">({counts.unread})</span>
@@ -580,11 +684,10 @@ export default function PostaCondivisaPage() {
 
               <button
                 onClick={() => setCurrentFilter('sent')}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                  currentFilter === 'sent'
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${currentFilter === 'sent'
                     ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 <ArrowUpRight className="h-3.5 w-3.5" />
                 <span>Inviate</span>
@@ -593,11 +696,10 @@ export default function PostaCondivisaPage() {
 
               <button
                 onClick={() => setCurrentFilter('all')}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
-                  currentFilter === 'all'
+                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${currentFilter === 'all'
                     ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 <span>Tutte</span>
                 <span className="text-[10px] opacity-75">({counts.all})</span>
@@ -608,65 +710,132 @@ export default function PostaCondivisaPage() {
             <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[10px] scrollbar-none pt-1 border-t border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => setAccountFilter('all')}
-                className={`px-2 py-1 rounded-lg font-semibold whitespace-nowrap transition-all ${
-                  accountFilter === 'all'
+                className={`px-2 py-1 rounded-lg font-semibold whitespace-nowrap transition-all ${accountFilter === 'all'
                     ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
                     : 'bg-slate-100 dark:bg-slate-800/60 text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 Tutte ({emails.length})
               </button>
               <button
                 onClick={() => setAccountFilter('team@aiutiamoci.cloud')}
-                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${
-                  accountFilter === 'team@aiutiamoci.cloud'
+                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${accountFilter === 'team@aiutiamoci.cloud'
                     ? 'bg-emerald-600 text-white shadow-xs font-bold'
                     : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
-                }`}
+                  }`}
               >
                 team@aiutiamoci
               </button>
               <button
                 onClick={() => setAccountFilter('info@aiutiamoci.cloud')}
-                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${
-                  accountFilter === 'info@aiutiamoci.cloud'
+                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${accountFilter === 'info@aiutiamoci.cloud'
                     ? 'bg-blue-600 text-white shadow-xs font-bold'
                     : 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100'
-                }`}
+                  }`}
               >
                 info@aiutiamoci
               </button>
               <button
                 onClick={() => setAccountFilter('assistenza@aiutiamoci.cloud')}
-                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${
-                  accountFilter === 'assistenza@aiutiamoci.cloud'
+                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${accountFilter === 'assistenza@aiutiamoci.cloud'
                     ? 'bg-indigo-600 text-white shadow-xs font-bold'
                     : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100'
-                }`}
+                  }`}
               >
                 assistenza@aiutiamoci
               </button>
               <button
                 onClick={() => setAccountFilter('info@mar2.cloud')}
-                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${
-                  accountFilter === 'info@mar2.cloud'
+                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${accountFilter === 'info@mar2.cloud'
                     ? 'bg-purple-600 text-white shadow-xs font-bold'
                     : 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100'
-                }`}
+                  }`}
               >
                 info@mar2
               </button>
               <button
                 onClick={() => setAccountFilter('support@mar2.cloud')}
-                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${
-                  accountFilter === 'support@mar2.cloud'
+                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${accountFilter === 'support@mar2.cloud'
                     ? 'bg-amber-600 text-white shadow-xs font-bold'
                     : 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 hover:bg-amber-100'
-                }`}
+                  }`}
               >
                 support@mar2
               </button>
             </div>
+          </div>
+
+          {/* Bulk Action Toolbar */}
+          <div className="px-3.5 py-2 bg-slate-50/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 shrink-0">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSelectAllToggle}
+                disabled={filteredEmails.length === 0 || loading}
+                className="flex items-center gap-1.5 font-medium hover:text-slate-900 dark:hover:text-white transition-colors disabled:opacity-40"
+                title={
+                  filteredEmails.length > 0 && filteredEmails.every((em) => selectedEmailIds.has(em.id))
+                    ? 'Deseleziona tutte'
+                    : 'Seleziona tutte'
+                }
+              >
+                {filteredEmails.length > 0 && filteredEmails.every((em) => selectedEmailIds.has(em.id)) ? (
+                  <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                ) : (
+                  <Square className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                )}
+                <span>
+                  {filteredEmails.length > 0 && filteredEmails.every((em) => selectedEmailIds.has(em.id))
+                    ? 'Tutte selezionate'
+                    : 'Seleziona tutte'}
+                </span>
+              </button>
+
+              {selectedEmailIds.size > 0 && (
+                <span className="bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-semibold px-2 py-0.5 rounded-full text-[11px]">
+                  {selectedEmailIds.size} {selectedEmailIds.size === 1 ? 'selezionata' : 'selezionate'}
+                </span>
+              )}
+            </div>
+
+            {selectedEmailIds.size > 0 && (
+              <div className="flex items-center gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleMarkAsReadBulk}
+                  disabled={isBulkOperating}
+                  className="h-7 text-xs px-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  title="Segna come lette"
+                >
+                  <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" />
+                  Lette
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleDeleteBulk}
+                  disabled={isBulkOperating}
+                  className="h-7 text-xs px-2.5 bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-1"
+                  title="Elimina selezionate"
+                >
+                  {isBulkOperating ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-3.5 w-3.5" />
+                  )}
+                  <span>Elimina ({selectedEmailIds.size})</span>
+                </Button>
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                  title="Annulla selezione"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Email List */}
@@ -678,6 +847,7 @@ export default function PostaCondivisaPage() {
             ) : filteredEmails.length > 0 ? (
               filteredEmails.map((em) => {
                 const isSelected = selectedEmail?.id === em.id
+                const isMarked = selectedEmailIds.has(em.id)
                 const isUnread = em.direction === 'inbound' && em.status === 'received'
                 const toList = getToArray(em.to_address)
                 const toStr = toList.join(' ').toLowerCase()
@@ -689,25 +859,37 @@ export default function PostaCondivisaPage() {
                   <div
                     key={em.id}
                     onClick={() => handleSelectEmail(em)}
-                    className={`p-3.5 cursor-pointer transition-all relative group border-l-4 ${
-                      isSelected
+                    className={`p-3.5 cursor-pointer transition-all relative group border-l-4 ${isSelected
                         ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-600'
-                        : isUnread
-                          ? 'bg-white dark:bg-slate-900 border-amber-500 font-semibold'
-                          : 'bg-white/60 dark:bg-slate-900/60 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-90'
-                    }`}
+                        : isMarked
+                          ? 'bg-blue-50/40 dark:bg-blue-950/30 border-blue-400'
+                          : isUnread
+                            ? 'bg-white dark:bg-slate-900 border-amber-500 font-semibold'
+                            : 'bg-white/60 dark:bg-slate-900/60 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-90'
+                      }`}
                   >
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <div className="flex items-center gap-1.5 min-w-0">
+                        <button
+                          type="button"
+                          onClick={(e) => handleToggleSelect(em.id, e)}
+                          className="p-0.5 -ml-1 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0"
+                          title={isMarked ? 'Deseleziona' : 'Seleziona'}
+                        >
+                          {isMarked ? (
+                            <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          ) : (
+                            <Square className="h-4 w-4 text-slate-300 dark:text-slate-600 hover:text-slate-500" />
+                          )}
+                        </button>
                         {isUnread && (
                           <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" title="Nuovo messaggio non letto" />
                         )}
                         <span
-                          className={`text-xs truncate ${
-                            isUnread
+                          className={`text-xs truncate ${isUnread
                               ? 'font-bold text-slate-900 dark:text-white'
                               : 'font-medium text-slate-700 dark:text-slate-300'
-                          }`}
+                            }`}
                         >
                           {em.direction === 'inbound' ? em.from_address : `A: ${toList.join(', ')}`}
                         </span>
@@ -718,11 +900,10 @@ export default function PostaCondivisaPage() {
                     </div>
 
                     <div
-                      className={`text-xs line-clamp-1 mb-1 ${
-                        isUnread
+                      className={`text-xs line-clamp-1 mb-1 ${isUnread
                           ? 'font-bold text-slate-900 dark:text-slate-100'
                           : 'text-slate-700 dark:text-slate-300 font-normal'
-                      }`}
+                        }`}
                     >
                       {em.subject || '(Nessun oggetto)'}
                     </div>
@@ -745,15 +926,14 @@ export default function PostaCondivisaPage() {
                           <>
                             <Badge
                               variant="outline"
-                              className={`text-[9px] px-1.5 py-0 font-mono flex items-center gap-1 ${
-                                isMar2
+                              className={`text-[9px] px-1.5 py-0 font-mono flex items-center gap-1 ${isMar2
                                   ? isSupport
                                     ? 'border-amber-500/30 text-amber-600 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300'
                                     : 'border-purple-500/30 text-purple-600 bg-purple-50 dark:bg-purple-950/60 dark:text-purple-300'
                                   : isAssistenza
                                     ? 'border-indigo-500/30 text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-300'
                                     : 'border-blue-500/30 text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-300'
-                              }`}
+                                }`}
                             >
                               <ArrowDownLeft className="h-2.5 w-2.5" />
                               {toList[0] || 'info@aiutiamoci.cloud'}
@@ -761,11 +941,10 @@ export default function PostaCondivisaPage() {
 
                             <Badge
                               variant="secondary"
-                              className={`text-[9px] px-1.5 py-0 flex items-center gap-1 ${
-                                isUnread
+                              className={`text-[9px] px-1.5 py-0 flex items-center gap-1 ${isUnread
                                   ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                                   : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                              }`}
+                                }`}
                             >
                               {isUnread ? 'Da Leggere' : 'Letta'}
                             </Badge>
@@ -773,8 +952,7 @@ export default function PostaCondivisaPage() {
                             {aiAnalysisMap[em.id] && (
                               <Badge
                                 variant="outline"
-                                className={`text-[9px] px-1.5 py-0 flex items-center gap-1 font-medium ${
-                                  aiAnalysisMap[em.id].category === 'urgente'
+                                className={`text-[9px] px-1.5 py-0 flex items-center gap-1 font-medium ${aiAnalysisMap[em.id].category === 'urgente'
                                     ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
                                     : aiAnalysisMap[em.id].category === 'supporto'
                                       ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
@@ -783,7 +961,7 @@ export default function PostaCondivisaPage() {
                                         : aiAnalysisMap[em.id].category === 'informativo'
                                           ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800'
                                           : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400'
-                                }`}
+                                  }`}
                               >
                                 <Sparkles className="h-2 w-2" />
                                 <span className="capitalize">{aiAnalysisMap[em.id].category}</span>
@@ -972,8 +1150,7 @@ export default function PostaCondivisaPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge
                           variant="outline"
-                          className={`text-[10px] px-2 py-0.5 capitalize font-semibold ${
-                            aiAnalysisMap[selectedEmail.id].category === 'urgente'
+                          className={`text-[10px] px-2 py-0.5 capitalize font-semibold ${aiAnalysisMap[selectedEmail.id].category === 'urgente'
                               ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800'
                               : aiAnalysisMap[selectedEmail.id].category === 'supporto'
                                 ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800'
@@ -982,7 +1159,7 @@ export default function PostaCondivisaPage() {
                                   : aiAnalysisMap[selectedEmail.id].category === 'informativo'
                                     ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800'
                                     : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300'
-                          }`}
+                            }`}
                         >
                           🏷️ {aiAnalysisMap[selectedEmail.id].category}
                         </Badge>

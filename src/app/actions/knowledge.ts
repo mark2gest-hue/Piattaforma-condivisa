@@ -16,7 +16,7 @@ export async function getKnowledgeItemsAction(category?: string, search?: string
     // Prova a recuperare da Supabase DB se disponibile
     try {
       const supabase = createAdminClient()
-      let query = (supabase as any).from('knowledge_items').select('*').order('created_at', { ascending: false })
+      let query = supabase.from('knowledge_items').select('*').order('created_at', { ascending: false })
 
       if (category && category !== 'all') {
         query = query.eq('category', category)
@@ -66,7 +66,7 @@ export async function autoIndexToSecondBrain(payload: {
 }) {
   try {
     const supabase = createAdminClient()
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('knowledge_items')
       .insert({
         title: payload.title.trim(),
@@ -107,7 +107,7 @@ export async function createKnowledgeItemAction(payload: {
 export async function deleteKnowledgeItemAction(id: string) {
   try {
     const supabase = createAdminClient()
-    const { error } = await (supabase as any).from('knowledge_items').delete().eq('id', id)
+    const { error } = await supabase.from('knowledge_items').delete().eq('id', id)
     if (error) return { success: false, error: error.message }
     return { success: true }
   } catch (error: any) {

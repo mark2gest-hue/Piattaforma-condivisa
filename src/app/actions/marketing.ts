@@ -5,6 +5,7 @@ import { callGemini } from './ai'
 import { autoIndexToSecondBrain, getKnowledgeItemsAction } from './knowledge'
 import { LESSON_SUMMARIES } from '@/lib/course-data'
 import { DEFAULT_KNOWLEDGE_ITEMS } from '@/lib/knowledge-data'
+import { Json } from '@/types/database.types'
 
 export interface MarketingBriefInput {
   title: string
@@ -475,9 +476,17 @@ export async function saveMarketingCampaignAction(
 
     let targetCampaignId = campaignId
 
+    const funnelBlueprint = {
+      grandSlamOffer: plan.grandSlamOffer,
+      angles: plan.angles,
+      funnelSteps: plan.funnelSteps,
+      launchChecklist: plan.launchChecklist,
+      stopLossRules: plan.stopLossRules,
+    }
+
     if (targetCampaignId) {
       // Aggiornamento campagna esistente (solo se proprietario o legacy orfana)
-      const { error: updateError } = await (supabase as any)
+      const { error: updateError } = await supabase
         .from('marketing_campaigns')
         .update({
           title: brief.title || brief.productName,
@@ -494,13 +503,7 @@ export async function saveMarketingCampaignAction(
           platforms: brief.platforms,
           kpi_cpa: brief.kpiCpaTarget,
           kpi_roas: brief.kpiRoasTarget,
-          funnel_blueprint: {
-            grandSlamOffer: plan.grandSlamOffer,
-            angles: plan.angles,
-            funnelSteps: plan.funnelSteps,
-            launchChecklist: plan.launchChecklist,
-            stopLossRules: plan.stopLossRules,
-          },
+          funnel_blueprint: funnelBlueprint as unknown as Json,
           updated_at: new Date().toISOString(),
         })
         .eq('id', targetCampaignId)
@@ -512,7 +515,7 @@ export async function saveMarketingCampaignAction(
       }
     } else {
       // Creazione nuova campagna con user_id
-      const { data: newCampaign, error: insertError } = await (supabase as any)
+      const { data: newCampaign, error: insertError } = await supabase
         .from('marketing_campaigns')
         .insert({
           user_id: user.id,
@@ -531,13 +534,7 @@ export async function saveMarketingCampaignAction(
           kpi_cpa: brief.kpiCpaTarget,
           kpi_roas: brief.kpiRoasTarget,
           status: 'draft',
-          funnel_blueprint: {
-            grandSlamOffer: plan.grandSlamOffer,
-            angles: plan.angles,
-            funnelSteps: plan.funnelSteps,
-            launchChecklist: plan.launchChecklist,
-            stopLossRules: plan.stopLossRules,
-          },
+          funnel_blueprint: funnelBlueprint as unknown as Json,
         })
         .select('id')
         .single()
@@ -546,13 +543,13 @@ export async function saveMarketingCampaignAction(
         console.warn('Errore inserimento nuova campagna marketing:', insertError)
         return { success: false, error: 'Errore durante la creazione della campagna' }
       } else if (newCampaign) {
-        targetCampaignId = (newCampaign as any).id
+        targetCampaignId = newCampaign.id
       }
     }
 
     // Inserimento o aggiornamento dei post del calendario editoriale
     if (targetCampaignId && plan.editorialPosts && plan.editorialPosts.length > 0) {
-      await (supabase as any).from('marketing_posts').delete().eq('campaign_id', targetCampaignId)
+      await supabase.from('marketing_posts').delete().eq('campaign_id', targetCampaignId)
 
       const postsToInsert = plan.editorialPosts.map((post) => ({
         campaign_id: targetCampaignId,
@@ -567,7 +564,7 @@ export async function saveMarketingCampaignAction(
         status: post.status || 'draft',
       }))
 
-      const { error: postsError } = await (supabase as any).from('marketing_posts').insert(postsToInsert)
+      const { error: postsError } = await supabase.from('marketing_posts').insert(postsToInsert)
       if (postsError) {
         console.warn('Errore salvataggio post marketing:', postsError)
       }
@@ -626,7 +623,7 @@ export async function getMarketingCampaignsAction() {
       return { success: false, error: 'Non autorizzato', campaigns: [] }
     }
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('marketing_campaigns')
       .select('*, marketing_posts(count)')
       .or(`user_id.eq.${user.id},user_id.is.null`)
@@ -656,7 +653,7 @@ export async function getMarketingCampaignByIdAction(campaignId: string): Promis
       return { success: false, error: 'Non autorizzato' }
     }
 
-    const { data: campaign, error: cError } = await (supabase as any)
+    const { data: campaign, error: cError } = await supabase
       .from('marketing_campaigns')
       .select('*')
       .eq('id', campaignId)
@@ -667,7 +664,7 @@ export async function getMarketingCampaignByIdAction(campaignId: string): Promis
       return { success: false, error: cError?.message || 'Campagna non trovata o non autorizzata' }
     }
 
-    const { data: posts, error: pError } = await (supabase as any)
+    const { data: posts, error: pError } = await supabase
       .from('marketing_posts')
       .select('*')
       .eq('campaign_id', campaignId)
@@ -745,7 +742,7 @@ export async function publishPostViaN8nAction(formData: {
     }
 
     if (formData.postId) {
-      await (supabase as any)
+      await supabase
         .from('marketing_posts')
         .update({
           status: formData.scheduledAt ? 'queued' : 'published',
@@ -775,7 +772,7 @@ export async function deleteMarketingCampaignAction(campaignId: string) {
       return { success: false, error: 'Non autorizzato' }
     }
 
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('marketing_campaigns')
       .delete()
       .eq('id', campaignId)
@@ -807,7 +804,7 @@ export async function generateSocialContentAction(formData: {
     const targetPostType = formData.postType || 'feed'
     const prompt = `Genera un post persuasivo ad alta conversione per ${formData.platform} sul tema "${targetTopic}". Formato: ${targetPostType}. Tono: ${formData.tone || 'professionale e coinvolgente'}.`
     const system = 'Sei un copywriter e social media strategist esperto. Scrivi il testo completo con emoji, hook iniziale e call to action.'
-    
+
     const text = await callGemini(system, prompt)
     if (text) {
       return { success: true, text }
@@ -1046,7 +1043,7 @@ export async function publishToBufferAction(formData: {
     // Se associato a un post del database, aggiorna lo stato su marketing_posts
     if (formData.postId) {
       const supabase = await createClient()
-      await (supabase as any)
+      await supabase
         .from('marketing_posts')
         .update({
           status: formData.scheduledAt ? 'queued' : 'published',
@@ -1425,12 +1422,12 @@ export async function getMarketingRealMetricsAction() {
     const supabase = await createClient()
 
     // 1. Leads da waitlist_leads
-    const { data: leads, error: leadsErr } = await (supabase as any)
+    const { data: leads, error: leadsErr } = await supabase
       .from('waitlist_leads')
       .select('id, converted_to_student, created_at, course_interest')
 
     // 2. Studenti accreditati da student_codes
-    const { data: students, error: studentsErr } = await (supabase as any)
+    const { data: students, error: studentsErr } = await supabase
       .from('student_codes')
       .select('id, code, access_tier, created_at')
 

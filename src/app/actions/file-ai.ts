@@ -28,7 +28,7 @@ export async function analyzeFileWithAIAction(fileId: string): Promise<{
     const supabaseAdmin = createAdminClient()
 
     // 1. Recupera metadati file
-    const { data: fileRecord, error: fileError } = await (supabaseAdmin as any)
+    const { data: fileRecord, error: fileError } = await supabaseAdmin
       .from('files')
       .select('*, uploader:profiles(full_name)')
       .eq('id', fileId)
@@ -82,7 +82,7 @@ export async function analyzeFileWithAIAction(fileId: string): Promise<{
 
     // 4. Invocazione Nemotron NIM
     const systemPrompt = `Sei un assistente AI aziendale d'élite specializzato nell'analisi documentale, sintesi strategica ed estrazione di piani d'azione operativi per il team.`
-    
+
     const userPrompt = `Analizza questo file aziendale:
 Nome File: ${fileRecord.name}
 Tipo: ${mimeType}
@@ -158,7 +158,7 @@ ${finalAnalysis.suggestedTaskDesc}
 *Origine: File ${fileRecord.name} (Caricato da ${fileRecord.uploader?.full_name || 'Team'})*`
 
       const ext = fileName.split('.').pop() || 'doc'
-      await (supabaseAdmin as any).from('knowledge_items').insert({
+      await supabaseAdmin.from('knowledge_items').insert({
         title: `[File] ${fileRecord.name}`,
         category: 'course_notes',
         description: `Sintesi documentale AI estratta da ${fileRecord.name}`,

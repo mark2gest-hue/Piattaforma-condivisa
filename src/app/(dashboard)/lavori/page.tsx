@@ -73,6 +73,7 @@ import {
   rejectAgentTaskRunAction,
   getTaskAgentRunsAction,
 } from '@/app/actions/agent-tasks'
+import { CockpitOggi } from '@/components/dashboard/CockpitOggi'
 
 const COLUMNS: { id: TaskStatus; title: string; color: string; badgeVariant: 'secondary' | 'warning' | 'purple' | 'success' }[] = [
   { id: 'todo', title: 'Da Fare', color: 'border-amber-500/30 text-amber-500', badgeVariant: 'secondary' },
@@ -81,7 +82,7 @@ const COLUMNS: { id: TaskStatus; title: string; color: string; badgeVariant: 'se
   { id: 'done', title: 'Completato', color: 'border-emerald-500/30 text-emerald-500', badgeVariant: 'success' },
 ]
 
-type TaskWithRelations = Task & { project?: Project; assignee?: Profile }
+type TaskWithRelations = Task & { project?: Project | null; assignee?: Profile | null }
 
 // Sortable Task Item Component
 function SortableTaskItem({
@@ -120,9 +121,8 @@ function SortableTaskItem({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none pb-2 group">
-      <Card className={`border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition-all cursor-grab active:cursor-grabbing bg-white dark:bg-slate-900 overflow-hidden rounded-xl ${
-        task.status === 'review' ? 'border-purple-400/80 dark:border-purple-500/60 ring-1 ring-purple-400/30' : 'hover:border-indigo-400 dark:hover:border-indigo-500/50'
-      }`}>
+      <Card className={`border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition-all cursor-grab active:cursor-grabbing bg-white dark:bg-slate-900 overflow-hidden rounded-xl ${task.status === 'review' ? 'border-purple-400/80 dark:border-purple-500/60 ring-1 ring-purple-400/30' : 'hover:border-indigo-400 dark:hover:border-indigo-500/50'
+        }`}>
         <CardHeader className="p-3.5 pb-2">
           <div className="flex items-start justify-between gap-2">
             <div className="space-y-1 w-full">
@@ -189,11 +189,10 @@ function SortableTaskItem({
             {task.assignee && (
               <Badge
                 variant="outline"
-                className={`text-[9px] px-1.5 py-0 flex items-center gap-1 font-semibold ${
-                  isAgent
+                className={`text-[9px] px-1.5 py-0 flex items-center gap-1 font-semibold ${isAgent
                     ? 'border-purple-400/50 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300'
                     : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                }`}
+                  }`}
               >
                 {isAgent ? (
                   <Bot className="h-2.5 w-2.5 text-purple-600 dark:text-purple-400" />
@@ -679,6 +678,9 @@ export default function KanbanBoardPage() {
 
   return (
     <div className="space-y-6 flex flex-col min-h-[calc(100vh-8rem)]">
+      {/* Cockpit Operativo "Oggi" */}
+      <CockpitOggi tasks={tasks} userName="Marco" />
+
       {/* Header with Switcher */}
       <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
@@ -702,11 +704,10 @@ export default function KanbanBoardPage() {
           <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shrink-0">
             <button
               onClick={() => setMainView('kanban')}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                mainView === 'kanban'
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${mainView === 'kanban'
                   ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
+                }`}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
               <span>Kanban</span>
@@ -714,11 +715,10 @@ export default function KanbanBoardPage() {
 
             <button
               onClick={() => setMainView('projects')}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                mainView === 'projects'
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${mainView === 'projects'
                   ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
+                }`}
             >
               <Layers className="h-3.5 w-3.5" />
               <span>Ambiti ({projects.length})</span>
@@ -769,11 +769,10 @@ export default function KanbanBoardPage() {
 
             <button
               onClick={() => setSelectedProjectFilter('all')}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${
-                selectedProjectFilter === 'all'
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${selectedProjectFilter === 'all'
                   ? 'bg-indigo-600 text-white shadow-xs'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-              }`}
+                }`}
             >
               Tutti ({tasks.length})
             </button>
@@ -784,11 +783,10 @@ export default function KanbanBoardPage() {
                 <button
                   key={p.id}
                   onClick={() => setSelectedProjectFilter(p.id)}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all flex-shrink-0 ${
-                    selectedProjectFilter === p.id
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all flex-shrink-0 ${selectedProjectFilter === p.id
                       ? 'bg-indigo-600 text-white shadow-xs'
                       : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                  }`}
+                    }`}
                 >
                   {p.title} ({count})
                 </button>
@@ -864,25 +862,23 @@ export default function KanbanBoardPage() {
                     return (
                       <div
                         key={col.id}
-                        className={`flex flex-col bg-slate-50 dark:bg-slate-900/60 rounded-2xl border shadow-xs overflow-hidden ${
-                          col.id === 'review'
+                        className={`flex flex-col bg-slate-50 dark:bg-slate-900/60 rounded-2xl border shadow-xs overflow-hidden ${col.id === 'review'
                             ? 'border-purple-300 dark:border-purple-800/80 bg-purple-50/10'
                             : 'border-slate-200 dark:border-slate-800'
-                        }`}
+                          }`}
                       >
                         {/* Column Header */}
                         <div className="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900">
                           <div className="flex items-center gap-2">
                             <span
-                              className={`w-2.5 h-2.5 rounded-full ${
-                                col.id === 'todo'
+                              className={`w-2.5 h-2.5 rounded-full ${col.id === 'todo'
                                   ? 'bg-amber-500'
                                   : col.id === 'in_progress'
-                                  ? 'bg-indigo-500'
-                                  : col.id === 'review'
-                                  ? 'bg-purple-500'
-                                  : 'bg-emerald-500'
-                              }`}
+                                    ? 'bg-indigo-500'
+                                    : col.id === 'review'
+                                      ? 'bg-purple-500'
+                                      : 'bg-emerald-500'
+                                }`}
                             />
                             <h2 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
                               {col.title}
@@ -925,9 +921,9 @@ export default function KanbanBoardPage() {
                   {activeTask ? (
                     <SortableTaskItem
                       task={activeTask}
-                      onEdit={() => {}}
-                      onDelete={() => {}}
-                      onMoveStatus={() => {}}
+                      onEdit={() => { }}
+                      onDelete={() => { }}
+                      onMoveStatus={() => { }}
                     />
                   ) : null}
                 </DragOverlay>
@@ -1338,11 +1334,10 @@ export default function KanbanBoardPage() {
                   {reviewRuns.map((run, idx) => (
                     <div
                       key={run.id}
-                      className={`p-4 rounded-2xl border transition-all ${
-                        idx === 0
+                      className={`p-4 rounded-2xl border transition-all ${idx === 0
                           ? 'border-purple-300 dark:border-purple-700 bg-purple-50/20 dark:bg-purple-950/20'
                           : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 opacity-70'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between pb-2 mb-2 border-b border-purple-100 dark:border-purple-900/40 text-[11px] text-slate-500 font-mono">
                         <div className="flex items-center gap-2">
