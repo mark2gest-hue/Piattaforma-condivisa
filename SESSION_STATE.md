@@ -1,7 +1,7 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-09 22:18
-Stato corrente: Aggiunto pulsante di ritorno rapido "Area Admin" nella barra superiore del workshop di Mira (`/workshop-agenti`), collegato direttamente a `/lavori`. Google Meet Pro integrato in `/videocall` e nei comandi vocali di Mira. Build di produzione 0 errori.
+Ultimo aggiornamento: 2026-09-09 22:30
+Stato corrente: Integrata la libreria ElevenLabs UI (`bar-visualizer` e `live-waveform`) per l'interfaccia vocale e multimodale di Agente Mira in `/workshop-agenti`. Onde vocali animate reattive per gli stati Speaking, Listening, Thinking e Building. Build di produzione 0 errori completata con successo.
 
 ---
 

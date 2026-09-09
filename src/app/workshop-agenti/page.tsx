@@ -28,6 +28,7 @@ import { AI_PROVIDERS, AIProviderId } from '@/lib/agent-engine/multi-provider'
 import { askOttoFriendlyAction, OttoFriendlyMode } from '@/app/actions/agent-workshop'
 import { StudentTasksZone } from './components/StudentTasksZone'
 import { SimulatorModal } from './components/SimulatorModal'
+import { BarVisualizer, AgentState } from '@/components/ui/elevenlabs/bar-visualizer'
 
 type AvatarMood = 'idle' | 'listening' | 'thinking' | 'talking' | 'building' | 'happy'
 
@@ -500,11 +501,44 @@ export default function WorkshopAgentiAmichevolePage() {
                   </div>
 
                   {/* Fumetto con Voce di Mira */}
-                  <div className="relative p-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-200 text-sm md:text-base leading-relaxed">
+                  <div className="relative p-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-200 text-sm md:text-base leading-relaxed space-y-3">
                     <div className="flex items-start gap-2">
                       <span className="text-amber-400 text-lg">💬</span>
                       <p className="flex-1 font-medium">{agentSpeech}</p>
                     </div>
+
+                    {/* Visualizzatore Vocale ElevenLabs UI (Onde Vocali Reattive) */}
+                    {(mood === 'talking' || mood === 'listening' || mood === 'thinking' || mood === 'building') && (
+                      <div className="pt-2 border-t border-slate-800/80 flex items-center gap-3">
+                        <span className="text-[11px] font-mono tracking-wider uppercase text-cyan-400 font-semibold shrink-0 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                          {mood === 'talking'
+                            ? 'Mira sta parlando...'
+                            : mood === 'listening'
+                            ? 'In ascolto...'
+                            : mood === 'building'
+                            ? 'Costruzione in corso...'
+                            : 'Elaborazione...'}
+                        </span>
+                        <div className="flex-1 max-w-[280px]">
+                          <BarVisualizer
+                            state={
+                              mood === 'talking'
+                                ? 'speaking'
+                                : mood === 'listening'
+                                ? 'listening'
+                                : 'thinking'
+                            }
+                            demo={true}
+                            barCount={18}
+                            minHeight={15}
+                            maxHeight={95}
+                            centerAlign={true}
+                            className="h-7 bg-transparent p-0 gap-1"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Input con Invio Diretto */}
