@@ -20,7 +20,10 @@ import {
   Users,
   Compass,
   CheckCircle2,
+  ArrowLeft,
+  LayoutDashboard,
 } from 'lucide-react'
+import Link from 'next/link'
 import { AI_PROVIDERS, AIProviderId } from '@/lib/agent-engine/multi-provider'
 import { askOttoFriendlyAction, OttoFriendlyMode } from '@/app/actions/agent-workshop'
 import { StudentTasksZone } from './components/StudentTasksZone'
@@ -296,6 +299,14 @@ export default function WorkshopAgentiAmichevolePage() {
       <header className="relative z-10 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-4 md:px-6 py-3">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
+            <Link
+              href="/lavori"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition-all cursor-pointer shadow-xs mr-0.5 group"
+              title="Torna alla Dashboard / Area Admin"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-amber-400 group-hover:-translate-x-0.5 transition-transform" />
+              <span className="font-medium">Area Admin</span>
+            </Link>
             <span className="text-2xl">👩‍💻</span>
             <div>
               <h1 className="text-base font-extrabold text-white tracking-tight flex items-center gap-2">

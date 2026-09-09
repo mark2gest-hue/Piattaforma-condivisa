@@ -1,7 +1,7 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-09 22:14
-Stato corrente: Integrato Google Meet Pro in `/videocall` (rimosso Daily.co, bundle ridotto a 4.2 kB). Collegata la gestione riunioni a voce/testo su Agente Mira (`/workshop-agenti` e `src/lib/google-meet-widget.ts`), con salvataggio automatico in `calendar_events` su Supabase e sincronizzazione 1-click Google Calendar. Build di produzione 0 errori.
+Ultimo aggiornamento: 2026-09-09 22:18
+Stato corrente: Aggiunto pulsante di ritorno rapido "Area Admin" nella barra superiore del workshop di Mira (`/workshop-agenti`), collegato direttamente a `/lavori`. Google Meet Pro integrato in `/videocall` e nei comandi vocali di Mira. Build di produzione 0 errori.
 
 ---
 
