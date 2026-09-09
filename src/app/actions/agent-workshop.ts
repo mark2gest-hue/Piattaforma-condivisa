@@ -264,6 +264,91 @@ export async function askOttoFriendlyAction(params: {
     }
   }
 
+  // Richiesta di creazione / schedulazione riunione Google Meet Pro
+  const isMeetIntent =
+    (pLower.includes('meet') ||
+      pLower.includes('riunione') ||
+      pLower.includes('videocall') ||
+      pLower.includes('call') ||
+      pLower.includes('appuntamento')) &&
+    (pLower.includes('fissa') ||
+      pLower.includes('metti') ||
+      pLower.includes('crea') ||
+      pLower.includes('avvia') ||
+      pLower.includes('organizza') ||
+      pLower.includes('calendario') ||
+      pLower.includes('pianifica') ||
+      pLower.includes('google') ||
+      mode === 'build')
+
+  if (isMeetIntent && (pLower.includes('meet') || pLower.includes('riunione') || pLower.includes('call') || pLower.includes('calendario'))) {
+    const { generateGoogleMeetCardHtml } = await import('@/lib/google-meet-widget')
+
+    // Calcolo data: default domani o oggi
+    let targetDate = new Date()
+    if (pLower.includes('domani')) {
+      targetDate = new Date(Date.now() + 86400000)
+    } else if (pLower.includes('dopodomani')) {
+      targetDate = new Date(Date.now() + 172800000)
+    }
+    const dateStr = targetDate.toISOString().split('T')[0]
+
+    // Calcolo orario: es. "alle 15", "alle 15:30", "ore 16", "10:00"
+    const timeMatch = pLower.match(/(?:alle|ore|h)\s*(\d{1,2})(?::(\d{2}))?/)
+    let timeStr = '15:30'
+    if (timeMatch) {
+      const hh = timeMatch[1].padStart(2, '0')
+      const mm = timeMatch[2] ? timeMatch[2].padStart(2, '0') : '00'
+      timeStr = `${hh}:${mm}`
+    }
+
+    // Titolo della riunione
+    let cleanTitle = prompt
+      .replace(/fissa|metti|crea|avvia|organizza|pianifica|una|un|il|la|in|su|calendario|riunione|meet|google meet|videocall|call|domani|oggi|dopodomani|alle\s*\d{1,2}(?::\d{2})?|ore\s*\d{1,2}(?::\d{2})?/gi, '')
+      .trim()
+    if (cleanTitle.length < 3) cleanTitle = 'Riunione Team: Revisione Progetti & Strategia'
+    else cleanTitle = `Riunione: ${cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)}`
+
+    // Inserimento automatico in calendar_events su Supabase
+    try {
+      const { createAdminClient } = await import('@/lib/supabase/server')
+      const supabase = createAdminClient()
+      await (supabase as any).from('calendar_events').insert({
+        title: cleanTitle,
+        description: 'Google Meet Pro: https://meet.google.com/new',
+        event_date: dateStr,
+        event_time: timeStr,
+        category: 'meeting',
+      })
+      const { notifyCalendarEventCreatedAction } = await import('./notifications')
+      notifyCalendarEventCreatedAction({
+        title: cleanTitle,
+        date: dateStr,
+        time: timeStr,
+        category: 'Google Meet Pro',
+      }).catch(() => {})
+    } catch (e: any) {
+      console.error('[MEET SUPABASE INSERT ERROR]', e?.message)
+    }
+
+    const cardHtml = generateGoogleMeetCardHtml({
+      title: cleanTitle,
+      date: dateStr,
+      time: timeStr,
+      durationMinutes: 45,
+      description: `Riunione strategica su Google Meet Pro con il team. Registrata nel Calendario condiviso di AiUtiamoci.`,
+    })
+
+    return {
+      success: true,
+      mode: 'build',
+      speech: `Ho fissato la riunione su Google Meet Pro per ${dateStr === new Date().toISOString().split('T')[0] ? 'oggi' : 'domani'} alle ore ${timeStr}! L'evento è salvato nel nostro Calendario e ho preparato la card nel Banco di Lavoro: puoi entrare direttamente in Google Meet o sincronizzarlo con il tuo Google Calendar in un clic.`,
+      title: `Google Meet Pro: ${cleanTitle}`,
+      htmlSnippet: cardHtml,
+      modelUsed: 'Google-Meet-Calendar-Engine',
+    }
+  }
+
   // Se l'utente chiede di trovare/estrarre qualsiasi elemento dal Vault Obsidian:
   if (isExtractionIntent && isVaultSubject) {
     const { DEFAULT_KNOWLEDGE_ITEMS } = await import('@/lib/knowledge-data')

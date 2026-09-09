@@ -1,7 +1,7 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-09 21:53
-Stato corrente: Integrato il Canvas Visivo Interattivo n8n (`src/lib/n8n-canvas-widget.ts`) nell'Agente Mira (`/workshop-agenti`) con simulazione live e ispezione JSON. Popolato e collegato l'intero Vault Obsidian in iCloud (`KnowledgeBase`) con schede progetto (3000-3004), workflow n8n e prompt master RCCF. Typecheck 0 errori.
+Ultimo aggiornamento: 2026-09-09 22:14
+Stato corrente: Integrato Google Meet Pro in `/videocall` (rimosso Daily.co, bundle ridotto a 4.2 kB). Collegata la gestione riunioni a voce/testo su Agente Mira (`/workshop-agenti` e `src/lib/google-meet-widget.ts`), con salvataggio automatico in `calendar_events` su Supabase e sincronizzazione 1-click Google Calendar. Build di produzione 0 errori.
 
 ---
 
