@@ -14,6 +14,7 @@ import {
   Layers,
   Calendar as CalendarIcon,
   GraduationCap,
+  Award,
   Network,
   Megaphone,
   ExternalLink,
@@ -179,6 +180,13 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           href: '/corsi',
           icon: GraduationCap,
           badge: 'Studenti',
+        },
+        {
+          title: 'Zona Compiti',
+          subtitle: 'Missioni & Attestati',
+          href: '/zona-compiti',
+          icon: Award,
+          badge: 'Certificati',
         },
         ...(isAdmin
           ? [

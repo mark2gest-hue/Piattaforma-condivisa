@@ -1,7 +1,7 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-09 00:40
-Stato corrente: Sidebar ripulita (rimossa sezione "Sistema / Agenti AI Piattaforma Esterna"); rotta legacy /agenti reindirizzata a /workshop-agenti; eliminato progetto esterno duplicato; typecheck 0 errori.
+Ultimo aggiornamento: 2026-09-09 09:35
+Stato corrente: Completata sequenza miglioramenti: 1) Zona Compiti & Certificati integrata in sidebar e middleware per studenti; 2) Secondo Cervello con filtri tag dinamici, ricerca full-text e pillole interattive; 3) Telemetria live Agente Nemotron nel Kanban (token e latenza). Typecheck 0 errori.
 
 ---
 

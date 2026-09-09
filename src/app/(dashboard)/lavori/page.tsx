@@ -55,7 +55,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound } from '@/lib/notifications'
-import { Task, Project, Profile } from '@/types/index'
+import { Task, Project, Profile, TaskAgentRun } from '@/types/index'
 import { TaskStatus, TaskPriority } from '@/types/database.types'
 import {
   getTasksAction,
@@ -82,7 +82,11 @@ const COLUMNS: { id: TaskStatus; title: string; color: string; badgeVariant: 'se
   { id: 'done', title: 'Completato', color: 'border-emerald-500/30 text-emerald-500', badgeVariant: 'success' },
 ]
 
-type TaskWithRelations = Task & { project?: Project | null; assignee?: Profile | null }
+type TaskWithRelations = Task & { 
+  project?: Project | null; 
+  assignee?: Profile | null;
+  agent_runs?: TaskAgentRun[]
+}
 
 // Sortable Task Item Component
 function SortableTaskItem({
@@ -118,6 +122,12 @@ function SortableTaskItem({
   }
 
   const isAgent = task.assignee?.is_agent
+  const latestRun = Array.isArray(task.agent_runs) && task.agent_runs.length > 0
+    ? task.agent_runs[task.agent_runs.length - 1]
+    : null
+  const latencyStr = latestRun?.completed_at && latestRun?.created_at
+    ? `${Math.max(0.1, ((new Date(latestRun.completed_at).getTime() - new Date(latestRun.created_at).getTime()) / 1000)).toFixed(1)}s`
+    : null
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none pb-2 group">
@@ -200,6 +210,18 @@ function SortableTaskItem({
                   <User className="h-2.5 w-2.5 text-slate-400" />
                 )}
                 <span>{task.assignee.full_name || 'Agente'}</span>
+              </Badge>
+            )}
+
+            {/* Agent Telemetry Pill */}
+            {latestRun && latestRun.tokens_used > 0 && (
+              <Badge
+                variant="outline"
+                className="text-[9px] px-1.5 py-0 border-purple-300/60 dark:border-purple-800/60 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 flex items-center gap-1 font-mono font-semibold"
+                title={`Modello: NVIDIA Nemotron • ${latestRun.tokens_used} token usati${latencyStr ? ` in ${latencyStr}` : ''}`}
+              >
+                <span>⚡ {latestRun.tokens_used.toLocaleString()} tok</span>
+                {latencyStr && <span className="opacity-75">• {latencyStr}</span>}
               </Badge>
             )}
           </div>
@@ -1362,9 +1384,16 @@ export default function KanbanBoardPage() {
                       </div>
 
                       {run.tokens_used > 0 && (
-                        <div className="pt-2 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-                          <span>Token utilizzati: <b>{run.tokens_used}</b></span>
-                          <span>Modello: <b>NVIDIA Nemotron</b></span>
+                        <div className="pt-2.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono border-t border-purple-100 dark:border-purple-900/40">
+                          <span className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300 font-semibold">
+                            <span>⚡ {run.tokens_used.toLocaleString()} token</span>
+                            {run.completed_at && run.created_at && (
+                              <span className="text-slate-500 font-normal">
+                                • {Math.max(0.1, ((new Date(run.completed_at).getTime() - new Date(run.created_at).getTime()) / 1000)).toFixed(1)}s
+                              </span>
+                            )}
+                          </span>
+                          <span>Modello: <b className="text-slate-700 dark:text-slate-200">NVIDIA Nemotron (550B Ultra)</b></span>
                         </div>
                       )}
 

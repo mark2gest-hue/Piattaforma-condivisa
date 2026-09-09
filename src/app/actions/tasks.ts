@@ -31,10 +31,10 @@ export async function getTasksAction() {
       .from('profiles')
       .select('*')
 
-    // 3. Prendi i compiti
+    // 3. Prendi i compiti con relazioni, inclusa telemetria agenti
     const { data: tasks, error: tasksError } = await supabase
       .from('tasks')
-      .select('*, project:projects(*), assignee:profiles!tasks_assigned_to_fkey(*)')
+      .select('*, project:projects(*), assignee:profiles!tasks_assigned_to_fkey(*), agent_runs:task_agent_runs(*)')
       .order('position', { ascending: true })
       .order('created_at', { ascending: false })
 

@@ -58,6 +58,7 @@ const CATEGORIES = [
 export default function CervelloKnowledgePage() {
   const [items, setItems] = useState<KnowledgeItem[]>(DEFAULT_KNOWLEDGE_ITEMS)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'graph'>('graph')
   const [loading, setLoading] = useState(false)
@@ -93,13 +94,37 @@ export default function CervelloKnowledgePage() {
     }
   }
 
-  // Filtraggio istantaneo locale super-sicuro senza attese
+  // Estrazione dinamica dei tag più rilevanti con conteggio
+  const availableTags = useMemo(() => {
+    const list = Array.isArray(items) && items.length > 0 ? items : DEFAULT_KNOWLEDGE_ITEMS
+    const tagCounts: Record<string, number> = {}
+    list.forEach((item) => {
+      if (Array.isArray(item?.tags)) {
+        item.tags.forEach((t) => {
+          if (typeof t === 'string' && t.trim()) {
+            const clean = t.trim().toLowerCase()
+            tagCounts[clean] = (tagCounts[clean] || 0) + 1
+          }
+        })
+      }
+    })
+    return Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 16)
+      .map(([tag, count]) => ({ tag, count }))
+  }, [items])
+
+  // Filtraggio istantaneo locale per categoria, tag e ricerca full-text
   const displayedItems = useMemo(() => {
     const list = Array.isArray(items) && items.length > 0 ? items : DEFAULT_KNOWLEDGE_ITEMS
     return list.filter((i) => {
       if (!i) return false
       if (selectedCategory && selectedCategory !== 'all' && i.category !== selectedCategory) {
         return false
+      }
+      if (selectedTag) {
+        const hasTag = Array.isArray(i.tags) && i.tags.some((t) => typeof t === 'string' && t.toLowerCase() === selectedTag.toLowerCase())
+        if (!hasTag) return false
       }
       if (searchQuery && searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim()
@@ -111,7 +136,7 @@ export default function CervelloKnowledgePage() {
       }
       return true
     })
-  }, [items, selectedCategory, searchQuery])
+  }, [items, selectedCategory, selectedTag, searchQuery])
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text)
@@ -370,6 +395,94 @@ export default function CervelloKnowledgePage() {
             )
           })}
         </div>
+
+        {/* Quick Tag Pills */}
+        {availableTags.length > 0 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 pl-1 shrink-0">
+              <Tag className="h-3 w-3 text-indigo-400" />
+              Tag:
+            </span>
+            <button
+              onClick={() => setSelectedTag(null)}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all shrink-0 ${
+                !selectedTag
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white font-bold'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'
+              }`}
+            >
+              Tutti i tag
+            </button>
+            {availableTags.map(({ tag, count }) => {
+              const isTagActive = selectedTag === tag
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(isTagActive ? null : tag)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 ${
+                    isTagActive
+                      ? 'bg-indigo-600 text-white font-bold shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800/80'
+                  }`}
+                >
+                  <span>#{tag}</span>
+                  <span
+                    className={`text-[9px] px-1 py-0.2 rounded-full ${
+                      isTagActive ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Active Filters Summary Bar */}
+        {(selectedCategory !== 'all' || selectedTag || searchQuery) && (
+          <div className="flex items-center justify-between px-3 py-2 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 rounded-xl text-xs text-indigo-900 dark:text-indigo-200">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Filtri attivi:</span>
+              {selectedCategory !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 text-[11px]">
+                  Categoria: <b>{CATEGORIES.find((c) => c.id === selectedCategory)?.label || selectedCategory}</b>
+                  <button onClick={() => setSelectedCategory('all')} className="hover:text-red-500">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {selectedTag && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 text-[11px]">
+                  Tag: <b>#{selectedTag}</b>
+                  <button onClick={() => setSelectedTag(null)} className="hover:text-red-500">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {searchQuery && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 text-[11px]">
+                  Ricerca: &ldquo;{searchQuery}&rdquo;
+                  <button onClick={() => setSearchQuery('')} className="hover:text-red-500">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              <span className="text-slate-500 text-[11px]">({displayedItems.length} risultati)</span>
+            </div>
+
+            <button
+              onClick={() => {
+                setSelectedCategory('all')
+                setSelectedTag(null)
+                setSearchQuery('')
+              }}
+              className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0"
+            >
+              Azzera filtri
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Content Area: Grafo Neurale oppure Griglia Schede */}
@@ -384,7 +497,15 @@ export default function CervelloKnowledgePage() {
       ) : displayedItems.length === 0 ? (
         <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
           <p className="text-sm font-semibold text-slate-400">Nessun prompt o risorsa trovata per questa categoria/ricerca.</p>
-          <Button size="sm" variant="ghost" onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setSelectedCategory('all')
+              setSelectedTag(null)
+              setSearchQuery('')
+            }}
+          >
             Reimposta Filtri
           </Button>
         </div>
@@ -437,14 +558,29 @@ export default function CervelloKnowledgePage() {
                   {/* Tags */}
                   {Array.isArray(item.tags) && item.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {item.tags.map((t: string, idx: number) => (
-                        <span
-                          key={idx}
-                          className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-1.5 py-0.5 rounded"
-                        >
-                          #{t}
-                        </span>
-                      ))}
+                      {item.tags.map((t: string, idx: number) => {
+                        const clean = typeof t === 'string' ? t.trim().toLowerCase() : ''
+                        if (!clean) return null
+                        const isThisTagActive = selectedTag === clean
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedTag(isThisTagActive ? null : clean)
+                            }}
+                            className={`text-[10px] font-mono px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                              isThisTagActive
+                                ? 'bg-indigo-600 text-white font-bold'
+                                : 'text-slate-400 bg-slate-100 dark:bg-slate-800/60 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 dark:hover:text-indigo-300'
+                            }`}
+                            title={`Filtra per #${clean}`}
+                          >
+                            #{clean}
+                          </button>
+                        )
+                      })}
                     </div>
                   )}
 
