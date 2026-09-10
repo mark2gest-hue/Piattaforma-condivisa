@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   Copy,
   Pencil,
+  FolderInput,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -64,6 +65,12 @@ export default function FilesManagerPage() {
   const [itemToRename, setItemToRename] = useState<FileWithUploader | null>(null)
   const [newRenameName, setNewRenameName] = useState('')
   const [isRenaming, setIsRenaming] = useState(false)
+
+  // Modal Sposta Elemento (Cartella o File)
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false)
+  const [itemToMove, setItemToMove] = useState<FileWithUploader | null>(null)
+  const [targetDestinationId, setTargetDestinationId] = useState<string>('root')
+  const [isMoving, setIsMoving] = useState(false)
 
   // Modal Anteprima
   const [previewFile, setPreviewFile] = useState<FileWithUploader | null>(null)
@@ -301,6 +308,80 @@ export default function FilesManagerPage() {
       setItemToRename(null)
     }
     setIsRenaming(false)
+  }
+
+  const handleOpenMoveModal = (item: FileWithUploader) => {
+    setItemToMove(item)
+    // Se l'elemento è già in una cartella (ha uno slash), possiamo proporre la destinazione o 'root'
+    setTargetDestinationId('root')
+    setIsMoveModalOpen(true)
+  }
+
+  const handleMoveItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!itemToMove || isMoving) return
+
+    setIsMoving(true)
+    const isFolder = itemToMove.mime_type === 'folder'
+    const targetFolder = targetDestinationId === 'root' ? null : files.find((f) => f.id === targetDestinationId)
+    const newPrefix = targetFolder ? `${targetFolder.id}/` : ''
+
+    try {
+      if (!isFolder) {
+        // Spostamento File Singolo:
+        // estraiamo il filename finale dello storage_path attuale
+        const segments = itemToMove.storage_path.split('/')
+        const fileNamePart = segments[segments.length - 1]
+        const newStoragePath = `${newPrefix}${fileNamePart}`
+
+        if (newStoragePath !== itemToMove.storage_path) {
+          const { error: moveStorageError } = await supabase.storage
+            .from('team-files')
+            .move(itemToMove.storage_path, newStoragePath)
+
+          if (moveStorageError) {
+            console.warn('Avviso spostamento file fisico storage:', moveStorageError.message)
+          }
+
+          const { error: updateDbError } = await (supabase as any)
+            .from('files')
+            .update({ storage_path: newStoragePath })
+            .eq('id', itemToMove.id)
+
+          if (updateDbError) throw updateDbError
+
+          setFiles((prev) =>
+            prev.map((f) => (f.id === itemToMove.id ? { ...f, storage_path: newStoragePath } : f))
+          )
+        }
+      } else {
+        // Spostamento Cartella:
+        // 1. Spostiamo la cartella stessa aggiornando il suo storage_path
+        const folderSegments = itemToMove.storage_path.split('/')
+        const folderNamePart = folderSegments[folderSegments.length - 1]
+        const newFolderStoragePath = `${newPrefix}${folderNamePart}`
+
+        const { error: updateFolderDbError } = await (supabase as any)
+          .from('files')
+          .update({ storage_path: newFolderStoragePath })
+          .eq('id', itemToMove.id)
+
+        if (updateFolderDbError) throw updateFolderDbError
+
+        // Aggiorniamo anche lo stato locale
+        setFiles((prev) =>
+          prev.map((f) => (f.id === itemToMove.id ? { ...f, storage_path: newFolderStoragePath } : f))
+        )
+      }
+
+      setIsMoveModalOpen(false)
+      setItemToMove(null)
+    } catch (err: any) {
+      console.error('Errore spostamento:', err)
+      alert(`Errore durante lo spostamento: ${err?.message || 'Sconosciuto'}`)
+    } finally {
+      setIsMoving(false)
+    }
   }
 
   const handleDownloadFile = async (file: FileWithUploader) => {
@@ -549,6 +630,16 @@ export default function FilesManagerPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-7 w-7 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
+                            title="Sposta Cartella"
+                            onClick={() => handleOpenMoveModal(folder)}
+                          >
+                            <FolderInput className="h-3.5 w-3.5" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
                             title="Elimina Cartella"
                             onClick={() => handleDeleteItem(folder)}
@@ -614,6 +705,16 @@ export default function FilesManagerPage() {
                             onClick={() => handleOpenRenameModal(f)}
                           >
                             <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
+                            title="Sposta File"
+                            onClick={() => handleOpenMoveModal(f)}
+                          >
+                            <FolderInput className="h-3.5 w-3.5" />
                           </Button>
 
                           <Button
@@ -766,6 +867,99 @@ export default function FilesManagerPage() {
                     </>
                   ) : (
                     'Salva Nome'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Sposta Elemento (Cartella o File) */}
+      {isMoveModalOpen && itemToMove && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <FolderInput className="h-4 w-4 text-blue-500" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Sposta {itemToMove.mime_type === 'folder' ? 'Cartella' : 'File'}
+                </h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsMoveModalOpen(false)
+                  setItemToMove(null)
+                }}
+                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleMoveItem} className="p-5 space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                  Elemento selezionato:
+                </label>
+                <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium text-slate-800 dark:text-slate-200 truncate flex items-center gap-2">
+                  {getFileIcon(itemToMove.mime_type)}
+                  <span className="truncate">{itemToMove.name}</span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                  Seleziona Destinazione *
+                </label>
+                <select
+                  value={targetDestinationId}
+                  onChange={(e) => setTargetDestinationId(e.target.value)}
+                  className="w-full h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="root">📁 Archivio Principale (Root)</option>
+                  {files
+                    .filter((f) => {
+                      if (f.mime_type !== 'folder') return false
+                      // Non può essere spostata dentro se stessa
+                      if (f.id === itemToMove.id) return false
+                      // Non può essere spostata dentro una cartella che è figlia di se stessa
+                      if (itemToMove.mime_type === 'folder' && f.storage_path.startsWith(`${itemToMove.id}/`)) return false
+                      return true
+                    })
+                    .map((folder) => (
+                      <option key={folder.id} value={folder.id}>
+                        📂 {folder.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsMoveModalOpen(false)
+                    setItemToMove(null)
+                  }}
+                >
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isMoving}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isMoving ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      Spostamento...
+                    </>
+                  ) : (
+                    'Conferma Spostamento'
                   )}
                 </Button>
               </div>
