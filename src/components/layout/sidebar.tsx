@@ -114,13 +114,15 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   const fetchTeamMembers = async () => {
     const { data: profiles } = await (supabase as any)
       .from('profiles')
-      .select('role')
+      .select('role, is_agent, is_active')
 
     if (profiles && profiles.length > 0) {
-      setTeamCount(profiles.length)
-      const devs = profiles.filter((p: any) => p.role === 'dev').length
-      const admins = profiles.filter((p: any) => p.role === 'admin').length
-      const others = profiles.length - devs - admins
+      // Conta solo i membri reali del team (escludendo gli agenti AI e disattivati)
+      const realMembers = profiles.filter((p: any) => !p.is_agent && p.is_active !== false)
+      setTeamCount(realMembers.length)
+      const devs = realMembers.filter((p: any) => p.role === 'dev').length
+      const admins = realMembers.filter((p: any) => p.role === 'admin').length
+      const others = realMembers.length - devs - admins
 
       const parts = []
       if (devs > 0) parts.push(`${devs} Dev`)
