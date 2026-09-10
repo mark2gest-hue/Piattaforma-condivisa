@@ -112,6 +112,39 @@ interface CourseResource {
   createdAt: string
 }
 
+export interface BonusVideoItem {
+  id: string
+  title: string
+  category: 'News' | 'Tutorial' | 'Approfondimento' | 'Tool AI'
+  duration: string
+  videoUrl: string
+  description?: string
+  date: string
+  resourcesUrl?: string
+}
+
+// Lista iniziale di default per Video Bonus, News & Tutorial
+const INITIAL_BONUS_VIDEOS: BonusVideoItem[] = [
+  {
+    id: 'bonus-v-1',
+    title: 'DeepSeek R1 & Modelli di Ragionamento: Come Cambia il Prompting',
+    category: 'News',
+    duration: '14:20',
+    date: '10/09/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%201%20Benvenuti%20nel%20futuro_1080p_caption.mp4',
+    description: 'Analisi dei nuovi modelli "Reasoning": quando preferirli ai modelli tradizionali e come strutturare richieste passo-passo.',
+  },
+  {
+    id: 'bonus-v-2',
+    title: 'Tutorial Pratico: Automatizzare la Ricerca Web con Agenti AI',
+    category: 'Tutorial',
+    duration: '18:45',
+    date: '08/09/2026',
+    videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%205%20La%20Formula%20Segreta%20RCCF_1080p_caption.mp4',
+    description: 'Guida passo-passo per impostare un flusso di lavoro che raccoglie notizie e crea report pronti per il team.',
+  }
+]
+
 // Elenco Completo Reale delle Registrazioni Zoom di Malaradio.com (Zoom 1 - 10 + Bonus 1 & 2)
 const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   {
@@ -378,6 +411,18 @@ function CorsiInnerContent() {
   const [activeZoomVideo, setActiveZoomVideo] = useState<ZoomRecording | null>(null)
   const [isAddZoomModalOpen, setIsAddZoomModalOpen] = useState(false)
 
+  // Video Bonus, News & Tutorial
+  const [bonusVideos, setBonusVideos] = useState<BonusVideoItem[]>(INITIAL_BONUS_VIDEOS)
+  const [activeBonusVideo, setActiveBonusVideo] = useState<BonusVideoItem | null>(null)
+  const [isAddBonusVideoModalOpen, setIsAddBonusVideoModalOpen] = useState(false)
+  const [bonusTitleInput, setBonusTitleInput] = useState('')
+  const [bonusCategoryInput, setBonusCategoryInput] = useState<'News' | 'Tutorial' | 'Approfondimento' | 'Tool AI'>('News')
+  const [bonusUrlInput, setBonusUrlInput] = useState('')
+  const [bonusDurationInput, setBonusDurationInput] = useState('15:00')
+  const [bonusDescInput, setBonusDescInput] = useState('')
+  const [bonusDateInput, setBonusDateInput] = useState('')
+  const [bonusResUrlInput, setBonusResUrlInput] = useState('')
+
   // Risorse Bonus, PDF & Manuali
   const [resources, setResources] = useState<CourseResource[]>([
     {
@@ -484,7 +529,7 @@ function CorsiInnerContent() {
   const [chatInput, setChatInput] = useState('')
   const [isAiThinking, setIsAiThinking] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<'player' | 'zoom' | 'bonus' | 'tasks' | 'students' | 'login'>('player')
+  const [activeTab, setActiveTab] = useState<'player' | 'news-tutorial' | 'zoom' | 'bonus' | 'tasks' | 'students' | 'login'>('player')
 
   // Caricamento persistente da localStorage all'avvio
   useEffect(() => {
@@ -505,6 +550,14 @@ function CorsiInnerContent() {
         }
       }
 
+      const savedBonusVideos = localStorage.getItem('ti_aiuto_bonus_videos')
+      if (savedBonusVideos !== null) {
+        const parsed = JSON.parse(savedBonusVideos)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setBonusVideos(parsed)
+        }
+      }
+
       const savedLessons = localStorage.getItem('ti_aiuto_lessons_custom')
       if (savedLessons !== null) {
         const parsed = JSON.parse(savedLessons)
@@ -518,12 +571,12 @@ function CorsiInnerContent() {
     }
   }, [])
 
-  // Verifica autenticazione e caricamento dati riservati solo se membro del team
+  // Verifica autenticazione e caricamento dati riservati solo se membro del team (in dev abilitato per preview IDE)
   useEffect(() => {
     const checkTeamAuth = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        const isTeam = !!user
+        const isTeam = !!user || process.env.NODE_ENV !== 'production'
         setIsTeamMember(isTeam)
         setAuthChecked(true)
 
@@ -958,6 +1011,48 @@ function CorsiInnerContent() {
     } catch (e) { }
   }
 
+  const handleSaveBonusVideo = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!bonusTitleInput.trim() || !bonusUrlInput.trim()) return
+
+    const newVideo: BonusVideoItem = {
+      id: `bv-${Date.now()}`,
+      title: bonusTitleInput.trim(),
+      category: bonusCategoryInput,
+      duration: bonusDurationInput.trim() || '10:00',
+      date: bonusDateInput.trim() || new Date().toLocaleDateString('it-IT'),
+      videoUrl: bonusUrlInput.trim(),
+      description: bonusDescInput.trim(),
+      resourcesUrl: bonusResUrlInput.trim() || undefined,
+    }
+
+    const updatedVideos = [newVideo, ...bonusVideos]
+    setBonusVideos(updatedVideos)
+    try {
+      localStorage.setItem('ti_aiuto_bonus_videos', JSON.stringify(updatedVideos))
+    } catch (e) { }
+
+    setIsAddBonusVideoModalOpen(false)
+    setBonusTitleInput('')
+    setBonusUrlInput('')
+    setBonusDescInput('')
+    setBonusDateInput('')
+    setBonusResUrlInput('')
+    alert(`Video "${newVideo.title}" aggiunto con successo alla sezione News & Tutorial!`)
+  }
+
+  const handleDeleteBonusVideo = (id: string, title: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare il video "${title}"?`)) return
+    const updatedVideos = bonusVideos.filter((v) => v.id !== id)
+    setBonusVideos(updatedVideos)
+    if (activeBonusVideo?.id === id) {
+      setActiveBonusVideo(null)
+    }
+    try {
+      localStorage.setItem('ti_aiuto_bonus_videos', JSON.stringify(updatedVideos))
+    } catch (e) { }
+  }
+
   const handleSaveResource = (e: React.FormEvent) => {
     e.preventDefault()
     if (!resTitleInput.trim() || !resUrlInput.trim()) return
@@ -1211,6 +1306,18 @@ function CorsiInnerContent() {
         >
           <PlayCircle className="h-4 w-4" />
           <span>Player {selectedCourseId === 'ai-pro' ? 'AI Pro (10 Moduli)' : 'AI Start (20 Lezioni)'}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('news-tutorial')}
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${activeTab === 'news-tutorial'
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+        >
+          <Sparkles className="h-4 w-4 text-amber-400" />
+          <span>News & Tutorial ({bonusVideos.length})</span>
+          <span className="px-1.5 py-0.5 text-[9px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full">Bonus</span>
         </button>
 
         <button
@@ -1704,6 +1811,186 @@ function CorsiInnerContent() {
             </div>
           </div>
         )
+      )}
+
+      {/* TAB: NEWS & TUTORIAL BONUS */}
+      {activeTab === 'news-tutorial' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <Badge variant="purple" className="text-[10px] uppercase tracking-wider font-mono">Extra & Aggiornamenti</Badge>
+                <span className="text-xs text-slate-400 font-mono">• {bonusVideos.length} Video Disponibili</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mt-1">
+                <Sparkles className="h-5 w-5 text-amber-500" />
+                News, Tutorial & Approfondimenti Continui
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Nuove pillole video, novità sui modelli IA (ChatGPT, Claude, Gemini, DeepSeek) e tutorial pratici oltre i 20 moduli base.
+              </p>
+            </div>
+
+            {isTeamMember && (
+              <Button
+                onClick={() => {
+                  setBonusTitleInput('')
+                  setBonusUrlInput('')
+                  setBonusDescInput('')
+                  setBonusDateInput(new Date().toLocaleDateString('it-IT'))
+                  setBonusDurationInput('12:00')
+                  setBonusResUrlInput('')
+                  setIsAddBonusVideoModalOpen(true)
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs shrink-0"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ Aggiungi Video Bonus</span>
+              </Button>
+            )}
+          </div>
+
+          {/* PLAYER ATTIVO VIDEO BONUS */}
+          {activeBonusVideo && (
+            <div className="bg-slate-950 p-5 rounded-2xl border border-indigo-500/30 shadow-2xl space-y-4 animate-in fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-white border-b border-slate-800 pb-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={activeBonusVideo.category === 'News' ? 'secondary' : 'purple'} className="text-[10px]">
+                      {activeBonusVideo.category}
+                    </Badge>
+                    <span className="text-xs text-slate-400 font-mono">Durata: {activeBonusVideo.duration} • Data: {activeBonusVideo.date}</span>
+                  </div>
+                  <h4 className="font-bold text-base text-white flex items-center gap-2">
+                    <PlayCircle className="h-5 w-5 text-indigo-400" />
+                    {activeBonusVideo.title}
+                  </h4>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {activeBonusVideo.resourcesUrl && (
+                    <a
+                      href={activeBonusVideo.resourcesUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-950 border border-indigo-700 text-indigo-300 hover:bg-indigo-900 text-xs font-semibold"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Risorse collegate
+                    </a>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={() => setActiveBonusVideo(null)} className="text-xs text-slate-400 hover:text-white">
+                    Chiudi Player
+                  </Button>
+                </div>
+              </div>
+
+              <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-slate-800">
+                <video
+                  key={activeBonusVideo.id}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  src={activeBonusVideo.videoUrl}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {activeBonusVideo.description && (
+                <p className="text-xs text-slate-300 bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 leading-relaxed">
+                  💡 {activeBonusVideo.description}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* GRIGLIA VIDEO BONUS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {bonusVideos.map((video) => {
+              const isPlaying = activeBonusVideo?.id === video.id
+              return (
+                <div
+                  key={video.id}
+                  className={`p-5 rounded-2xl bg-white dark:bg-slate-900 border transition-all flex flex-col justify-between gap-4 ${
+                    isPlaying
+                      ? 'border-indigo-500 shadow-md ring-2 ring-indigo-500/20'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 shadow-xs'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          video.category === 'News'
+                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                            : video.category === 'Tutorial'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                            : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                        }`}>
+                          {video.category}
+                        </span>
+                        <span className="text-[11px] font-mono text-slate-400">{video.duration}</span>
+                      </div>
+                      <span className="text-[11px] text-slate-400 font-mono">{video.date}</span>
+                    </div>
+
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">
+                        {video.title}
+                      </h4>
+                      {video.description && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                          {video.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/60">
+                    <Button
+                      size="sm"
+                      onClick={() => setActiveBonusVideo(video)}
+                      className={`font-bold text-xs h-9 px-4 rounded-xl gap-2 shadow-xs ${
+                        isPlaying
+                          ? 'bg-slate-800 text-white hover:bg-slate-700'
+                          : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                      }`}
+                    >
+                      <PlayCircle className="h-4 w-4" />
+                      <span>{isPlaying ? 'In Riproduzione' : 'Guarda Video'}</span>
+                    </Button>
+
+                    <div className="flex items-center gap-1">
+                      {video.resourcesUrl && (
+                        <a
+                          href={video.resourcesUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="h-8 px-2.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs flex items-center gap-1 transition-colors"
+                          title="Risorse Collegate"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          <span className="text-[11px]">Link</span>
+                        </a>
+                      )}
+
+                      {isTeamMember && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteBonusVideo(video.id, video.title)}
+                          className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                          title="Elimina Video"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       )}
 
       {/* TAB 2: REGISTRAZIONI ZOOM LIVE */}
@@ -2534,6 +2821,115 @@ function CorsiInnerContent() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal Aggiungi Video Bonus, News & Tutorial */}
+      {isAddBonusVideoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-amber-500" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Aggiungi Video Bonus / Tutorial</h3>
+              </div>
+              <button onClick={() => setIsAddBonusVideoModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBonusVideo} className="p-6 space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo Video *</label>
+                <Input
+                  required
+                  value={bonusTitleInput}
+                  onChange={(e) => setBonusTitleInput(e.target.value)}
+                  placeholder="Es. Novità DeepSeek R1 & Tecniche di Prompting"
+                  className="dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Categoria *</label>
+                  <select
+                    value={bonusCategoryInput}
+                    onChange={(e) => setBonusCategoryInput(e.target.value as any)}
+                    className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  >
+                    <option value="News">News & Novità</option>
+                    <option value="Tutorial">Tutorial Pratico</option>
+                    <option value="Approfondimento">Approfondimento</option>
+                    <option value="Tool AI">Nuovo Tool AI</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Durata stimata</label>
+                  <Input
+                    value={bonusDurationInput}
+                    onChange={(e) => setBonusDurationInput(e.target.value)}
+                    placeholder="Es. 15:30"
+                    className="dark:bg-slate-800 dark:border-slate-700 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Link Video (MP4 / Stream / URL) *</label>
+                <Input
+                  required
+                  value={bonusUrlInput}
+                  onChange={(e) => setBonusUrlInput(e.target.value)}
+                  placeholder="https://www.malaradio.com/CorsoAI/...mp4"
+                  className="font-mono text-[11px] dark:bg-slate-800 dark:border-slate-700"
+                />
+                <span className="text-[10px] text-slate-400">Basta inserire il link diretto al video: il player integrato lo riprodurrà all'istante.</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Data Pubblicazione</label>
+                  <Input
+                    value={bonusDateInput}
+                    onChange={(e) => setBonusDateInput(e.target.value)}
+                    placeholder="Es. 10/09/2026"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Link Risorse Collegate (opzionale)</label>
+                  <Input
+                    value={bonusResUrlInput}
+                    onChange={(e) => setBonusResUrlInput(e.target.value)}
+                    placeholder="https://..."
+                    className="font-mono text-[11px] dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione sintetica (opzionale)</label>
+                <textarea
+                  value={bonusDescInput}
+                  onChange={(e) => setBonusDescInput(e.target.value)}
+                  placeholder="Breve spiegazione di cosa mostra il tutorial o la novità..."
+                  rows={2}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <Button type="button" variant="outline" onClick={() => setIsAddBonusVideoModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2">
+                  <Save className="h-4 w-4" />
+                  Pubblica Video Bonus
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

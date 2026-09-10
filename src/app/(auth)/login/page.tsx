@@ -33,9 +33,8 @@ export default function LoginPage() {
       return
     }
 
-    // Login riuscito -> reindirizza alla bacheca Lavori
-    router.push('/lavori')
-    router.refresh()
+    // Login riuscito -> reindirizza forzando il caricamento completo dei cookie di sessione
+    window.location.href = '/lavori'
   }
 
   return (

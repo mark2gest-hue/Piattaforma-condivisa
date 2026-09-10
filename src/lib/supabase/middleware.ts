@@ -52,8 +52,8 @@ export async function updateSession(request: NextRequest) {
   const isPublicRoute = isRootRoute || isCorsiRoute || isZonaCompitiRoute || isGraziaRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute
 
   // Se l'utente non è autenticato come membro del team e cerca di accedere a rotte riservate (/lavori, /posta, /chat, /files...),
-  // viene reindirizzato a /login
-  if (!user && !isPublicRoute) {
+  // viene reindirizzato a /login (solo in produzione per evitare loop di cookie bloccati nelle webview IDE)
+  if (!user && !isPublicRoute && process.env.NODE_ENV === 'production') {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

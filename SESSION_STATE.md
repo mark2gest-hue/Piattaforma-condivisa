@@ -151,6 +151,12 @@ Stato corrente: Integrata la libreria ElevenLabs UI (`bar-visualizer` e `live-wa
 ---
 
 ## 5. Prossimi Passi Immediati (Next Actions)
-1. Eseguire validazione typecheck (`npm run typecheck`) e linting previa autorizzazione esplicita.
-2. Monitorare l'efficienza delle chiamate NVIDIA NIM e i tempi di risposta su prompt lunghi.
-3. Consolidare la gestione filtri e tag nella visualizzazione del Secondo Cervello.
+1. **Masterclass Lezione 1 — V2 Motion APPROVATA DAI SOCI**:
+   - Video pilota approvato dai soci con pieno successo (`1_Lezione_Completa_MASTERCLASS_v2_Motion.mp4` in Downloads) con transizioni fluide `transitions.dev`, B-Roll crossfade, PiP ciano relatore e card didattiche animate.
+   - **In attesa**: Registrazione dei video puliti da parte di Stefano Maraisi.
+   - **Azione successiva**: Non appena Stefano carica i file video definitivi, eseguire lo script batch automatizzato con la pipeline collaudata per assemblare tutte le 20 lezioni complete con dispense PDF.
+2. **Roadmap AG-UI Protocol (In Memoria)**:
+   - Nota tecnica archiviata in Obsidian: `KnowledgeBase/06_Corso_Agenti_AI/AG_UI_Protocol_Architecture.md`.
+   - Adottare per gradi il pattern Generative UI (event-driven streaming) per Agente Mira (`/workshop-agenti`) per renderizzare componenti interattivi (quiz, form, slider) e integrare il concetto come lezione di punta nel Modulo 7 del Corso Pro.
+3. Eseguire validazione periodica typecheck e monitorare le route di produzione su `aiutiamoci.cloud`.
+

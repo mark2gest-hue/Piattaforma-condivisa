@@ -29,10 +29,14 @@ const nextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
+          ...(process.env.NODE_ENV === 'production'
+            ? [
+                {
+                  key: 'X-Frame-Options',
+                  value: 'SAMEORIGIN',
+                },
+              ]
+            : []),
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',

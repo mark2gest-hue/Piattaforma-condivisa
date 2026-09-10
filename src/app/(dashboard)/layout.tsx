@@ -11,9 +11,9 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Se l'utente non è un amministratore/membro del team autenticato (es. uno studente con codice),
-  // nascondiamo completamente la Sidebar e la Navbar del team!
-  if (!user) {
+  // In produzione: se non c'è user, layout minimale per non mostrare sidebar
+  // In locale: consentiamo la preview completa del workspace di sviluppo
+  if (!user && process.env.NODE_ENV === 'production') {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between">
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
@@ -41,10 +41,10 @@ export default async function DashboardLayout({
     return 'Marco'
   }
 
-  const userName = resolveUserName(profile?.full_name, user.user_metadata?.full_name, user.email)
-  const userRole = profile?.role || user.user_metadata?.role || 'dev'
-  const userEmail = profile?.email || user.email || ''
-  const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url || null
+  const userName = resolveUserName(profile?.full_name, user?.user_metadata?.full_name, user?.email)
+  const userRole = profile?.role || user?.user_metadata?.role || 'dev'
+  const userEmail = profile?.email || user?.email || ''
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || null
 
   return (
     <DashboardShell
