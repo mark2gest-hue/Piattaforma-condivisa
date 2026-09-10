@@ -24,6 +24,7 @@ import {
   ListPlus,
   CheckCircle2,
   Copy,
+  Pencil,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -57,6 +58,12 @@ export default function FilesManagerPage() {
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
+
+  // Modal Rinomina Elemento (Cartella o File)
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false)
+  const [itemToRename, setItemToRename] = useState<FileWithUploader | null>(null)
+  const [newRenameName, setNewRenameName] = useState('')
+  const [isRenaming, setIsRenaming] = useState(false)
 
   // Modal Anteprima
   const [previewFile, setPreviewFile] = useState<FileWithUploader | null>(null)
@@ -259,6 +266,41 @@ export default function FilesManagerPage() {
     if (previewFile?.id === item.id) {
       setPreviewFile(null)
     }
+  }
+
+  const handleOpenRenameModal = (item: FileWithUploader) => {
+    setItemToRename(item)
+    setNewRenameName(item.name)
+    setIsRenameModalOpen(true)
+  }
+
+  const handleRenameItem = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!itemToRename || !newRenameName.trim() || isRenaming) return
+
+    setIsRenaming(true)
+    const updatedName = newRenameName.trim()
+
+    const { error } = await (supabase as any)
+      .from('files')
+      .update({ name: updatedName })
+      .eq('id', itemToRename.id)
+
+    if (error) {
+      console.error('Errore durante la rinomina:', error)
+      alert(`Errore rinomina: ${error.message}`)
+    } else {
+      setFiles((prev) =>
+        prev.map((f) => (f.id === itemToRename.id ? { ...f, name: updatedName } : f))
+      )
+      // Se era aperta l'anteprima dello stesso elemento, aggiorna il nome
+      if (previewFile?.id === itemToRename.id) {
+        setPreviewFile((prev) => (prev ? { ...prev, name: updatedName } : null))
+      }
+      setIsRenameModalOpen(false)
+      setItemToRename(null)
+    }
+    setIsRenaming(false)
   }
 
   const handleDownloadFile = async (file: FileWithUploader) => {
@@ -497,6 +539,16 @@ export default function FilesManagerPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-7 w-7 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400"
+                            title="Rinomina Cartella"
+                            onClick={() => handleOpenRenameModal(folder)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
                             title="Elimina Cartella"
                             onClick={() => handleDeleteItem(folder)}
@@ -552,6 +604,16 @@ export default function FilesManagerPage() {
                             onClick={() => handlePreviewFile(f)}
                           >
                             <Eye className="h-4 w-4" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400"
+                            title="Rinomina File"
+                            onClick={() => handleOpenRenameModal(f)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
                           </Button>
 
                           <Button
@@ -634,6 +696,76 @@ export default function FilesManagerPage() {
                     </>
                   ) : (
                     'Crea Cartella'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Rinomina Elemento (Cartella o File) */}
+      {isRenameModalOpen && itemToRename && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <Pencil className="h-4 w-4 text-amber-500" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Rinomina {itemToRename.mime_type === 'folder' ? 'Cartella' : 'File'}
+                </h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsRenameModalOpen(false)
+                  setItemToRename(null)
+                }}
+                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleRenameItem} className="p-5 space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                  Nuovo Nome *
+                </label>
+                <Input
+                  autoFocus
+                  required
+                  value={newRenameName}
+                  onChange={(e) => setNewRenameName(e.target.value)}
+                  placeholder="Inserisci il nuovo nome"
+                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsRenameModalOpen(false)
+                    setItemToRename(null)
+                  }}
+                >
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isRenaming || !newRenameName.trim() || newRenameName.trim() === itemToRename.name}
+                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  {isRenaming ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      Salvataggio...
+                    </>
+                  ) : (
+                    'Salva Nome'
                   )}
                 </Button>
               </div>
