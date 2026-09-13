@@ -1,7 +1,14 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-09 22:30
-Stato corrente: Integrata la libreria ElevenLabs UI (`bar-visualizer` e `live-waveform`) per l'interfaccia vocale e multimodale di Agente Mira in `/workshop-agenti`. Onde vocali animate reattive per gli stati Speaking, Listening, Thinking e Building. Build di produzione 0 errori completata con successo.
+Ultimo aggiornamento: 2026-09-13 12:48
+Stato corrente: 
+- Risolto blocco di rete Safari (disattivato limite tracciamento IP su Wi-Fi).
+- Allineati cookie @supabase/ssr su client/server/middleware per risolvere il loop di redirect al login.
+- Integrata anteprima nativa per documenti Word .docx con docx-preview.
+- Integrato visualizzatore nativo per file Markdown (.md, .markdown) e plaintext (.txt, .json, .csv) con toggle sorgente e copia rapida.
+- Ottimizzata notifica Telegram sui file caricati con await esplicito e nome profilo uploader.
+- Redatta e archiviata in Obsidian la Guida Commerciale AI Aziendale (Privacy, 3 Piani e Casi d'Uso).
+- Configurato e testato con successo Dify locale su porta 80 con Gemini 3.6 Flash.
 
 ---
 
