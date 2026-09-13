@@ -80,6 +80,12 @@ export default function FilesManagerPage() {
   const [docxError, setDocxError] = useState<string | null>(null)
   const docxContainerRef = useRef<HTMLDivElement | null>(null)
 
+  // Markdown & Plaintext Viewer State
+  const [markdownContent, setMarkdownContent] = useState<string | null>(null)
+  const [markdownLoading, setMarkdownLoading] = useState(false)
+  const [markdownCopied, setMarkdownCopied] = useState(false)
+  const [markdownRawView, setMarkdownRawView] = useState(false)
+
   // AI Document Analysis State (Nemotron NIM)
   const [selectedFileForAi, setSelectedFileForAi] = useState<FileWithUploader | null>(null)
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
@@ -236,6 +242,68 @@ export default function FilesManagerPage() {
     return name.endsWith('.docx') || mime.includes('wordprocessingml') || mime.includes('officedocument')
   }
 
+  const isMarkdownFile = (file?: FileWithUploader | null) => {
+    if (!file) return false
+    const name = file.name.toLowerCase()
+    const mime = (file.mime_type || '').toLowerCase()
+    return name.endsWith('.md') || name.endsWith('.markdown') || mime.includes('markdown')
+  }
+
+  const isTextFile = (file?: FileWithUploader | null) => {
+    if (!file) return false
+    const name = file.name.toLowerCase()
+    const mime = (file.mime_type || '').toLowerCase()
+    return (
+      isMarkdownFile(file) ||
+      name.endsWith('.txt') ||
+      name.endsWith('.json') ||
+      name.endsWith('.csv') ||
+      name.endsWith('.sql') ||
+      name.endsWith('.log') ||
+      mime.includes('text/plain') ||
+      mime.includes('text/markdown') ||
+      mime.includes('application/json')
+    )
+  }
+
+  // Effetto per caricare il testo di file Markdown e Plaintext
+  useEffect(() => {
+    if (!previewFile || !previewUrl || !isTextFile(previewFile)) {
+      setMarkdownContent(null)
+      return
+    }
+
+    let isMounted = true
+    setMarkdownLoading(true)
+    setMarkdownContent(null)
+
+    fetch(previewUrl)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return res.text()
+      })
+      .then((text) => {
+        if (isMounted) {
+          setMarkdownContent(text)
+        }
+      })
+      .catch((err) => {
+        console.error('Errore lettura file Markdown:', err)
+        if (isMounted) {
+          setMarkdownContent(`Errore caricamento del file: ${err?.message || 'Sconosciuto'}`)
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setMarkdownLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [previewFile, previewUrl])
+
   // Effetto per renderizzare il documento Word .docx
   useEffect(() => {
     if (!previewFile || !previewUrl || !isDocxFile(previewFile)) {
@@ -293,6 +361,9 @@ export default function FilesManagerPage() {
     setPreviewUrl(null)
     setDocxError(null)
     setDocxRendering(false)
+    setMarkdownContent(null)
+    setMarkdownRawView(false)
+    setMarkdownCopied(false)
 
     const { data, error } = await supabase.storage
       .from('team-files')
@@ -1129,6 +1200,136 @@ export default function FilesManagerPage() {
                       ref={docxContainerRef}
                       className="flex-1 overflow-auto p-4 bg-slate-50 text-slate-900"
                     />
+                  </div>
+                ) : isTextFile(previewFile) ? (
+                  <div className="w-full h-[75vh] flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 shadow-md bg-white dark:bg-slate-900 overflow-hidden">
+                    {/* Header barra strumenti Markdown */}
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/60 text-xs">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-mono text-[10px] uppercase">
+                          {previewFile.name.endsWith('.md') ? 'MARKDOWN DOCUMENT' : 'PLAIN TEXT'}
+                        </Badge>
+                        <span className="text-slate-400 dark:text-slate-500">•</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {formatBytes(previewFile.size_bytes)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        {previewFile.name.endsWith('.md') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setMarkdownRawView(!markdownRawView)}
+                            className="h-7 text-xs px-2.5 font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
+                          >
+                            <FileCode className="h-3.5 w-3.5 mr-1" />
+                            {markdownRawView ? 'Vista Renderizzata' : 'Sorgente Markdown'}
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (markdownContent) {
+                              navigator.clipboard.writeText(markdownContent)
+                              setMarkdownCopied(true)
+                              setTimeout(() => setMarkdownCopied(false), 2000)
+                            }
+                          }}
+                          className="h-7 text-xs px-2.5 font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
+                        >
+                          {markdownCopied ? (
+                            <>
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+                              <span className="text-emerald-500">Copiato!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3.5 w-3.5 mr-1" />
+                              Copia Testo
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Contenitore Testo / Markdown */}
+                    <div className="flex-1 overflow-auto p-6 md:p-8 bg-slate-50/50 dark:bg-slate-900/50">
+                      {markdownLoading ? (
+                        <div className="flex flex-col items-center justify-center h-full p-8 gap-2 text-slate-500">
+                          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                          <span className="text-xs">Caricamento documento in corso...</span>
+                        </div>
+                      ) : markdownContent ? (
+                        markdownRawView ? (
+                          <pre className="text-xs font-mono whitespace-pre-wrap break-words text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-inner">
+                            {markdownContent}
+                          </pre>
+                        ) : (
+                          <div className="max-w-4xl mx-auto bg-white dark:bg-slate-950 p-6 md:p-10 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm text-slate-800 dark:text-slate-100 text-sm leading-relaxed space-y-4 font-sans">
+                            {markdownContent.split('\n\n').map((block, idx) => {
+                              const trimmed = block.trim()
+                              if (trimmed.startsWith('# ')) {
+                                return (
+                                  <h1 key={idx} className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2 pt-2">
+                                    {trimmed.replace(/^#\s+/, '')}
+                                  </h1>
+                                )
+                              }
+                              if (trimmed.startsWith('## ')) {
+                                return (
+                                  <h2 key={idx} className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100/60 dark:border-slate-800/60 pb-1.5 pt-3">
+                                    {trimmed.replace(/^##\s+/, '')}
+                                  </h2>
+                                )
+                              }
+                              if (trimmed.startsWith('### ')) {
+                                return (
+                                  <h3 key={idx} className="text-base font-semibold text-slate-800 dark:text-slate-200 pt-2">
+                                    {trimmed.replace(/^###\s+/, '')}
+                                  </h3>
+                                )
+                              }
+                              if (trimmed.startsWith('> ')) {
+                                return (
+                                  <blockquote key={idx} className="border-l-4 border-blue-500/80 bg-blue-50/50 dark:bg-blue-950/30 p-3 rounded-r-lg text-xs italic text-slate-700 dark:text-slate-300 my-2">
+                                    {trimmed.replace(/^>\s+/, '')}
+                                  </blockquote>
+                                )
+                              }
+                              if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                                return (
+                                  <ul key={idx} className="list-disc pl-5 space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                                    {trimmed.split('\n').map((li, lIdx) => (
+                                      <li key={lIdx}>{li.replace(/^[-*]\s+/, '')}</li>
+                                    ))}
+                                  </ul>
+                                )
+                              }
+                              if (trimmed.startsWith('```')) {
+                                const lines = trimmed.split('\n')
+                                const code = lines.slice(1, -1).join('\n')
+                                return (
+                                  <pre key={idx} className="bg-slate-900 text-slate-100 p-3.5 rounded-lg text-xs font-mono overflow-x-auto my-2 border border-slate-800">
+                                    <code>{code}</code>
+                                  </pre>
+                                )
+                              }
+                              return (
+                                <p key={idx} className="text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line">
+                                  {trimmed}
+                                </p>
+                              )
+                            })}
+                          </div>
+                        )
+                      ) : (
+                        <div className="text-center p-8 text-slate-400 text-xs">
+                          Documento vuoto o nessun testo disponibile.
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : previewFile.mime_type.includes('video') ? (
                   <video src={previewUrl} controls className="w-full max-h-[70vh] rounded-lg shadow-md" />
