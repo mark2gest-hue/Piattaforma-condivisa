@@ -205,8 +205,14 @@ export default function FilesManagerPage() {
         } else if (dbFile) {
           newItems.push(dbFile as any)
 
-          // Notifica Telegram caricamento singolo file
-          notifyFileUploadAction(selectedFile.name, false).catch((e) =>
+          // Notifica Telegram caricamento singolo file (con uploader profile name)
+          const uploaderDisplayName =
+            (dbFile as any).uploader?.full_name ||
+            user?.user_metadata?.full_name ||
+            user?.email?.split('@')[0] ||
+            'Membro del team'
+
+          await notifyFileUploadAction(selectedFile.name, false, uploaderDisplayName).catch((e) =>
             console.error('Errore notifica Telegram file:', e)
           )
         }

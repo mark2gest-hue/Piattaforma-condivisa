@@ -62,9 +62,9 @@ export async function notifyCalendarEventCreatedAction(event: {
   }
 }
 
-export async function notifyFileUploadAction(fileName: string, isFolder: boolean = false) {
+export async function notifyFileUploadAction(fileName: string, isFolder: boolean = false, uploaderName?: string) {
   try {
-    const userName = await getCurrentUserProfileName()
+    const userName = uploaderName || (await getCurrentUserProfileName())
     const icon = isFolder ? '📁' : '📄'
     const actionLabel = isFolder ? 'Nuova Cartella Creata' : 'Nuovo File Caricato'
 
