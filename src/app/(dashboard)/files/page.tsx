@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   FolderOpen,
   FolderPlus,
@@ -76,6 +76,9 @@ export default function FilesManagerPage() {
   const [previewFile, setPreviewFile] = useState<FileWithUploader | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
+  const [docxRendering, setDocxRendering] = useState(false)
+  const [docxError, setDocxError] = useState<string | null>(null)
+  const docxContainerRef = useRef<HTMLDivElement | null>(null)
 
   // AI Document Analysis State (Nemotron NIM)
   const [selectedFileForAi, setSelectedFileForAi] = useState<FileWithUploader | null>(null)
@@ -226,10 +229,70 @@ export default function FilesManagerPage() {
     setBreadcrumbs(breadcrumbs.slice(0, index + 1))
   }
 
+  const isDocxFile = (file?: FileWithUploader | null) => {
+    if (!file) return false
+    const name = file.name.toLowerCase()
+    const mime = (file.mime_type || '').toLowerCase()
+    return name.endsWith('.docx') || mime.includes('wordprocessingml') || mime.includes('officedocument')
+  }
+
+  // Effetto per renderizzare il documento Word .docx
+  useEffect(() => {
+    if (!previewFile || !previewUrl || !isDocxFile(previewFile)) {
+      return
+    }
+
+    let isMounted = true
+    setDocxRendering(true)
+    setDocxError(null)
+
+    const renderDocx = async () => {
+      try {
+        const response = await fetch(previewUrl)
+        if (!response.ok) {
+          throw new Error(`Impossibile scaricare il file Word (${response.status})`)
+        }
+        const blob = await response.blob()
+        if (!isMounted) return
+
+        // Import dinamico lato client per evitare SSR issues
+        const { renderAsync } = await import('docx-preview')
+        if (docxContainerRef.current && isMounted) {
+          docxContainerRef.current.innerHTML = ''
+          await renderAsync(blob, docxContainerRef.current, undefined, {
+            inWrapper: true,
+            ignoreWidth: false,
+            ignoreHeight: false,
+            experimental: true,
+            className: 'docx-document-rendered',
+          })
+        }
+      } catch (err: any) {
+        console.error('Errore rendering DOCX:', err)
+        if (isMounted) {
+          setDocxError(err?.message || 'Errore durante l\'apertura del documento Word.')
+        }
+      } finally {
+        if (isMounted) {
+          setDocxRendering(false)
+        }
+      }
+    }
+
+    // Piccolo timeout per dare tempo al DOM di montare il ref container
+    const timer = setTimeout(renderDocx, 50)
+    return () => {
+      isMounted = false
+      clearTimeout(timer)
+    }
+  }, [previewFile, previewUrl])
+
   const handlePreviewFile = async (file: FileWithUploader) => {
     setPreviewFile(file)
     setPreviewLoading(true)
     setPreviewUrl(null)
+    setDocxError(null)
+    setDocxRendering(false)
 
     const { data, error } = await supabase.storage
       .from('team-files')
@@ -1040,6 +1103,33 @@ export default function FilesManagerPage() {
                     title={previewFile.name}
                     className="w-full h-[72vh] rounded-xl border border-slate-200 dark:border-slate-800 shadow-md bg-white"
                   />
+                ) : isDocxFile(previewFile) ? (
+                  <div className="w-full h-[72vh] flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 shadow-md bg-white overflow-hidden">
+                    {docxRendering && (
+                      <div className="flex items-center justify-center p-8 gap-2 text-slate-500">
+                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                        <span className="text-xs">Formattazione documento Word in corso...</span>
+                      </div>
+                    )}
+                    {docxError && (
+                      <div className="p-6 text-center text-red-500 text-xs">
+                        <p className="font-semibold mb-1">Non è stato possibile renderizzare il documento Word direttamente a schermo.</p>
+                        <p className="text-slate-400 mb-3">{docxError}</p>
+                        <Button
+                          size="sm"
+                          onClick={() => window.open(previewUrl, '_blank')}
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Scarica / Apri Documento
+                        </Button>
+                      </div>
+                    )}
+                    <div
+                      ref={docxContainerRef}
+                      className="flex-1 overflow-auto p-4 bg-slate-50 text-slate-900"
+                    />
+                  </div>
                 ) : previewFile.mime_type.includes('video') ? (
                   <video src={previewUrl} controls className="w-full max-h-[70vh] rounded-lg shadow-md" />
                 ) : previewFile.mime_type.includes('audio') ? (
