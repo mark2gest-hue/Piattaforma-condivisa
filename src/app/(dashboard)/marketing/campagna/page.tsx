@@ -102,7 +102,7 @@ function CampaignWizardContent() {
   const [brief, setBrief] = useState<MarketingBriefInput>({
     title: 'Lancio Corso AI Start & Consulenze B2B',
     productName: 'AI Start: Percorso Completo',
-    price: 97,
+    price: 149,
     targetAvatar: 'Imprenditori, liberi professionisti e manager che vogliono integrare l\'AI nei flussi di lavoro',
     awarenessLevel: 'Problem-Aware',
     coreDesire: 'Automatizzare le task quotidiane e raddoppiare la produttività aziendale senza saper programmare',
@@ -130,7 +130,7 @@ function CampaignWizardContent() {
       setBrief({
         title: c.title,
         productName: c.product_name,
-        price: Number(c.price) || 97,
+        price: Number(c.price) || 149,
         targetAvatar: c.target_avatar || '',
         awarenessLevel: c.awareness_level || 'Problem-Aware',
         coreDesire: c.core_desire || '',
@@ -269,7 +269,7 @@ function CampaignWizardContent() {
     const expressBrief: MarketingBriefInput = {
       title: expressResult.topic,
       productName: 'AI Start: Percorso Completo',
-      price: 97,
+      price: 149,
       targetAvatar: expressResult.targetAudience,
       awarenessLevel: 'Problem-Aware',
       coreDesire: '',
@@ -1084,7 +1084,7 @@ Generato dall'Agente APEX Growth Architect per ${brief.productName}.`
                         setBrief({
                           title: 'Campagna ADV: Corso AI Start (Domina l\'IA da Zero)',
                           productName: 'AI Start: Percorso Completo in 20 Video',
-                          price: 97,
+                          price: 149,
                           targetAvatar: 'Professionisti, commercianti e curiosi che vogliono usare ChatGPT e l\'AI per il lavoro senza gergo tecnico',
                           awarenessLevel: 'Problem-Aware',
                           coreDesire: 'Automatizzare email, fogli di calcolo e presentazioni risparmiando 5 ore a settimana',

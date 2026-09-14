@@ -38,7 +38,7 @@ Stato corrente:
 - [x] **Marketing & Campagne (`/marketing`)**:
   - Framework APEX Growth con tracciamento metriche, budget e stato campagne.
   - **Metriche Reali Funnel**: estrazione diretta da Supabase (`waitlist_leads` e `student_codes`) con conteggio leads raccolti, studenti attivi e calcolo automatico CVR reale.
-  - **Preset 1-Click Corsi**: compilazione istantanea del brief di campagna per `Corso 1: AI Start` (€97) e `Corso 2: AI Pro (Agenti Autonomi)` (€297) sia nel generatore avanzato sia nelle chips rapide del generatore express.
+  - **Preset 1-Click Corsi**: compilazione istantanea del brief di campagna per `Corso 1: AI Start` (€149) e `Corso 2: AI Pro (Agenti Autonomi)` (€297) sia nel generatore avanzato sia nelle chips rapide del generatore express.
   - Simulatore economico e calcolatore ROI in tempo reale (Ad Spend, nuovi clienti, fatturato stimato).
   - Generatori modali interattivi per asset social: Caroselli (`carousel-generator-modal.tsx`), Locandine promozionali (`locandina-generator-modal.tsx`) e Reel/Storyboard video (`reel-video-generator-modal.tsx`).
   - Integrazione diretta con Buffer per programmazione post e auto-indicizzazione nel Secondo Cervello.

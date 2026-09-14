@@ -110,7 +110,7 @@ export async function runWorkshopSimulationAction(params: {
     toolInput = { query: 'prezzi e piano didattico corsi agenti AI 2026', maxResults: 3 }
     toolOutput = {
       sources: [
-        { title: 'Corso 1: AI Start', price: '97€', focus: 'Prompting e Basi AI' },
+        { title: 'Corso 1: AI Start', price: '149€', focus: 'Prompting e Basi AI' },
         { title: 'Corso 2: AI Pro Agenti', price: '297€', focus: 'Agenti Autonomi & n8n' },
       ],
     }

@@ -56,7 +56,7 @@ export default function MarketingHubPage() {
   const [simTargetFollowers, setSimTargetFollowers] = useState(5000)
   const [simCpc, setSimCpc] = useState(0.45)
   const [simCvr, setSimCvr] = useState(3.5)
-  const [simPrice, setSimPrice] = useState(97)
+  const [simPrice, setSimPrice] = useState(149)
 
   useEffect(() => {
     loadCampaigns()

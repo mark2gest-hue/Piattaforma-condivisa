@@ -34,7 +34,7 @@ export function StructuredData() {
     inLanguage: 'it',
     offers: {
       '@type': 'Offer',
-      price: '97.00',
+      price: '149.00',
       priceCurrency: 'EUR',
       category: 'Paid',
       availability: 'https://schema.org/InStock',
