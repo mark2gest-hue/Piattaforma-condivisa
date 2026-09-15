@@ -71,3 +71,5 @@ public/sample_frame*.jpg
 public/kanban_base_frame.png
 public/test_screencast_frame.jpg
 public/tiktok_thumb_*.png
+recordings/
+scripts/render_masterclass_ref.sh

@@ -21,11 +21,11 @@ export default function VideocallPage() {
   const [inCall, setInCall] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  // Config Google Meet
-  const googleMeetUrl = 'https://meet.google.com/new'
+  // Config Google Meet (Stanza Permanente Soci Marco, Stefano, Socio)
+  const googleMeetUrl = 'https://meet.google.com/wsv-bqxm-bvr'
 
-  // Config Jitsi Meet (Open Source 100% Gratis senza registrazione)
-  const jitsiRoomName = 'teamhub-aiutiamoci-cloud'
+  // Config Stanza WebRTC Alternativa
+  const jitsiRoomName = 'teamhub-soci-aiutiamoci'
   const jitsiRoomUrl = `https://meet.jit.si/${jitsiRoomName}#config.prejoinPageEnabled=false`
 
   const handleCopyLink = (url: string) => {
@@ -113,13 +113,13 @@ export default function VideocallPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-center gap-2">
-                  <h3 className="text-2xl font-bold text-white tracking-tight">Google Meet Pro Hub</h3>
-                  <Badge variant="outline" className="bg-sky-500/20 text-sky-300 border-sky-500/40 text-[11px] font-semibold">
-                    PRO ATTIVO
+                  <h3 className="text-2xl font-bold text-white tracking-tight">Stanza Riservata Soci</h3>
+                  <Badge variant="outline" className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[11px] font-semibold">
+                    STANZA PERMANENTE ATTIVA
                   </Badge>
                 </div>
                 <p className="text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
-                  Sfrutta la qualità massima, registrazione cloud, cancellazione rumore e condivisione schermo con il tuo account Google Pro.
+                  Stanza Google Meet fissa per allineamenti rapidi e riunioni operative tra Marco, Stefano e soci.
                 </p>
               </div>
 
@@ -128,19 +128,19 @@ export default function VideocallPage() {
                 <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800 pb-2">
                   <span className="flex items-center gap-1.5 font-medium text-slate-300">
                     <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                    Crittografia End-to-End Enterprise
+                    Crittografia Google Enterprise
                   </span>
-                  <span className="font-mono text-sky-400">meet.google.com/new</span>
+                  <span className="font-mono text-sky-400 font-bold">meet.google.com/wsv-bqxm-bvr</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="flex items-center gap-2 text-slate-300">
                     <Users className="h-3.5 w-3.5 text-slate-500" />
-                    <span>Fino a 250 partecipanti</span>
+                    <span>Riservata ai 3 Soci</span>
                   </div>
                   <div className="flex items-center gap-2 text-slate-300">
                     <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                    <span>Durata illimitata Pro</span>
+                    <span>Link permanente (no scadenza)</span>
                   </div>
                 </div>
               </div>
@@ -153,7 +153,7 @@ export default function VideocallPage() {
                   className="w-full sm:w-auto bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold shadow-lg shadow-sky-500/25 px-8 h-12 cursor-pointer text-sm"
                 >
                   <Video className="h-4 w-4 mr-2" />
-                  Avvia Google Meet Pro
+                  Entra nella Stanza Soci
                   <ExternalLink className="h-3.5 w-3.5 ml-2 opacity-70" />
                 </Button>
 
@@ -166,7 +166,7 @@ export default function VideocallPage() {
                   {copied ? (
                     <>
                       <Check className="h-4 w-4 mr-2 text-emerald-400" />
-                      Copiato!
+                      Link Copiato!
                     </>
                   ) : (
                     <>

@@ -158,10 +158,10 @@ Stato corrente:
 ---
 
 ## 5. Prossimi Passi Immediati (Next Actions)
-1. **Masterclass Lezione 1 — V2 Motion APPROVATA DAI SOCI**:
-   - Video pilota approvato dai soci con pieno successo (`1_Lezione_Completa_MASTERCLASS_v2_Motion.mp4` in Downloads) con transizioni fluide `transitions.dev`, B-Roll crossfade, PiP ciano relatore e card didattiche animate.
-   - **In attesa**: Registrazione dei video puliti da parte di Stefano Maraisi.
-   - **Azione successiva**: Non appena Stefano carica i file video definitivi, eseguire lo script batch automatizzato con la pipeline collaudata per assemblare tutte le 20 lezioni complete con dispense PDF.
+1. **Masterclass 20 Lezioni — Nuovo Motore Remotion (React + Motion Spring) APPROVATO**:
+   - Validato con pieno successo il test comparativo con Remotion (`masterclass_remotion_comparison.mp4`): grafica vettoriale, animazioni elastiche Apple-style (`spring`), CSS Glassmorphism e sorgenti native pulite senza residui.
+   - **In attesa**: Invio dei link definitivi dei 20 video da parte di Stefano Maraisi.
+   - **Azione successiva**: Al ricevimento dei link/file, rifinire il template master della Lezione 1 con Remotion (audio + sottotitoli + card didattiche + PiP) e lanciare la pipeline batch automatizzata per assemblare tutte e 20 le lezioni in parallelo ad altissima fedeltà.
 2. **Roadmap AG-UI Protocol (In Memoria)**:
    - Nota tecnica archiviata in Obsidian: `KnowledgeBase/06_Corso_Agenti_AI/AG_UI_Protocol_Architecture.md`.
    - Adottare per gradi il pattern Generative UI (event-driven streaming) per Agente Mira (`/workshop-agenti`) per renderizzare componenti interattivi (quiz, form, slider) e integrare il concetto come lezione di punta nel Modulo 7 del Corso Pro.
