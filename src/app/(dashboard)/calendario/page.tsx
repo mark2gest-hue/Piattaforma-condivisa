@@ -578,95 +578,108 @@ export default function CalendarioPage() {
                 <label className="font-semibold text-slate-700 dark:text-slate-300">Categoria</label>
                 <select
                   value={eventCategory}
-                  onChange={(e: any) => setEventCategory(e.target.value)}
+                  onChange={(e: any) => {
+                    const val = e.target.value
+                    setEventCategory(val)
+                    if (val === 'task' || val === 'consulting') {
+                      setSendEmailInvite(false)
+                    } else {
+                      setSendEmailInvite(true)
+                    }
+                  }}
                   className="w-full h-9 rounded-md border border-slate-200 dark:border-slate-700 bg-background dark:bg-slate-800 px-3 text-xs"
                 >
-                  <option value="call">Riunione Videocall</option>
+                  <option value="call">Riunione Videocall / Live Meet</option>
                   <option value="course">Lezione Corso Formativo</option>
-                  <option value="consulting">Sessione Consulenza B2B</option>
-                  <option value="task">Scadenza Task Kanban</option>
+                  <option value="consulting">Appuntamento / Consulenza Di Persona</option>
+                  <option value="task">Promemoria / Scadenza Interna</option>
                 </select>
               </div>
 
-              {/* Campo Dedicato Link Videocall / Google Meet */}
-              <div className="space-y-1.5 bg-sky-500/5 dark:bg-sky-500/10 p-3 rounded-xl border border-sky-500/20">
-                <div className="flex items-center justify-between">
-                  <label className="font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-1.5">
-                    <Video className="h-3.5 w-3.5 text-sky-500" />
-                    Link Riunione (Google Meet / Zoom)
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setEventMeetUrl('https://meet.google.com/wsv-bqxm-bvr')}
-                    className="text-[10px] text-sky-600 dark:text-sky-400 hover:underline font-semibold cursor-pointer"
-                  >
-                    + Usa Stanza Soci
-                  </button>
-                </div>
-                <Input
-                  value={eventMeetUrl}
-                  onChange={(e) => setEventMeetUrl(e.target.value)}
-                  placeholder="https://meet.google.com/xyz-abc-def"
-                  className="text-xs bg-white dark:bg-slate-900 border-sky-500/30 text-sky-600 dark:text-sky-300 font-mono"
-                />
-              </div>
-
-              {/* Sezione Destinatari & Notifiche Email */}
-              <div className="space-y-3 bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
-                    <Mail className="h-3.5 w-3.5 text-blue-500" />
-                    Destinatari Invito & Notifiche
-                  </span>
-                  <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                    <input
-                      type="checkbox"
-                      checked={sendEmailInvite}
-                      onChange={(e) => setSendEmailInvite(e.target.checked)}
-                      className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
-                    />
-                    Invia Email Automatica (Resend)
-                  </label>
-                </div>
-
-                {sendEmailInvite && (
-                  <div className="space-y-2.5 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
-                    <div className="space-y-1">
-                      <label className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
-                        A chi inviare la convocazione:
+              {/* I campi Videocall e Inviti compaiono solo se è una call/lezione o se l'utente vuole aggiungere il link */}
+              {(eventCategory === 'call' || eventCategory === 'course') && (
+                <>
+                  {/* Campo Dedicato Link Videocall / Google Meet */}
+                  <div className="space-y-1.5 bg-sky-500/5 dark:bg-sky-500/10 p-3 rounded-xl border border-sky-500/20">
+                    <div className="flex items-center justify-between">
+                      <label className="font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-1.5">
+                        <Video className="h-3.5 w-3.5 text-sky-500" />
+                        Link Riunione (Google Meet / Zoom)
                       </label>
-                      <select
-                        value={recipientType}
-                        onChange={(e: any) => setRecipientType(e.target.value)}
-                        className="w-full h-8 rounded-md border border-slate-200 dark:border-slate-700 bg-background dark:bg-slate-900 px-2.5 text-xs font-medium"
+                      <button
+                        type="button"
+                        onClick={() => setEventMeetUrl('https://meet.google.com/wsv-bqxm-bvr')}
+                        className="text-[10px] text-sky-600 dark:text-sky-400 hover:underline font-semibold cursor-pointer"
                       >
-                        <option value="single">👤 Singoli Partecipanti / Esterni (es. Gianni, Francesco...)</option>
-                        <option value="ai-start">🎓 Studenti: Corso Base (AI Start)</option>
-                        <option value="ai-pro">🚀 Studenti: Corso Avanzato (AI Pro & B2B)</option>
-                        <option value="all">🌐 TUTTI gli Studenti della Piattaforma (Base + Avanzato)</option>
-                      </select>
+                        + Usa Stanza Soci
+                      </button>
+                    </div>
+                    <Input
+                      value={eventMeetUrl}
+                      onChange={(e) => setEventMeetUrl(e.target.value)}
+                      placeholder="https://meet.google.com/xyz-abc-def"
+                      className="text-xs bg-white dark:bg-slate-900 border-sky-500/30 text-sky-600 dark:text-sky-300 font-mono"
+                    />
+                  </div>
+
+                  {/* Sezione Destinatari & Notifiche Email */}
+                  <div className="space-y-3 bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                        <Mail className="h-3.5 w-3.5 text-blue-500" />
+                        Destinatari Invito & Notifiche
+                      </span>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                        <input
+                          type="checkbox"
+                          checked={sendEmailInvite}
+                          onChange={(e) => setSendEmailInvite(e.target.checked)}
+                          className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
+                        />
+                        Invia Email Automatica (Resend)
+                      </label>
                     </div>
 
-                    {recipientType === 'single' ? (
-                      <div className="space-y-1">
-                        <label className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
-                          Email dei partecipanti (separate da virgola):
-                        </label>
-                        <Input
-                          value={customEmails}
-                          onChange={(e) => setCustomEmails(e.target.value)}
-                          placeholder="gianni@azienda.it, francesco@gmail.com..."
-                          className="text-xs dark:bg-slate-900 dark:border-slate-700"
-                        />
-                      </div>
-                    ) : (
-                      <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-[11px] text-blue-700 dark:text-blue-300">
-                        ✨ La piattaforma recupererà automaticamente gli indirizzi di tutti gli studenti registrati nella categoria selezionata per spedire l'invito della Masterclass in broadcast.
+                    {sendEmailInvite && (
+                      <div className="space-y-2.5 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                        <div className="space-y-1">
+                          <label className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
+                            A chi inviare la convocazione:
+                          </label>
+                          <select
+                            value={recipientType}
+                            onChange={(e: any) => setRecipientType(e.target.value)}
+                            className="w-full h-8 rounded-md border border-slate-200 dark:border-slate-700 bg-background dark:bg-slate-900 px-2.5 text-xs font-medium"
+                          >
+                            <option value="single">👤 Singoli Partecipanti / Esterni (es. Gianni, Francesco...)</option>
+                            <option value="ai-start">🎓 Studenti: Corso Base (AI Start)</option>
+                            <option value="ai-pro">🚀 Studenti: Corso Avanzato (AI Pro & B2B)</option>
+                            <option value="all">🌐 TUTTI gli Studenti della Piattaforma (Base + Avanzato)</option>
+                          </select>
+                        </div>
+
+                        {recipientType === 'single' ? (
+                          <div className="space-y-1">
+                            <label className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
+                              Email dei partecipanti (separate da virgola):
+                            </label>
+                            <Input
+                              value={customEmails}
+                              onChange={(e) => setCustomEmails(e.target.value)}
+                              placeholder="gianni@azienda.it, francesco@gmail.com..."
+                              className="text-xs dark:bg-slate-900 dark:border-slate-700"
+                            />
+                          </div>
+                        ) : (
+                          <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-[11px] text-blue-700 dark:text-blue-300">
+                            ✨ La piattaforma recupererà automaticamente gli indirizzi di tutti gli studenti registrati nella categoria selezionata per spedire l'invito della Masterclass in broadcast.
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
 
               <div className="space-y-1.5">
                 <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione (Opzionale)</label>
