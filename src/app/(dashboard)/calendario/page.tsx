@@ -29,29 +29,12 @@ interface CalendarEvent {
   time?: string
   category: 'task' | 'consulting' | 'course' | 'call'
   description?: string
+  meet_url?: string
 }
 
 export default function CalendarioPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [events, setEvents] = useState<CalendarEvent[]>([
-    {
-      id: 'e-1',
-      title: 'Sessione Consulenza B2B AlfaCorp',
-      date: new Date().toISOString().split('T')[0],
-      time: '10:30',
-      category: 'consulting',
-      description: 'Revisione deliverable ed allineamento contrattuale',
-    },
-    {
-      id: 'e-2',
-      title: 'Riunione Videocall di Allineamento Team',
-      date: new Date().toISOString().split('T')[0],
-      time: '15:00',
-      category: 'call',
-      description: 'Stanza WebRTC Jitsi Meet',
-    },
-  ])
-
+  const [events, setEvents] = useState<CalendarEvent[]>([])
   const [selectedDateStr, setSelectedDateStr] = useState<string>(() => {
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -59,7 +42,8 @@ export default function CalendarioPage() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const [eventTitle, setEventTitle] = useState('')
   const [eventTime, setEventTime] = useState('09:00')
-  const [eventCategory, setEventCategory] = useState<'task' | 'consulting' | 'course' | 'call'>('task')
+  const [eventCategory, setEventCategory] = useState<'task' | 'consulting' | 'course' | 'call'>('call')
+  const [eventMeetUrl, setEventMeetUrl] = useState('')
   const [eventDesc, setEventDesc] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -89,14 +73,26 @@ export default function CalendarioPage() {
         .select('*')
         .order('event_date', { ascending: true })
 
-      const dbCalEvents: CalendarEvent[] = (calData || []).map((ev: any) => ({
-        id: ev.id,
-        title: ev.title,
-        date: ev.event_date,
-        time: ev.event_time || '09:00',
-        category: ev.category as any,
-        description: ev.description || '',
-      }))
+      const dbCalEvents: CalendarEvent[] = (calData || []).map((ev: any) => {
+        // Estrai meet_url se memorizzato in descrizione con prefisso [MEET: ...]
+        let meetUrl = ''
+        let cleanDesc = ev.description || ''
+        const match = cleanDesc.match(/\[MEET:\s*([^\]]+)\]/)
+        if (match) {
+          meetUrl = match[1].trim()
+          cleanDesc = cleanDesc.replace(/\[MEET:\s*[^\]]+\]/, '').trim()
+        }
+
+        return {
+          id: ev.id,
+          title: ev.title,
+          date: ev.event_date,
+          time: ev.event_time || '09:00',
+          category: ev.category as any,
+          description: cleanDesc,
+          meet_url: meetUrl,
+        }
+      })
 
       setEvents([...dbCalEvents, ...taskEvents])
     } catch (err) {
@@ -131,11 +127,17 @@ export default function CalendarioPage() {
     try {
       const { data: userData } = await supabase.auth.getUser()
 
+      // Componi la descrizione includendo meet_url se presente
+      let finalDesc = eventDesc.trim()
+      if (eventMeetUrl.trim()) {
+        finalDesc = `${finalDesc} [MEET: ${eventMeetUrl.trim()}]`.trim()
+      }
+
       const { data: newRow, error } = await (supabase as any)
         .from('calendar_events')
         .insert({
           title: eventTitle.trim(),
-          description: eventDesc.trim(),
+          description: finalDesc,
           event_date: selectedDateStr,
           event_time: eventTime,
           category: eventCategory,
@@ -157,7 +159,8 @@ export default function CalendarioPage() {
           date: newRow.event_date,
           time: newRow.event_time,
           category: newRow.category as any,
-          description: newRow.description,
+          description: eventDesc.trim(),
+          meet_url: eventMeetUrl.trim(),
         }
         setEvents([createdEvent, ...events])
       }
@@ -176,6 +179,7 @@ export default function CalendarioPage() {
 
       setIsEventModalOpen(false)
       setEventTitle('')
+      setEventMeetUrl('')
       setEventDesc('')
     } catch (err: any) {
       alert(`Errore: ${err.message}`)
@@ -433,11 +437,29 @@ export default function CalendarioPage() {
                       </p>
                     )}
 
+                    {ev.meet_url && (
+                      <div className="pt-1">
+                        <Button
+                          size="sm"
+                          onClick={() => window.open(ev.meet_url, '_blank')}
+                          className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs h-7 gap-1.5 shadow-xs"
+                        >
+                          <Video className="h-3.5 w-3.5" />
+                          Partecipa alla Riunione (Meet)
+                        </Button>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-3 text-[10px] text-slate-400 font-mono pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3 text-slate-400" />
                         {ev.time || '10:00'}
                       </span>
+                      {ev.meet_url && (
+                        <span className="text-sky-500 font-sans font-medium flex items-center gap-1 truncate max-w-[180px]">
+                          📹 {ev.meet_url.replace('https://', '')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))
@@ -512,11 +534,34 @@ export default function CalendarioPage() {
                   onChange={(e: any) => setEventCategory(e.target.value)}
                   className="w-full h-9 rounded-md border border-slate-200 dark:border-slate-700 bg-background dark:bg-slate-800 px-3 text-xs"
                 >
-                  <option value="task">Scadenza Task Kanban</option>
-                  <option value="consulting">Sessione Consulenza B2B</option>
-                  <option value="course">Lezione Corso Formativo</option>
                   <option value="call">Riunione Videocall</option>
+                  <option value="course">Lezione Corso Formativo</option>
+                  <option value="consulting">Sessione Consulenza B2B</option>
+                  <option value="task">Scadenza Task Kanban</option>
                 </select>
+              </div>
+
+              {/* Campo Dedicato Link Videocall / Google Meet */}
+              <div className="space-y-1.5 bg-sky-500/5 dark:bg-sky-500/10 p-3 rounded-xl border border-sky-500/20">
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-1.5">
+                    <Video className="h-3.5 w-3.5 text-sky-500" />
+                    Link Riunione (Google Meet / Zoom)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setEventMeetUrl('https://meet.google.com/wsv-bqxm-bvr')}
+                    className="text-[10px] text-sky-600 dark:text-sky-400 hover:underline font-semibold cursor-pointer"
+                  >
+                    + Usa Stanza Soci
+                  </button>
+                </div>
+                <Input
+                  value={eventMeetUrl}
+                  onChange={(e) => setEventMeetUrl(e.target.value)}
+                  placeholder="https://meet.google.com/xyz-abc-def"
+                  className="text-xs bg-white dark:bg-slate-900 border-sky-500/30 text-sky-600 dark:text-sky-300 font-mono"
+                />
               </div>
 
               <div className="space-y-1.5">
