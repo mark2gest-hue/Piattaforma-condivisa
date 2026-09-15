@@ -14,6 +14,9 @@ import {
   Loader2,
   Sparkles,
   Trash2,
+  Mail,
+  Send,
+  Share2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +24,7 @@ import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound } from '@/lib/notifications'
 import { notifyCalendarEventCreatedAction } from '@/app/actions/notifications'
+import { sendEventInvitationsAction } from '@/app/actions/event-invitations'
 
 interface CalendarEvent {
   id: string
@@ -45,6 +49,10 @@ export default function CalendarioPage() {
   const [eventCategory, setEventCategory] = useState<'task' | 'consulting' | 'course' | 'call'>('call')
   const [eventMeetUrl, setEventMeetUrl] = useState('')
   const [eventDesc, setEventDesc] = useState('')
+  const [recipientType, setRecipientType] = useState<'single' | 'ai-start' | 'ai-pro' | 'all'>('single')
+  const [customEmails, setCustomEmails] = useState('')
+  const [sendEmailInvite, setSendEmailInvite] = useState(true)
+  const [isSendingInvitations, setIsSendingInvitations] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const supabase = createClient()
@@ -175,12 +183,36 @@ export default function CalendarioPage() {
         category: eventCategory,
       }).catch((e) => console.error('Errore notifica Telegram evento calendario:', e))
 
-      alert(`Evento "${eventTitle}" aggiunto con successo al Calendario!`)
+      // Invia inviti via email tramite Resend se abilitato
+      let emailReportMsg = ''
+      if (sendEmailInvite && (customEmails.trim() || recipientType !== 'single')) {
+        setIsSendingInvitations(true)
+        const resEmail = await sendEventInvitationsAction({
+          eventTitle: eventTitle.trim(),
+          eventDate: selectedDateStr,
+          eventTime,
+          meetUrl: eventMeetUrl.trim(),
+          description: eventDesc.trim(),
+          recipientType,
+          customEmails: customEmails.trim(),
+        })
+        setIsSendingInvitations(false)
+
+        if (resEmail.success) {
+          emailReportMsg = `\n✉️ Inviti inviati con successo a ${resEmail.sentCount} destinatari via Resend!`
+        } else {
+          emailReportMsg = `\n⚠️ Attenzione invio email: ${resEmail.error}`
+        }
+      }
+
+      alert(`Evento "${eventTitle}" aggiunto al Calendario!${emailReportMsg}`)
 
       setIsEventModalOpen(false)
       setEventTitle('')
       setEventMeetUrl('')
       setEventDesc('')
+      setCustomEmails('')
+      setRecipientType('single')
     } catch (err: any) {
       alert(`Errore: ${err.message}`)
     }
@@ -438,14 +470,29 @@ export default function CalendarioPage() {
                     )}
 
                     {ev.meet_url && (
-                      <div className="pt-1">
+                      <div className="pt-1 flex items-center gap-1.5">
                         <Button
                           size="sm"
                           onClick={() => window.open(ev.meet_url, '_blank')}
-                          className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs h-7 gap-1.5 shadow-xs"
+                          className="flex-1 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs h-7 gap-1 shadow-xs"
                         >
                           <Video className="h-3.5 w-3.5" />
-                          Partecipa alla Riunione (Meet)
+                          Partecipa Meet
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const text = encodeURIComponent(
+                              `Ciao! Ti confermo la riunione "${ev.title}" per il ${ev.date} alle ${ev.time || '10:00'}.\nEcco il link Google Meet per collegarci: ${ev.meet_url}`
+                            )
+                            window.open(`https://wa.me/?text=${text}`, '_blank')
+                          }}
+                          className="h-7 px-2.5 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-semibold gap-1"
+                          title="Invia promemoria su WhatsApp"
+                        >
+                          <Share2 className="h-3.5 w-3.5 text-emerald-500" />
+                          WhatsApp
                         </Button>
                       </div>
                     )}
@@ -564,24 +611,114 @@ export default function CalendarioPage() {
                 />
               </div>
 
+              {/* Sezione Destinatari & Notifiche Email */}
+              <div className="space-y-3 bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                    <Mail className="h-3.5 w-3.5 text-blue-500" />
+                    Destinatari Invito & Notifiche
+                  </span>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                    <input
+                      type="checkbox"
+                      checked={sendEmailInvite}
+                      onChange={(e) => setSendEmailInvite(e.target.checked)}
+                      className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
+                    />
+                    Invia Email Automatica (Resend)
+                  </label>
+                </div>
+
+                {sendEmailInvite && (
+                  <div className="space-y-2.5 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                    <div className="space-y-1">
+                      <label className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
+                        A chi inviare la convocazione:
+                      </label>
+                      <select
+                        value={recipientType}
+                        onChange={(e: any) => setRecipientType(e.target.value)}
+                        className="w-full h-8 rounded-md border border-slate-200 dark:border-slate-700 bg-background dark:bg-slate-900 px-2.5 text-xs font-medium"
+                      >
+                        <option value="single">👤 Singoli Partecipanti / Esterni (es. Gianni, Francesco...)</option>
+                        <option value="ai-start">🎓 Studenti: Corso Base (AI Start)</option>
+                        <option value="ai-pro">🚀 Studenti: Corso Avanzato (AI Pro & B2B)</option>
+                        <option value="all">🌐 TUTTI gli Studenti della Piattaforma (Base + Avanzato)</option>
+                      </select>
+                    </div>
+
+                    {recipientType === 'single' ? (
+                      <div className="space-y-1">
+                        <label className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
+                          Email dei partecipanti (separate da virgola):
+                        </label>
+                        <Input
+                          value={customEmails}
+                          onChange={(e) => setCustomEmails(e.target.value)}
+                          placeholder="gianni@azienda.it, francesco@gmail.com..."
+                          className="text-xs dark:bg-slate-900 dark:border-slate-700"
+                        />
+                      </div>
+                    ) : (
+                      <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-[11px] text-blue-700 dark:text-blue-300">
+                        ✨ La piattaforma recupererà automaticamente gli indirizzi di tutti gli studenti registrati nella categoria selezionata per spedire l'invito della Masterclass in broadcast.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-1.5">
                 <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione (Opzionale)</label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={eventDesc}
                   onChange={(e) => setEventDesc(e.target.value)}
                   placeholder="Dettagli aggiuntivi per i partecipanti..."
-                  className="w-full text-xs p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <Button type="button" variant="outline" onClick={() => setIsEventModalOpen(false)}>
-                  Annulla
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                {/* Tasto rapido WhatsApp per condividere al volo */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const text = encodeURIComponent(
+                      `Ciao! Ti confermo la riunione "${eventTitle || 'Videocall'}" per il ${selectedDateStr} alle ${eventTime}.\nEcco il link Google Meet per collegarci: ${eventMeetUrl || 'https://meet.google.com/wsv-bqxm-bvr'}\nA presto!`
+                    )
+                    window.open(`https://wa.me/?text=${text}`, '_blank')
+                  }}
+                  className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-semibold gap-1.5 h-9"
+                >
+                  <Share2 className="h-3.5 w-3.5 text-emerald-500" />
+                  Invia su WhatsApp
                 </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
-                  Aggiungi al Calendario
-                </Button>
+
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsEventModalOpen(false)}>
+                    Annulla
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSendingInvitations}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-9 px-4 gap-1.5"
+                  >
+                    {isSendingInvitations ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Invio in corso...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3.5 w-3.5" />
+                        Salva e Invia Inviti
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
           </div>
