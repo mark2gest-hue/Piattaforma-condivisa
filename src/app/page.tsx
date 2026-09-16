@@ -68,6 +68,7 @@ const MODULES_LIST = [
 ]
 
 const FAQS = [
+  { q: 'I corsi rilasciano una certificazione ufficiale?', a: 'Certamente! I nostri percorsi formativi rilasciano la Certificazione delle Competenze a livello europeo, emessa in collaborazione con l\'Ente Certificatore ATOMA tramite docente qualificato ed autorizzato.' },
   { q: 'Serve saper programmare o avere competenze tecniche?', a: 'Assolutamente no! AI Start è stato progettato appositamente per chi parte da zero. Spieghiamo tutto in modo chiaro, senza tecnicismi.' },
   { q: 'Come funziona l’accesso alle lezioni video?', a: 'Al momento dell’iscrizione riceverai un Codice Univoco personale (es. AI-START-8F92). Inserendolo nell’Area Studenti sbloccherai subito tutti i 20 video ed il player HTML5.' },
   { q: 'Cos’è l’Assistente @AI in Chat?', a: 'È il tuo tutor virtuale integrato nella piattaforma. Durante la visione delle lezioni puoi digitare @AI per porre qualsiasi domanda e ricevere risposte istantanee.' },
@@ -231,6 +232,11 @@ export default function LandingPage() {
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-12 lg:py-16 space-y-24">
         <div className="text-center space-y-6 max-w-4xl mx-auto">
           <div className="flex items-center justify-center gap-2 flex-wrap">
+            <Badge className="py-1.5 px-4 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold rounded-full gap-2 inline-flex items-center">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+              Certificazione Europea delle Competenze con Ente ATOMA
+            </Badge>
+
             <Badge className="py-1.5 px-4 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold rounded-full gap-2 inline-flex items-center">
               <Zap className="h-3.5 w-3.5 text-amber-400" />
               Corso Pratico in 20 Video Lezioni senza tecnicismi
@@ -351,6 +357,10 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                     <span>Attestato di completamento finale</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-emerald-300 font-semibold">
+                    <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>Certificazione Europea con Ente ATOMA (Docente Autorizzato)</span>
                   </div>
                 </div>
               </div>

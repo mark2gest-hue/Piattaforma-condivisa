@@ -58,6 +58,7 @@ import {
   getStudentCodesAction,
   deleteStudentCodeAction,
   verifyStudentCodeAction,
+  upgradeStudentTierAction,
 } from '@/app/actions/student'
 import { LESSON_SUMMARIES } from '@/lib/course-data'
 import { askStudentAiAction, generateLessonQuizAction, QuizQuestion } from '@/app/actions/ai'
@@ -478,8 +479,8 @@ function CorsiInnerContent() {
   const [isTeamMember, setIsTeamMember] = useState<boolean>(false)
   const [authChecked, setAuthChecked] = useState<boolean>(false)
 
-  // Subtab Registro: 'registrations' | 'active' | 'waitlist'
-  const [studentSubTab, setStudentSubTab] = useState<'registrations' | 'active' | 'waitlist'>('registrations')
+  // Subtab Registro: 'registrations' | 'active' | 'pro_students' | 'waitlist'
+  const [studentSubTab, setStudentSubTab] = useState<'registrations' | 'active' | 'pro_students' | 'waitlist'>('registrations')
   const [courseRegistrations, setCourseRegistrations] = useState<CourseRegistration[]>([])
   const [loadingRegistrations, setLoadingRegistrations] = useState<boolean>(false)
   const [copiedEmailKey, setCopiedEmailKey] = useState<string | null>(null)
@@ -647,17 +648,33 @@ function CorsiInnerContent() {
     setLoadingRegistrations(false)
   }
 
-  const handleApproveRegistration = async (reg: CourseRegistration) => {
+  const handleApproveRegistration = async (reg: CourseRegistration, targetTier: 'ai-start' | 'ai-pro' | 'both' = 'ai-start') => {
     setIsApprovingId(reg.id)
-    const res = await approveCourseRegistrationAction(reg.id)
+    const res = await approveCourseRegistrationAction(reg.id, targetTier)
     if (res.success && res.code) {
       playNotificationSound('chat')
-      alert(`🎉 Registrazione per ${reg.name} APPROVATA con successo!\nCodice generato: ${res.code}\nEmail con istruzioni inviata a ${reg.email}.`)
+      const tierName = targetTier === 'ai-pro' ? 'AI Pro (Corso Avanzato)' : targetTier === 'both' ? 'Bundle Completo (Start + Pro)' : 'AI Start'
+      alert(`🎉 Registrazione per ${reg.name} APPROVATA per ${tierName}!\nCodice generato: ${res.code}\nEmail con istruzioni inviata a ${reg.email}.`)
       await loadCourseRegistrations()
+      await loadStudentCodes()
     } else {
       alert(`Errore approvazione: ${res.error}`)
     }
     setIsApprovingId(null)
+  }
+
+  const handleUpgradeStudent = async (student: StudentRegistration, targetTier: 'ai-pro' | 'both') => {
+    const tierName = targetTier === 'both' ? 'Bundle Completo (Start + Pro)' : 'AI Pro (Avanzato)'
+    if (!confirm(`Vuoi abilitare ${student.studentName} all'accesso ${tierName}? Verrà inviata una notifica automatica via email.`)) return
+
+    const res = await upgradeStudentTierAction(student.id, targetTier)
+    if (res.success) {
+      playNotificationSound('chat')
+      alert(`🚀 Upgrade completato per ${student.studentName}!\nNuovo livello: ${tierName}.\nEmail di notifica inviata con successo a ${student.studentEmail}.`)
+      await loadStudentCodes()
+    } else {
+      alert(`Errore upgrade: ${res.error}`)
+    }
   }
 
   const handleDeleteRegistration = async (id: string, name: string) => {
@@ -2291,34 +2308,45 @@ function CorsiInnerContent() {
             </div>
           </div>
 
-          {/* Sotto-Schede: Registrazioni & Questionario vs Studenti Attivi vs Lista d'Attesa */}
+          {/* Sotto-Schede: In Attesa vs Studenti Corso 1 vs Iscritti Corso 2 vs Lista d'Attesa */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setStudentSubTab('registrations')}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'registrations'
-                    ? 'bg-blue-600 text-white shadow-xs'
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'registrations'
+                    ? 'bg-amber-600 text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
               >
                 <ClipboardList className="h-4 w-4" />
-                <span>Questionario & Registrazioni ({courseRegistrations.length})</span>
+                <span>⏳ In Attesa ({courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length})</span>
                 {courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length > 0 && (
-                  <span className="px-1.5 py-0.2 bg-amber-500 text-white text-[10px] rounded-full font-bold">
-                    {courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length}
+                  <span className="px-1.5 py-0.2 bg-white text-amber-700 text-[10px] rounded-full font-black">
+                    NEW
                   </span>
                 )}
               </button>
 
               <button
                 onClick={() => setStudentSubTab('active')}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'active'
-                    ? 'bg-indigo-600 text-white shadow-xs'
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'active'
+                    ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
               >
                 <Users className="h-4 w-4" />
-                <span>Studenti Accreditati ({registrations.length})</span>
+                <span>🎓 Studenti Corso 1 - AI Start ({registrations.filter(r => r.accessTier === 'ai-start' || !r.accessTier).length})</span>
+              </button>
+
+              <button
+                onClick={() => setStudentSubTab('pro_students')}
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'pro_students'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>🚀 Iscritti Corso 2 - AI Pro ({registrations.filter(r => r.accessTier === 'ai-pro' || r.accessTier === 'both').length})</span>
               </button>
 
               <button
@@ -2326,13 +2354,13 @@ function CorsiInnerContent() {
                   setStudentSubTab('waitlist')
                   loadWaitlistLeads()
                 }}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'waitlist'
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'waitlist'
                     ? 'bg-purple-600 text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
               >
                 <Clock className="h-4 w-4" />
-                <span>⏳ Lista d'Attesa AI Pro ({waitlistLeads.length})</span>
+                <span>📋 Lista d'Attesa Leads ({waitlistLeads.length})</span>
               </button>
             </div>
 
@@ -2487,44 +2515,68 @@ function CorsiInnerContent() {
                               </td>
 
                               <td className="py-3.5 px-4 text-right">
-                                {isAppr ? (
-                                  <div className="flex flex-col items-end">
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-400 font-semibold text-[11px]">
-                                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                                      <span>Approvato</span>
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {isAppr ? (
+                                    <div className="flex flex-col items-end">
+                                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-400 font-semibold text-[11px]">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                        <span>Approvato</span>
+                                      </div>
+                                      {reg.approved_at && (
+                                        <span className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                          {new Date(reg.approved_at).toLocaleString('it-IT', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                          })}
+                                        </span>
+                                      )}
+                                      {reg.access_code && (
+                                        <span className="text-[10px] text-indigo-400 font-mono">
+                                          {reg.access_code}
+                                        </span>
+                                      )}
                                     </div>
-                                    {reg.approved_at && (
-                                      <span className="text-[10px] text-slate-500 font-mono mt-0.5">
-                                        {new Date(reg.approved_at).toLocaleString('it-IT', {
-                                          day: '2-digit',
-                                          month: '2-digit',
-                                          year: 'numeric',
-                                          hour: '2-digit',
-                                          minute: '2-digit',
-                                        })}
-                                      </span>
-                                    )}
-                                    {reg.access_code && (
-                                      <span className="text-[10px] text-indigo-400 font-mono">
-                                        {reg.access_code}
-                                      </span>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    disabled={isApprovingId === reg.id}
-                                    onClick={() => handleApproveRegistration(reg)}
-                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] h-7 px-3 rounded-lg gap-1.5 shadow-xs"
+                                  ) : (
+                                    <div className="flex items-center gap-1.5">
+                                      <Button
+                                        size="sm"
+                                        disabled={isApprovingId === reg.id}
+                                        onClick={() => handleApproveRegistration(reg, 'ai-start')}
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] h-7 px-2.5 rounded-lg gap-1 shadow-xs"
+                                        title="Approva e invia accesso ad AI Start (Corso 1)"
+                                      >
+                                        {isApprovingId === reg.id ? (
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <CheckCircle2 className="h-3 w-3" />
+                                        )}
+                                        <span>Approva Start</span>
+                                      </Button>
+
+                                      <Button
+                                        size="sm"
+                                        disabled={isApprovingId === reg.id}
+                                        onClick={() => handleApproveRegistration(reg, 'ai-pro')}
+                                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] h-7 px-2.5 rounded-lg gap-1 shadow-xs"
+                                        title="Approva direttamente per AI Pro (Corso 2) senza reiscrizione"
+                                      >
+                                        <Sparkles className="h-3 w-3" />
+                                        <span>Approva Pro</span>
+                                      </Button>
+                                    </div>
+                                  )}
+
+                                  <button
+                                    onClick={() => handleDeleteRegistration(reg.id, reg.name)}
+                                    className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                    title="Elimina richiesta (Cestina)"
                                   >
-                                    {isApprovingId === reg.id ? (
-                                      <Loader2 className="h-3 w-3 animate-spin" />
-                                    ) : (
-                                      <CheckCircle2 className="h-3 w-3" />
-                                    )}
-                                    <span>Approva</span>
-                                  </Button>
-                                )}
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           )
@@ -2692,6 +2744,18 @@ function CorsiInnerContent() {
                               </Badge>
                             </td>
                             <td className="py-3.5 px-4 text-right flex items-center justify-end gap-1">
+                              {reg.accessTier !== 'ai-pro' && reg.accessTier !== 'both' && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleUpgradeStudent(reg, 'both')}
+                                  className="text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400 gap-1 h-7 font-semibold"
+                                  title="Promuovi questo studente anche a Corso 2 (AI Pro) senza reiscrizione"
+                                >
+                                  <Sparkles className="h-3.5 w-3.5" />
+                                  Upgrade Pro
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -2736,7 +2800,120 @@ function CorsiInnerContent() {
             </div>
           )}
 
-          {/* TABELLA 3: LISTA D'ATTESA AI PRO */}
+          {/* TABELLA 3: ISCRITTI UFFICIALI CORSO 2 (AI PRO) */}
+          {studentSubTab === 'pro_students' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="relative w-full sm:w-80">
+                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    value={activeSearchQuery}
+                    onChange={(e) => setActiveSearchQuery(e.target.value)}
+                    placeholder="Cerca studente Pro per nome o email..."
+                    className="pl-9 text-xs h-9 bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-xl"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-500">
+                    Totale Iscritti Corso 2:{' '}
+                    <strong className="text-indigo-600 dark:text-indigo-400">
+                      {registrations.filter((r) => r.accessTier === 'ai-pro' || r.accessTier === 'both').length}
+                    </strong>
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                      <tr>
+                        <th className="py-3 px-4">Codice Univoco</th>
+                        <th className="py-3 px-4">Nome Studente</th>
+                        <th className="py-3 px-4">Email</th>
+                        <th className="py-3 px-4">Livello d'Accesso</th>
+                        <th className="py-3 px-4">Stato</th>
+                        <th className="py-3 px-4 text-right">Azioni</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {registrations
+                        .filter((r) => r.accessTier === 'ai-pro' || r.accessTier === 'both')
+                        .filter((r) => {
+                          if (!activeSearchQuery) return true
+                          const q = activeSearchQuery.toLowerCase()
+                          return r.studentName.toLowerCase().includes(q) || r.studentEmail.toLowerCase().includes(q) || r.code.toLowerCase().includes(q)
+                        })
+                        .map((reg) => (
+                          <tr key={reg.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                            <td className="py-3.5 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                              {reg.code}
+                            </td>
+                            <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
+                              {reg.studentName}
+                            </td>
+                            <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400 font-mono">
+                              {reg.studentEmail}
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-1.5">
+                                {reg.accessTier === 'both' ? (
+                                  <Badge variant="purple" className="text-[9px] font-mono">🌟 FULL ACCESS (BASE + PRO)</Badge>
+                                ) : (
+                                  <Badge variant="purple" className="text-[9px] font-mono">🚀 SOLO AI PRO</Badge>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <Badge variant="success" className="text-[9px] uppercase">
+                                Iscritto Ufficiale
+                              </Badge>
+                            </td>
+                            <td className="py-3.5 px-4 text-right flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  sendSharedEmail({
+                                    to: reg.studentEmail,
+                                    subject: `Accesso Ufficiale AI Pro (Corso 2) - Codice: ${reg.code}`,
+                                    body: `Gentile ${reg.studentName},\n\nti confermiamo che il tuo accesso al CORSO 2 (AI Pro - Automazioni & Agenti AI) è ATTIVO!\n\nIl tuo codice di accesso univoco è: ${reg.code}.\n\nAccedi alla piattaforma su https://piattaforma.aiutiamoci.cloud/corsi e inserisci il codice per sbloccare tutti i moduli avanzati.\n\nCordiali saluti,\nTeam Aiutiamoci Cloud`,
+                                  })
+                                  alert(`Inviata email con codice AI Pro a ${reg.studentEmail}!`)
+                                }}
+                                className="text-xs text-indigo-600 hover:text-indigo-800 dark:hover:text-indigo-300 gap-1 h-7"
+                              >
+                                <Mail className="h-3.5 w-3.5" />
+                                Invia Mail
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteStudent(reg.id, reg.studentName, reg.code)}
+                                className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                                title="Elimina Studente e Codice"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {registrations.filter((r) => r.accessTier === 'ai-pro' || r.accessTier === 'both').length === 0 && (
+                  <div className="p-10 text-center text-slate-400 text-xs space-y-2">
+                    <Sparkles className="h-8 w-8 mx-auto text-indigo-400 opacity-60" />
+                    <p className="font-semibold text-slate-300">Nessuno studente iscritto a Corso 2 al momento.</p>
+                    <p className="text-slate-500">Puoi approvare le registrazioni come AI Pro o fare l'upgrade immediato dagli studenti di Corso 1.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TABELLA 4: LISTA D'ATTESA AI PRO */}
           {studentSubTab === 'waitlist' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs space-y-4 p-4">
               <div className="flex items-center justify-between">

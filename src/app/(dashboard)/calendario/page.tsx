@@ -49,7 +49,8 @@ export default function CalendarioPage() {
   const [eventCategory, setEventCategory] = useState<'task' | 'consulting' | 'course' | 'call'>('call')
   const [eventMeetUrl, setEventMeetUrl] = useState('')
   const [eventDesc, setEventDesc] = useState('')
-  const [recipientType, setRecipientType] = useState<'single' | 'ai-start' | 'ai-pro' | 'all'>('single')
+  const [recipientType, setRecipientType] = useState<'single' | 'ai-start' | 'ai-pro' | 'all' | 'pending'>('single')
+  const [recipientCategories, setRecipientCategories] = useState<string[]>(['single'])
   const [customEmails, setCustomEmails] = useState('')
   const [sendEmailInvite, setSendEmailInvite] = useState(true)
   const [isSendingInvitations, setIsSendingInvitations] = useState(false)
@@ -185,7 +186,8 @@ export default function CalendarioPage() {
 
       // Invia inviti via email tramite Resend se abilitato
       let emailReportMsg = ''
-      if (sendEmailInvite && (customEmails.trim() || recipientType !== 'single')) {
+      const hasSelectedCategories = recipientCategories.length > 0 && (recipientCategories.some(c => c !== 'single') || customEmails.trim().length > 0)
+      if (sendEmailInvite && hasSelectedCategories) {
         setIsSendingInvitations(true)
         const resEmail = await sendEventInvitationsAction({
           eventTitle: eventTitle.trim(),
@@ -193,7 +195,7 @@ export default function CalendarioPage() {
           eventTime,
           meetUrl: eventMeetUrl.trim(),
           description: eventDesc.trim(),
-          recipientType,
+          recipientCategories: recipientCategories as any,
           customEmails: customEmails.trim(),
         })
         setIsSendingInvitations(false)
@@ -641,40 +643,153 @@ export default function CalendarioPage() {
                     </div>
 
                     {sendEmailInvite && (
-                      <div className="space-y-2.5 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
-                        <div className="space-y-1">
-                          <label className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
-                            A chi inviare la convocazione:
+                      <div className="space-y-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                        <div className="flex items-center justify-between">
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+                            Seleziona Categorie Destinatari (Multiscelta):
                           </label>
-                          <select
-                            value={recipientType}
-                            onChange={(e: any) => setRecipientType(e.target.value)}
-                            className="w-full h-8 rounded-md border border-slate-200 dark:border-slate-700 bg-background dark:bg-slate-900 px-2.5 text-xs font-medium"
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const allCats = ['pending', 'ai-start', 'ai-pro', 'waitlist', 'single']
+                              if (recipientCategories.length === allCats.length) {
+                                setRecipientCategories([])
+                              } else {
+                                setRecipientCategories(allCats)
+                              }
+                            }}
+                            className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold"
                           >
-                            <option value="single">👤 Singoli Partecipanti / Esterni (es. Gianni, Francesco...)</option>
-                            <option value="ai-start">🎓 Studenti: Corso Base (AI Start)</option>
-                            <option value="ai-pro">🚀 Studenti: Corso Avanzato (AI Pro & B2B)</option>
-                            <option value="all">🌐 TUTTI gli Studenti della Piattaforma (Base + Avanzato)</option>
-                          </select>
+                            {recipientCategories.length === 5 ? 'Deseleziona Tutti' : 'Seleziona Tutti'}
+                          </button>
                         </div>
 
-                        {recipientType === 'single' ? (
-                          <div className="space-y-1">
-                            <label className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
-                              Email dei partecipanti (separate da virgola):
-                            </label>
+                        {/* Grid Checkbox Multiscelta */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          {/* 1. Registrati in Attesa di Pagamento */}
+                          <label className={`flex items-start gap-2 p-2.5 rounded-xl border transition-all cursor-pointer ${
+                            recipientCategories.includes('pending')
+                              ? 'bg-amber-500/10 border-amber-500/40 text-amber-900 dark:text-amber-200 shadow-xs'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-400'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={recipientCategories.includes('pending')}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setRecipientCategories([...recipientCategories, 'pending'])
+                                } else {
+                                  setRecipientCategories(recipientCategories.filter(c => c !== 'pending'))
+                                }
+                              }}
+                              className="mt-0.5 rounded text-amber-600 focus:ring-amber-500"
+                            />
+                            <div className="min-w-0">
+                              <span className="font-bold block text-[11px]">⏳ Registrati in Attesa</span>
+                              <span className="text-[10px] text-slate-500 block leading-tight">Partecipanti call di vendita / non pagati</span>
+                            </div>
+                          </label>
+
+                          {/* 2. Studenti Base (AI Start) */}
+                          <label className={`flex items-start gap-2 p-2.5 rounded-xl border transition-all cursor-pointer ${
+                            recipientCategories.includes('ai-start')
+                              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-900 dark:text-emerald-200 shadow-xs'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-400'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={recipientCategories.includes('ai-start')}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setRecipientCategories([...recipientCategories, 'ai-start'])
+                                } else {
+                                  setRecipientCategories(recipientCategories.filter(c => c !== 'ai-start'))
+                                }
+                              }}
+                              className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
+                            />
+                            <div className="min-w-0">
+                              <span className="font-bold block text-[11px]">🎓 Studenti AI Start</span>
+                              <span className="text-[10px] text-slate-500 block leading-tight">Accreditati con codice attivo</span>
+                            </div>
+                          </label>
+
+                          {/* 3. Studenti Avanzato (AI Pro) */}
+                          <label className={`flex items-start gap-2 p-2.5 rounded-xl border transition-all cursor-pointer ${
+                            recipientCategories.includes('ai-pro')
+                              ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-900 dark:text-indigo-200 shadow-xs'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-400'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={recipientCategories.includes('ai-pro')}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setRecipientCategories([...recipientCategories, 'ai-pro'])
+                                } else {
+                                  setRecipientCategories(recipientCategories.filter(c => c !== 'ai-pro'))
+                                }
+                              }}
+                              className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <div className="min-w-0">
+                              <span className="font-bold block text-[11px]">🚀 Studenti AI Pro B2B</span>
+                              <span className="text-[10px] text-slate-500 block leading-tight">Iscritti corso agenti</span>
+                            </div>
+                          </label>
+
+                          {/* 4. Lista d'Attesa Leads */}
+                          <label className={`flex items-start gap-2 p-2.5 rounded-xl border transition-all cursor-pointer ${
+                            recipientCategories.includes('waitlist')
+                              ? 'bg-purple-500/10 border-purple-500/40 text-purple-900 dark:text-purple-200 shadow-xs'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-400'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={recipientCategories.includes('waitlist')}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setRecipientCategories([...recipientCategories, 'waitlist'])
+                                } else {
+                                  setRecipientCategories(recipientCategories.filter(c => c !== 'waitlist'))
+                                }
+                              }}
+                              className="mt-0.5 rounded text-purple-600 focus:ring-purple-500"
+                            />
+                            <div className="min-w-0">
+                              <span className="font-bold block text-[11px]">📋 Lista d'Attesa AI Pro</span>
+                              <span className="text-[10px] text-slate-500 block leading-tight">Lead registrati al lancio</span>
+                            </div>
+                          </label>
+                        </div>
+
+                        {/* 5. Inserimento manuale email aggiuntive */}
+                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
+                          <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300 text-[11px] cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={recipientCategories.includes('single')}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setRecipientCategories([...recipientCategories, 'single'])
+                                } else {
+                                  setRecipientCategories(recipientCategories.filter(c => c !== 'single'))
+                                }
+                              }}
+                              className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
+                            />
+                            <span>➕ Aggiungi singole email esterne / soci:</span>
+                          </label>
+
+                          {recipientCategories.includes('single') && (
                             <Input
                               value={customEmails}
                               onChange={(e) => setCustomEmails(e.target.value)}
                               placeholder="gianni@azienda.it, francesco@gmail.com..."
                               className="text-xs dark:bg-slate-900 dark:border-slate-700"
                             />
-                          </div>
-                        ) : (
-                          <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-[11px] text-blue-700 dark:text-blue-300">
-                            ✨ La piattaforma recupererà automaticamente gli indirizzi di tutti gli studenti registrati nella categoria selezionata per spedire l'invito della Masterclass in broadcast.
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

@@ -11,7 +11,8 @@ export interface SendEventInvitationsParams {
   eventTime: string
   meetUrl?: string
   description?: string
-  recipientType: 'single' | 'ai-start' | 'ai-pro' | 'all'
+  recipientType?: 'single' | 'ai-start' | 'ai-pro' | 'all' | 'pending'
+  recipientCategories?: ('single' | 'ai-start' | 'ai-pro' | 'pending' | 'waitlist')[]
   customEmails?: string // separate da virgola
 }
 
@@ -20,31 +21,47 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
     const adminClient = createAdminClient()
     const targetEmails: { email: string; name?: string }[] = []
 
-    // 1. Risolvi le email in base al tipo di destinatario
-    if (params.recipientType === 'single') {
+    // Normalizza le categorie selezionate
+    const categories = new Set<string>()
+    if (params.recipientCategories && params.recipientCategories.length > 0) {
+      params.recipientCategories.forEach(c => categories.add(c))
+    } else if (params.recipientType) {
+      if (params.recipientType === 'all') {
+        categories.add('ai-start')
+        categories.add('ai-pro')
+        categories.add('pending')
+        categories.add('waitlist')
+      } else {
+        categories.add(params.recipientType)
+      }
+    }
+
+    // 1. Email Singole / Manuali
+    if (categories.has('single') || (params.customEmails && params.customEmails.trim())) {
       if (params.customEmails && params.customEmails.trim()) {
         const raw = params.customEmails.split(/[,;\n]/)
         for (const item of raw) {
           const email = item.trim()
           if (email && email.includes('@')) {
-            targetEmails.push({ email, name: email.split('@')[0] })
+            if (!targetEmails.some((t) => t.email.toLowerCase() === email.toLowerCase())) {
+              targetEmails.push({ email, name: email.split('@')[0] })
+            }
           }
         }
       }
-    } else {
-      // Query da student_codes
-      let query = adminClient
+    }
+
+    // 2. Studenti con codice attivo (AI Start e/o AI Pro)
+    const tiersToFetch: string[] = []
+    if (categories.has('ai-start')) tiersToFetch.push('ai-start', 'both', 'all')
+    if (categories.has('ai-pro')) tiersToFetch.push('ai-pro', 'both', 'all')
+
+    if (tiersToFetch.length > 0) {
+      const { data: students, error: stdError } = await adminClient
         .from('student_codes')
         .select('student_email, student_name, access_tier')
         .eq('is_active', true)
-
-      if (params.recipientType === 'ai-start') {
-        query = query.in('access_tier', ['ai-start', 'both', 'all'])
-      } else if (params.recipientType === 'ai-pro') {
-        query = query.in('access_tier', ['ai-pro', 'both', 'all'])
-      }
-
-      const { data: students, error: stdError } = await query
+        .in('access_tier', tiersToFetch)
 
       if (stdError) {
         console.error('[sendEventInvitationsAction] Errore fetch studenti:', stdError)
@@ -55,17 +72,35 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
           }
         })
       }
+    }
 
-      // Se è 'ai-pro' o 'all', recupera anche i lead registrati alla waitlist
-      if (params.recipientType === 'ai-pro' || params.recipientType === 'all') {
-        const { data: waitlist } = await adminClient.from('waitlist_leads').select('email')
-        if (waitlist) {
-          waitlist.forEach((w) => {
-            if (w.email && !targetEmails.some((t) => t.email.toLowerCase() === w.email.toLowerCase())) {
-              targetEmails.push({ email: w.email, name: 'Professionista' })
-            }
-          })
-        }
+    // 3. Utenti registrati in attesa di pagamento / approvazione (course_registrations)
+    if (categories.has('pending')) {
+      const { data: pendingRegs, error: pendingErr } = await adminClient
+        .from('course_registrations')
+        .select('email, name, status, approved')
+        .or('status.eq.pending,approved.eq.false')
+
+      if (pendingErr) {
+        console.error('[sendEventInvitationsAction] Errore fetch registrati in attesa:', pendingErr)
+      } else if (pendingRegs) {
+        pendingRegs.forEach((p) => {
+          if (p.email && !targetEmails.some((t) => t.email.toLowerCase() === p.email.toLowerCase())) {
+            targetEmails.push({ email: p.email, name: p.name || 'Partecipante' })
+          }
+        })
+      }
+    }
+
+    // 4. Lead lista d'attesa (waitlist_leads)
+    if (categories.has('waitlist')) {
+      const { data: waitlist } = await adminClient.from('waitlist_leads').select('email, name')
+      if (waitlist) {
+        waitlist.forEach((w) => {
+          if (w.email && !targetEmails.some((t) => t.email.toLowerCase() === w.email.toLowerCase())) {
+            targetEmails.push({ email: w.email, name: w.name || 'Professionista' })
+          }
+        })
       }
     }
 

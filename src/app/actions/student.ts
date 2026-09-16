@@ -387,7 +387,7 @@ export async function submitCourseRegistrationAction(formData: {
   }
 }
 
-export async function approveCourseRegistrationAction(registrationId: string) {
+export async function approveCourseRegistrationAction(registrationId: string, targetTier: CourseAccessTier = 'ai-start') {
   try {
     await requireAuthUser()
     const supabaseAdmin = createAdminClient()
@@ -403,12 +403,19 @@ export async function approveCourseRegistrationAction(registrationId: string) {
       return { success: false, error: 'Registrazione non trovata.' }
     }
 
-    // 2. Genera il codice studente univoco (o usa quello pre-esistente)
+    // 2. Genera il codice studente univoco (o usa quello pre-esistente con prefisso coerente)
     let accessCode = reg.access_code
     if (!accessCode) {
       const randomHex = Math.floor(100000 + Math.random() * 900000).toString(16).toUpperCase()
-      accessCode = `AI-${randomHex}`
+      const prefix = targetTier === 'ai-pro' ? 'AI-PRO' : targetTier === 'both' ? 'AI-ALL' : 'AI-START'
+      accessCode = `${prefix}-${randomHex}`
     }
+
+    const courseTitle = targetTier === 'ai-pro'
+      ? 'AI Pro - Automazioni & Agenti AI'
+      : targetTier === 'both'
+        ? 'Bundle Completo: AI Start + AI Pro'
+        : 'AI Start - Domina l’IA da Zero'
 
     // 3. Inserisci o aggiorna nella tabella student_codes
     const { error: codeErr } = await supabaseAdmin
@@ -417,8 +424,8 @@ export async function approveCourseRegistrationAction(registrationId: string) {
         code: accessCode,
         student_name: reg.name,
         student_email: reg.email,
-        course_title: 'AI Start: Domina l’IA da Zero',
-        access_tier: 'ai-start',
+        course_title: courseTitle,
+        access_tier: targetTier,
         is_active: true,
       }, { onConflict: 'code' })
 
@@ -428,10 +435,14 @@ export async function approveCourseRegistrationAction(registrationId: string) {
 
     // 4. Invia l'email con il codice di sblocco all'iscritto
     try {
+      const subject = targetTier === 'ai-pro'
+        ? `🚀 Richiesta Approvata: Il tuo Codice di Accesso ad AI Pro (Corso Avanzato)`
+        : `🎉 Richiesta Approvata: Il tuo Codice di Accesso ad AI Start`
+
       await sendSharedEmail({
         to: reg.email,
-        subject: `🎉 Richiesta Approvata: Il tuo Codice di Accesso ad AI Start`,
-        body: `Ciao ${reg.name},\n\nSiamo felici di comunicarti che la tua richiesta di registrazione è stata approvata!\n\nEcco il tuo codice univoco per accedere a tutte le 20 lezioni pratiche e registrazioni del corso "AI Start":\n\n👉 CODICE DI ACCESSO: ${accessCode}\n\nPer iniziare:\n1. Vai su https://aiutiamoci.cloud\n2. Clicca su "Accedi al Corso"\n3. Inserisci il tuo codice: ${accessCode}\n\nBuon apprendimento!\nTeam Ti AIuto\nsupporto: info@aiutiamoci.cloud`,
+        subject,
+        body: `Ciao ${reg.name},\n\nSiamo felici di comunicarti che la tua richiesta di registrazione è stata approvata per:\n👉 ${courseTitle}\n\nEcco il tuo codice univoco per accedere alle lezioni e all'assistente virtuale @AI:\n\n🔑 CODICE DI ACCESSO: ${accessCode}\n\nPer iniziare:\n1. Vai su https://aiutiamoci.cloud\n2. Clicca su "Accedi al Corso"\n3. Inserisci il tuo codice: ${accessCode}\n\nBuon apprendimento!\nTeam Ti AIuto (aiutiamoci.cloud)\nsupporto: info@aiutiamoci.cloud`,
       })
     } catch (mailErr) {
       console.error('Errore invio email approvazione a', reg.email, mailErr)
@@ -454,10 +465,61 @@ export async function approveCourseRegistrationAction(registrationId: string) {
       return { success: false, error: updateErr.message }
     }
 
-    return { success: true, code: accessCode, approvedAt: nowIso }
+    return { success: true, code: accessCode, approvedAt: nowIso, tier: targetTier }
   } catch (error: any) {
     console.error('Errore approveCourseRegistrationAction:', error)
     return { success: false, error: error.message || 'Errore durante l\'approvazione' }
+  }
+}
+
+export async function upgradeStudentTierAction(studentCodeId: string, newTier: CourseAccessTier) {
+  try {
+    await requireAuthUser()
+    const supabaseAdmin = createAdminClient()
+
+    // 1. Recupera dati dello studente
+    const { data: std, error: fetchErr } = await supabaseAdmin
+      .from('student_codes')
+      .select('*')
+      .eq('id', studentCodeId)
+      .single()
+
+    if (fetchErr || !std) {
+      return { success: false, error: 'Studente non trovato.' }
+    }
+
+    const newTitle = newTier === 'both'
+      ? 'Bundle Completo: AI Start + AI Pro'
+      : newTier === 'ai-pro'
+        ? 'AI Pro - Automazioni & Agenti AI'
+        : 'AI Start - Domina l’IA da Zero'
+
+    // 2. Aggiorna tier
+    const { error: updateErr } = await supabaseAdmin
+      .from('student_codes')
+      .update({
+        access_tier: newTier,
+        course_title: newTitle,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', studentCodeId)
+
+    if (updateErr) throw updateErr
+
+    // 3. Spedisci email automatica di notifica upgrade
+    try {
+      await sendSharedEmail({
+        to: std.student_email,
+        subject: `🚀 Upgrade Abilitato: Benvenuto in AI Pro!`,
+        body: `Gentile ${std.student_name},\n\nti confermiamo che il tuo account è stato aggiornato con successo con l'accesso al percorso:\n👉 ${newTitle}\n\nPuoi accedere subito a tutti i contenuti e le lezioni avanzate utilizzando il tuo codice personale già attivo:\n🔑 CODICE: ${std.code}\n\nAccedi alla piattaforma: https://aiutiamoci.cloud\n\nBuono studio e benvenuto nel livello avanzato!\nTeam Ti AIuto`,
+      })
+    } catch (mailErr) {
+      console.error('Errore invio email upgrade:', mailErr)
+    }
+
+    return { success: true, tier: newTier, title: newTitle }
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Errore aggiornamento livello studente' }
   }
 }
 

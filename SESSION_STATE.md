@@ -1,14 +1,13 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-13 12:48
+Ultimo aggiornamento: 2026-09-16 15:35
 Stato corrente: 
-- Risolto blocco di rete Safari (disattivato limite tracciamento IP su Wi-Fi).
-- Allineati cookie @supabase/ssr su client/server/middleware per risolvere il loop di redirect al login.
-- Integrata anteprima nativa per documenti Word .docx con docx-preview.
-- Integrato visualizzatore nativo per file Markdown (.md, .markdown) e plaintext (.txt, .json, .csv) con toggle sorgente e copia rapida.
-- Ottimizzata notifica Telegram sui file caricati con await esplicito e nome profilo uploader.
-- Redatta e archiviata in Obsidian la Guida Commerciale AI Aziendale (Privacy, 3 Piani e Casi d'Uso).
-- Configurato e testato con successo Dify locale su porta 80 con Gemini 3.6 Flash.
+- Implementata multiscelta a checkbox nel Calendario (`/calendario`) per invio email a categorie combinabili (In Attesa, Corso 1, Corso 2, Waitlist, Singoli) con selezione totale rapida.
+- Suddivisione e segregazione completa tra Iscritti Ufficiali Corso 2 (`student_codes` con `access_tier` ai-pro/both) e Leads Lista d'Attesa (`waitlist_leads`).
+- Aggiunto 3° tab esplicito in `/corsi`: "🚀 Iscritti Corso 2 - AI Pro" con invio rapido promemoria credenziali e ricerca dedicata.
+- Nel tab "In Attesa": opzione di approvazione rapida sia come "Approva Start" sia come "Approva Pro", e tasto cestino per scartare.
+- Nel tab "Studenti Corso 1": aggiunto pulsante "🚀 Upgrade Pro" (promuove all'istante l'utente a Full Access e invia la mail automatica senza richiedere reiscrizione).
+- Deploy di produzione completato con successo su VPS Stefano (`80.225.81.150`, PM2 id 0 `aiutiamoci`).
 
 ---
 
