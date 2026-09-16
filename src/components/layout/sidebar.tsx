@@ -19,6 +19,7 @@ import {
   Megaphone,
   ExternalLink,
   Cpu,
+  FileCode2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -231,6 +232,13 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           href: '/cervello',
           icon: Network,
           badge: 'Vault',
+        },
+        {
+          title: 'Convertitore AI',
+          subtitle: 'DocToMark • PDF, Word ⇆ MD',
+          href: '/convert/',
+          icon: FileCode2,
+          badge: 'Tool',
         },
       ],
     },
