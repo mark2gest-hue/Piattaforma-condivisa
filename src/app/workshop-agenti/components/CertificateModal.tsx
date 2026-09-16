@@ -65,7 +65,7 @@ export function CertificateModal({ certificate, onClose }: CertificateModalProps
           </div>
 
           <p className="text-xs md:text-sm text-slate-300 max-w-lg mx-auto leading-relaxed">
-            Ha superato con successo tutte le 5 missioni pratiche e i test operativi del percorso:
+            Ha superato con successo l’intero percorso formativo di <strong>16 Ore Certificate</strong> (Video Asincroni, Live Q&A, Missioni e Test Operativi):
             <br />
             <strong className="text-white font-semibold">{courseName}</strong>
           </p>

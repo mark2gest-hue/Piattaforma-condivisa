@@ -348,7 +348,7 @@ function generateCertificateDataUrl(studentName: string, dateStr: string, certCo
   // Achievement Description
   ctx.fillStyle = '#cbd5e1'
   ctx.font = '24px sans-serif'
-  ctx.fillText(isPro ? 'ha completato con successo l’intero percorso avanzato di Automazioni & Agenti:' : 'ha completato con successo l’intero percorso formativo di 20 Moduli Video:', 960, 530)
+  ctx.fillText(isPro ? 'ha completato con successo l’intero percorso avanzato di 16 Ore Certificate:' : 'ha completato con successo l’intero percorso formativo di 16 Ore Certificate (20 Moduli + Live):', 960, 530)
 
   // Course Name
   ctx.fillStyle = isPro ? '#c084fc' : '#60a5fa'
@@ -1307,8 +1307,11 @@ function CorsiInnerContent() {
                 01
               </div>
               <div>
-                <h4 className="font-bold text-xs sm:text-sm">📘 AI Start (Corso Base)</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">20 Video Lezioni • Prompting & Strumenti</p>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-xs sm:text-sm">📘 AI Start (Corso Base)</h4>
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold">16h Certificate</span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">20 Video • Live Q&A • Esercitazioni & Test Finale</p>
               </div>
             </div>
             {hasCourseAccess('ai-start') ? (
@@ -1331,8 +1334,11 @@ function CorsiInnerContent() {
                 02
               </div>
               <div>
-                <h4 className="font-bold text-xs sm:text-sm">🚀 AI Pro (Automazioni & Agenti)</h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">10 Moduli • Webhook, RAG & Multi-Agenti</p>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-xs sm:text-sm">🚀 AI Pro (Automazioni & Agenti)</h4>
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold">16h Certificate</span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">10 Moduli • Live Workshop • n8n, RAG & Collaudo</p>
               </div>
             </div>
             {hasCourseAccess('ai-pro') ? (
