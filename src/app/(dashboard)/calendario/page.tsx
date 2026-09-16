@@ -47,7 +47,7 @@ export default function CalendarioPage() {
   const [eventTitle, setEventTitle] = useState('')
   const [eventTime, setEventTime] = useState('09:00')
   const [eventCategory, setEventCategory] = useState<'task' | 'consulting' | 'course' | 'call'>('call')
-  const [eventMeetUrl, setEventMeetUrl] = useState('')
+  const [eventMeetUrl, setEventMeetUrl] = useState('https://meet.google.com/wsv-bqxm-bvr')
   const [eventDesc, setEventDesc] = useState('')
   const [recipientType, setRecipientType] = useState<'single' | 'ai-start' | 'ai-pro' | 'all' | 'pending'>('single')
   const [recipientCategories, setRecipientCategories] = useState<string[]>(['single'])
@@ -222,7 +222,7 @@ export default function CalendarioPage() {
 
       setIsEventModalOpen(false)
       setEventTitle('')
-      setEventMeetUrl('')
+      setEventMeetUrl('https://meet.google.com/wsv-bqxm-bvr')
       setEventDesc('')
       setCustomEmails('')
       setRecipientType('single')
@@ -242,7 +242,7 @@ export default function CalendarioPage() {
         eventTitle: ev.title,
         eventDate: ev.date,
         eventTime: ev.time || '10:00',
-        meetUrl: ev.meet_url,
+        meetUrl: ev.meet_url?.trim() || 'https://meet.google.com/wsv-bqxm-bvr',
         description: ev.description,
         recipientCategories: ['pending', 'ai-start', 'ai-pro', 'waitlist'],
       })

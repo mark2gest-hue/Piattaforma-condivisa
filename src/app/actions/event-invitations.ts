@@ -111,16 +111,23 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
     console.log(`[sendEventInvitationsAction] Invio a ${targetEmails.length} destinatari per evento "${params.eventTitle}"`)
 
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'aiutiamoci <info@aiutiamoci.cloud>'
-    const meetButtonHtml = params.meetUrl
-      ? `
-        <div style="margin: 30px 0; text-align: center;">
-          <a href="${params.meetUrl}" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 14px rgba(2,132,199,0.35);">
-            📹 Partecipa alla Videochiamata (Meet)
-          </a>
-          <p style="margin-top: 10px; font-size: 12px; color: #64748b; font-family: monospace;">${params.meetUrl}</p>
-        </div>
-      `
-      : ''
+    const finalMeetUrl = (params.meetUrl && params.meetUrl.trim().length > 0)
+      ? params.meetUrl.trim()
+      : 'https://meet.google.com/wsv-bqxm-bvr'
+
+    const meetButtonHtml = `
+      <div style="margin: 26px 0; text-align: center; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 20px;">
+        <p style="margin: 0 0 12px 0; font-size: 13px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.05em;">
+          🟢 Stanza Videochiamata Pronta
+        </p>
+        <a href="${finalMeetUrl}" target="_blank" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 14px rgba(2,132,199,0.35);">
+          📹 Accedi alla Videocall (Google Meet)
+        </a>
+        <p style="margin: 12px 0 0 0; font-size: 12px; color: #475569;">
+          Link diretto: <a href="${finalMeetUrl}" target="_blank" style="color: #0284c7; font-family: monospace; font-weight: 600; text-decoration: underline;">${finalMeetUrl}</a>
+        </p>
+      </div>
+    `
 
     let sentCount = 0
     let failedCount = 0
