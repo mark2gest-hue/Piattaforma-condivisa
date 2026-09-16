@@ -92,6 +92,8 @@ export default function CalendarioPage() {
         if (match) {
           meetUrl = match[1].trim()
           cleanDesc = cleanDesc.replace(/\[MEET:\s*[^\]]+\]/, '').trim()
+        } else if (ev.category === 'call' || ev.category === 'course') {
+          meetUrl = 'https://meet.google.com/wsv-bqxm-bvr'
         }
 
         return {
