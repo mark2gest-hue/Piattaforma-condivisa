@@ -2574,27 +2574,47 @@ function CorsiInnerContent() {
                               <td className="py-3.5 px-4 text-right">
                                 <div className="flex items-center justify-end gap-1.5">
                                   {isAppr ? (
-                                    <div className="flex flex-col items-end">
-                                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-400 font-semibold text-[11px]">
-                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                                        <span>Approvato</span>
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex flex-col items-end">
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-400 font-semibold text-[11px]">
+                                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                          <span>Approvato</span>
+                                        </div>
+                                        {reg.approved_at && (
+                                          <span className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                            {new Date(reg.approved_at).toLocaleString('it-IT', {
+                                              day: '2-digit',
+                                              month: '2-digit',
+                                              year: 'numeric',
+                                              hour: '2-digit',
+                                              minute: '2-digit',
+                                            })}
+                                          </span>
+                                        )}
+                                        {reg.access_code && (
+                                          <span className="text-[10px] text-indigo-400 font-mono">
+                                            {reg.access_code}
+                                          </span>
+                                        )}
                                       </div>
-                                      {reg.approved_at && (
-                                        <span className="text-[10px] text-slate-500 font-mono mt-0.5">
-                                          {new Date(reg.approved_at).toLocaleString('it-IT', {
-                                            day: '2-digit',
-                                            month: '2-digit',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                          })}
-                                        </span>
-                                      )}
-                                      {reg.access_code && (
-                                        <span className="text-[10px] text-indigo-400 font-mono">
-                                          {reg.access_code}
-                                        </span>
-                                      )}
+
+                                      {(() => {
+                                        const matchingStudent = registrations.find(s => s.code === reg.access_code || s.studentEmail === reg.email)
+                                        if (matchingStudent && matchingStudent.accessTier !== 'ai-pro' && matchingStudent.accessTier !== 'both') {
+                                          return (
+                                            <Button
+                                              size="sm"
+                                              onClick={() => handleUpgradeStudent(matchingStudent, 'both')}
+                                              className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] h-7 px-2 rounded-lg gap-1 shadow-xs shrink-0"
+                                              title="Promuovi questo corsista ad AI Pro (Corso 2) senza reiscrizione"
+                                            >
+                                              <Sparkles className="h-3 w-3" />
+                                              <span>Upgrade Pro</span>
+                                            </Button>
+                                          )
+                                        }
+                                        return null
+                                      })()}
                                     </div>
                                   ) : (
                                     <div className="flex items-center gap-1.5">

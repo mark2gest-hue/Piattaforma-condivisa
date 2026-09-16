@@ -1,12 +1,14 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-16 15:35
+Ultimo aggiornamento: 2026-09-16 16:05
 Stato corrente: 
-- Implementata multiscelta a checkbox nel Calendario (`/calendario`) per invio email a categorie combinabili (In Attesa, Corso 1, Corso 2, Waitlist, Singoli) con selezione totale rapida.
-- Suddivisione e segregazione completa tra Iscritti Ufficiali Corso 2 (`student_codes` con `access_tier` ai-pro/both) e Leads Lista d'Attesa (`waitlist_leads`).
-- Aggiunto 3° tab esplicito in `/corsi`: "🚀 Iscritti Corso 2 - AI Pro" con invio rapido promemoria credenziali e ricerca dedicata.
-- Nel tab "In Attesa": opzione di approvazione rapida sia come "Approva Start" sia come "Approva Pro", e tasto cestino per scartare.
-- Nel tab "Studenti Corso 1": aggiunto pulsante "🚀 Upgrade Pro" (promuove all'istante l'utente a Full Access e invia la mail automatica senza richiedere reiscrizione).
+- Implementato sistema Referral Fase 1: intercettazione automatica ?ref= / ?referral= su landing page con precompilazione modulo e banner di benvenuto dedicato.
+- Aggiunto pulsante "Copia Link Referral" per gli studenti accreditati in /corsi per generare il proprio link invito con codice univoco annesso.
+- Implementata multiscelta a checkbox nel Calendario (`/calendario`) per invio email a categorie combinabili con selezione rapida.
+- Segregazione completa tra Iscritti Ufficiali Corso 2 e Leads Lista d'Attesa.
+- Aggiunto 3° tab esplicito in `/corsi`: "🚀 Iscritti Corso 2 - AI Pro".
+- Tab "In Attesa": opzione "Approva Start" e "Approva Pro", e tasto cestino per scartare.
+- Tab "Studenti Corso 1": pulsante rapido "🚀 Upgrade Pro" senza reiscrizione.
 - Deploy di produzione completato con successo su VPS Stefano (`80.225.81.150`, PM2 id 0 `aiutiamoci`).
 
 ---
