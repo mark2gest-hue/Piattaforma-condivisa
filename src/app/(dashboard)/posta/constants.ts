@@ -6,9 +6,9 @@ export interface EmailSenderOption {
 }
 
 export const AVAILABLE_FROM_EMAILS: EmailSenderOption[] = [
-  { id: 'team-aiutiamoci', email: 'team@aiutiamoci.cloud', label: 'Team Ti AIuto <team@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
-  { id: 'info-aiutiamoci', email: 'info@aiutiamoci.cloud', label: 'Ti AIuto <info@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
-  { id: 'assistenza-aiutiamoci', email: 'assistenza@aiutiamoci.cloud', label: 'Assistenza Ti AIuto <assistenza@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
+  { id: 'team-aiutiamoci', email: 'team@aiutiamoci.cloud', label: 'Team aiutiamoci <team@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
+  { id: 'info-aiutiamoci', email: 'info@aiutiamoci.cloud', label: 'aiutiamoci <info@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
+  { id: 'assistenza-aiutiamoci', email: 'assistenza@aiutiamoci.cloud', label: 'Assistenza aiutiamoci <assistenza@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
   { id: 'info-mar2', email: 'info@mar2.cloud', label: 'Mar2 <info@mar2.cloud>', domain: 'mar2.cloud' },
   { id: 'support-mar2', email: 'support@mar2.cloud', label: 'Support Mar2 <support@mar2.cloud>', domain: 'mar2.cloud' },
 ]

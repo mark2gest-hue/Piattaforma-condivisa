@@ -87,7 +87,7 @@ export async function enrollStudentAction(formData: {
 
     const emailSubject = `Il tuo Codice di Accesso a ${tier === 'both' ? 'AI Start & AI Pro' : tier === 'ai-pro' ? 'AI Pro' : 'AI Start'}: ${generatedCode}`
 
-    const emailBody = `Gentile ${formData.studentName.trim()},\n\nti confermiamo l'avvenuta attivazione del tuo accesso a:\n👉 ${tierDesc}\n\nEcco il tuo CODICE DI ACCESSO UNIVOCO:\n🔑 CODICE: ${generatedCode}\n\nAccedi subito inserendo il codice nell'Area Studenti su aiutiamoci.cloud.\n\nCordiali saluti,\nTeam Ti AIuto (aiutiamoci.cloud)`
+    const emailBody = `Gentile ${formData.studentName.trim()},\n\nti confermiamo l'avvenuta attivazione del tuo accesso a:\n👉 ${tierDesc}\n\nEcco il tuo CODICE DI ACCESSO UNIVOCO:\n🔑 CODICE: ${generatedCode}\n\nAccedi subito inserendo il codice nell'Area Studenti su aiutiamoci.cloud.\n\nCordiali saluti,\nTeam aiutiamoci.cloud`
 
     await sendSharedEmail({
       to: formData.studentEmail.trim(),
@@ -163,7 +163,7 @@ export async function bulkEnrollStudentsAction(
           await sendSharedEmail({
             to: res.email,
             subject: `Il tuo Codice di Accesso: ${res.code}`,
-            body: `Gentile ${res.name},\n\nti confermiamo l'attivazione dell'accesso a: ${tierDesc}.\n\n👉 CODICE UNIVOCO: ${res.code}\n\nAccedi inserendolo nell'Area Studenti su aiutiamoci.cloud.\n\nCordiali saluti,\nTeam Ti AIuto`,
+            body: `Gentile ${res.name},\n\nti confermiamo l'attivazione dell'accesso a: ${tierDesc}.\n\n👉 CODICE UNIVOCO: ${res.code}\n\nAccedi inserendolo nell'Area Studenti su aiutiamoci.cloud.\n\nCordiali saluti,\nTeam aiutiamoci.cloud`,
           })
         } catch (e) {
           console.warn(`Errore invio email massiva a ${res.email}:`, e)
@@ -207,7 +207,7 @@ export async function joinWaitlistAction(email: string, name?: string) {
     await sendSharedEmail({
       to: cleanEmail,
       subject: `Iscrizione Confermata: Lista d'Attesa AI Pro (Automazioni & Agenti)`,
-      body: `Gentile ${cleanName},\n\nti confermiamo che sei stato inserito con priorità nella lista d'attesa del Corso Avanzato "AI Pro: Automazioni & Agenti".\n\nNon appena apriremo i posti ufficiali, riceverai una notifica esclusiva con coupon promozionale riservato.\n\nCordiali saluti,\nTeam Ti AIuto (aiutiamoci.cloud)`,
+      body: `Gentile ${cleanName},\n\nti confermiamo che sei stato inserito con priorità nella lista d'attesa del Corso Avanzato "AI Pro: Automazioni & Agenti".\n\nNon appena apriremo i posti ufficiali, riceverai una notifica esclusiva con coupon promozionale riservato.\n\nCordiali saluti,\nTeam aiutiamoci.cloud`,
     })
 
     return { success: true }
@@ -454,7 +454,7 @@ export async function approveCourseRegistrationAction(registrationId: string, ta
       await sendSharedEmail({
         to: reg.email,
         subject,
-        body: `Ciao ${reg.name},\n\nSiamo felici di comunicarti che la tua richiesta di registrazione è stata approvata per:\n👉 ${courseTitle}\n\nEcco il tuo codice univoco per accedere alle lezioni e all'assistente virtuale @AI:\n\n🔑 CODICE DI ACCESSO: ${accessCode}\n\nPer iniziare:\n1. Vai su https://aiutiamoci.cloud\n2. Clicca su "Accedi al Corso"\n3. Inserisci il tuo codice: ${accessCode}\n\nBuon apprendimento!\nTeam Ti AIuto (aiutiamoci.cloud)\nsupporto: info@aiutiamoci.cloud`,
+        body: `Ciao ${reg.name},\n\nSiamo felici di comunicarti che la tua richiesta di registrazione è stata approvata per:\n👉 ${courseTitle}\n\nEcco il tuo codice univoco per accedere alle lezioni e all'assistente virtuale @AI:\n\n🔑 CODICE DI ACCESSO: ${accessCode}\n\nPer iniziare:\n1. Vai su https://aiutiamoci.cloud\n2. Clicca su "Accedi al Corso"\n3. Inserisci il tuo codice: ${accessCode}\n\nBuon apprendimento!\nTeam aiutiamoci.cloud\nsupporto: info@aiutiamoci.cloud`,
       })
     } catch (mailErr) {
       console.error('Errore invio email approvazione a', reg.email, mailErr)
@@ -523,7 +523,7 @@ export async function upgradeStudentTierAction(studentCodeId: string, newTier: C
       await sendSharedEmail({
         to: std.student_email,
         subject: `🚀 Upgrade Abilitato: Benvenuto in AI Pro!`,
-        body: `Gentile ${std.student_name},\n\nti confermiamo che il tuo account è stato aggiornato con successo con l'accesso al percorso:\n👉 ${newTitle}\n\nPuoi accedere subito a tutti i contenuti e le lezioni avanzate utilizzando il tuo codice personale già attivo:\n🔑 CODICE: ${std.code}\n\nAccedi alla piattaforma: https://aiutiamoci.cloud\n\nBuono studio e benvenuto nel livello avanzato!\nTeam Ti AIuto`,
+        body: `Gentile ${std.student_name},\n\nti confermiamo che il tuo account è stato aggiornato con successo con l'accesso al percorso:\n👉 ${newTitle}\n\nPuoi accedere subito a tutti i contenuti e le lezioni avanzate utilizzando il tuo codice personale già attivo:\n🔑 CODICE: ${std.code}\n\nAccedi alla piattaforma: https://aiutiamoci.cloud\n\nBuono studio e benvenuto nel livello avanzato!\nTeam aiutiamoci.cloud`,
       })
     } catch (mailErr) {
       console.error('Errore invio email upgrade:', mailErr)

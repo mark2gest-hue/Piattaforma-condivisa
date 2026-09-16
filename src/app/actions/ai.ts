@@ -54,7 +54,7 @@ export async function askStudentAiAction(
     const lessonId = currentLessonId || 1
     const lessonInfo = LESSON_SUMMARIES[lessonId] || LESSON_SUMMARIES[1]
 
-    const systemInstruction = `Sei l'Assistente AI ufficiale del portale formativo "Ti AIuto" (aiutiamoci.cloud), specializzato nel corso "AI Start: Domina l'Intelligenza Artificiale da Zero".
+    const systemInstruction = `Sei l'Assistente AI ufficiale del portale formativo "aiutiamoci.cloud", specializzato nel corso "AI Start: Domina l'Intelligenza Artificiale da Zero".
 Il tuo obiettivo è rispondere agli studenti in modo cordiale, pratico, incoraggiante ed estremamente utile.
 
 Contesto Lezione Attuale:
@@ -91,7 +91,7 @@ Linee guida:
     if (lower === 'ciao' || lower === 'salve' || lower === 'buongiorno' || lower === 'buonasera' || lower.startsWith('ciao ')) {
       return {
         success: true,
-        text: `👋 Ciao! Sono l'**Assistente AI di Ti AIuto**. Ti sto accompagnando durante la **Lezione ${lessonId} (${lessonInfo.title})**.\n\nCome posso aiutarti? Puoi chiedermi:\n- 📝 Un **riassunto dettagliato** dei punti chiave di questa lezione\n- 💡 Un **esempio pratico** di prompt per il tuo lavoro\n- ❓ Una spiegazione su qualsiasi strumento o concetto trattato nel video!`,
+        text: `👋 Ciao! Sono l'**Assistente AI di aiutiamoci**. Ti sto accompagnando durante la **Lezione ${lessonId} (${lessonInfo.title})**.\n\nCome posso aiutarti? Puoi chiedermi:\n- 📝 Un **riassunto dettagliato** dei punti chiave di questa lezione\n- 💡 Un **esempio pratico** di prompt per il tuo lavoro\n- ❓ Una spiegazione su qualsiasi strumento o concetto trattato nel video!`,
       }
     }
 
@@ -194,7 +194,7 @@ DEVI RESTITUIRE ESCLUSIVAMENTE UN JSON VALIDO con la seguente struttura:
     return {
       success: true,
       subject: fallbackSubjects[formData.tone] || 'Comunicazione Operativa dal Team',
-      body: `Gentile ${formData.recipient || 'Cliente'},\n\nIn riferimento a "${formData.prompt}", desideriamo confermarle la piena disponibilità del nostro team per procedere secondo le modalità concordate.\n\nRestiamo a disposizione per qualsiasi chiarimento.\n\nCordiali saluti,\nTeam Ti AIuto (aiutiamoci.cloud)`,
+      body: `Gentile ${formData.recipient || 'Cliente'},\n\nIn riferimento a "${formData.prompt}", desideriamo confermarle la piena disponibilità del nostro team per procedere secondo le modalità concordate.\n\nRestiamo a disposizione per qualsiasi chiarimento.\n\nCordiali saluti,\nTeam aiutiamoci.cloud`,
     }
   } catch (err: any) {
     return { success: false, error: err.message || 'Errore generazione email' }
@@ -259,7 +259,7 @@ DEVI RESTITUIRE ESCLUSIVAMENTE UN ARRAY JSON VALIDO con questa struttura:
 // 4. Agente Assistente FAQ & Policy
 export async function askFaqAiAction(userQuery: string) {
   try {
-    const systemInstruction = `Sei l'assistente dedicato alle policy aziendali, condizioni d'uso e FAQ di "Ti AIuto" (aiutiamoci.cloud).
+    const systemInstruction = `Sei l'assistente dedicato alle policy aziendali, condizioni d'uso e FAQ di aiutiamoci.cloud.
 Rispondi in modo professionale, cortese, chiaro e puntuale in italiano.`
 
     const rawResponse = await callGemini(systemInstruction, userQuery)

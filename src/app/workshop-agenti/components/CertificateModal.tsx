@@ -52,7 +52,7 @@ export function CertificateModal({ certificate, onClose }: CertificateModalProps
               Attestato di Completamento
             </h2>
             <p className="text-xs text-slate-400">
-              Rilasciato dal Laboratorio Didattico Permanente Ti AIuto & Mira Tutor
+              Rilasciato dal Laboratorio Didattico Permanente aiutiamoci.cloud & Mira Tutor
             </p>
           </div>
 
@@ -100,7 +100,7 @@ export function CertificateModal({ certificate, onClose }: CertificateModalProps
             </span>
             <span className="flex items-center gap-1 text-slate-400">
               <Sparkles className="w-3 h-3 text-cyan-400" />
-              Firmato digitalmente da Mira AI & Team Ti AIuto
+              Firmato digitalmente da Mira AI & Team aiutiamoci.cloud
             </span>
           </div>
         </div>

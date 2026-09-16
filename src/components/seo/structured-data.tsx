@@ -5,7 +5,7 @@ export function StructuredData() {
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
     name: 'AIutiamoci',
-    alternateName: 'Ti AIuto',
+    alternateName: 'aiutiamoci.cloud',
     url: 'https://aiutiamoci.cloud',
     logo: 'https://aiutiamoci.cloud/favicon.svg',
     description:

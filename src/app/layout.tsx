@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://aiutiamoci.cloud'),
   title: 'AIutiamoci | Piattaforma Formazione AI & Lavoro Condiviso',
   description: 'Il portale formativo e collaborativo per professionisti e aziende. 20 Video Lezioni AI Start, assistenza tutor @AI, prompt operativi e automazioni per il tuo lavoro.',
-  keywords: ['Intelligenza Artificiale', 'Corso AI Start', 'Formazione AI', 'Prompt Engineering', 'Automazioni AI', 'Ti AIuto', 'aiutiamoci.cloud'],
+  keywords: ['Intelligenza Artificiale', 'Corso AI Start', 'Formazione AI', 'Prompt Engineering', 'Automazioni AI', 'aiutiamoci', 'aiutiamoci.cloud'],
   authors: [{ name: 'Team AIutiamoci', url: 'https://aiutiamoci.cloud' }],
   openGraph: {
     title: 'AIutiamoci | Corso AI Start & Piattaforma Lavoro Condiviso',

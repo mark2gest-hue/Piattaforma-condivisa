@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     })
 
     const prompt = `
-Sei un agente AI avanzato per la gestione della posta aziendale del team "Ti AIuto" e "Mar2" (domini aiutiamoci.cloud e mar2.cloud).
+Sei un agente AI avanzato per la gestione della posta aziendale del team "aiutiamoci" e "Mar2" (domini aiutiamoci.cloud e mar2.cloud).
 Il tuo compito è analizzare con precisione l'email ricevuta, categorizzarla, valutare la priorità, scrivere un riassunto sintetico ed elaborare una bozza di risposta professionale, empatica e puntuale in lingua italiana.
 
 Dati dell'email:
@@ -64,7 +64,7 @@ Regole di analisi:
    - "spam": email indesiderate, phishing, pubblicità non pertinente.
 2. **priority**: Un numero intero da 1 (massima urgenza/criticità) a 5 (bassa priorità / puramente informativo).
 3. **summary**: Un riassunto chiaro e conciso in 1-2 frasi (in italiano) di cosa chiede/comunica il mittente.
-4. **suggestedReply**: Una bozza di risposta pronta all'uso, cordiale e professionale a nome del Team (firmata "Il Team di Supporto" o "Team Ti AIuto"), che risponde direttamente ai punti sollevati. Se l'email è spam o una notifica automatica che non richiede risposta, scrivi "".
+4. **suggestedReply**: Una bozza di risposta pronta all'uso, cordiale e professionale a nome del Team (firmata "Il Team di Supporto" o "Team aiutiamoci.cloud"), che risponde direttamente ai punti sollevati. Se l'email è spam o una notifica automatica che non richiede risposta, scrivi "".
 5. **autoReplyCandidate**: Booleano (true solo se l'email è una semplice richiesta informativa o di conferma standard che non richiede intervento decisionale umano; false se è urgente, complessa, commerciale o di supporto delicato).
 6. **sentiment**: Uno tra: "positivo", "neutro", "critico", "urgente".
 7. **confidence**: Livello di confidenza da 0 a 100.

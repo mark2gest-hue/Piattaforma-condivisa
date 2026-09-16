@@ -219,7 +219,7 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-extrabold text-sm sm:text-lg tracking-tight text-white flex items-center gap-1.5 truncate">
-                aiutiamoci.cloud <span className="text-[10px] font-mono px-1.5 sm:px-2 py-0.5 bg-indigo-500/20 text-indigo-400 rounded-full border border-indigo-500/30 shrink-0">Ti AIuto</span>
+                aiutiamoci.cloud
               </span>
               <span className="text-[11px] sm:text-xs text-slate-400 font-medium truncate">Formazione ed Agenti IA</span>
             </div>
@@ -557,7 +557,7 @@ export default function LandingPage() {
       <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950 py-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
-            <span>© 2026 <strong>aiutiamoci.cloud</strong> — Ti AIuto. Tutti i diritti riservati.</span>
+            <span>© 2026 <strong>aiutiamoci.cloud</strong>. Tutti i diritti riservati.</span>
           </div>
           <div className="flex items-center gap-6">
             <button onClick={() => setIsStudentModalOpen(true)} className="hover:text-slate-300">Area Studenti</button>

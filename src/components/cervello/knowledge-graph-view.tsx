@@ -575,7 +575,7 @@ export function KnowledgeGraphView({
             ) : (
               <div className="space-y-3 text-xs text-slate-300">
                 <p>
-                  Il nodo centrale che coordina l'intero grafo della conoscenza condivisa di Ti AIuto.
+                  Il nodo centrale che coordina l'intero grafo della conoscenza condivisa di aiutiamoci.cloud.
                 </p>
                 <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-[11px] text-indigo-200">
                   Tutte le note sono sincronizzate e pronte per l'esportazione verso <strong>Obsidian</strong> e <strong>Proton Drive</strong>.

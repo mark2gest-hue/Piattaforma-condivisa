@@ -17,7 +17,7 @@ export async function sendSharedEmail(formData: {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    const chosenFrom = formData.from || process.env.RESEND_FROM_EMAIL || 'Ti AIuto <info@aiutiamoci.cloud>'
+    const chosenFrom = formData.from || process.env.RESEND_FROM_EMAIL || 'aiutiamoci <info@aiutiamoci.cloud>'
 
     console.log(`[Resend] Invio email da: ${chosenFrom} a: ${formData.to} | Oggetto: ${formData.subject}`)
 
@@ -163,7 +163,7 @@ export async function analyzeEmailWithAI(emailData: {
     ]
 
     const prompt = `
-Sei un agente AI avanzato per la gestione della posta aziendale del team "Ti AIuto" e "Mar2" (domini aiutiamoci.cloud e mar2.cloud).
+Sei un agente AI avanzato per la gestione della posta aziendale del team "aiutiamoci" e "Mar2" (domini aiutiamoci.cloud e mar2.cloud).
 Il tuo compito è analizzare con precisione l'email ricevuta, categorizzarla, valutare la priorità, scrivere un riassunto sintetico ed elaborare una bozza di risposta professionale, cordiale e puntuale in lingua italiana.
 
 Dati dell'email:
@@ -180,7 +180,7 @@ Regole di output JSON:
 1. "category": uno tra "urgente", "supporto", "commerciale", "informativo", "spam".
 2. "priority": numero intero da 1 (massima urgenza/bloccante) a 5 (bassa priorità/informativo).
 3. "summary": riassunto chiaro e conciso in 1-2 frasi in italiano.
-4. "suggestedReply": bozza di risposta pronta all'uso a nome del Team (firmata "Il Team Ti AIuto" o "Il Team di Supporto"). Se spam o notifica automatica, stringa vuota "".
+4. "suggestedReply": bozza di risposta pronta all'uso a nome del Team (firmata "Il Team aiutiamoci.cloud" o "Il Team di Supporto"). Se spam o notifica automatica, stringa vuota "".
 5. "autoReplyCandidate": boolean (true solo per conferme/ricezioni standard semplici o FAQ ovvie; false se richiede valutazione umana).
 6. "sentiment": uno tra "positivo", "neutro", "critico", "urgente".
 7. "confidence": intero da 0 a 100.

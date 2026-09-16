@@ -77,7 +77,7 @@ export default function PostaCondivisaPage() {
   const [emails, setEmails] = useState<EmailWithSender[]>([])
   const [selectedEmail, setSelectedEmail] = useState<EmailWithSender | null>(null)
   const [replyText, setReplyText] = useState('')
-  const [replyFrom, setReplyFrom] = useState<string>('Ti AIuto <info@aiutiamoci.cloud>')
+  const [replyFrom, setReplyFrom] = useState<string>('aiutiamoci <info@aiutiamoci.cloud>')
   const [isSending, setIsSending] = useState(false)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -93,7 +93,7 @@ export default function PostaCondivisaPage() {
 
   // Modal Nuova Email
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false)
-  const [composeFrom, setComposeFrom] = useState<string>('Ti AIuto <info@aiutiamoci.cloud>')
+  const [composeFrom, setComposeFrom] = useState<string>('aiutiamoci <info@aiutiamoci.cloud>')
   const [composeTo, setComposeTo] = useState('')
   const [composeSubject, setComposeSubject] = useState('')
   const [composeBody, setComposeBody] = useState('')
@@ -260,7 +260,7 @@ export default function PostaCondivisaPage() {
     if (matching) {
       setReplyFrom(matching.label)
     } else {
-      setReplyFrom('Ti AIuto <info@aiutiamoci.cloud>')
+      setReplyFrom('aiutiamoci <info@aiutiamoci.cloud>')
     }
 
     if (em.direction === 'inbound' && em.status === 'received') {

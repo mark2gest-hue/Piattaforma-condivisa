@@ -319,7 +319,7 @@ function generateCertificateDataUrl(studentName: string, dateStr: string, certCo
   ctx.fillStyle = '#94a3b8'
   ctx.font = 'bold 24px sans-serif'
   ctx.textAlign = 'center'
-  ctx.fillText('TI AIUTO • PIATTAFORMA DI FORMAZIONE DIGITALE (AIUTIAMOCI.CLOUD)', 960, 140)
+  ctx.fillText('AIUTIAMOCI • PIATTAFORMA DI FORMAZIONE DIGITALE (AIUTIAMOCI.CLOUD)', 960, 140)
 
   // Certificate Title
   ctx.fillStyle = '#f8fafc'
@@ -372,7 +372,7 @@ function generateCertificateDataUrl(studentName: string, dateStr: string, certCo
   ctx.font = 'bold 18px sans-serif'
   ctx.fillText('VERIFIED', 960, 785)
   ctx.font = 'bold 13px sans-serif'
-  ctx.fillText('TI AIUTO OFFICIAL', 960, 808)
+  ctx.fillText('AIUTIAMOCI OFFICIAL', 960, 808)
 
   // Left Footer: Date
   ctx.textAlign = 'left'
@@ -518,7 +518,7 @@ function CorsiInnerContent() {
   const [chatMessages, setChatMessages] = useState<Array<{ id: string; sender: string; isAi: boolean; text: string; time: string }>>([
     {
       id: 'welcome-tutor',
-      sender: 'Assistente @AI Ti AIuto',
+      sender: 'Assistente @AI aiutiamoci',
       isAi: true,
       text: 'Ciao! Benvenuto nel percorso formativo. Durante la visione delle lezioni puoi chiedermi chiarimenti sui concetti, consigli sui prompt o spiegazioni pratiche. Come posso aiutarti?',
       time: 'Oggi',
@@ -1156,7 +1156,7 @@ function CorsiInnerContent() {
       const res = await askStudentAiAction(updatedHistory, activeLesson.id)
       const aiMsg = {
         id: `m-ai-${Date.now()}`,
-        sender: 'Assistente @AI Ti AIuto',
+        sender: 'Assistente @AI aiutiamoci',
         isAi: true,
         text: res.success && res.text ? res.text : 'Grazie per la domanda! Ho preso nota del tuo quesito sul modulo attivo.',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),

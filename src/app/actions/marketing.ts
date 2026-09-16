@@ -896,18 +896,18 @@ export async function getBufferProfilesAction(): Promise<{
     return {
       success: true,
       profiles: [
-        { id: 'ig-1', service: 'instagram', formatted_username: '@ti.aiuto_official' },
-        { id: 'li-1', service: 'linkedin', formatted_username: 'Ti AIuto Community' },
-        { id: 'fb-1', service: 'facebook', formatted_username: 'Ti AIuto Platform' },
+        { id: 'ig-1', service: 'instagram', formatted_username: '@aiutiamoci.cloud' },
+        { id: 'li-1', service: 'linkedin', formatted_username: 'aiutiamoci Community' },
+        { id: 'fb-1', service: 'facebook', formatted_username: 'aiutiamoci Platform' },
       ],
     }
   } catch (err: any) {
     return {
       success: true,
       profiles: [
-        { id: 'ig-1', service: 'instagram', formatted_username: '@ti.aiuto_official' },
-        { id: 'li-1', service: 'linkedin', formatted_username: 'Ti AIuto Community' },
-        { id: 'fb-1', service: 'facebook', formatted_username: 'Ti AIuto Platform' },
+        { id: 'ig-1', service: 'instagram', formatted_username: '@aiutiamoci.cloud' },
+        { id: 'li-1', service: 'linkedin', formatted_username: 'aiutiamoci Community' },
+        { id: 'fb-1', service: 'facebook', formatted_username: 'aiutiamoci Platform' },
       ],
     }
   }

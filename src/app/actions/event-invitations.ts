@@ -110,7 +110,7 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
 
     console.log(`[sendEventInvitationsAction] Invio a ${targetEmails.length} destinatari per evento "${params.eventTitle}"`)
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Ti AIuto <info@aiutiamoci.cloud>'
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'aiutiamoci <info@aiutiamoci.cloud>'
     const meetButtonHtml = params.meetUrl
       ? `
         <div style="margin: 30px 0; text-align: center;">
@@ -149,7 +149,7 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
         <body>
           <div class="container">
             <div class="header">
-              <p>Ti AIuto • Campus Didattico</p>
+              <p>aiutiamoci • Campus Didattico</p>
               <h1>Invito Ufficiale Riunione & Masterclass</h1>
             </div>
             <div class="content">
@@ -172,7 +172,7 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
               </p>
             </div>
             <div class="footer">
-              Piattaforma Lavoro Condivisa • Ti AIuto SRL<br>
+              Piattaforma Lavoro Condivisa • aiutiamoci.cloud<br>
               Per assistenza rispondi a questa email o visita <a href="https://aiutiamoci.cloud" style="color: #0284c7; text-decoration: none;">aiutiamoci.cloud</a>
             </div>
           </div>
