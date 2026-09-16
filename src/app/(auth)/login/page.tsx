@@ -42,14 +42,21 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/30">
-            <Sparkles className="h-6 w-6" />
-          </div>
+          <img
+            src="/images/logo_full_dark.png"
+            alt="AI Sviluppo"
+            className="h-16 w-auto object-contain hidden dark:block"
+          />
+          <img
+            src="/images/logo_full_light.png"
+            alt="AI Sviluppo"
+            className="h-16 w-auto object-contain block dark:hidden"
+          />
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Team Hub
+            aiutiamoci.cloud
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
-            Accesso riservato al team (Corsi, Consulenze & Agenti AI)
+            Piattaforma Operativa, Corsi & Agenti AI
           </p>
         </div>
 

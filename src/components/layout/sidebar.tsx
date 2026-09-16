@@ -357,16 +357,20 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
       {/* Desktop Fixed Sidebar */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30 bg-slate-900 text-slate-100 border-r border-slate-800">
         {/* Brand Header */}
-        <div className="flex items-center gap-3 px-6 h-16 border-b border-slate-800/80 bg-slate-950/40">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/30">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
-              Team Hub <span className="text-[10px] uppercase font-semibold px-1.5 py-0.2 bg-blue-500/20 text-blue-400 rounded">v1.0</span>
-            </span>
-            <span className="text-[11px] text-slate-400 font-medium">Corsi • Consulenze • AI</span>
-          </div>
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-800/80 bg-slate-950/40">
+          <Link href="/lavori" className="flex items-center gap-3 group">
+            <img
+              src="/images/logo_icon_dark.png"
+              alt="AI Logo"
+              className="h-9 w-9 object-contain shrink-0 transition-transform group-hover:scale-105"
+            />
+            <div className="flex flex-col">
+              <span className="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
+                aiutiamoci <span className="text-[10px] uppercase font-semibold px-1.5 py-0.2 bg-blue-500/20 text-blue-400 rounded">Hub</span>
+              </span>
+              <span className="text-[11px] text-slate-400 font-medium">Piattaforma & Corsi AI</span>
+            </div>
+          </Link>
         </div>
         {sidebarContent}
       </aside>
@@ -383,11 +387,13 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           <aside className="relative flex flex-col w-72 max-w-[85vw] h-full bg-slate-900 text-slate-100 border-r border-slate-800 z-10 shadow-2xl animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between px-5 h-16 border-b border-slate-800/80 bg-slate-950/40">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/30">
-                  <Sparkles className="h-5 w-5" />
-                </div>
+                <img
+                  src="/images/logo_icon_dark.png"
+                  alt="AI Logo"
+                  className="h-9 w-9 object-contain shrink-0"
+                />
                 <div className="flex flex-col">
-                  <span className="font-bold text-sm tracking-tight text-white">Team Hub</span>
+                  <span className="font-bold text-sm tracking-tight text-white">aiutiamoci</span>
                   <span className="text-[10px] text-slate-400">Piattaforma Condivisa</span>
                 </div>
               </div>

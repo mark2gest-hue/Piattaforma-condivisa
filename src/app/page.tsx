@@ -213,16 +213,20 @@ export default function LandingPage() {
       {/* Header Navigation Bar */}
       <header className="relative z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="font-extrabold text-sm sm:text-lg tracking-tight text-white flex items-center gap-1.5 truncate">
-                aiutiamoci.cloud
-              </span>
-              <span className="text-[11px] sm:text-xs text-slate-400 font-medium truncate">Formazione ed Agenti IA</span>
-            </div>
+          <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <img
+                src="/images/logo_full_dark.png"
+                alt="AI Sviluppo - aiutiamoci.cloud"
+                className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+              />
+              <div className="hidden sm:flex flex-col min-w-0">
+                <span className="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5 truncate">
+                  aiutiamoci.cloud
+                </span>
+                <span className="text-[11px] text-slate-400 font-medium truncate">Formazione ed Agenti IA</span>
+              </div>
+            </Link>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 text-xs font-semibold shrink-0">
@@ -556,7 +560,12 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950 py-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>
+          <div className="flex items-center gap-3">
+            <img
+              src="/images/logo_full_dark.png"
+              alt="AI Sviluppo"
+              className="h-8 w-auto object-contain opacity-80"
+            />
             <span>© 2026 <strong>aiutiamoci.cloud</strong>. Tutti i diritti riservati.</span>
           </div>
           <div className="flex items-center gap-6">
