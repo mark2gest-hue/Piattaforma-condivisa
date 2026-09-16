@@ -513,45 +513,47 @@ export default function CalendarioPage() {
                     )}
 
                     {ev.meet_url && (
-                      <div className="pt-1 flex items-center gap-1.5">
+                      <div className="pt-1.5 space-y-1.5">
                         <Button
                           size="sm"
                           onClick={() => window.open(ev.meet_url, '_blank')}
-                          className="flex-1 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs h-7 gap-1 shadow-xs"
+                          className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs h-8 gap-1.5 shadow-xs justify-center"
                         >
                           <Video className="h-3.5 w-3.5" />
-                          Partecipa Meet
+                          Partecipa su Google Meet
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const text = encodeURIComponent(
-                              `Ciao! Ti confermo la riunione "${ev.title}" per il ${ev.date} alle ${ev.time || '10:00'}.\nEcco il link Google Meet per collegarci: ${ev.meet_url}`
-                            )
-                            window.open(`https://wa.me/?text=${text}`, '_blank')
-                          }}
-                          className="h-7 px-2.5 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-semibold gap-1"
-                          title="Invia promemoria su WhatsApp"
-                        >
-                          <Share2 className="h-3.5 w-3.5 text-emerald-500" />
-                          WhatsApp
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={sendingEventId === ev.id}
-                          onClick={() => handleSendManualInvites(ev)}
-                          className="h-7 px-2.5 border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 text-xs font-semibold gap-1"
-                          title="Invia inviti ed email a tutti adesso via Resend"
-                        >
-                          {sendingEventId === ev.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
-                          ) : (
-                            <Send className="h-3.5 w-3.5 text-blue-500" />
-                          )}
-                          Invia Email
-                        </Button>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const text = encodeURIComponent(
+                                `Ciao! Ti confermo la riunione "${ev.title}" per il ${ev.date} alle ${ev.time || '10:00'}.\nEcco il link Google Meet per collegarci: ${ev.meet_url}`
+                              )
+                              window.open(`https://wa.me/?text=${text}`, '_blank')
+                            }}
+                            className="h-7 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-[11px] font-semibold gap-1 justify-center"
+                            title="Invia promemoria su WhatsApp"
+                          >
+                            <Share2 className="h-3 w-3 text-emerald-500 shrink-0" />
+                            WhatsApp
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={sendingEventId === ev.id}
+                            onClick={() => handleSendManualInvites(ev)}
+                            className="h-7 border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 text-[11px] font-semibold gap-1 justify-center"
+                            title="Invia inviti ed email a tutti adesso via Resend"
+                          >
+                            {sendingEventId === ev.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin text-blue-500 shrink-0" />
+                            ) : (
+                              <Send className="h-3 w-3 text-blue-500 shrink-0" />
+                            )}
+                            Invia Email
+                          </Button>
+                        </div>
                       </div>
                     )}
 
