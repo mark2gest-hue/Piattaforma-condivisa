@@ -43,6 +43,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { enrollStudentAction, joinWaitlistAction, submitCourseRegistrationAction } from '@/app/actions/student'
+import { LegalModal, CookieBanner } from '@/components/legal/LegalModal'
 
 const MODULES_LIST = [
   { num: '01', title: '1. Benvenuti nel Futuro', category: 'Modulo 1 – Fondamenta', desc: 'Introduzione ai concetti chiave ed alla rivoluzione dell’Intelligenza Artificiale.' },
@@ -108,6 +109,9 @@ export default function LandingPage() {
 
   // Accordion FAQ aperto
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
+
+  // Modale Legale (Privacy, Cookies, Termini, Disclaimer)
+  const [legalModalType, setLegalModalType] = useState<'privacy' | 'cookies' | 'terms' | 'disclaimer' | null>(null)
 
   // Rilevamento automatico Referral da URL (?ref=CODICE)
   useEffect(() => {
@@ -558,23 +562,69 @@ export default function LandingPage() {
       </main>
 
       {/* FOOTER */}
-      <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950 py-8">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="flex items-center gap-3">
-            <img
-              src="/images/logo_full_dark.png"
-              alt="AI Sviluppo"
-              className="h-8 w-auto object-contain opacity-80"
-            />
-            <span>© 2026 <strong>aiutiamoci.cloud</strong>. Tutti i diritti riservati.</span>
+      <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950 py-10">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col gap-6 text-xs text-slate-500">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <img
+                src="/images/logo_full_dark.png"
+                alt="AI Sviluppo"
+                className="h-8 w-auto object-contain opacity-80"
+              />
+              <span>© 2026 <strong>aiutiamoci.cloud</strong>. Tutti i diritti riservati.</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 font-medium">
+              <button onClick={() => setIsStudentModalOpen(true)} className="hover:text-slate-300 transition-colors">Area Studenti</button>
+              <button onClick={() => setIsWaitlistModalOpen(true)} className="hover:text-slate-300 transition-colors">Corso Avanzato AI Pro</button>
+              <Link href="/login" className="hover:text-slate-300 transition-colors">Team Login</Link>
+            </div>
           </div>
-          <div className="flex items-center gap-6">
-            <button onClick={() => setIsStudentModalOpen(true)} className="hover:text-slate-300">Area Studenti</button>
-            <button onClick={() => setIsWaitlistModalOpen(true)} className="hover:text-slate-300">Corso Avanzato AI Pro</button>
-            <Link href="/login" className="hover:text-slate-300">Team Login</Link>
+
+          {/* Legal Compliance Bar */}
+          <div className="pt-4 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
+            <p className="text-center sm:text-left">
+              Piattaforma didattica per la formazione all&apos;Intelligenza Artificiale applicata.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 text-slate-400">
+              <button
+                onClick={() => setLegalModalType('privacy')}
+                className="hover:text-indigo-400 hover:underline transition-colors"
+              >
+                Privacy Policy
+              </button>
+              <span>•</span>
+              <button
+                onClick={() => setLegalModalType('cookies')}
+                className="hover:text-indigo-400 hover:underline transition-colors"
+              >
+                Cookie Policy
+              </button>
+              <span>•</span>
+              <button
+                onClick={() => setLegalModalType('terms')}
+                className="hover:text-indigo-400 hover:underline transition-colors"
+              >
+                Termini d&apos;Uso
+              </button>
+              <span>•</span>
+              <button
+                onClick={() => setLegalModalType('disclaimer')}
+                className="hover:text-indigo-400 hover:underline transition-colors"
+              >
+                Disclaimer Didattico
+              </button>
+            </div>
           </div>
         </div>
       </footer>
+
+      {/* Cookie Consent Banner & Legal Modal */}
+      <CookieBanner onOpenPolicy={() => setLegalModalType('cookies')} />
+      <LegalModal
+        isOpen={legalModalType !== null}
+        onClose={() => setLegalModalType(null)}
+        type={legalModalType}
+      />
 
       {/* MODAL 1: LOGIN CODICE STUDENTE */}
       {isStudentModalOpen && (
