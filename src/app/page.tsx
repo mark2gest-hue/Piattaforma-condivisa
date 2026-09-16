@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -108,6 +108,27 @@ export default function LandingPage() {
 
   // Accordion FAQ aperto
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0)
+
+  // Rilevamento automatico Referral da URL (?ref=CODICE)
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search)
+        const refUrl = urlParams.get('ref') || urlParams.get('referral')
+        const savedRef = sessionStorage.getItem('course_referral_code')
+        const activeRef = refUrl || savedRef
+
+        if (activeRef) {
+          const cleanRef = activeRef.trim().toUpperCase()
+          setReferrerName(cleanRef)
+          setReferralSource('Passaparola / Amico o Collega')
+          sessionStorage.setItem('course_referral_code', cleanRef)
+        }
+      }
+    } catch {
+      // safe fallback
+    }
+  }, [])
 
   const handleStudentAccess = (e: React.FormEvent) => {
     e.preventDefault()
@@ -633,6 +654,16 @@ export default function LandingPage() {
                 <p className="text-slate-400 text-xs leading-relaxed">
                   Compila questo breve questionario per richiedere l&apos;accesso gratuito al corso e alle registrazioni video.
                 </p>
+
+                {referrerName && (
+                  <div className="bg-emerald-950/50 border border-emerald-800/80 rounded-xl p-3 flex items-center gap-2.5 text-emerald-300 text-xs shadow-xs">
+                    <Sparkles className="h-4 w-4 shrink-0 text-emerald-400" />
+                    <div>
+                      <span>Sei stato invitato con codice referral: <strong className="font-mono text-emerald-200">{referrerName}</strong>!</span>
+                      <p className="text-[10px] text-emerald-400/80 font-normal">Hai diritto all&apos;accreditamento prioritario.</p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <label className="font-semibold text-slate-300">Nome e Cognome *</label>

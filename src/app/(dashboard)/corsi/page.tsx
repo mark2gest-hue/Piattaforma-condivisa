@@ -1231,13 +1231,28 @@ function CorsiInnerContent() {
                 </Button>
               </div>
             ) : activeStudent ? (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="success" className="py-1 px-3 flex items-center gap-1 text-xs">
                   <Unlock className="h-3.5 w-3.5" />
                   <span>
                     Studente: <strong>{activeStudent.name}</strong> ({activeStudent.code})
                   </span>
                 </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const link = `https://aiutiamoci.cloud/?ref=${encodeURIComponent(activeStudent.code)}`
+                    navigator.clipboard.writeText(link)
+                    playNotificationSound('chat')
+                    alert(`🔗 Il tuo Link Referral personale è stato copiato negli appunti!\n\n${link}\n\nCondividilo con colleghi o amici: quando si iscrivono, il modulo registrerà in automatico che sono stati presentati da te con il tuo codice!`)
+                  }}
+                  className="text-xs h-8 gap-1.5 border-purple-500/40 text-purple-400 hover:bg-purple-950/30 font-semibold shadow-xs"
+                  title="Copia il tuo link personale d'invito con codice referral"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                  <span>Copia Link Referral</span>
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
