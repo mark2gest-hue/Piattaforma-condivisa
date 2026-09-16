@@ -53,7 +53,9 @@ export default function CalendarioPage() {
   const [recipientCategories, setRecipientCategories] = useState<string[]>(['single'])
   const [customEmails, setCustomEmails] = useState('')
   const [sendEmailInvite, setSendEmailInvite] = useState(true)
+  const [emailTiming, setEmailTiming] = useState<'now' | '1h' | '2h' | '24h'>('now')
   const [isSendingInvitations, setIsSendingInvitations] = useState(false)
+  const [sendingEventId, setSendingEventId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   const supabase = createClient()
@@ -188,22 +190,31 @@ export default function CalendarioPage() {
       let emailReportMsg = ''
       const hasSelectedCategories = recipientCategories.length > 0 && (recipientCategories.some(c => c !== 'single') || customEmails.trim().length > 0)
       if (sendEmailInvite && hasSelectedCategories) {
-        setIsSendingInvitations(true)
-        const resEmail = await sendEventInvitationsAction({
-          eventTitle: eventTitle.trim(),
-          eventDate: selectedDateStr,
-          eventTime,
-          meetUrl: eventMeetUrl.trim(),
-          description: eventDesc.trim(),
-          recipientCategories: recipientCategories as any,
-          customEmails: customEmails.trim(),
-        })
-        setIsSendingInvitations(false)
+        if (emailTiming === 'now') {
+          setIsSendingInvitations(true)
+          const resEmail = await sendEventInvitationsAction({
+            eventTitle: eventTitle.trim(),
+            eventDate: selectedDateStr,
+            eventTime,
+            meetUrl: eventMeetUrl.trim(),
+            description: eventDesc.trim(),
+            recipientCategories: recipientCategories as any,
+            customEmails: customEmails.trim(),
+          })
+          setIsSendingInvitations(false)
 
-        if (resEmail.success) {
-          emailReportMsg = `\n✉️ Inviti inviati con successo a ${resEmail.sentCount} destinatari via Resend!`
+          if (resEmail.success) {
+            emailReportMsg = `\n✉️ Inviti inviati con successo a ${resEmail.sentCount} destinatari via Resend!`
+          } else {
+            emailReportMsg = `\n⚠️ Attenzione invio email: ${resEmail.error}`
+          }
         } else {
-          emailReportMsg = `\n⚠️ Attenzione invio email: ${resEmail.error}`
+          const timingLabels: Record<string, string> = {
+            '1h': '1 ora prima dell\'evento',
+            '2h': '2 ore prima dell\'evento',
+            '24h': '24 ore prima dell\'evento (il giorno prima)'
+          }
+          emailReportMsg = `\n⏰ Invio email programmato per: ${timingLabels[emailTiming] || emailTiming}. Puoi anche inviarle manualmente in qualsiasi momento dalla lista eventi!`
         }
       }
 
@@ -215,8 +226,36 @@ export default function CalendarioPage() {
       setEventDesc('')
       setCustomEmails('')
       setRecipientType('single')
+      setEmailTiming('now')
     } catch (err: any) {
       alert(`Errore: ${err.message}`)
+    }
+  }
+
+  const handleSendManualInvites = async (ev: CalendarEvent) => {
+    const confirmMsg = `Vuoi inviare ora le email di invito e promemoria per:\n\n"${ev.title}" (${ev.date} ore ${ev.time || '10:00'})?\n\nVerranno inclusi tutti gli studenti e contatti registrati.`
+    if (!confirm(confirmMsg)) return
+
+    try {
+      setSendingEventId(ev.id)
+      const res = await sendEventInvitationsAction({
+        eventTitle: ev.title,
+        eventDate: ev.date,
+        eventTime: ev.time || '10:00',
+        meetUrl: ev.meet_url,
+        description: ev.description,
+        recipientCategories: ['pending', 'ai-start', 'ai-pro', 'waitlist'],
+      })
+      setSendingEventId(null)
+
+      if (res.success) {
+        alert(`✉️ Inviti inviati con successo a ${res.sentCount} destinatari!`)
+      } else {
+        alert(`Errore invio inviti: ${res.error}`)
+      }
+    } catch (err: any) {
+      setSendingEventId(null)
+      alert(`Errore imprevisto: ${err.message}`)
     }
   }
 
@@ -495,6 +534,21 @@ export default function CalendarioPage() {
                         >
                           <Share2 className="h-3.5 w-3.5 text-emerald-500" />
                           WhatsApp
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={sendingEventId === ev.id}
+                          onClick={() => handleSendManualInvites(ev)}
+                          className="h-7 px-2.5 border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 text-xs font-semibold gap-1"
+                          title="Invia inviti ed email a tutti adesso via Resend"
+                        >
+                          {sendingEventId === ev.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
+                          ) : (
+                            <Send className="h-3.5 w-3.5 text-blue-500" />
+                          )}
+                          Invia Email
                         </Button>
                       </div>
                     )}
@@ -789,6 +843,65 @@ export default function CalendarioPage() {
                               className="text-xs dark:bg-slate-900 dark:border-slate-700"
                             />
                           )}
+                        </div>
+
+                        {/* 6. Selettore Orario Invio (Timing) */}
+                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] flex items-center gap-1.5">
+                            <Clock className="h-3 w-3 text-blue-500" />
+                            Quando vuoi inviare le email?
+                          </label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setEmailTiming('now')}
+                              className={`px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
+                                emailTiming === 'now'
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400'
+                              }`}
+                            >
+                              ⚡ Subito
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEmailTiming('1h')}
+                              className={`px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
+                                emailTiming === '1h'
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400'
+                              }`}
+                            >
+                              1 ora prima
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEmailTiming('2h')}
+                              className={`px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
+                                emailTiming === '2h'
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400'
+                              }`}
+                            >
+                              2 ore prima
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEmailTiming('24h')}
+                              className={`px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
+                                emailTiming === '24h'
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400'
+                              }`}
+                            >
+                              24h prima
+                            </button>
+                          </div>
+                          <p className="text-[10px] text-slate-400 leading-tight">
+                            {emailTiming === 'now' 
+                              ? 'Le email partono immediatamente al salvataggio dell\'evento.' 
+                              : `Invio programmato. Dalla schermata eventi potrai anche forzare l'invio in ogni momento con il tasto "Invia Email".`}
+                          </p>
                         </div>
                       </div>
                     )}

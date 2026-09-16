@@ -15,7 +15,7 @@ export default async function DashboardLayout({
   // In locale: consentiamo la preview completa del workspace di sviluppo
   if (!user && process.env.NODE_ENV === 'production') {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
           {children}
         </main>

@@ -40,7 +40,10 @@ import {
   Copy,
   Check,
   Search,
+  Sun,
+  Moon,
 } from 'lucide-react'
+import { useTheme } from '@/components/theme-provider'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -248,7 +251,7 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
 
 // Mappatura precisa dei 20 Moduli Video del Corso AI Start con gli URL MP4 reali e le rispettive Dispense PDF
 const AI_START_LESSONS: Lesson[] = [
-  { id: 1, title: '1 Benvenuti nel Futuro', duration: '10:30', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%201%20Benvenuti%20nel%20futuro_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/ET7TTVJ7RW#QSaWgz8wLPay' },
+  { id: 1, title: '1 Benvenuti nel Futuro', duration: '10:30', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%201%20Benvenuti%20nel%20futuro_1080p_caption.mp4', resourcesPdfUrl: '/dispense/dispensa-modulo-1.pdf' },
   { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '12:45', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%202%20Breve%20Storia%20Evoluzione%20Lampo_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/9KVC7PNW74#pzsb1mevkrdG' },
   { id: 3, title: '3 Sconfiggere il Foglio Bianco', duration: '15:20', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%203%20Sconfiggere%20il%20Foglio%20Bianco_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/PGCQEQEP2W#2fJfIEEX3haf' },
   { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '14:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20Ai%20-%20Lezione%204%20Il%20Linguaggio%20della%20Chiarezza%20Prompt_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0WRQ83PPM0#Q2bU6vrD5eDq' },
@@ -474,6 +477,7 @@ function CorsiInnerContent() {
   const [customVideoUrlInput, setCustomVideoUrlInput] = useState('')
 
   // Stato Studente Loggato tramite Codice
+  const { theme, setTheme } = useTheme()
   const [studentCodeInput, setStudentCodeInput] = useState('')
   const [activeStudent, setActiveStudent] = useState<{ name: string; code: string; accessTier?: 'ai-start' | 'ai-pro' | 'both' } | null>(null)
   const [isTeamMember, setIsTeamMember] = useState<boolean>(false)
@@ -513,18 +517,11 @@ function CorsiInnerContent() {
   // Chat Studenti con Assistente @AI
   const [chatMessages, setChatMessages] = useState<Array<{ id: string; sender: string; isAi: boolean; text: string; time: string }>>([
     {
-      id: 'm-1',
-      sender: 'Marco (Studente)',
-      isAi: false,
-      text: 'Ciao! Ho un dubbio sulla lezione 2 riguardante il Prompt Engineering per le email commerciali.',
-      time: '14:20',
-    },
-    {
-      id: 'm-2',
+      id: 'welcome-tutor',
       sender: 'Assistente @AI Ti AIuto',
       isAi: true,
-      text: 'Ciao Marco! Nel Modulo 2 spieghiamo come impostare un prompt in 3 parti: 1. Ruolo (es. Consulente commerciale), 2. Contesto del cliente, 3. Tono ed obiettivo. Clicca sui 20 video in playlist per riprodurli!',
-      time: '14:21',
+      text: 'Ciao! Benvenuto nel percorso formativo. Durante la visione delle lezioni puoi chiedermi chiarimenti sui concetti, consigli sui prompt o spiegazioni pratiche. Come posso aiutarti?',
+      time: 'Oggi',
     },
   ])
   const [chatInput, setChatInput] = useState('')
@@ -1254,6 +1251,15 @@ function CorsiInnerContent() {
                   <span>Copia Link Referral</span>
                 </Button>
                 <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="h-8 w-8 rounded-xl border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  title={theme === 'dark' ? 'Passa al Tema Chiaro (Light Mode)' : 'Passa al Tema Scuro (Dark Mode)'}
+                >
+                  {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-600" />}
+                </Button>
+                <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setActiveStudent(null)}
@@ -1263,14 +1269,25 @@ function CorsiInnerContent() {
                 </Button>
               </div>
             ) : (
-              <Button
-                variant="outline"
-                onClick={() => setActiveTab('login')}
-                className="text-xs font-semibold h-10 gap-1.5 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400"
-              >
-                <Key className="h-4 w-4" />
-                <span>Accedi con Codice Studente</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="h-9 w-9 rounded-xl border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  title={theme === 'dark' ? 'Passa al Tema Chiaro (Light Mode)' : 'Passa al Tema Scuro (Dark Mode)'}
+                >
+                  {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-600" />}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveTab('login')}
+                  className="text-xs font-semibold h-10 gap-1.5 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400"
+                >
+                  <Key className="h-4 w-4" />
+                  <span>Accedi con Codice Studente</span>
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -1544,7 +1561,7 @@ function CorsiInnerContent() {
                   )}
 
                   <a
-                    href={(selectedCourseId === 'ai-start' ? activeLesson.resourcesPdfUrl : null) || 'https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY'}
+                    href={(selectedCourseId === 'ai-start' ? activeLesson.resourcesPdfUrl : null) || '/dispense/dispensa-modulo-1.pdf'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full"
@@ -1638,7 +1655,7 @@ function CorsiInnerContent() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <a
-                          href={activeLesson.resourcesPdfUrl || 'https://drive.proton.me/urls/92VERQ5CQR#EP0hzsSBpyiY'}
+                          href={activeLesson.resourcesPdfUrl || '/dispense/dispensa-modulo-1.pdf'}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
