@@ -343,12 +343,21 @@ export async function submitCourseRegistrationAction(formData: {
   objective?: string
   blocker?: string
   expectation?: string
+  referral_source?: string
+  referred_by?: string
   raw_answers?: any
 }) {
   try {
     const supabaseAdmin = createAdminClient()
     const cleanEmail = formData.email.trim().toLowerCase()
     const cleanName = formData.name.trim()
+
+    const rawAnswers = {
+      ...(formData.raw_answers || {}),
+      source: formData.referral_source || (formData.raw_answers?.source ?? 'Non specificata'),
+      referral_source: formData.referral_source || (formData.raw_answers?.referral_source ?? 'Non specificata'),
+      referred_by: formData.referred_by || (formData.raw_answers?.referred_by ?? null),
+    }
 
     // Inserisci la nuova registrazione in stato 'pending'
     const { data, error: insertError } = await supabaseAdmin
@@ -360,7 +369,7 @@ export async function submitCourseRegistrationAction(formData: {
         objective: formData.objective || 'Migliorare il lavoro',
         blocker: formData.blocker || 'Non so da dove iniziare',
         expectation: formData.expectation || 'Voglio sperimentare e capire',
-        raw_answers: formData.raw_answers || null,
+        raw_answers: rawAnswers,
         status: 'pending',
         approved: false,
       })
@@ -373,9 +382,12 @@ export async function submitCourseRegistrationAction(formData: {
     }
 
     // Crea un task operativo per notificare il team
+    const referralInfo = formData.referred_by ? `\nPresentato da / Referral: ${formData.referred_by}` : ''
+    const sourceInfo = formData.referral_source ? `\nFonte: ${formData.referral_source}` : ''
+
     await supabaseAdmin.from('tasks').insert({
       title: `Nuova Richiesta Registrazione Corso: ${cleanName}`,
-      description: `L'utente ${cleanName} (${cleanEmail}) ha completato il questionario di iscrizione.\nEsperienza AI: ${formData.ai_experience}\nObiettivo: ${formData.objective}\nBlocco: ${formData.blocker}\nAspettativa: ${formData.expectation}`,
+      description: `L'utente ${cleanName} (${cleanEmail}) ha completato il questionario di iscrizione.\nEsperienza AI: ${formData.ai_experience}\nObiettivo: ${formData.objective}\nBlocco: ${formData.blocker}\nAspettativa: ${formData.expectation}${sourceInfo}${referralInfo}`,
       status: 'todo',
       priority: 'high',
     })

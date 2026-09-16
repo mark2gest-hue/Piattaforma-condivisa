@@ -2441,6 +2441,7 @@ function CorsiInnerContent() {
                         <th className="py-3 px-4 min-w-[170px]">Obiettivo</th>
                         <th className="py-3 px-4 min-w-[160px]">Blocco</th>
                         <th className="py-3 px-4 min-w-[160px]">Aspettativa</th>
+                        <th className="py-3 px-4 min-w-[180px]">Fonte / Referral</th>
                         <th className="py-3 px-4 min-w-[130px]">Data</th>
                         <th className="py-3 px-4 min-w-[140px] text-right">Stato</th>
                       </tr>
@@ -2459,12 +2460,17 @@ function CorsiInnerContent() {
                             const mObj = (reg.objective || '').toLowerCase().includes(q)
                             const mExp = (reg.ai_experience || '').toLowerCase().includes(q)
                             const mBlk = (reg.blocker || '').toLowerCase().includes(q)
-                            return mName || mEmail || mObj || mExp || mBlk
+                            const raw = (reg.raw_answers as any) || {}
+                            const mRef = ((raw.referred_by || '') + ' ' + (raw.referral_source || raw.source || '')).toLowerCase().includes(q)
+                            return mName || mEmail || mObj || mExp || mBlk || mRef
                           }
                           return true
                         })
                         .map((reg) => {
                           const isAppr = reg.approved === true || reg.status === 'approved'
+                          const raw = (reg.raw_answers as any) || {}
+                          const src = raw.referral_source || raw.source
+                          const ref = raw.referred_by
                           return (
                             <tr key={reg.id} className="hover:bg-slate-800/40 transition-colors">
                               <td className="py-3.5 px-4 font-bold text-slate-100">
@@ -2502,6 +2508,25 @@ function CorsiInnerContent() {
 
                               <td className="py-3.5 px-4 text-slate-400 truncate max-w-[160px]" title={reg.expectation || ''}>
                                 {reg.expectation || '—'}
+                              </td>
+
+                              <td className="py-3.5 px-4 text-slate-300">
+                                {!src && !ref ? (
+                                  <span className="text-slate-500">—</span>
+                                ) : (
+                                  <div className="flex flex-col gap-1 max-w-[170px]">
+                                    {src && (
+                                      <span className="text-[11px] font-semibold text-indigo-400 truncate" title={src}>
+                                        {src}
+                                      </span>
+                                    )}
+                                    {ref && (
+                                      <span className="text-[10px] text-amber-300 font-mono bg-amber-950/40 border border-amber-800/60 px-1.5 py-0.5 rounded-md inline-flex items-center gap-1 w-fit" title={ref}>
+                                        👤 Da: {ref}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </td>
 
                               <td className="py-3.5 px-4 text-slate-400 font-mono text-[11px] whitespace-nowrap">

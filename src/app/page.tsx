@@ -87,6 +87,8 @@ export default function LandingPage() {
   const [objective, setObjective] = useState('Migliorare il lavoro o il business')
   const [blocker, setBlocker] = useState('Non so da dove iniziare')
   const [expectation, setExpectation] = useState('Voglio sperimentare e capire')
+  const [referralSource, setReferralSource] = useState('Passaparola / Amico o Collega')
+  const [referrerName, setReferrerName] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
   const [enrollSuccess, setEnrollSuccess] = useState(false)
 
@@ -127,11 +129,15 @@ export default function LandingPage() {
       objective: objective,
       blocker: blocker,
       expectation: expectation,
+      referral_source: referralSource,
+      referred_by: referrerName.trim() || undefined,
       raw_answers: {
         experience: aiExperience,
         goal: objective,
         blocker: blocker,
         mindset: expectation,
+        referral_source: referralSource,
+        referred_by: referrerName.trim() || null,
       }
     })
 
@@ -706,6 +712,35 @@ export default function LandingPage() {
                     <option value="Voglio risultati pratici subito">Voglio risultati pratici subito</option>
                     <option value="Voglio imparare le basi con calma">Voglio imparare le basi con calma</option>
                   </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-300">Come ci hai conosciuto? *</label>
+                  <select
+                    value={referralSource}
+                    onChange={(e) => setReferralSource(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="Passaparola / Amico o Collega">Passaparola / Amico o Collega</option>
+                    <option value="Social Media (Instagram, Facebook, LinkedIn)">Social Media (Instagram, Facebook, LinkedIn)</option>
+                    <option value="Email / Newsletter">Email / Newsletter</option>
+                    <option value="Ricerca su Google / Web">Ricerca su Google / Web</option>
+                    <option value="Webinar / Evento">Webinar / Evento</option>
+                    <option value="Altro">Altro</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="font-semibold text-slate-300">Chi ti ha presentato?</label>
+                    <span className="text-[10px] text-slate-500 font-normal">Opzionale / Nome o Codice Referral</span>
+                  </div>
+                  <Input
+                    value={referrerName}
+                    onChange={(e) => setReferrerName(e.target.value)}
+                    placeholder="Es. Mario Rossi o codice amico"
+                    className="bg-slate-950 border-slate-800 text-white text-xs"
+                  />
                 </div>
 
                 <Button
