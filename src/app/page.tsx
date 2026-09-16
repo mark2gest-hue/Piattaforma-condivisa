@@ -761,19 +761,6 @@ export default function LandingPage() {
                   </select>
                 </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="font-semibold text-slate-300">Chi ti ha presentato?</label>
-                    <span className="text-[10px] text-slate-500 font-normal">Opzionale / Nome o Codice Referral</span>
-                  </div>
-                  <Input
-                    value={referrerName}
-                    onChange={(e) => setReferrerName(e.target.value)}
-                    placeholder="Es. Mario Rossi o codice amico"
-                    className="bg-slate-950 border-slate-800 text-white text-xs"
-                  />
-                </div>
-
                 <Button
                   type="submit"
                   disabled={isRegistering}
