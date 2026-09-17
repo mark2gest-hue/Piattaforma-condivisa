@@ -3,8 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { sendTelegramMessage, escapeHtml } from '@/lib/telegram'
 import { createClient } from '@supabase/supabase-js'
 
-// Token del Bot Tutor per gli studenti
-const TUTOR_BOT_TOKEN = '8748283928:AAHSZeD6Y-OgFuu9oI4lVepFZmyulwvj4SM'
+// Token del Bot Tutor per gli studenti letto in modo sicuro dalle variabili d'ambiente
+const TUTOR_BOT_TOKEN = process.env.TELEGRAM_TUTOR_BOT_TOKEN || ''
 const TELEGRAM_API = `https://api.telegram.org/bot${TUTOR_BOT_TOKEN}`
 
 // Inizializzazione Gemini
