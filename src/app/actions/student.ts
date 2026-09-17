@@ -1,7 +1,10 @@
 'use server'
 
+import { Resend } from 'resend'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { sendSharedEmail } from '@/app/(dashboard)/posta/actions'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export type CourseAccessTier = 'ai-start' | 'ai-pro' | 'both'
 
@@ -392,6 +395,107 @@ export async function submitCourseRegistrationAction(formData: {
       priority: 'high',
     })
 
+    // Invia email automatica di benvenuto con invito alla Diretta Live al NUOVO registrato
+    try {
+      const fromEmail = process.env.RESEND_FROM_EMAIL || 'aiutiamoci <info@aiutiamoci.cloud>'
+      const meetUrl = 'https://meet.google.com/wsv-bqxm-bvr'
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #0f172a; }
+            .container { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+            .header { background: #0f172a; padding: 28px; text-align: center; border-bottom: 4px solid #0284c7; }
+            .header h1 { margin: 0; font-size: 20px; color: #ffffff; font-weight: 800; letter-spacing: -0.02em; }
+            .header p { margin: 6px 0 0 0; color: #38bdf8; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+            .content { padding: 32px 28px; }
+            .live-box { margin: 24px 0; text-align: center; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 20px; }
+            .footer { background: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <p>aiutiamoci • Campus Formativo & Operativo AI</p>
+              <h1>Registrazione Ricevuta & Invito alla Diretta Live</h1>
+            </div>
+            <div class="content">
+              <p style="font-size: 15px; line-height: 1.6; margin-top: 0;">Ciao <strong>${cleanName}</strong>,</p>
+              <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+                Grazie per esserti registrato su <strong>aiutiamoci.cloud</strong>! La tua richiesta è stata presa in carico dal nostro team didattico e stiamo predisponendo la tua attivazione.
+              </p>
+              <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+                Nel frattempo, sei ufficialmente invitato a partecipare alla nostra prossima sessione live in videoconferenza:
+              </p>
+
+              <div class="live-box">
+                <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.05em;">
+                  🟢 Stanza Videochiamata & Masterclass Live
+                </p>
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #334155; font-weight: 600;">
+                  🗓️ Tutti i Giovedì alle ore 21:00
+                </p>
+                <a href="${meetUrl}" target="_blank" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 14px rgba(2,132,199,0.35);">
+                  📹 Accedi alla Videocall (Google Meet)
+                </a>
+                <p style="margin: 12px 0 0 0; font-size: 12px; color: #475569;">
+                  Link diretto: <a href="${meetUrl}" target="_blank" style="color: #0284c7; font-family: monospace; font-weight: 600; text-decoration: underline;">${meetUrl}</a>
+                </p>
+              </div>
+
+              <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 0;">
+                💡 <em>Non è necessaria alcuna installazione: puoi collegarti comodamente dal tuo computer o smartphone tramite browser. A breve riceverai anche l'abilitazione con il tuo codice studente personale.</em>
+              </p>
+            </div>
+            <div class="footer">
+              <p style="margin: 0 0 6px 0; font-weight: 600; color: #475569;">aiutiamoci • Campus Formativo & Operativo AI</p>
+              <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 11px;">
+                Ricevi questa comunicazione perché ti sei registrato su <a href="https://aiutiamoci.cloud" style="color: #0284c7; text-decoration: none;">aiutiamoci.cloud</a>.
+              </p>
+              <p style="margin: 0; font-size: 11px; color: #cbd5e1;">
+                Per assistenza rispondi a questa email o scrivi a <a href="mailto:info@aiutiamoci.cloud" style="color: #64748b;">info@aiutiamoci.cloud</a>.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+
+      const plainTextContent = `
+Ciao ${cleanName},
+
+Grazie per esserti registrato su aiutiamoci.cloud!
+La tua richiesta è stata presa in carico dal nostro team didattico.
+
+Nel frattempo, sei invitato a partecipare alla nostra prossima sessione live in videoconferenza:
+
+🗓️ Tutti i Giovedì alle ore 21:00
+🔗 Link Google Meet per collegarsi:
+${meetUrl}
+
+Non è necessaria alcuna installazione: la stanza funziona direttamente nel tuo browser.
+A breve riceverai anche la conferma definitiva con il tuo codice di accesso.
+
+---
+aiutiamoci.cloud • Campus Formativo AI
+Per assistenza rispondi a questa email o scrivi a info@aiutiamoci.cloud
+`.trim()
+
+      await resend.emails.send({
+        from: fromEmail,
+        to: cleanEmail,
+        replyTo: 'info@aiutiamoci.cloud',
+        subject: `Conferma Registrazione e Invito alla Diretta Live - aiutiamoci.cloud`,
+        html: htmlContent,
+        text: plainTextContent,
+      })
+    } catch (mailErr) {
+      console.error('Errore invio email automatica benvenuto al nuovo registrato:', mailErr)
+    }
+
     return { success: true, registration: data }
   } catch (error: any) {
     console.error('Errore submitCourseRegistrationAction:', error)
@@ -445,16 +549,16 @@ export async function approveCourseRegistrationAction(registrationId: string, ta
       console.warn('Avviso inserimento student_codes durante approvazione:', codeErr)
     }
 
-    // 4. Invia l'email con il codice di sblocco all'iscritto
+    // 4. Invia l'email con il codice di sblocco all'iscritto e il link perenne alle dirette
     try {
       const subject = targetTier === 'ai-pro'
-        ? `🚀 Richiesta Approvata: Il tuo Codice di Accesso ad AI Pro (Corso Avanzato)`
-        : `🎉 Richiesta Approvata: Il tuo Codice di Accesso ad AI Start`
+        ? `Richiesta Approvata: Il tuo Codice di Accesso ad AI Pro (Corso Avanzato)`
+        : `Richiesta Approvata: Il tuo Codice di Accesso ad AI Start`
 
       await sendSharedEmail({
         to: reg.email,
         subject,
-        body: `Ciao ${reg.name},\n\nSiamo felici di comunicarti che la tua richiesta di registrazione è stata approvata per:\n👉 ${courseTitle}\n\nEcco il tuo codice univoco per accedere alle lezioni e all'assistente virtuale @AI:\n\n🔑 CODICE DI ACCESSO: ${accessCode}\n\nPer iniziare:\n1. Vai su https://aiutiamoci.cloud\n2. Clicca su "Accedi al Corso"\n3. Inserisci il tuo codice: ${accessCode}\n\nBuon apprendimento!\nTeam aiutiamoci.cloud\nsupporto: info@aiutiamoci.cloud`,
+        body: `Ciao ${reg.name},\n\nSiamo felici di comunicarti che la tua richiesta di registrazione è stata approvata per:\n👉 ${courseTitle}\n\nEcco il tuo codice univoco per accedere alle lezioni e all'assistente virtuale @AI:\n\n🔑 CODICE DI ACCESSO: ${accessCode}\n\nPer iniziare:\n1. Vai su https://aiutiamoci.cloud\n2. Clicca su "Accedi al Corso"\n3. Inserisci il tuo codice: ${accessCode}\n\n📹 STANZA VIDEOCONFERENZA & MASTERCLASS LIVE:\nhttps://meet.google.com/wsv-bqxm-bvr\n(Ci colleghiamo in diretta ogni giovedì alle 21:00 per approfondimenti pratici e sessioni Q&A)\n\nBuon apprendimento!\nTeam aiutiamoci.cloud\nsupporto: info@aiutiamoci.cloud`,
       })
     } catch (mailErr) {
       console.error('Errore invio email approvazione a', reg.email, mailErr)
