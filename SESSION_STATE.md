@@ -1,14 +1,12 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-16 16:05
+Ultimo aggiornamento: 2026-09-17 10:48
 Stato corrente: 
-- Implementato sistema Referral Fase 1: intercettazione automatica ?ref= / ?referral= su landing page con precompilazione modulo e banner di benvenuto dedicato.
-- Aggiunto pulsante "Copia Link Referral" per gli studenti accreditati in /corsi per generare il proprio link invito con codice univoco annesso.
-- Implementata multiscelta a checkbox nel Calendario (`/calendario`) per invio email a categorie combinabili con selezione rapida.
-- Segregazione completa tra Iscritti Ufficiali Corso 2 e Leads Lista d'Attesa.
-- Aggiunto 3° tab esplicito in `/corsi`: "🚀 Iscritti Corso 2 - AI Pro".
-- Tab "In Attesa": opzione "Approva Start" e "Approva Pro", e tasto cestino per scartare.
-- Tab "Studenti Corso 1": pulsante rapido "🚀 Upgrade Pro" senza reiscrizione.
+- Aggiornato branding completo a `aiutiamoci` / `aiutiamoci.cloud` con suite icone e loghi ad alto contrasto (dark & light mode) e favicon vettoriale.
+- Implementata conformità legale completa: Cookie Consent Banner all'apertura con salvataggio preferenze, e modali dedicati per Privacy Policy (GDPR), Cookie Policy, Termini di Servizio e Disclaimer Didattico nel footer.
+- Architettura 16 Ore Certificate approvata e rilasciata: badge monte ore aggiornati, attestato canvas con codice crittografico e generazione del Dossier Tecnico Didattico per l'Ente di Certificazione ATOMA.
+- Generato Dossier Tecnico in PDF vettoriale su carta intestata istituzionale (salvato in Downloads, root progetto, link pubblico `/docs/` e Secondo Cervello Obsidian con anteprima embed).
+- Risolto e blindato invio email riunioni/videocall (`sendEventInvitationsAction`): fallback automatico Google Meet (`https://meet.google.com/wsv-bqxm-bvr`), box verde ad alta visibilità e pulsante responsive su due righe nel Calendario (`/calendario`).
 - Deploy di produzione completato con successo su VPS Stefano (`80.225.81.150`, PM2 id 0 `aiutiamoci`).
 
 ---
