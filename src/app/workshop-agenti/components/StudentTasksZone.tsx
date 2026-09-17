@@ -220,13 +220,13 @@ export function StudentTasksZone({ provider, initialTier = 'ai-start' }: Student
         </div>
 
         <a
-          href="https://t.me/Corsi_Masterclass_bot"
+          href="https://t.me/+QSql9PpGLlMzYmI0"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow-md shadow-sky-600/25 transition-all shrink-0 cursor-pointer w-full sm:w-auto"
         >
           <MessageSquare className="h-3.5 w-3.5" />
-          <span>Entra nel Gruppo Telegram</span>
+          <span>Entra nel Gruppo Telegram (Aiutiamoci Corsi)</span>
           <ExternalLink className="h-3 w-3 opacity-80" />
         </a>
       </div>
