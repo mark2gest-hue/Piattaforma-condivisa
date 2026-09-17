@@ -1,6 +1,6 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-17 11:38
+Ultimo aggiornamento: 2026-09-17 20:25
 Stato corrente: 
 - Aggiornato branding completo a `aiutiamoci` / `aiutiamoci.cloud` con suite icone e loghi ad alto contrasto (dark & light mode) e favicon vettoriale.
 - Implementata conformità legale completa: Cookie Consent Banner all'apertura con salvataggio preferenze, e modali dedicati per Privacy Policy (GDPR), Cookie Policy, Termini di Servizio e Disclaimer Didattico nel footer.
@@ -13,6 +13,12 @@ Stato corrente:
   - 🤝 Clienti & Briefing B2B: `https://meet.google.com/yme-pyws-osa` (Titolo: "Clienti & Briefing")
   - 🛠️ Lab Agenti AI Pro: `https://meet.google.com/dwe-rczj-uxz` (Titolo: "Laboratorio Agenti AI")
 - Implementata selezione stanza obbligatoria nella pagina Videocall (`/videocall`): all'apertura nessuna stanza è pre-selezionata; il tasto "Entra nella Stanza" e "Copia Link" rimangono disabilitati e si attivano solo al click su una delle 4 sale.
+- Gruppo Telegram Corsisti Community (`Aiutiamoci Corsi` - `https://t.me/+QSql9PpGLlMzYmI0`):
+  - Integrato link di accesso rapido nella stanza Masterclass Corsisti (`/videocall`) e nella zona compiti (`/workshop-agenti`).
+  - Rilasciato in produzione il Bot Tutor AI Corsisti (`@Corsi_Masterclass_bot`) con webhook dedicato `/api/telegram/tutor-webhook`.
+  - Vademecum automatico per nuovi membri e comando `/vademecum` in linguaggio naturale (zero gergo tecnico, attivabile sia con tag sia scrivendo "Tutor...").
+  - Routing istantaneo ai soci (Marco, Lorenzo, Stefano) con pulsanti inline che notificano la chat privata interna del team.
+  - Assistenza proattiva al recupero del Codice ID di accesso alla piattaforma.
 
 ---
 
