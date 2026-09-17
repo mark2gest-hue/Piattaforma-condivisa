@@ -292,6 +292,22 @@ export default function VideocallPage() {
                     </Button>
                   </div>
 
+                  {/* Link Community Telegram & Tutor AI per Masterclass Corsisti */}
+                  {currentRoom.id === 'masterclass' && (
+                    <div className="pt-2">
+                      <a
+                        href="https://t.me/Corsi_Masterclass_bot"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 hover:text-white text-xs font-semibold transition-all shadow-xs w-full sm:w-auto cursor-pointer"
+                      >
+                        <span className="text-sm">💬</span>
+                        <span>Entra nella Community Telegram & Tutor AI (@Corsi_Masterclass_bot)</span>
+                        <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                      </a>
+                    </div>
+                  )}
+
                   <div>
                     <a
                       href="/calendario"

@@ -14,6 +14,8 @@ import {
   Trophy,
   RefreshCw,
   BookOpen,
+  ExternalLink,
+  MessageSquare,
 } from 'lucide-react'
 import {
   initStudentWorkspaceAction,
@@ -196,6 +198,37 @@ export function StudentTasksZone({ provider, initialTier = 'ai-start' }: Student
             )}
           </div>
         </div>
+      </div>
+
+      {/* Banner Esclusivo Community Telegram & Tutor AI Corsisti */}
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-purple-500/10 border border-sky-500/30 shadow-lg shadow-sky-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-xl shrink-0">
+            💬
+          </div>
+          <div>
+            <div className="text-xs sm:text-sm font-bold text-white flex items-center gap-2 flex-wrap">
+              <span>Community Telegram & Tutor AI (@Corsi_Masterclass_bot)</span>
+              <span className="text-[10px] bg-sky-500/20 text-sky-300 font-semibold px-2 py-0.5 rounded-full border border-sky-500/40">
+                RISERVATO CORSISTI
+              </span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+              Confrontati con gli altri corsisti, ricevi aiuto h24 sui prompt e contatta direttamente Marco, Lorenzo o Stefano.
+            </p>
+          </div>
+        </div>
+
+        <a
+          href="https://t.me/Corsi_Masterclass_bot"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow-md shadow-sky-600/25 transition-all shrink-0 cursor-pointer w-full sm:w-auto"
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          <span>Entra nel Gruppo Telegram</span>
+          <ExternalLink className="h-3 w-3 opacity-80" />
+        </a>
       </div>
 
       {/* Lista Missioni Didattiche */}
