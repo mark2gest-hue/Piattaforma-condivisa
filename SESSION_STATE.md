@@ -8,7 +8,7 @@ Stato corrente:
 - Generato Dossier Tecnico in PDF vettoriale su carta intestata istituzionale (salvato in Downloads, root progetto, link pubblico `/docs/` e Secondo Cervello Obsidian con anteprima embed).
 - Risolto e blindato invio email riunioni/videocall (`sendEventInvitationsAction`): fallback automatico Google Meet (`https://meet.google.com/wsv-bqxm-bvr`), box verde ad alta visibilità e pulsante responsive su due righe nel Calendario (`/calendario`).
 - Configurate e rilasciate in produzione le 4 Stanze Google Meet ufficiali permanenti generate da Google AI Pro:
-  - 👥 Soci & Team: `https://meet.google.com/abs-jmek-msy`
+  - 👥 Soci & Team: `https://meet.google.com/mth-rqxp-bdf` (Titolato su Google Calendar "Stanza riservata ai soci")
   - 🎓 Masterclass Corsisti: `https://meet.google.com/wsv-bqxm-bvr`
   - 🤝 Clienti & Briefing B2B: `https://meet.google.com/ymk-pejo-eye`
   - 🛠️ Lab Agenti AI Pro: `https://meet.google.com/atv-fojm-kfo`
