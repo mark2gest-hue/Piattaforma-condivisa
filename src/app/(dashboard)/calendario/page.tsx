@@ -47,19 +47,19 @@ const PRESET_MEET_ROOMS = [
     id: 'clients',
     label: '🤝 Clienti & Briefing B2B',
     desc: 'Audit e consulenze riservate PMI',
-    url: 'https://meet.google.com/qnt-uifv-rzk',
+    url: 'https://meet.google.com/ymk-pejo-eye',
   },
   {
     id: 'team',
     label: '👥 Riunione Soci & Team',
     desc: 'Allineamento interno protetto',
-    url: 'https://meet.google.com/mrv-pknj-fbt',
+    url: 'https://meet.google.com/abs-jmek-msy',
   },
   {
     id: 'lab',
     label: '🛠️ Lab Agenti AI Pro',
     desc: 'Laboratorio tecnico avanzato',
-    url: 'https://meet.google.com/fzx-ymdw-khs',
+    url: 'https://meet.google.com/atv-fojm-kfo',
   },
 ]
 
