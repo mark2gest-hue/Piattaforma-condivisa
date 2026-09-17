@@ -53,7 +53,7 @@ const PRESET_MEET_ROOMS = [
     id: 'team',
     label: '👥 Riunione Soci & Team',
     desc: 'Allineamento interno protetto',
-    url: 'https://meet.google.com/abs-jmek-msy',
+    url: 'https://meet.google.com/mth-rqxp-bdf',
   },
   {
     id: 'lab',
