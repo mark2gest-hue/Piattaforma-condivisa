@@ -7,9 +7,8 @@ Stato corrente:
 - Architettura 16 Ore Certificate approvata e rilasciata: badge monte ore aggiornati, attestato canvas con codice crittografico e generazione del Dossier Tecnico Didattico per l'Ente di Certificazione ATOMA.
 - Generato Dossier Tecnico in PDF vettoriale su carta intestata istituzionale (salvato in Downloads, root progetto, link pubblico `/docs/` e Secondo Cervello Obsidian con anteprima embed).
 - Risolto e blindato invio email riunioni/videocall (`sendEventInvitationsAction`): fallback automatico Google Meet (`https://meet.google.com/wsv-bqxm-bvr`), box verde ad alta visibilità e pulsante responsive su due righe nel Calendario (`/calendario`).
-- Implementate 4 Stanze Google Meet dedicate e separate con selettore rapido a preset nel form eventi del Calendario (`/calendario`): Masterclass Corsisti, Clienti & Briefing B2B, Riunione Soci & Team, Lab Agenti AI Pro (con supporto link personalizzato).
-- Iscrizioni nuove abilitate con invio automatico del link Meet alla Masterclass (`student.ts`), proteggendo i 37 corsisti già esistenti da email duplicate.
-- Deploy di produzione completato con successo su VPS Stefano (`80.225.81.150`, PM2 id 0 `aiutiamoci`).
+- Implementato selettore interattivo a 4 tasti rapidi in `/videocall`: Stanza Soci (`mrv-pknj-fbt`), Masterclass (`wsv-bqxm-bvr`), Clienti B2B (`qnt-uifv-rzk`) e Lab Pro (`fzx-ymdw-khs`), con scheda dinamica, link permanente e copia rapida negli appunti.
+- Deploy di produzione completato con successo su VPS Stefano (`80.225.81.150`, PM2 id 0 `aiutiamoci`, PID 42731).
 
 ---
 
