@@ -110,27 +110,63 @@ export async function POST(req: NextRequest) {
     const fromUser = message.from || {}
     const studentName = fromUser.first_name || 'Corsista'
 
-    // 2a. Evento Nuovo Membro nel Gruppo
+    // 2a. Evento Nuovo Membro nel Gruppo -> Vademecum Ufficiale
     if (message.new_chat_members && message.new_chat_members.length > 0) {
       for (const newMember of message.new_chat_members) {
         if (newMember.is_bot) continue
         const welcomeName = newMember.first_name || 'nuovo corsista'
-        const welcomeText =
-          `👋 <b>Benvenuto/a ${escapeHtml(welcomeName)} nella Community di Aiutiamoci!</b>\n\n` +
-          `Questo è lo spazio riservato per confrontarsi, condividere idee, fare networking ed esercitarsi sull'adozione dell'Intelligenza Artificiale nel lavoro.\n\n` +
-          `📌 <b>Cose utili da sapere:</b>\n` +
-          `• Puoi discutere liberamente di AI, strumenti e business con gli altri corsisti.\n` +
-          `• Se hai bisogno di me (il tuo Tutor AI), basta <b>taggarmi</b> con @Corsi_Masterclass_bot.\n` +
-          `• Trovi le dirette e la piattaforma su: <b>https://aiutiamoci.cloud</b>\n\n` +
-          `<i>Buon percorso insieme! 🚀</i>`
+        const vademecumText =
+          `👋 <b>Benvenuto/a ${escapeHtml(welcomeName)} nella Community di Aiutiamoci!</b> 🚀\n\n` +
+          `Ecco un breve <b>Vademecum</b> su come utilizzare al meglio questo spazio:\n\n` +
+          `👥 <b>1. Uno Spazio Aperto tra Persone:</b>\n` +
+          `• Questo gruppo è una chat libera per confrontarsi, fare networking, scambiarsi feedback ed esperienze pratiche sull'adozione dell'AI nel lavoro.\n` +
+          `• Sentiti libero/a di scrivere, condividere news o chiedere consigli agli altri membri.\n\n` +
+          `🤖 <b>2. Come usare il Tutor AI (@Corsi_Masterclass_bot):</b>\n` +
+          `• Il bot non disturba le vostre conversazioni e resta in silenzio.\n` +
+          `• Se hai un dubbio didattico su un prompt, uno strumento (ChatGPT, Claude, DeepSeek) o una lezione, basta <b>taggarlo</b> nel messaggio: <code>@Corsi_Masterclass_bot</code>.\n` +
+          `• Puoi anche aprirgli una <b>chat privata</b> 1-a-1 per fargli domande h24 senza intasare il gruppo.\n\n` +
+          `⚡ <b>3. Scorciatoie Utili:</b>\n` +
+          `• <code>/orari</code> ➔ Data e link Google Meet della prossima Masterclass.\n` +
+          `• <code>/docenti</code> ➔ Per metterti in contatto diretto e privato con <b>Marco</b>, <b>Lorenzo</b> o <b>Stefano</b> per qualsiasi esigenza personale.\n` +
+          `• <code>/vademecum</code> ➔ Per rileggere questa guida quando vuoi.\n\n` +
+          `🌐 <b>4. La Piattaforma Web:</b>\n` +
+          `• Accedi a tutte le stanze e strumenti su: <b>https://aiutiamoci.cloud</b>\n\n` +
+          `<i>Buon percorso insieme da tutto il team! ✨</i>`
 
-        await sendTutorMessage(chatId, welcomeText)
+        await sendTutorMessage(chatId, vademecumText)
       }
       return NextResponse.json({ ok: true })
     }
 
     const text = (message.text || '').trim()
     if (!text) {
+      return NextResponse.json({ ok: true })
+    }
+
+    // Comandi Vademecum / Start / Guida
+    const lowerRawText = text.toLowerCase()
+    const isVademecumCommand =
+      lowerRawText.startsWith('/vademecum') ||
+      lowerRawText.startsWith('/start') ||
+      lowerRawText.startsWith('/guida') ||
+      lowerRawText.startsWith('/help') ||
+      lowerRawText.startsWith('/aiuto')
+
+    if (isVademecumCommand) {
+      const vademecumText =
+        `📖 <b>Vademecum Ufficiale — Community Aiutiamoci</b> 🚀\n\n` +
+        `Ecco come sfruttare al meglio questo spazio:\n\n` +
+        `👥 <b>1. Discussione tra Umani:</b>\n` +
+        `• Il gruppo è una chat viva per scambiarsi pareri, prompt, idee e casi pratici di business.\n\n` +
+        `🤖 <b>2. Il Tutor AI al tuo servizio:</b>\n` +
+        `• Tagga <code>@Corsi_Masterclass_bot</code> per ricevere aiuto su prompt, strumenti AI ed esercizi.\n` +
+        `• Puoi scrivergli anche in privato per domande individuali riservate.\n\n` +
+        `⚡ <b>3. Comandi Rapidi:</b>\n` +
+        `• <code>/orari</code> ➔ Orari e link della Masterclass giovedì ore 18:30.\n` +
+        `• <code>/docenti</code> ➔ Contatto diretto con <b>Marco</b>, <b>Lorenzo</b> o <b>Stefano</b>.\n\n` +
+        `🌐 <b>Piattaforma:</b> <b>https://aiutiamoci.cloud</b>`
+
+      await sendTutorMessage(chatId, vademecumText, undefined, message.message_id)
       return NextResponse.json({ ok: true })
     }
 
