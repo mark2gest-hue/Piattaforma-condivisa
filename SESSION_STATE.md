@@ -1,12 +1,14 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-17 10:48
+Ultimo aggiornamento: 2026-09-17 11:38
 Stato corrente: 
 - Aggiornato branding completo a `aiutiamoci` / `aiutiamoci.cloud` con suite icone e loghi ad alto contrasto (dark & light mode) e favicon vettoriale.
 - Implementata conformità legale completa: Cookie Consent Banner all'apertura con salvataggio preferenze, e modali dedicati per Privacy Policy (GDPR), Cookie Policy, Termini di Servizio e Disclaimer Didattico nel footer.
 - Architettura 16 Ore Certificate approvata e rilasciata: badge monte ore aggiornati, attestato canvas con codice crittografico e generazione del Dossier Tecnico Didattico per l'Ente di Certificazione ATOMA.
 - Generato Dossier Tecnico in PDF vettoriale su carta intestata istituzionale (salvato in Downloads, root progetto, link pubblico `/docs/` e Secondo Cervello Obsidian con anteprima embed).
 - Risolto e blindato invio email riunioni/videocall (`sendEventInvitationsAction`): fallback automatico Google Meet (`https://meet.google.com/wsv-bqxm-bvr`), box verde ad alta visibilità e pulsante responsive su due righe nel Calendario (`/calendario`).
+- Implementate 4 Stanze Google Meet dedicate e separate con selettore rapido a preset nel form eventi del Calendario (`/calendario`): Masterclass Corsisti, Clienti & Briefing B2B, Riunione Soci & Team, Lab Agenti AI Pro (con supporto link personalizzato).
+- Iscrizioni nuove abilitate con invio automatico del link Meet alla Masterclass (`student.ts`), proteggendo i 37 corsisti già esistenti da email duplicate.
 - Deploy di produzione completato con successo su VPS Stefano (`80.225.81.150`, PM2 id 0 `aiutiamoci`).
 
 ---
