@@ -170,7 +170,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    // In un gruppo, rispondiamo SOLO se il bot viene menzionato o se è un comando
+    // Trigger Automatico Proattivo: Assistenza Codice ID / Accesso Piattaforma (risponde anche senza tag!)
+    const isLoginHelpNeeded =
+      lowerRawText.includes('password') ||
+      lowerRawText.includes('psw') ||
+      lowerRawText.includes('pwd') ||
+      lowerRawText.includes('codice id') ||
+      lowerRawText.includes('mio id') ||
+      lowerRawText.includes('perso il codice') ||
+      lowerRawText.includes('perso l\'id') ||
+      lowerRawText.includes('perso lid') ||
+      lowerRawText.includes('non ricordo il codice') ||
+      lowerRawText.includes('non riesco ad accedere') ||
+      lowerRawText.includes('non riesco a entrare') ||
+      lowerRawText.includes('non entra') ||
+      lowerRawText.includes('recuperare il codice')
+
+    if (isLoginHelpNeeded) {
+      const loginKeyboard = {
+        inline_keyboard: [
+          [
+            { text: '👤 Chiedi a Marco', callback_data: 'contact:marco' },
+            { text: '👤 Chiedi a Lorenzo', callback_data: 'contact:lorenzo' },
+            { text: '👤 Chiedi a Stefano', callback_data: 'contact:stefano' },
+          ],
+        ],
+      }
+
+      const loginHelpMessage =
+        `🔑 <b>Hai bisogno del tuo Codice ID per la Piattaforma?</b>\n\n` +
+        `• Per accedere a <b>https://aiutiamoci.cloud</b> non serve una password, ma il tuo <b>Codice ID Studente</b> personale (es. <code>AI-START-...</code>).\n` +
+        `• Controlla l'email di conferma iscrizione ricevuta dal team di Aiutiamoci.\n\n` +
+        `<i>Non riesci a trovarlo? Tocca qui sotto per fartelo rimandare subito in privato:</i>`
+
+      await sendTutorMessage(chatId, loginHelpMessage, loginKeyboard, message.message_id)
+      return NextResponse.json({ ok: true })
+    }
+
+    // In un gruppo, per tutti gli altri argomenti rispondiamo SOLO se il bot viene menzionato o se è un comando
     const isMentioned =
       text.includes('@Corsi_Masterclass_bot') ||
       message.reply_to_message?.from?.username === 'Corsi_Masterclass_bot' ||
