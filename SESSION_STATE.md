@@ -12,7 +12,7 @@ Stato corrente:
   - 🎓 Masterclass Corsisti: `https://meet.google.com/wsv-bqxm-bvr` (Stanza storica corsisti)
   - 🤝 Clienti & Briefing B2B: `https://meet.google.com/yme-pyws-osa` (Titolo: "Clienti & Briefing")
   - 🛠️ Lab Agenti AI Pro: `https://meet.google.com/dwe-rczj-uxz` (Titolo: "Laboratorio Agenti AI")
-- Deploy di produzione completato con successo su VPS Stefano (`80.225.81.150`, PM2 id 0 `aiutiamoci`, PID 44622).
+- Implementata selezione stanza obbligatoria nella pagina Videocall (`/videocall`): all'apertura nessuna stanza è pre-selezionata; il tasto "Entra nella Stanza" e "Copia Link" rimangono disabilitati e si attivano solo al click su una delle 4 sale.
 
 ---
 
