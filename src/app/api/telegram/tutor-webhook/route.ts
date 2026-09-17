@@ -8,7 +8,10 @@ const TUTOR_BOT_TOKEN = process.env.TELEGRAM_TUTOR_BOT_TOKEN || ''
 const TELEGRAM_API = `https://api.telegram.org/bot${TUTOR_BOT_TOKEN}`
 
 // Inizializzazione Gemini
-const geminiApiKey = process.env.GEMINI_API_KEY
+const geminiApiKey =
+  process.env.GEMINI_API_KEY ||
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+  process.env.GOOGLE_AI_API_KEY
 const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null
 
 // Inizializzazione Supabase per recupero eventi calendario / lezioni
@@ -377,29 +380,85 @@ export async function POST(req: NextRequest) {
     }
 
     const systemPrompt = `Sei il Tutor Didattico e Assistente AI ufficiale di "Aiutiamoci" (aiutiamoci.cloud).
-La piattaforma e l'Academy sono fondate da Marco, Lorenzo e Stefano per supportare professionisti, PMI e corsisti nell'adozione pratica dell'Intelligenza Artificiale (ChatGPT, Claude, DeepSeek, automazioni n8n, prompt engineering).
+La piattaforma e l'Academy sono fondate da Marco, Lorenzo e Stefano per supportare professionisti, aziende, dipendenti e corsisti nell'adozione pratica dell'Intelligenza Artificiale (ChatGPT, Claude, Gemini, automazioni, prompt engineering avanzato).
 
-ISTRUZIONI:
-1. Tono professionale, cordiale, incoraggiante, chiaro e concreto.
-2. Rispondi con spiegazioni pratiche, bullet point sintetici e zero fuffa teorica.
-3. Se l'utente chiede chiarimenti didattici o aiuto su un prompt, spiegaglielo passo dopo passo.
-4. Se una domanda richiede l'intervento personale dei fondatori, suggeriscigli di digitare /docenti o chiedere di parlare con Marco, Lorenzo o Stefano.
-5. Mantieni la risposta sintetica (massimo 150-200 parole) adatta a una chat Telegram.
-6. Rispondi in italiano con formattazione HTML compatibile con Telegram (usa <b> per grassetto, <code> per codice o prompt).`
+KNOWLEDGE BASE DIDATTICA DEL CORSO "AI START" (20 Lezioni):
+- Modulo 1: Fondamenta
+  • Lezione 01: Benvenuti nel Futuro (Concetti chiave dell'IA, la rivoluzione tecnologica e come superare le paure iniziali).
+  • Lezione 02: Breve Storia dell'Evoluzione (Dalle origini alle opportunità pratiche attuali nel lavoro).
+  • Lezione 03: Sconfiggere il Foglio Bianco (Superare il blocco iniziale e iniziare a dialogare efficacemente con l'IA).
+- Modulo 2: Prompting Efficace
+  • Lezione 04: Il Linguaggio della Chiarezza (Struttura di comunicazione efficace per ottenere risposte precise).
+  • Lezione 05: La Formula Segreta RCCF (Ruolo, Contesto, Contenuto, Formato: la regola aurea per prompt professionali).
+  • Lezione 06: Iterazione e Dialogo (Come correggere, affinare e guidare l'IA passo dopo passo).
+- Modulo 3: Strumenti Operativi
+  • Lezione 07: ChatGPT, Claude, Gemini, Perplexity (Quale modello scegliere in base al tipo di compito).
+  • Lezione 08: Scrivere senza Sforzo (Bozze email, contratti, relazioni aziendali e sintesi in pochi secondi).
+  • Lezione 09: Dipingere con le Parole (Generazione immagini e visual per marketing).
+  • Lezione 10: Anatomia di un Prompt Visivo (Creare immagini e grafiche coerenti e d'impatto).
+  • Lezione 11: Presentazioni in 5 Minuti (Creazione rapida di slide per clienti e riunioni).
+- Modulo 4: Pratica & Produttività Aziendale
+  • Lezione 12: Analisi Dati per Excel (Tabelle, formule e grafici senza formule complesse).
+  • Lezione 13: L'Agenda Intelligente (Pianificazione priorità e scadenze).
+  • Lezione 14: Studiare e Imparare ELI5 ("Explain Like I'm 5": comprendere concetti complessi in parole semplici).
+  • Lezione 15: Allucinazioni dell'IA (Come riconoscere gli errori e verificare sempre le fonti).
+- Modulo 5: Futuro, Automazione e Sicurezza
+  • Lezione 16: Privacy e Sicurezza (Protezione dei dati aziendali secondo le norme e GDPR).
+  • Lezione 17: Il Lavoro che Cambia (Evoluzione del mercato e come posizionarsi professionalmente).
+  • Lezione 18: Creare il proprio Workflow (Costruire flussi di lavoro automatizzati personalizzati).
+  • Lezione 19: La Tua Nuova Superpotenza (Integrazione quotidiana dell'IA nella routine lavorativa).
+  • Lezione 20: Riepilogo Corso AI (Consolidamento delle competenze, attestato finale e prossimi passi).
+
+MASTERCLASS SETTIMANALE & DOCENTI:
+- Ogni Giovedì alle ore 18:30 su Google Meet (https://meet.google.com/wsv-bqxm-bvr).
+- Docenti e Fondatori: Marco, Lorenzo e Stefano.
+- Per parlare direttamente con un docente per questioni personali o riservate: comando /docenti.
+- Accesso piattaforma e compiti: https://aiutiamoci.cloud tramite il proprio Codice ID personale.
+
+ISTRUZIONI PER LE RISPOSTE:
+1. Rispondi con tono cordiale, incoraggiante, pratico ed empatico (adatto anche a chi non è un nativo digitale o ha più di 40-50 anni).
+2. Sii specifico sui contenuti delle lezioni quando lo studente ti chiede informazioni su un modulo o una lezione.
+3. Se l'utente chiede aiuto su un prompt o un esercizio, guidalo passo dopo passo e fagli degli esempi concreti (es. applicando la formula RCCF).
+4. Mantieni le risposte snelle (massimo 150-200 parole), ben formattate con elenchi puntati.
+5. Usa formattazione HTML compatibile con Telegram (<b>grassetto</b>, <code>codice/prompt</code>, <i>corsivo</i>).`
 
     const prompt = `${systemPrompt}\n\nDomanda dello studente (${studentName}):\n${cleanText}`
 
-    try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-      const result = await model.generateContent(prompt)
-      const response = await result.response
-      const reply = response.text()?.trim() || 'Non sono riuscito a elaborare la risposta, riprova tra poco!'
+    const candidateModels = [
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-3-flash-preview',
+      'gemini-3.7-flash',
+      'gemini-flash-latest',
+    ]
+
+    let reply = ''
+    let lastError: any = null
+
+    for (const modelName of candidateModels) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName })
+        const result = await model.generateContent(prompt)
+        const response = await result.response
+        const text = response.text()?.trim()
+        if (text) {
+          reply = text
+          break
+        }
+      } catch (err: any) {
+        lastError = err
+        console.warn(`[TutorBot] Fallback from ${modelName}:`, err.message || err)
+      }
+    }
+
+    if (reply) {
       await sendTutorMessage(chatId, reply, undefined, message.message_id)
-    } catch (aiErr: any) {
-      console.error('[TutorBot Gemini error]:', aiErr)
+    } else {
+      console.error('[TutorBot all models failed]:', lastError)
       await sendTutorMessage(
         chatId,
-        `Sto elaborando molte richieste contemporaneamente! Riprova tra pochi istanti oppure digita /orari per le info sulle lezioni.`,
+        `Ciao ${escapeHtml(studentName)}! Al momento sto aggiornando i dati didattici. Per qualsiasi informazione immediata puoi digitare <code>/orari</code> oppure <code>/docenti</code> per parlare con Marco, Lorenzo o Stefano!`,
         undefined,
         message.message_id
       )
