@@ -47,7 +47,7 @@ const PRESET_MEET_ROOMS = [
     id: 'clients',
     label: '🤝 Clienti & Briefing B2B',
     desc: 'Audit e consulenze riservate PMI',
-    url: 'https://meet.google.com/eci-rjqs-rwa',
+    url: 'https://meet.google.com/yme-pyws-osa',
   },
   {
     id: 'team',
