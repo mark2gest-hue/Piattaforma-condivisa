@@ -10,7 +10,7 @@ Stato corrente:
 - Configurate e rilasciate in produzione le 4 Stanze Google Meet ufficiali permanenti (tutte titolate su Google Calendar eccetto Masterclass protetta):
   - 👥 Soci & Team: `https://meet.google.com/mth-rqxp-bdf` (Titolo: "Stanza riservata ai soci")
   - 🎓 Masterclass Corsisti: `https://meet.google.com/wsv-bqxm-bvr` (Stanza storica corsisti)
-  - 🤝 Clienti & Briefing B2B: `https://meet.google.com/eci-rjqs-rwa` (Titolo: "Clienti & Briefing")
+  - 🤝 Clienti & Briefing B2B: `https://meet.google.com/yme-pyws-osa` (Titolo: "Clienti & Briefing")
   - 🛠️ Lab Agenti AI Pro: `https://meet.google.com/dwe-rczj-uxz` (Titolo: "Laboratorio Agenti AI")
 - Deploy di produzione completato con successo su VPS Stefano (`80.225.81.150`, PM2 id 0 `aiutiamoci`, PID 44622).
 
