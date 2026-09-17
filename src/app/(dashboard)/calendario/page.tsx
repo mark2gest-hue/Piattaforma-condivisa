@@ -47,7 +47,7 @@ const PRESET_MEET_ROOMS = [
     id: 'clients',
     label: '🤝 Clienti & Briefing B2B',
     desc: 'Audit e consulenze riservate PMI',
-    url: 'https://meet.google.com/ymk-pejo-eye',
+    url: 'https://meet.google.com/eci-rjqs-rwa',
   },
   {
     id: 'team',
@@ -59,7 +59,7 @@ const PRESET_MEET_ROOMS = [
     id: 'lab',
     label: '🛠️ Lab Agenti AI Pro',
     desc: 'Laboratorio tecnico avanzato',
-    url: 'https://meet.google.com/atv-fojm-kfo',
+    url: 'https://meet.google.com/dwe-rczj-uxz',
   },
 ]
 
