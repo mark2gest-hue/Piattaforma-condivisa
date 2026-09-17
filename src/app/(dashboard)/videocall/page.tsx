@@ -22,7 +22,7 @@ export default function VideocallPage() {
   const [copied, setCopied] = useState(false)
 
   // Config Google Meet (Stanza Permanente Soci Marco, Stefano, Socio)
-  const googleMeetUrl = 'https://meet.google.com/wsv-bqxm-bvr'
+  const googleMeetUrl = 'https://meet.google.com/mrv-pknj-fbt'
 
   // Config Stanza WebRTC Alternativa
   const jitsiRoomName = 'teamhub-soci-aiutiamoci'
@@ -130,7 +130,7 @@ export default function VideocallPage() {
                     <ShieldCheck className="h-4 w-4 text-emerald-400" />
                     Crittografia Google Enterprise
                   </span>
-                  <span className="font-mono text-sky-400 font-bold">meet.google.com/wsv-bqxm-bvr</span>
+                  <span className="font-mono text-sky-400 font-bold">meet.google.com/mrv-pknj-fbt</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
