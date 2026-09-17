@@ -1,3 +1,5 @@
+
+
 'use server'
 
 import { Resend } from 'resend'
@@ -179,20 +181,47 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
               </p>
             </div>
             <div class="footer">
-              Piattaforma Lavoro Condivisa • aiutiamoci.cloud<br>
-              Per assistenza rispondi a questa email o visita <a href="https://aiutiamoci.cloud" style="color: #0284c7; text-decoration: none;">aiutiamoci.cloud</a>
+              <p style="margin: 0 0 6px 0; font-weight: 600; color: #475569;">aiutiamoci • Campus Formativo & Operativo AI</p>
+              <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 11px;">
+                Ricevi questa comunicazione perché sei registrato o iscritto alle masterclass di <a href="https://aiutiamoci.cloud" style="color: #0284c7; text-decoration: none;">aiutiamoci.cloud</a>.
+              </p>
+              <p style="margin: 0; font-size: 11px; color: #cbd5e1;">
+                Per assistenza o per non ricevere ulteriori promemoria rispondi a questa email o scrivi a <a href="mailto:info@aiutiamoci.cloud" style="color: #64748b;">info@aiutiamoci.cloud</a>.
+              </p>
             </div>
           </div>
         </body>
         </html>
       `
 
+      const plainTextContent = `
+Ciao ${recipientName},
+
+Ti confermiamo la data e l'orario per la prossima sessione live:
+
+📌 ${params.eventTitle}
+🗓️ Data: ${params.eventDate}
+⏰ Orario: ${params.eventTime}
+${params.description ? `\nDettagli: ${params.description}\n` : ''}
+🔗 Link per accedere alla videochiamata Google Meet:
+${finalMeetUrl}
+
+Ti consigliamo di collegarti qualche minuto prima per verificare microfono e webcam.
+Non è necessaria alcuna installazione: la stanza funziona direttamente nel tuo browser.
+
+---
+aiutiamoci.cloud • Campus Formativo AI
+Per assistenza rispondi a questa email o scrivi a info@aiutiamoci.cloud
+`.trim()
+
       try {
         const res = await resend.emails.send({
           from: fromEmail,
           to: recipient.email,
-          subject: `🔴 Invito Live: ${params.eventTitle} (${params.eventDate} alle ${params.eventTime})`,
+          replyTo: 'info@aiutiamoci.cloud',
+          subject: `Invito: ${params.eventTitle} (${params.eventDate} ore ${params.eventTime})`,
           html: htmlContent,
+          text: plainTextContent,
         })
         if (res.error) {
           console.error(`[Resend error to ${recipient.email}]:`, res.error)
