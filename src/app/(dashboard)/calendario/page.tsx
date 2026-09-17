@@ -36,6 +36,33 @@ interface CalendarEvent {
   meet_url?: string
 }
 
+const PRESET_MEET_ROOMS = [
+  {
+    id: 'masterclass',
+    label: '🎓 Masterclass Corsisti',
+    desc: 'Dirette live e Q&A del giovedì',
+    url: 'https://meet.google.com/wsv-bqxm-bvr',
+  },
+  {
+    id: 'clients',
+    label: '🤝 Clienti & Briefing B2B',
+    desc: 'Audit e consulenze riservate PMI',
+    url: 'https://meet.google.com/qnt-uifv-rzk',
+  },
+  {
+    id: 'team',
+    label: '👥 Riunione Soci & Team',
+    desc: 'Allineamento interno protetto',
+    url: 'https://meet.google.com/mrv-pknj-fbt',
+  },
+  {
+    id: 'lab',
+    label: '🛠️ Lab Agenti AI Pro',
+    desc: 'Laboratorio tecnico avanzato',
+    url: 'https://meet.google.com/fzx-ymdw-khs',
+  },
+]
+
 export default function CalendarioPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -659,27 +686,51 @@ export default function CalendarioPage() {
               {/* I campi Videocall e Inviti compaiono solo se è una call/lezione o se l'utente vuole aggiungere il link */}
               {(eventCategory === 'call' || eventCategory === 'course') && (
                 <>
-                  {/* Campo Dedicato Link Videocall / Google Meet */}
-                  <div className="space-y-1.5 bg-sky-500/5 dark:bg-sky-500/10 p-3 rounded-xl border border-sky-500/20">
+                  {/* Campo Dedicato Link Videocall / Google Meet con Stanze Separate */}
+                  <div className="space-y-2 bg-sky-500/5 dark:bg-sky-500/10 p-3.5 rounded-xl border border-sky-500/20">
                     <div className="flex items-center justify-between">
-                      <label className="font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-1.5">
+                      <label className="font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-1.5 text-xs">
                         <Video className="h-3.5 w-3.5 text-sky-500" />
-                        Link Riunione (Google Meet / Zoom)
+                        Stanza & Link Riunione
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => setEventMeetUrl('https://meet.google.com/wsv-bqxm-bvr')}
-                        className="text-[10px] text-sky-600 dark:text-sky-400 hover:underline font-semibold cursor-pointer"
-                      >
-                        + Usa Stanza Soci
-                      </button>
+                      <span className="text-[10px] text-slate-400 font-medium">Seleziona stanza o incolla link</span>
                     </div>
-                    <Input
-                      value={eventMeetUrl}
-                      onChange={(e) => setEventMeetUrl(e.target.value)}
-                      placeholder="https://meet.google.com/xyz-abc-def"
-                      className="text-xs bg-white dark:bg-slate-900 border-sky-500/30 text-sky-600 dark:text-sky-300 font-mono"
-                    />
+
+                    {/* Chips Stanze Separate Dedicate */}
+                    <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                      {PRESET_MEET_ROOMS.map((room) => {
+                        const isSelected = eventMeetUrl.trim().toLowerCase() === room.url.toLowerCase()
+                        return (
+                          <button
+                            key={room.id}
+                            type="button"
+                            onClick={() => setEventMeetUrl(room.url)}
+                            className={`px-2.5 py-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
+                              isSelected
+                                ? 'bg-sky-600 border-sky-600 text-white shadow-xs'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-sky-400'
+                            }`}
+                          >
+                            <span className="font-bold text-[11px] truncate">{room.label}</span>
+                            <span className={`text-[9px] truncate ${isSelected ? 'text-sky-100' : 'text-slate-400'}`}>
+                              {room.desc}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    <div className="pt-1">
+                      <Input
+                        value={eventMeetUrl}
+                        onChange={(e) => setEventMeetUrl(e.target.value)}
+                        placeholder="https://meet.google.com/xyz-abc-def"
+                        className="text-xs bg-white dark:bg-slate-900 border-sky-500/30 text-sky-600 dark:text-sky-300 font-mono h-8"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        💡 Puoi cliccare un preset sopra o incollare qualsiasi link personalizzato (Zoom, Teams, Google Meet).
+                      </p>
+                    </div>
                   </div>
 
                   {/* Sezione Destinatari & Notifiche Email */}
