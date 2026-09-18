@@ -22,7 +22,17 @@ import {
   Lock,
   PhoneCall,
   Search,
-  Sparkles
+  Sparkles,
+  Upload,
+  FileSpreadsheet,
+  Film,
+  Mic,
+  Type,
+  Clock,
+  User,
+  Download,
+  Copy,
+  Plus
 } from 'lucide-react';
 
 interface ToolService {
@@ -168,6 +178,36 @@ export default function ServiziAIPage() {
   const [activeModalTool, setActiveModalTool] = useState<ToolService | null>(null);
   const [simulationStatus, setSimulationStatus] = useState<'idle' | 'running' | 'success'>('idle');
 
+  // Modal input states
+  const [modalInputMode, setModalInputMode] = useState<'upload' | 'text'>('text');
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+
+  // Form states specifici per ogni tool
+  const [billProvider, setBillProvider] = useState<string>('Enel Energia');
+  const [billAmount, setBillAmount] = useState<string>('240.50');
+  const [billNotes, setBillNotes] = useState<string>('Bolletta bimestrale luce, sospetto costi elevati su spese trasporto e oneri.');
+
+  const [frigoIngredients, setFrigoIngredients] = useState<string>('3 uova, 1 zucchina, mezza confezione di ricotta aperta, pasta corta, parmigiano');
+  const [frigoTime, setFrigoTime] = useState<'15min' | '30min' | 'forno'>('15min');
+
+  const [restoreColorize, setRestoreColorize] = useState<boolean>(true);
+  const [restoreFixDamages, setRestoreFixDamages] = useState<boolean>(true);
+  const [restoreUltraHd, setRestoreUltraHd] = useState<boolean>(true);
+
+  const [medicalText, setMedicalText] = useState<string>('Referto ecografico: quadro morfologico con modesta alterazione disomogenea priva di formazioni nodulari espansive o addensamenti focali.');
+  
+  const [kidName, setKidName] = useState<string>('Leonardo');
+  const [kidAge, setKidAge] = useState<string>('6');
+  const [storyTopic, setStoryTopic] = useState<string>('Un cagnolino coraggioso che costruisce un razzo per esplorare la luna');
+  const [storyMoral, setStoryMoral] = useState<string>('Superare la paura del buio e aiutare i compagni in difficoltà');
+  const [storyStyle, setStoryStyle] = useState<string>('Acquerello Dolce');
+
+  const [ocrExportFormat, setOcrExportFormat] = useState<'excel' | 'csv' | 'json'>('excel');
+
+  const [videoScript, setVideoScript] = useState<string>('3 consigli pratici per scegliere la tariffa luce ideale ed evitare le trappole del mercato libero nel 2026.');
+  const [videoVoice, setVideoVoice] = useState<string>('Marco (Calda & Professionale)');
+  const [videoSubtitleStyle, setVideoSubtitleStyle] = useState<string>('TikTok Giallo Evidenziato');
+
   const filteredTools = selectedCategory === 'tutti'
     ? TOOL_SERVICES
     : TOOL_SERVICES.filter((t) => t.category === selectedCategory);
@@ -175,6 +215,15 @@ export default function ServiziAIPage() {
   const handleSimulateTool = (tool: ToolService) => {
     setActiveModalTool(tool);
     setSimulationStatus('idle');
+    setUploadedFileName(null);
+    // Imposta il default più logico per il tipo di tool
+    if (tool.id === 'favole' || tool.id === 'video-reel') {
+      setModalInputMode('text');
+    } else if (tool.id === 'foto-restauro' || tool.id === 'ocr-pro') {
+      setModalInputMode('upload');
+    } else {
+      setModalInputMode('text');
+    }
   };
 
   const handleExecuteSimulation = () => {
@@ -675,95 +724,688 @@ export default function ServiziAIPage() {
       </main>
 
       {/* ======================================================================= */}
-      {/* MODALE DI SIMULAZIONE ESECUZIONE (SENZA SLOP, CONTESTO PRATICO)         */}
+      {/* MODALE DI SIMULAZIONE ESECUZIONE (SU MISURA PER OGNI STRUMENTO)         */}
       {/* ======================================================================= */}
       {activeModalTool && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-xl bg-neutral-900 border border-neutral-700 p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-xl rounded-2xl bg-neutral-900 border border-neutral-700 p-6 shadow-2xl my-8">
             
-            <div className="flex items-start justify-between gap-3 mb-4 pb-3 border-b border-neutral-800">
+            {/* Header Modale */}
+            <div className="flex items-start justify-between gap-3 mb-5 pb-4 border-b border-neutral-800">
               <div>
-                <span className="text-[10px] font-mono uppercase text-neutral-400 bg-neutral-800 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-mono uppercase text-neutral-300 bg-neutral-800 border border-neutral-700 px-2 py-0.5 rounded">
                   {activeModalTool.badge}
                 </span>
-                <h3 className="text-base font-semibold text-white mt-1">{activeModalTool.title}</h3>
+                <h3 className="text-base font-semibold text-white mt-1.5 flex items-center gap-2">
+                  {activeModalTool.title}
+                </h3>
               </div>
               <button
                 onClick={() => setActiveModalTool(null)}
-                className="text-neutral-400 hover:text-white text-sm p-1 rounded"
+                className="text-neutral-400 hover:text-white text-sm p-1 rounded-md hover:bg-neutral-800 transition-colors"
               >
                 ✕
               </button>
             </div>
 
+            {/* STATO 1: FORM INPUT DEDICATO */}
             {simulationStatus === 'idle' && (
               <div className="space-y-4 text-xs">
-                <p className="text-neutral-300 leading-relaxed">
+                
+                <p className="text-neutral-400 leading-relaxed text-xs">
                   {activeModalTool.description}
                 </p>
 
-                {/* Zona di upload sobria */}
-                <div className="border border-dashed border-neutral-700 hover:border-neutral-500 rounded-lg p-6 text-center bg-neutral-950 transition-colors cursor-pointer">
-                  <FileText className="w-6 h-6 text-neutral-500 mx-auto mb-2" />
-                  <div className="text-neutral-200 font-medium mb-0.5">Carica il documento o scatta una foto</div>
-                  <div className="text-[11px] text-neutral-500">Supporta PDF, JPG e PNG fino a 20MB</div>
-                </div>
+                {/* 1. BOLLETTE: Inserisci Dati o Carica Bolletta */}
+                {activeModalTool.id === 'bollette' && (
+                  <div className="space-y-3 pt-1">
+                    <div className="flex gap-2 p-1 bg-neutral-950 rounded-lg border border-neutral-800">
+                      <button
+                        type="button"
+                        onClick={() => setModalInputMode('text')}
+                        className={`flex-1 py-1.5 rounded-md font-medium text-[11px] transition-colors ${
+                          modalInputMode === 'text'
+                            ? 'bg-neutral-800 text-white shadow-sm'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        ✍️ Inserisci Fornitore & Dubbi
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setModalInputMode('upload')}
+                        className={`flex-1 py-1.5 rounded-md font-medium text-[11px] transition-colors ${
+                          modalInputMode === 'upload'
+                            ? 'bg-neutral-800 text-white shadow-sm'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        📄 Carica PDF / Foto Bolletta
+                      </button>
+                    </div>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-neutral-950 border border-neutral-800 font-mono text-xs">
-                  <span className="text-neutral-400">Costo operazione:</span>
-                  <span className="font-semibold text-amber-300">{activeModalTool.creditsCost} Crediti</span>
+                    {modalInputMode === 'text' ? (
+                      <div className="space-y-2.5">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[11px] text-neutral-400 mb-1">Fornitore / Gestore</label>
+                            <input
+                              type="text"
+                              value={billProvider}
+                              onChange={(e) => setBillProvider(e.target.value)}
+                              placeholder="es. Enel, Eni, A2A, Vodafone..."
+                              className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-neutral-400 mb-1">Importo Bolletta (€)</label>
+                            <input
+                              type="text"
+                              value={billAmount}
+                              onChange={(e) => setBillAmount(e.target.value)}
+                              placeholder="es. 240.50"
+                              className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 font-mono"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-neutral-400 mb-1">Note o voci sospette</label>
+                          <textarea
+                            rows={3}
+                            value={billNotes}
+                            onChange={(e) => setBillNotes(e.target.value)}
+                            placeholder="Descrivi cosa non ti torna o incolla i dati di consumo..."
+                            className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 text-xs"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => setUploadedFileName('bolletta_luce_febbraio_2026.pdf')}
+                        className="border border-dashed border-neutral-700 hover:border-neutral-500 rounded-xl p-5 text-center bg-neutral-950 transition-colors cursor-pointer"
+                      >
+                        <Upload className="w-6 h-6 text-neutral-400 mx-auto mb-2" />
+                        <div className="text-neutral-200 font-medium text-xs mb-0.5">
+                          {uploadedFileName ? `File selezionato: ${uploadedFileName}` : 'Trascina o tocca per caricare la bolletta'}
+                        </div>
+                        <div className="text-[11px] text-neutral-500">Formati supportati: PDF, JPG, PNG (fino a 25MB)</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 2. FRIGO: Scrivi Ingredienti o Carica Foto */}
+                {activeModalTool.id === 'frigo' && (
+                  <div className="space-y-3 pt-1">
+                    <div className="flex gap-2 p-1 bg-neutral-950 rounded-lg border border-neutral-800">
+                      <button
+                        type="button"
+                        onClick={() => setModalInputMode('text')}
+                        className={`flex-1 py-1.5 rounded-md font-medium text-[11px] transition-colors ${
+                          modalInputMode === 'text'
+                            ? 'bg-neutral-800 text-white shadow-sm'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        ✍️ Digita Ingredienti Disponibili
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setModalInputMode('upload')}
+                        className={`flex-1 py-1.5 rounded-md font-medium text-[11px] transition-colors ${
+                          modalInputMode === 'upload'
+                            ? 'bg-neutral-800 text-white shadow-sm'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        📷 Foto Frigo / Dispensa
+                      </button>
+                    </div>
+
+                    {modalInputMode === 'text' ? (
+                      <div className="space-y-2.5">
+                        <div>
+                          <label className="block text-[11px] text-neutral-400 mb-1">
+                            Cosa hai in frigo o in dispensa da consumare?
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={frigoIngredients}
+                            onChange={(e) => setFrigoIngredients(e.target.value)}
+                            placeholder="es. 3 uova, 1 zucchina, parmigiano, mezza ricotta, pasta..."
+                            className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] text-neutral-400 mb-1.5">Tempo massimo di preparazione</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { id: '15min', label: '⚡ 15 Minuti (Espresso)' },
+                              { id: '30min', label: '⏱️ 30 Minuti (Standard)' },
+                              { id: 'forno', label: '🍲 Forno / Lenta' },
+                            ].map((t) => (
+                              <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => setFrigoTime(t.id as any)}
+                                className={`py-1.5 px-2 rounded-lg border text-[11px] text-center transition-colors ${
+                                  frigoTime === t.id
+                                    ? 'bg-neutral-800 border-white text-white font-medium'
+                                    : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700'
+                                }`}
+                              >
+                                {t.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => setUploadedFileName('foto_ripiani_frigo_01.jpg')}
+                        className="border border-dashed border-neutral-700 hover:border-neutral-500 rounded-xl p-5 text-center bg-neutral-950 transition-colors cursor-pointer"
+                      >
+                        <ChefHat className="w-6 h-6 text-neutral-400 mx-auto mb-2" />
+                        <div className="text-neutral-200 font-medium text-xs mb-0.5">
+                          {uploadedFileName ? `Foto caricata: ${uploadedFileName}` : 'Scatta o carica una foto ai ripiani del frigo'}
+                        </div>
+                        <div className="text-[11px] text-neutral-500">L’AI riconoscerà automaticamente verdure, formaggi e scadenze</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. FOTO RESTAURO: Carica Foto & Opzioni di Recupero */}
+                {activeModalTool.id === 'foto-restauro' && (
+                  <div className="space-y-3 pt-1">
+                    <div 
+                      onClick={() => setUploadedFileName('foto_nonni_anni50_originale.png')}
+                      className="border border-dashed border-neutral-700 hover:border-neutral-500 rounded-xl p-5 text-center bg-neutral-950 transition-colors cursor-pointer"
+                    >
+                      <ImageIcon className="w-6 h-6 text-neutral-400 mx-auto mb-2" />
+                      <div className="text-neutral-200 font-medium text-xs mb-0.5">
+                        {uploadedFileName ? `Foto selezionata: ${uploadedFileName}` : 'Carica la vecchia foto da restaurare'}
+                      </div>
+                      <div className="text-[11px] text-neutral-500">JPG, PNG o scansione TIFF in alta risoluzione</div>
+                    </div>
+
+                    <div className="space-y-2 p-3 bg-neutral-950 rounded-xl border border-neutral-800">
+                      <div className="text-[11px] font-semibold text-neutral-300 mb-1">Opzioni di restauro attive:</div>
+                      
+                      <label className="flex items-center gap-2.5 text-neutral-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={restoreColorize}
+                          onChange={(e) => setRestoreColorize(e.target.checked)}
+                          className="rounded border-neutral-700 bg-neutral-900 text-white focus:ring-0 w-4 h-4"
+                        />
+                        <span>Colorazione filologica naturale (incarnato, occhi, abiti storici)</span>
+                      </label>
+
+                      <label className="flex items-center gap-2.5 text-neutral-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={restoreFixDamages}
+                          onChange={(e) => setRestoreFixDamages(e.target.checked)}
+                          className="rounded border-neutral-700 bg-neutral-900 text-white focus:ring-0 w-4 h-4"
+                        />
+                        <span>Rimozione graffi, pieghe della carta e polvere da scansione</span>
+                      </label>
+
+                      <label className="flex items-center gap-2.5 text-neutral-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={restoreUltraHd}
+                          onChange={(e) => setRestoreUltraHd(e.target.checked)}
+                          className="rounded border-neutral-700 bg-neutral-900 text-white focus:ring-0 w-4 h-4"
+                        />
+                        <span>Upscaling Ultra-HD per stampa fotografica su carta fine-art (300 DPI)</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. MEDICO / BUROCRAZIA: Incolla Testo o Carica Scansione */}
+                {activeModalTool.id === 'medico' && (
+                  <div className="space-y-3 pt-1">
+                    <div className="flex gap-2 p-1 bg-neutral-950 rounded-lg border border-neutral-800">
+                      <button
+                        type="button"
+                        onClick={() => setModalInputMode('text')}
+                        className={`flex-1 py-1.5 rounded-md font-medium text-[11px] transition-colors ${
+                          modalInputMode === 'text'
+                            ? 'bg-neutral-800 text-white shadow-sm'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        ✍️ Incolla Testo Referto / Burocrazia
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setModalInputMode('upload')}
+                        className={`flex-1 py-1.5 rounded-md font-medium text-[11px] transition-colors ${
+                          modalInputMode === 'upload'
+                            ? 'bg-neutral-800 text-white shadow-sm'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        📄 Carica Foto / Scansione
+                      </button>
+                    </div>
+
+                    {modalInputMode === 'text' ? (
+                      <div className="space-y-2">
+                        <label className="block text-[11px] text-neutral-400">
+                          Incolla il testo del referto medico o della lettera INPS/Agenzia Entrate
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={medicalText}
+                          onChange={(e) => setMedicalText(e.target.value)}
+                          placeholder="Incolla qui le conclusioni dell'esame o il passaggio formale da chiarire..."
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 text-xs font-mono"
+                        />
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => setUploadedFileName('referto_ecografia_anonimo.pdf')}
+                        className="border border-dashed border-neutral-700 hover:border-neutral-500 rounded-xl p-5 text-center bg-neutral-950 transition-colors cursor-pointer"
+                      >
+                        <HeartPulse className="w-6 h-6 text-neutral-400 mx-auto mb-2" />
+                        <div className="text-neutral-200 font-medium text-xs mb-0.5">
+                          {uploadedFileName ? `Referto caricato: ${uploadedFileName}` : 'Carica scansione referto o foto lettera'}
+                        </div>
+                        <div className="text-[11px] text-neutral-500">PDF, JPG o PNG</div>
+                      </div>
+                    )}
+
+                    <div className="p-2.5 rounded-lg bg-neutral-950 border border-neutral-800 text-[11px] text-neutral-400 flex items-center gap-2">
+                      <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                      <span><strong>Tutela Privacy:</strong> i dati anagrafici vengono rimossi prima dell’elaborazione linguistica.</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. FAVOLE PER BAMBINI: Form Creativo Guidato */}
+                {activeModalTool.id === 'favole' && (
+                  <div className="space-y-3 pt-1">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Nome del bambino/a</label>
+                        <input
+                          type="text"
+                          value={kidName}
+                          onChange={(e) => setKidName(e.target.value)}
+                          placeholder="es. Leonardo, Giulia..."
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Età (anni)</label>
+                        <input
+                          type="text"
+                          value={kidAge}
+                          onChange={(e) => setKidAge(e.target.value)}
+                          placeholder="es. 5, 7, 9..."
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">Personaggi o mondo preferito</label>
+                      <input
+                        type="text"
+                        value={storyTopic}
+                        onChange={(e) => setStoryTopic(e.target.value)}
+                        placeholder="es. Un cagnolino coraggioso, dinosauri gentili, pianeti di caramelle..."
+                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">Insegnamento o morale della storia</label>
+                      <input
+                        type="text"
+                        value={storyMoral}
+                        onChange={(e) => setStoryMoral(e.target.value)}
+                        placeholder="es. Superare la paura del buio, rispettare la natura, condividere i giochi..."
+                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">Stile Grafico Illustrazioni</label>
+                      <select
+                        value={storyStyle}
+                        onChange={(e) => setStoryStyle(e.target.value)}
+                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 focus:outline-none focus:border-neutral-500"
+                      >
+                        <option value="Acquerello Dolce">🎨 Acquerello Dolce (Stile Fiaba Tradizionale)</option>
+                        <option value="Pastello Illustrato">🖍️ Disegno a Pastello Morbido</option>
+                        <option value="Fiabesco Digitale">✨ Fiabesco Digitale Pixar 3D</option>
+                        <option value="Tavola Classica">📖 Tavola Classica a Matita</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. OCR PRO: Fatture & Scontrini Excel */}
+                {activeModalTool.id === 'ocr-pro' && (
+                  <div className="space-y-3 pt-1">
+                    <div 
+                      onClick={() => setUploadedFileName('fatture_ricevute_marzo_2026.zip')}
+                      className="border border-dashed border-neutral-700 hover:border-neutral-500 rounded-xl p-5 text-center bg-neutral-950 transition-colors cursor-pointer"
+                    >
+                      <FileSpreadsheet className="w-6 h-6 text-neutral-400 mx-auto mb-2" />
+                      <div className="text-neutral-200 font-medium text-xs mb-0.5">
+                        {uploadedFileName ? `File selezionato: ${uploadedFileName}` : 'Trascina fatture, ricevute o scontrini'}
+                      </div>
+                      <div className="text-[11px] text-neutral-500">Carica singoli file o un pacco fino a 20 scontrini (PDF/JPG)</div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1.5">Formato di esportazione desiderato</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { id: 'excel', label: '📊 Foglio Excel (.xlsx)' },
+                          { id: 'csv', label: '📄 File CSV universale' },
+                          { id: 'json', label: '⚙️ JSON Dati Grezzi' },
+                        ].map((f) => (
+                          <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => setOcrExportFormat(f.id as any)}
+                            className={`py-1.5 px-2 rounded-lg border text-[11px] text-center transition-colors ${
+                              ocrExportFormat === f.id
+                                ? 'bg-neutral-800 border-white text-white font-medium'
+                                : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700'
+                            }`}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 7. VIDEO REEL: Testo, Voce e Sottotitoli */}
+                {activeModalTool.id === 'video-reel' && (
+                  <div className="space-y-3 pt-1">
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">
+                        Script o Messaggio del Video (fino a 60 secondi di parlato)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={videoScript}
+                        onChange={(e) => setVideoScript(e.target.value)}
+                        placeholder="Scrivi qui il consiglio professionale o il messaggio per i social..."
+                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 text-xs"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Voce Narrante AI</label>
+                        <select
+                          value={videoVoice}
+                          onChange={(e) => setVideoVoice(e.target.value)}
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 focus:outline-none focus:border-neutral-500 text-xs"
+                        >
+                          <option value="Marco (Calda & Professionale)">🎙️ Marco (Calda & Professionale)</option>
+                          <option value="Elena (Istituzionale & Chiara)">🎙️ Elena (Istituzionale & Chiara)</option>
+                          <option value="Alex (Dinamico & Social)">🎙️ Alex (Dinamico & Social)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Stile Sottotitoli</label>
+                        <select
+                          value={videoSubtitleStyle}
+                          onChange={(e) => setVideoSubtitleStyle(e.target.value)}
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 focus:outline-none focus:border-neutral-500 text-xs"
+                        >
+                          <option value="TikTok Giallo Evidenziato">🟨 TikTok Giallo Evidenziato</option>
+                          <option value="Minimale Bianco Clean">⬜ Minimale Bianco Clean</option>
+                          <option value="Box Scuro Alto Contrasto">⬛ Box Scuro Alto Contrasto</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-neutral-950 border border-neutral-800 text-[11px] text-neutral-400 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Film className="w-3.5 h-3.5 text-neutral-400" />
+                        Formato di esportazione:
+                      </span>
+                      <span className="font-mono text-neutral-200">Verticale 9:16 (1080x1920 HD)</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer Costo e Azioni */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-950 border border-neutral-800 font-mono text-xs mt-4">
+                  <span className="text-neutral-400">Costo Operazione:</span>
+                  <span className="font-semibold text-amber-300 flex items-center gap-1">
+                    <Coins className="w-3.5 h-3.5" />
+                    {activeModalTool.creditsCost} Crediti
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-2">
                   <button
+                    type="button"
                     onClick={() => setActiveModalTool(null)}
-                    className="px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-medium"
+                    className="px-3.5 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-medium transition-colors"
                   >
-                    Chiudi
+                    Annulla
                   </button>
                   <button
+                    type="button"
                     onClick={handleExecuteSimulation}
-                    className="px-4 py-2 rounded-lg bg-white hover:bg-neutral-200 text-neutral-950 text-xs font-semibold"
+                    className="px-4 py-2 rounded-lg bg-white hover:bg-neutral-200 text-neutral-950 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
                   >
-                    Elabora Documento ({activeModalTool.creditsCost} Crediti)
+                    <Wand2 className="w-3.5 h-3.5 text-neutral-950" />
+                    {activeModalTool.id === 'bollette' && `Analizza Bolletta (${activeModalTool.creditsCost} Crediti)`}
+                    {activeModalTool.id === 'frigo' && `Genera Ricette (${activeModalTool.creditsCost} Credito)`}
+                    {activeModalTool.id === 'foto-restauro' && `Avvia Restauro (${activeModalTool.creditsCost} Crediti)`}
+                    {activeModalTool.id === 'medico' && `Decodifica Referto (${activeModalTool.creditsCost} Crediti)`}
+                    {activeModalTool.id === 'favole' && `Crea Fiaba Illustrata (${activeModalTool.creditsCost} Crediti)`}
+                    {activeModalTool.id === 'ocr-pro' && `Estrai Dati Excel (${activeModalTool.creditsCost} Crediti)`}
+                    {activeModalTool.id === 'video-reel' && `Monta Video Reel (${activeModalTool.creditsCost} Crediti)`}
                   </button>
                 </div>
               </div>
             )}
 
+            {/* STATO 2: ELABORAZIONE IN CORSO */}
             {simulationStatus === 'running' && (
-              <div className="py-10 text-center space-y-3">
-                <RefreshCcw className="w-6 h-6 text-white animate-spin mx-auto" />
+              <div className="py-12 text-center space-y-3">
+                <RefreshCcw className="w-8 h-8 text-white animate-spin mx-auto" />
                 <div className="text-sm font-semibold text-white">Elaborazione in corso...</div>
-                <div className="text-xs text-neutral-400">Analisi semantica e validazione dati protetta</div>
+                <div className="text-xs text-neutral-400">
+                  {activeModalTool.id === 'bollette' && 'Verifica tariffaria ARERA e decodifica oneri di sistema'}
+                  {activeModalTool.id === 'frigo' && 'Composizione menu bilanciato e tempi di cottura minimi'}
+                  {activeModalTool.id === 'foto-restauro' && 'Pulizia granulosità, ricostruzione pigmenti e upscaling 4K'}
+                  {activeModalTool.id === 'medico' && 'Sintesi semantica priva di gergo e redazione domande per il medico'}
+                  {activeModalTool.id === 'favole' && `Generazione 4 capitoli e illustrazioni per ${kidName}`}
+                  {activeModalTool.id === 'ocr-pro' && 'Riconoscimento OCR ottico e compilazione righe contabili'}
+                  {activeModalTool.id === 'video-reel' && 'Sintesi vocale neurale in italiano e sincronizzazione clip'}
+                </div>
               </div>
             )}
 
+            {/* STATO 3: RISULTATO DEDICATO SU MISURA */}
             {simulationStatus === 'success' && (
               <div className="space-y-4 text-xs">
-                <div className="p-3.5 rounded-lg bg-neutral-950 border border-emerald-900/60 text-emerald-400 flex items-start gap-2.5">
+                <div className="p-3.5 rounded-xl bg-neutral-950 border border-emerald-900/60 text-emerald-400 flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
                   <div>
-                    <div className="font-semibold text-white text-xs mb-0.5">Analisi Completata</div>
+                    <div className="font-semibold text-white text-xs mb-0.5">Operazione Completata con Successo</div>
                     <div className="text-[11px] text-neutral-300">
-                      Operazione eseguita con successo. Sono stati scalati {activeModalTool.creditsCost} crediti dal tuo saldo.
+                      Scalati {activeModalTool.creditsCost} crediti. Il tuo nuovo saldo è di {simulatedUserCredits} crediti.
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg bg-neutral-950 border border-neutral-800 space-y-2">
-                  <div className="font-semibold text-neutral-200">Esito generato dal sistema:</div>
-                  <p className="text-neutral-400 leading-relaxed font-mono text-[11px]">
-                    {activeModalTool.realWorldOutcome}
-                  </p>
+                {/* Box Esito Specifico per Tool */}
+                <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 space-y-3">
+                  <div className="font-semibold text-white text-xs flex items-center justify-between">
+                    <span>Risultato Elaborazione:</span>
+                    <span className="text-[10px] font-mono text-neutral-500">ID #2026-OK</span>
+                  </div>
+
+                  {/* BOLLETTE RESULT */}
+                  {activeModalTool.id === 'bollette' && (
+                    <div className="space-y-2 font-sans text-xs text-neutral-300 leading-relaxed">
+                      <div className="p-2.5 bg-neutral-900 rounded-lg border border-neutral-800">
+                        <div className="text-[11px] text-neutral-400">Tariffa Applicata Rilevata:</div>
+                        <div className="font-semibold text-amber-300 text-sm">0,34 €/kWh (Media mercato tutelato: 0,14 €/kWh)</div>
+                        <div className="text-[11px] text-rose-400 mt-1">⚠️ Rilevata voce extra "Servizi Opzionali Non Richiesti": €14,90/mese</div>
+                      </div>
+                      <p className="text-[11px] text-neutral-300">
+                        {activeModalTool.realWorldOutcome}
+                      </p>
+                      <button 
+                        onClick={() => alert('Download bozza reclamo formale avviato (.docx)')}
+                        className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Scarica Lettera di Reclamo Formale (.docx)
+                      </button>
+                    </div>
+                  )}
+
+                  {/* FRIGO RESULT */}
+                  {activeModalTool.id === 'frigo' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-2.5 bg-neutral-900 rounded-lg border border-neutral-800">
+                        <div className="font-semibold text-white mb-1">🍽️ Ricetta 1: Frittata Soffice Zucchine & Crema di Ricotta (12 min)</div>
+                        <div className="text-[11px] text-neutral-400">Taglia la zucchina a rondelle sottili, saltala 4 min in padella. Sbatti le uova con la ricotta e cuoci a fuoco dolce per 6 minuti.</div>
+                      </div>
+                      <div className="p-2.5 bg-neutral-900 rounded-lg border border-neutral-800">
+                        <div className="font-semibold text-white mb-1">🍝 Ricetta 2: Pasta Rapida al Mantecato di Ricotta e Scaglie di Parmigiano (10 min)</div>
+                        <div className="text-[11px] text-neutral-400">Unisci la ricotta con 2 cucchiai di acqua di cottura e pepe. Manteca la pasta direttamente in padella.</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* FOTO RESTAURO RESULT */}
+                  {activeModalTool.id === 'foto-restauro' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-2.5 bg-neutral-900 rounded-lg border border-neutral-800 flex items-center justify-between">
+                        <div>
+                          <div className="font-semibold text-white">File Restaurato: {uploadedFileName || 'foto_restaurata_300dpi.png'}</div>
+                          <div className="text-[11px] text-emerald-400">✓ Graffi eliminati • Colori volti applicati • Risoluzione 4096x2840</div>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => alert('Download immagine restaurata HD avviato')}
+                        className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Scarica Foto Restaurata per Stampa 300 DPI
+                      </button>
+                    </div>
+                  )}
+
+                  {/* MEDICO RESULT */}
+                  {activeModalTool.id === 'medico' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-2.5 bg-neutral-900 rounded-lg border border-neutral-800">
+                        <div className="font-semibold text-white mb-1">Spiegazione in Parole Semplici:</div>
+                        <div className="text-[11px] text-neutral-300 leading-relaxed">
+                          L'esame non evidenzia masse, nodi o lesioni pericolose. C'è solo una normale e lieve variazione del tessuto, del tutto identica a quella riscontrata nella visita precedente.
+                        </div>
+                      </div>
+                      <div className="p-2.5 bg-neutral-900 rounded-lg border border-neutral-800">
+                        <div className="font-semibold text-white mb-1">2 Domande Consigliate per il Medico:</div>
+                        <ul className="text-[11px] text-neutral-400 list-disc list-inside space-y-0.5">
+                          <li>"Dottore, il controllo a 12 mesi è confermato o preferisce vederci prima?"</li>
+                          <li>"Ci sono precauzioni particolari o abitudini da modificare?"</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* FAVOLE RESULT */}
+                  {activeModalTool.id === 'favole' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800 space-y-1.5">
+                        <div className="font-semibold text-white">📖 Libro: "{kidName} e il Razzo delle Stelle Amiche"</div>
+                        <div className="text-[11px] text-neutral-400 italic">
+                          "Capitolo 1: Nella cameretta di {kidName}, la luce della luna non faceva più paura. Il piccolo cagnolino Leo scodinzolò puntando la bussola dorata verso il cielo..."
+                        </div>
+                        <div className="text-[10px] text-neutral-500 font-mono">Include 4 capitoli completi + 4 tavole illustrate in stile {storyStyle}</div>
+                      </div>
+                      <button 
+                        onClick={() => alert('Download libretto PDF stampabile con copertina avviato')}
+                        className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Scarica Libretto Fiaba Stampabile (.pdf)
+                      </button>
+                    </div>
+                  )}
+
+                  {/* OCR PRO RESULT */}
+                  {activeModalTool.id === 'ocr-pro' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-2.5 bg-neutral-900 rounded-lg border border-neutral-800 overflow-x-auto font-mono text-[10px]">
+                        <div className="grid grid-cols-4 gap-2 font-bold text-neutral-300 pb-1 border-b border-neutral-800">
+                          <div>Data / Fornitore</div>
+                          <div>P.IVA</div>
+                          <div>Imponibile</div>
+                          <div>Totale</div>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2 text-neutral-400 pt-1">
+                          <div>14/03/26 - Forniture SRL</div>
+                          <div>08472910961</div>
+                          <div>€ 142,00</div>
+                          <div className="text-white font-semibold">€ 173,24</div>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => alert('Download foglio Excel compilato avviato (.xlsx)')}
+                        className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Scarica Foglio Compilato (.xlsx)
+                      </button>
+                    </div>
+                  )}
+
+                  {/* VIDEO REEL RESULT */}
+                  {activeModalTool.id === 'video-reel' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800 flex items-center justify-between">
+                        <div>
+                          <div className="font-semibold text-white">Video Reel 9:16 Generato (42 sec)</div>
+                          <div className="text-[11px] text-neutral-400">Voce: {videoVoice} • Sottotitoli sincronizzati</div>
+                        </div>
+                        <span className="text-[10px] font-mono bg-neutral-800 px-2 py-1 rounded text-emerald-400">1080x1920 HD</span>
+                      </div>
+                      <button 
+                        onClick={() => alert('Download video MP4 verticale pronto per i social avviato')}
+                        className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Scarica Video Reel (.mp4)
+                      </button>
+                    </div>
+                  )}
+
                 </div>
 
                 <div className="flex justify-end pt-2">
                   <button
+                    type="button"
                     onClick={() => setActiveModalTool(null)}
-                    className="px-4 py-2 rounded-lg bg-white hover:bg-neutral-200 text-neutral-950 font-semibold text-xs"
+                    className="px-4 py-2 rounded-lg bg-white hover:bg-neutral-200 text-neutral-950 font-semibold text-xs transition-colors"
                   >
-                    Fine
+                    Chiudi
                   </button>
                 </div>
               </div>
