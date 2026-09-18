@@ -560,6 +560,78 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* SEZIONE DOCENTI & SQUADRA (CHI SIAMO: MARCO, STEFANO, LORENZO) */}
+        <div className="bg-gradient-to-b from-slate-900/90 to-slate-950 border border-slate-800 rounded-3xl p-8 sm:p-12 space-y-8 max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            {/* Foto dei 3 Soci / Docenti */}
+            <div className="md:col-span-5 flex justify-center">
+              <div className="relative rounded-3xl overflow-hidden border-2 border-indigo-500/40 shadow-2xl shadow-indigo-500/20 max-w-sm group">
+                <img
+                  src="/images/team_docenti.jpg"
+                  alt="I Docenti di Aiutiamoci: Marco, Stefano e Lorenzo"
+                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80 pointer-events-none"></div>
+                <div className="absolute bottom-3 left-3 right-3 text-center pointer-events-none">
+                  <span className="text-[11px] font-bold text-white bg-slate-950/80 border border-slate-800 px-3 py-1 rounded-full backdrop-blur-md">
+                    Marco • Stefano • Lorenzo
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Testo di Presentazione Umana */}
+            <div className="md:col-span-7 space-y-5 text-left">
+              <div className="space-y-2">
+                <Badge variant="purple" className="text-[10px] uppercase font-bold tracking-widest">
+                  Docenti & Fondatori
+                </Badge>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+                  Persone Reali, Esperienza Pratica e Zero Teoria Astratta
+                </h3>
+              </div>
+
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                Siamo <strong>Marco</strong>, <strong>Stefano</strong> e <strong>Lorenzo</strong>. Abbiamo creato <strong>aiutiamoci.cloud</strong> con un obiettivo chiaro: rendere l&apos;Intelligenza Artificiale uno strumento quotidiano accessibile a professionisti, imprenditori e a chiunque voglia migliorare la propria produttività senza dover imparare a programmare.
+              </p>
+
+              <div className="space-y-3 text-xs text-slate-300 pt-1">
+                <div className="flex items-start gap-3">
+                  <div className="h-6 w-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 border border-indigo-500/30">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <strong className="text-white">Dirette settimanali e Masterclass Live:</strong>
+                    <span className="text-slate-400 block mt-0.5">Ti guidiamo passo passo ogni giovedì sera con sessioni di domande e risposte dal vivo.</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-500/30">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <strong className="text-white">Supporto Continuo su Telegram & Piattaforma:</strong>
+                    <span className="text-slate-400 block mt-0.5">Non sei mai lasciato solo: rispondiamo direttamente noi e il nostro Tutor AI h24 nella community riservata.</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="h-6 w-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 mt-0.5 border border-purple-500/30">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <strong className="text-white">Docenti Autorizzati con Certificazione Europea:</strong>
+                    <span className="text-slate-400 block mt-0.5">Formazione certificata in collaborazione con l&apos;Ente di Formazione ATOMA per un valore professionale reale.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* FAQ ACCORDION */}
         <div className="space-y-6 max-w-3xl mx-auto">
           <div className="text-center space-y-2">
