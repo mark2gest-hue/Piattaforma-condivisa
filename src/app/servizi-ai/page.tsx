@@ -41,7 +41,7 @@ interface ToolService {
   title: string;
   badge: string;
   creditsCost: number;
-  previewType: 'bolletta' | 'ricetta' | 'foto' | 'medico' | 'favola' | 'fattura' | 'video';
+  previewType: 'bolletta' | 'ricetta' | 'foto' | 'medico' | 'favola' | 'fattura' | 'video' | 'preventivo' | 'sollecito' | 'audio' | 'bando' | 'tasse';
   tagline: string;
   description: string;
   realWorldOutcome: string;
@@ -125,6 +125,68 @@ const TOOL_SERVICES: ToolService[] = [
     targetAudience: 'Partite IVA, artigiani, piccoli commercianti',
   },
   {
+    id: 'preventivi-blindati',
+    category: 'professionale',
+    title: 'Preventivatore Blindato & Clausole Extra',
+    badge: 'Tutela Compensi',
+    creditsCost: 2,
+    previewType: 'preventivo',
+    tagline: 'Preventivi formali con clausola anti-fuori-sacco e acconto 30%',
+    description: 'Inserisci oggetto dell’incarico, compenso e tempi di consegna. Genera un preventivo formale con clausola anti-modifiche gratuite (extra tariffati a parte), acconto obbligatorio e recesso.',
+    realWorldOutcome: 'Basta contestazioni su ore extra e acconto garantito prima di iniziare.',
+    targetAudience: 'Freelance, artigiani, consulenti, sviluppatori, grafici',
+    popular: true,
+  },
+  {
+    id: 'solleciti-pagamento',
+    category: 'professionale',
+    title: 'Recupero Crediti & Solleciti in 3 Livelli',
+    badge: 'Incasso Puntuale',
+    creditsCost: 1,
+    previewType: 'sollecito',
+    tagline: 'Dal promemoria cordiale alla diffida formale D.Lgs. 231/02',
+    description: 'Inserisci numero fattura, importo e giorni di ritardo. Genera 3 bozze graduate: 1) Promemoria amichevole, 2) Sollecito amministrativo con IBAN, 3) Messa in mora con interessi legali.',
+    realWorldOutcome: 'Incassa fatture scadute senza attriti inutili né spese legali.',
+    targetAudience: 'Partite IVA, studi professionali, PMI',
+  },
+  {
+    id: 'audio-verbale',
+    category: 'professionale',
+    title: 'Da Vocale WhatsApp a Verbale & Task',
+    badge: 'Zero Confusione',
+    creditsCost: 2,
+    previewType: 'audio',
+    tagline: 'Trasforma vocali lunghi in to-do list e messaggio di conferma per il cliente',
+    description: 'Invia l’audio del cliente o incolla il testo. Estrae i punti chiave concordati, la lista operativa delle cose da fare e redige il messaggio WhatsApp di conferma da rimandare al cliente per blindare l’accordo.',
+    realWorldOutcome: 'Niente più fraintendimenti o richieste arbitrarie a voce.',
+    targetAudience: 'Artigiani, agenzie, project manager, liberi professionisti',
+    popular: true,
+  },
+  {
+    id: 'scanner-bandi',
+    category: 'professionale',
+    title: 'Scanner Bandi & Fondo Perduto PMI',
+    badge: 'Finanza Agevolata',
+    creditsCost: 3,
+    previewType: 'bando',
+    tagline: 'Da PDF ministeriali di 60 pagine a sintesi operativa in 1 pagina',
+    description: 'Carica il PDF del bando regionale, CCIAA o Invitalia. Estrae in 60 secondi: requisiti ATECO, percentuale a fondo perduto, spese ammesse, scadenze e documentazione necessaria.',
+    realWorldOutcome: 'Capisci subito se puoi partecipare prima di pagare un consulente.',
+    targetAudience: 'Piccole imprese, commercianti, artigiani, startup',
+  },
+  {
+    id: 'calcolo-netto-tasse',
+    category: 'professionale',
+    title: 'Calcolatore Netto & Riserva Tasse F24',
+    badge: 'Pianificazione Fiscale',
+    creditsCost: 1,
+    previewType: 'tasse',
+    tagline: 'Quanto puoi spendere davvero e quanto accantonare per l’F24',
+    description: 'Inserisci il fatturato incassato e il tuo regime fiscale (Forfettario 5%/15% o Semplificato). Calcola al centesimo la riserva tasse/INPS da non toccare e il netto reale in tasca.',
+    realWorldOutcome: 'Zero sorprese e ansia al momento del saldo F24 di giugno e novembre.',
+    targetAudience: 'Nuovi forfettari, professionisti, freelance',
+  },
+  {
     id: 'video-reel',
     category: 'professionale',
     title: 'Studio Sintesi Video con Voce e Sottotitoli',
@@ -204,6 +266,28 @@ export default function ServiziAIPage() {
 
   const [ocrExportFormat, setOcrExportFormat] = useState<'excel' | 'csv' | 'json'>('excel');
 
+  // Nuovi Tool P.IVA
+  const [quoteClient, setQuoteClient] = useState<string>('Studio Tecnico Ing. Bianchi');
+  const [quoteJob, setQuoteJob] = useState<string>('Rifacimento impianto elettrico e certificazione di conformità');
+  const [quoteAmount, setQuoteAmount] = useState<string>('2400');
+  const [quoteDepositPercent, setQuoteDepositPercent] = useState<string>('30');
+  const [quoteExtraHourly, setQuoteExtraHourly] = useState<string>('45');
+
+  const [sollecitoClient, setSollecitoClient] = useState<string>('Azienda Meccanica SPA');
+  const [sollecitoInvoiceNum, setSollecitoInvoiceNum] = useState<string>('FATT-2026/08');
+  const [sollecitoAmount, setSollecitoAmount] = useState<string>('1850.00');
+  const [sollecitoDaysLate, setSollecitoDaysLate] = useState<string>('28');
+  const [sollecitoLevel, setSollecitoLevel] = useState<'amichevole' | 'formale' | 'diffida'>('formale');
+
+  const [audioTranscript, setAudioTranscript] = useState<string>('Ciao Marco, ho visto la prima bozza del lavoro. Mi raccomando ricordati di cambiare i colori della testata entro giovedì sera e inserire il pulsante di pagamento. Ci sentiamo venerdì mattina per la consegna finale.');
+
+  const [bandoAteco, setBandoAteco] = useState<string>('62.01 (Servizi Digitali / Sviluppo Software)');
+  const [bandoRegion, setBandoRegion] = useState<string>('Regione Lombardia / Bando Transizione Digitale');
+
+  const [taxGrossAmount, setTaxGrossAmount] = useState<string>('4500');
+  const [taxRegime, setTaxRegime] = useState<'forfettario5' | 'forfettario15' | 'ordinario'>('forfettario5');
+  const [taxAtecoPercent, setTaxAtecoPercent] = useState<string>('78');
+
   const [videoScript, setVideoScript] = useState<string>('3 consigli pratici per scegliere la tariffa luce ideale ed evitare le trappole del mercato libero nel 2026.');
   const [videoVoice, setVideoVoice] = useState<string>('Marco (Calda & Professionale)');
   const [videoSubtitleStyle, setVideoSubtitleStyle] = useState<string>('TikTok Giallo Evidenziato');
@@ -217,9 +301,15 @@ export default function ServiziAIPage() {
     setSimulationStatus('idle');
     setUploadedFileName(null);
     // Imposta il default più logico per il tipo di tool
-    if (tool.id === 'favole' || tool.id === 'video-reel') {
+    if (
+      tool.id === 'favole' ||
+      tool.id === 'video-reel' ||
+      tool.id === 'preventivi-blindati' ||
+      tool.id === 'solleciti-pagamento' ||
+      tool.id === 'calcolo-netto-tasse'
+    ) {
       setModalInputMode('text');
-    } else if (tool.id === 'foto-restauro' || tool.id === 'ocr-pro') {
+    } else if (tool.id === 'foto-restauro' || tool.id === 'ocr-pro' || tool.id === 'scanner-bandi') {
       setModalInputMode('upload');
     } else {
       setModalInputMode('text');
@@ -501,6 +591,81 @@ export default function ServiziAIPage() {
                           </div>
                           <div className="text-neutral-400 text-[10px]">
                             Pronto da pubblicare su Instagram e WhatsApp.
+                          </div>
+                        </div>
+                      )}
+
+                      {tool.previewType === 'preventivo' && (
+                        <div className="space-y-1.5">
+                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                            <span>Incarico:</span>
+                            <span className="text-neutral-300">Lavoro Professionale (€2.400)</span>
+                          </div>
+                          <div className="text-emerald-400 font-sans text-xs">
+                            ✓ Acconto 30% obbligatorio + Extra a tariffa
+                          </div>
+                          <div className="text-neutral-400 text-[10px]">
+                            Preventivo PDF formale con clausola anti-fuori-sacco.
+                          </div>
+                        </div>
+                      )}
+
+                      {tool.previewType === 'sollecito' && (
+                        <div className="space-y-1.5">
+                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                            <span>Fattura #08 (scaduta da 28gg):</span>
+                            <span className="text-rose-400">€ 1.850,00</span>
+                          </div>
+                          <div className="text-emerald-400 font-sans text-xs">
+                            ✓ 3 Livelli pronti: Promemoria, Sollecito, Diffida
+                          </div>
+                          <div className="text-neutral-400 text-[10px]">
+                            Include coordinate bancarie e D.Lgs. 231/02.
+                          </div>
+                        </div>
+                      )}
+
+                      {tool.previewType === 'audio' && (
+                        <div className="space-y-1.5">
+                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                            <span>Vocale WhatsApp:</span>
+                            <span className="text-neutral-300">Audio 3 min 40 sec</span>
+                          </div>
+                          <div className="text-emerald-400 font-sans text-xs">
+                            ✓ Lista 4 task operativi + Messaggio di conferma
+                          </div>
+                          <div className="text-neutral-400 text-[10px]">
+                            Niente più fraintendimenti su cosa fare.
+                          </div>
+                        </div>
+                      )}
+
+                      {tool.previewType === 'bando' && (
+                        <div className="space-y-1.5">
+                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                            <span>Bando Regionale:</span>
+                            <span className="text-neutral-300">Fondo Digitale (PDF 64 pag.)</span>
+                          </div>
+                          <div className="text-emerald-400 font-sans text-xs">
+                            ✓ Fondo perduto 50% • Requisiti ATECO
+                          </div>
+                          <div className="text-neutral-400 text-[10px]">
+                            Scheda 1-pagina con scadenze e documenti obbligatori.
+                          </div>
+                        </div>
+                      )}
+
+                      {tool.previewType === 'tasse' && (
+                        <div className="space-y-1.5">
+                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                            <span>Fattura Incassata:</span>
+                            <span className="text-neutral-300">€ 4.500 (Forfettario 5%)</span>
+                          </div>
+                          <div className="text-emerald-400 font-sans text-xs">
+                            ✓ Netto spendibile: € 3.240 • Riserva F24: € 1.260
+                          </div>
+                          <div className="text-neutral-400 text-[10px]">
+                            Zero ansia o sorprese alla scadenza tasse.
                           </div>
                         </div>
                       )}
@@ -1185,6 +1350,282 @@ export default function ServiziAIPage() {
                   </div>
                 )}
 
+                {/* 8. PREVENTIVI BLINDATI */}
+                {activeModalTool.id === 'preventivi-blindati' && (
+                  <div className="space-y-3 pt-1">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Cliente / Committente</label>
+                        <input
+                          type="text"
+                          value={quoteClient}
+                          onChange={(e) => setQuoteClient(e.target.value)}
+                          placeholder="es. Studio Legale Rossi..."
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Compenso Pattuito (€)</label>
+                        <input
+                          type="text"
+                          value={quoteAmount}
+                          onChange={(e) => setQuoteAmount(e.target.value)}
+                          placeholder="es. 2400"
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">Oggetto dell'incarico e deliverables</label>
+                      <textarea
+                        rows={3}
+                        value={quoteJob}
+                        onChange={(e) => setQuoteJob(e.target.value)}
+                        placeholder="Descrivi cosa include il lavoro (es. 5 pagine web, setup hosting, 2 sessioni formative)..."
+                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 text-xs"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Acconto all'avvio (%)</label>
+                        <input
+                          type="text"
+                          value={quoteDepositPercent}
+                          onChange={(e) => setQuoteDepositPercent(e.target.value)}
+                          placeholder="es. 30 o 50"
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 font-mono text-xs focus:outline-none focus:border-neutral-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Tariffa Modifiche Extra (€/ora)</label>
+                        <input
+                          type="text"
+                          value={quoteExtraHourly}
+                          onChange={(e) => setQuoteExtraHourly(e.target.value)}
+                          placeholder="es. 45 o 60"
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 font-mono text-xs focus:outline-none focus:border-neutral-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 9. SOLLECITI DI PAGAMENTO */}
+                {activeModalTool.id === 'solleciti-pagamento' && (
+                  <div className="space-y-3 pt-1">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Cliente / Debitore</label>
+                        <input
+                          type="text"
+                          value={sollecitoClient}
+                          onChange={(e) => setSollecitoClient(e.target.value)}
+                          placeholder="es. Azienda Meccanica SPA..."
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 focus:outline-none focus:border-neutral-500 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">N. Fattura & Data</label>
+                        <input
+                          type="text"
+                          value={sollecitoInvoiceNum}
+                          onChange={(e) => setSollecitoInvoiceNum(e.target.value)}
+                          placeholder="es. FATT-2026/08"
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 font-mono text-xs focus:outline-none focus:border-neutral-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Importo Scaduto (€)</label>
+                        <input
+                          type="text"
+                          value={sollecitoAmount}
+                          onChange={(e) => setSollecitoAmount(e.target.value)}
+                          placeholder="es. 1850.00"
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 font-mono text-xs focus:outline-none focus:border-neutral-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Giorni di Ritardo</label>
+                        <input
+                          type="text"
+                          value={sollecitoDaysLate}
+                          onChange={(e) => setSollecitoDaysLate(e.target.value)}
+                          placeholder="es. 15, 30, 60..."
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 font-mono text-xs focus:outline-none focus:border-neutral-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1.5">Livello di Fermezza della Comunicazione</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { id: 'amichevole', label: '1. Promemoria Cordiale' },
+                          { id: 'formale', label: '2. Sollecito con IBAN' },
+                          { id: 'diffida', label: '3. Diffida D.Lgs. 231/02' },
+                        ].map((lvl) => (
+                          <button
+                            key={lvl.id}
+                            type="button"
+                            onClick={() => setSollecitoLevel(lvl.id as any)}
+                            className={`py-1.5 px-2 rounded-lg border text-[11px] text-center transition-colors ${
+                              sollecitoLevel === lvl.id
+                                ? 'bg-neutral-800 border-white text-white font-medium'
+                                : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700'
+                            }`}
+                          >
+                            {lvl.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 10. DA VOCALE WHATSAPP A VERBALE */}
+                {activeModalTool.id === 'audio-verbale' && (
+                  <div className="space-y-3 pt-1">
+                    <div className="flex gap-2 p-1 bg-neutral-950 rounded-lg border border-neutral-800">
+                      <button
+                        type="button"
+                        onClick={() => setModalInputMode('text')}
+                        className={`flex-1 py-1.5 rounded-md font-medium text-[11px] transition-colors ${
+                          modalInputMode === 'text'
+                            ? 'bg-neutral-800 text-white shadow-sm'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        ✍️ Incolla Trascrizione o Appunti
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setModalInputMode('upload')}
+                        className={`flex-1 py-1.5 rounded-md font-medium text-[11px] transition-colors ${
+                          modalInputMode === 'upload'
+                            ? 'bg-neutral-800 text-white shadow-sm'
+                            : 'text-neutral-400 hover:text-neutral-200'
+                        }`}
+                      >
+                        🎙️ Carica File Audio / Vocale
+                      </button>
+                    </div>
+
+                    {modalInputMode === 'text' ? (
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">
+                          Incolla il testo del messaggio vocale o gli appunti della telefonata
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={audioTranscript}
+                          onChange={(e) => setAudioTranscript(e.target.value)}
+                          placeholder="Incolla il testo del vocale o la trascrizione grezza del cliente..."
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-500 text-xs"
+                        />
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => setUploadedFileName('audio_cliente_richiesta_modifiche.ogg')}
+                        className="border border-dashed border-neutral-700 hover:border-neutral-500 rounded-xl p-5 text-center bg-neutral-950 transition-colors cursor-pointer"
+                      >
+                        <Mic className="w-6 h-6 text-neutral-400 mx-auto mb-2" />
+                        <div className="text-neutral-200 font-medium text-xs mb-0.5">
+                          {uploadedFileName ? `Audio caricato: ${uploadedFileName}` : 'Carica vocale WhatsApp o memo vocale'}
+                        </div>
+                        <div className="text-[11px] text-neutral-500">Supporta OGG, MP3, M4A, WAV</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 11. SCANNER BANDI E CONTRIBUTI */}
+                {activeModalTool.id === 'scanner-bandi' && (
+                  <div className="space-y-3 pt-1">
+                    <div 
+                      onClick={() => setUploadedFileName('bando_transizione_digitale_2026.pdf')}
+                      className="border border-dashed border-neutral-700 hover:border-neutral-500 rounded-xl p-5 text-center bg-neutral-950 transition-colors cursor-pointer"
+                    >
+                      <FileText className="w-6 h-6 text-neutral-400 mx-auto mb-2" />
+                      <div className="text-neutral-200 font-medium text-xs mb-0.5">
+                        {uploadedFileName ? `Bando caricato: ${uploadedFileName}` : 'Trascina o carica il PDF del bando'}
+                      </div>
+                      <div className="text-[11px] text-neutral-500">PDF ministeriali, regionali, CCIAA o Invitalia fino a 60 pagine</div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Codice ATECO Aziendale</label>
+                        <input
+                          type="text"
+                          value={bandoAteco}
+                          onChange={(e) => setBandoAteco(e.target.value)}
+                          placeholder="es. 62.01, 43.21..."
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Regione / Ambito</label>
+                        <input
+                          type="text"
+                          value={bandoRegion}
+                          onChange={(e) => setBandoRegion(e.target.value)}
+                          placeholder="es. Lombardia, Nazionale..."
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 12. CALCOLO NETTO E RISERVA TASSE */}
+                {activeModalTool.id === 'calcolo-netto-tasse' && (
+                  <div className="space-y-3 pt-1">
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Fattura / Incasso Lordo (€)</label>
+                        <input
+                          type="text"
+                          value={taxGrossAmount}
+                          onChange={(e) => setTaxGrossAmount(e.target.value)}
+                          placeholder="es. 4500"
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 font-mono text-xs focus:outline-none focus:border-neutral-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-neutral-400 mb-1">Regime Fiscale</label>
+                        <select
+                          value={taxRegime}
+                          onChange={(e) => setTaxRegime(e.target.value as any)}
+                          className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                        >
+                          <option value="forfettario5">Forfettario Start-up (5% + INPS)</option>
+                          <option value="forfettario15">Forfettario Standard (15% + INPS)</option>
+                          <option value="ordinario">Regime Ordinario / Semplificato</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">Coefficiente di Redditività ATECO</label>
+                      <select
+                        value={taxAtecoPercent}
+                        onChange={(e) => setTaxAtecoPercent(e.target.value)}
+                        className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-neutral-100 text-xs focus:outline-none focus:border-neutral-500"
+                      >
+                        <option value="78">78% — Professionisti, Consulenti, Sviluppatori, Servizi</option>
+                        <option value="67">67% — Commercio all'ingrosso e dettaglio</option>
+                        <option value="86">86% — Attività immobiliari e costruzioni</option>
+                        <option value="40">40% — Commercio al dettaglio alimentari / Ristorazione</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
                 {/* Footer Costo e Azioni */}
                 <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-950 border border-neutral-800 font-mono text-xs mt-4">
                   <span className="text-neutral-400">Costo Operazione:</span>
@@ -1214,6 +1655,11 @@ export default function ServiziAIPage() {
                     {activeModalTool.id === 'medico' && `Decodifica Referto (${activeModalTool.creditsCost} Crediti)`}
                     {activeModalTool.id === 'favole' && `Crea Fiaba Illustrata (${activeModalTool.creditsCost} Crediti)`}
                     {activeModalTool.id === 'ocr-pro' && `Estrai Dati Excel (${activeModalTool.creditsCost} Crediti)`}
+                    {activeModalTool.id === 'preventivi-blindati' && `Genera Preventivo (${activeModalTool.creditsCost} Crediti)`}
+                    {activeModalTool.id === 'solleciti-pagamento' && `Genera Sollecito (${activeModalTool.creditsCost} Credito)`}
+                    {activeModalTool.id === 'audio-verbale' && `Estrai Verbale (${activeModalTool.creditsCost} Crediti)`}
+                    {activeModalTool.id === 'scanner-bandi' && `Analizza Bando (${activeModalTool.creditsCost} Crediti)`}
+                    {activeModalTool.id === 'calcolo-netto-tasse' && `Calcola Riserva (${activeModalTool.creditsCost} Credito)`}
                     {activeModalTool.id === 'video-reel' && `Monta Video Reel (${activeModalTool.creditsCost} Crediti)`}
                   </button>
                 </div>
@@ -1232,6 +1678,11 @@ export default function ServiziAIPage() {
                   {activeModalTool.id === 'medico' && 'Sintesi semantica priva di gergo e redazione domande per il medico'}
                   {activeModalTool.id === 'favole' && `Generazione 4 capitoli e illustrazioni per ${kidName}`}
                   {activeModalTool.id === 'ocr-pro' && 'Riconoscimento OCR ottico e compilazione righe contabili'}
+                  {activeModalTool.id === 'preventivi-blindati' && 'Redazione clausole contrattuali e piano di pagamento acconti'}
+                  {activeModalTool.id === 'solleciti-pagamento' && 'Calibrazione del tono e calcolo termini di mora D.Lgs. 231/02'}
+                  {activeModalTool.id === 'audio-verbale' && 'Scomposizione semantica audio e formulazione to-do list'}
+                  {activeModalTool.id === 'scanner-bandi' && 'Scansione ammissibilità ATECO e verifica aliquota fondo perduto'}
+                  {activeModalTool.id === 'calcolo-netto-tasse' && 'Calcolo imposta sostitutiva, rivalsa INPS e riserva netta'}
                   {activeModalTool.id === 'video-reel' && 'Sintesi vocale neurale in italiano e sincronizzazione clip'}
                 </div>
               </div>
@@ -1373,6 +1824,131 @@ export default function ServiziAIPage() {
                       >
                         <Download className="w-3.5 h-3.5" />
                         Scarica Foglio Compilato (.xlsx)
+                      </button>
+                    </div>
+                  )}
+
+                  {/* PREVENTIVI BLINDATI RESULT */}
+                  {activeModalTool.id === 'preventivi-blindati' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800 space-y-2">
+                        <div className="flex justify-between items-baseline border-b border-neutral-800 pb-1.5">
+                          <span className="font-semibold text-white">Preventivo Incarico #{quoteClient.split(' ')[0]}-2026</span>
+                          <span className="font-mono text-emerald-400 font-bold">€ {quoteAmount} + IVA</span>
+                        </div>
+                        <div className="text-[11px] text-neutral-400">
+                          <strong>Condizioni di Pagamento:</strong> Acconto {quoteDepositPercent}% all'accettazione (€ {(Number(quoteAmount || 0) * (Number(quoteDepositPercent || 30) / 100)).toFixed(2)}), Saldo 70% alla consegna.
+                        </div>
+                        <div className="p-2 rounded bg-neutral-950 border border-neutral-800 text-[10px] text-amber-300/90 font-mono">
+                          ✓ Clausola Anti-Fuori-Sacco attiva: "Eventuali revisioni, varianti o richieste non contemplate nell'allegato tecnico saranno conteggiate a parte alla tariffa oraria di €{quoteExtraHourly}/ora previa approvazione scritta."
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => alert('Download Preventivo Formale PDF con firma digitale avviato')}
+                        className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Scarica Preventivo Formale PDF
+                      </button>
+                    </div>
+                  )}
+
+                  {/* SOLLECITI PAGAMENTO RESULT */}
+                  {activeModalTool.id === 'solleciti-pagamento' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800 space-y-2">
+                        <div className="flex justify-between items-center text-neutral-400 border-b border-neutral-800 pb-1">
+                          <span>Bozza Sollecito ({sollecitoLevel.toUpperCase()}):</span>
+                          <span className="font-mono text-white">Fattura {sollecitoInvoiceNum}</span>
+                        </div>
+                        <p className="text-[11px] text-neutral-300 font-mono leading-relaxed bg-neutral-950 p-2.5 rounded border border-neutral-800">
+                          {sollecitoLevel === 'amichevole' && `Gentile ${sollecitoClient}, con la presente ci permettiamo di ricordarVi la fattura ${sollecitoInvoiceNum} di € ${sollecitoAmount} scaduta da ${sollecitoDaysLate} giorni. Confidando in una semplice svista contabile, restiamo a disposizione per ogni chiarimento.`}
+                          {sollecitoLevel === 'formale' && `Spett.le ${sollecitoClient}, ad oggi non risulta pervenuto il saldo della fattura ${sollecitoInvoiceNum} pari a € ${sollecitoAmount}. Vi invitiamo a regolarizzare l'importo a mezzo bonifico bancario (IBAN: IT99X00000000000) entro 5 giorni lavorativi.`}
+                          {sollecitoLevel === 'diffida' && `FORMALE MESSA IN MORA (D.Lgs. 231/02): Spett.le ${sollecitoClient}, trascorsi infruttuosamente ${sollecitoDaysLate} giorni dalla scadenza della fattura ${sollecitoInvoiceNum} (€ ${sollecitoAmount}), intimiamo il pagamento entro 48 ore con riserva di addebito interessi legali e spese di recupero.`}
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => alert('Testo del sollecito copiato negli appunti!')}
+                        className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        Copia Testo per WhatsApp / Email
+                      </button>
+                    </div>
+                  )}
+
+                  {/* AUDIO VERBALE RESULT */}
+                  {activeModalTool.id === 'audio-verbale' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800 space-y-2">
+                        <div className="font-semibold text-white">📋 Task Operativi Estratti dal Vocale:</div>
+                        <ul className="space-y-1 text-[11px] text-neutral-300 list-disc list-inside">
+                          <li>Aggiornare palette cromatica della testata (Scadenza: Giovedì ore 18:00)</li>
+                          <li>Integrare pulsante di pagamento checkout diretto</li>
+                          <li>Predisporre recap per consegna finale di Venerdì mattina</li>
+                        </ul>
+                        <div className="p-2 rounded bg-neutral-950 border border-neutral-800 text-[10px] text-emerald-400 font-mono">
+                          ✓ Messaggio di conferma pronto da inviare al cliente su WhatsApp generato.
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => alert('Messaggio di conferma per WhatsApp copiato!')}
+                        className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        Copia Messaggio di Conferma WhatsApp
+                      </button>
+                    </div>
+                  )}
+
+                  {/* SCANNER BANDI RESULT */}
+                  {activeModalTool.id === 'scanner-bandi' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800 space-y-2">
+                        <div className="flex justify-between items-center border-b border-neutral-800 pb-1">
+                          <span className="font-semibold text-white">Esito Ammissibilità:</span>
+                          <span className="text-emerald-400 font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">AMMESSO 100% ✓</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-[11px]">
+                          <div><strong>Agevolazione:</strong> 50% Fondo Perduto</div>
+                          <div><strong>Scadenza:</strong> 30 Aprile 2026</div>
+                          <div><strong>Spese Ammesse:</strong> Software, AI, Hardware, Formazione</div>
+                          <div><strong>Spesa Minima:</strong> € 5.000</div>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => alert('Download Scheda Sintetica Bando 1-Pagina avviato')}
+                        className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Scarica Scheda Bando 1-Pagina (.pdf)
+                      </button>
+                    </div>
+                  )}
+
+                  {/* CALCOLO NETTO TASSE RESULT */}
+                  {activeModalTool.id === 'calcolo-netto-tasse' && (
+                    <div className="space-y-2.5 font-sans text-xs text-neutral-300">
+                      <div className="p-3 bg-neutral-900 rounded-lg border border-neutral-800 space-y-2 font-mono text-xs">
+                        <div className="flex justify-between border-b border-neutral-800 pb-1.5 text-neutral-400">
+                          <span>Incasso Fattura Lordo:</span>
+                          <span className="text-white font-bold font-mono">€ {taxGrossAmount}</span>
+                        </div>
+                        <div className="flex justify-between text-rose-400 text-[11px]">
+                          <span>🛡️ Riserva Tasse & INPS (da accantonare):</span>
+                          <span>- € {(Number(taxGrossAmount || 0) * 0.28).toFixed(2)} (28%)</span>
+                        </div>
+                        <div className="flex justify-between text-emerald-400 font-bold text-sm pt-1 border-t border-neutral-800">
+                          <span>💵 Netto Reale Spendibile in Tasca:</span>
+                          <span>€ {(Number(taxGrossAmount || 0) * 0.72).toFixed(2)} (72%)</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => alert('Promemoria F24 salvato nel tuo Secondo Cervello!')}
+                        className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-medium flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        Salva Ripartizione nel Secondo Cervello
                       </button>
                     </div>
                   )}
