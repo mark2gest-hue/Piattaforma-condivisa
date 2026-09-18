@@ -2,6 +2,10 @@
 
 Ultimo aggiornamento: 2026-09-18 13:37
 Stato corrente: 
+- Nuova rotta riservata Servizi AI (`/servizi-ai`):
+  - Creata vetrina con estetica Anti-Slop per presentare le soluzioni pratiche (bollette, anti-spreco, foto, referti medici, fatture Excel).
+  - Nessun pulsante o link pubblico presente nella landing o navbar (accessibile solo tramite URL diretto).
+  - Deploy completato con successo sulla VPS Didattica (`80.225.81.150` via Nginx + PM2 `aiutiamoci`).
 - Semplificazione strategica Landing Page pubblica (`/`):
   - Ridisegnato il funnel d'azione a 3 percorsi chiari nell'Hero: 
     1. 📝 *Iscrizione Masterclass (Gratis)*: form snello a 3 campi (Nome, Email, Telefono/WhatsApp). Rimossi i pulsanti duplicati dalla navbar e dalle schede.
