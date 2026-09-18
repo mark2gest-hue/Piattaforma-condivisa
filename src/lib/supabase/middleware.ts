@@ -46,10 +46,11 @@ export async function updateSession(request: NextRequest) {
   const isZonaCompitiRoute = pathname.startsWith('/zona-compiti')
   const isGraziaRoute = pathname.startsWith('/grazia')
   const isN8nScreencastRoute = pathname.startsWith('/n8n-screencast')
+  const isServiziAiRoute = pathname.startsWith('/servizi-ai')
   const isRootRoute = pathname === '/'
 
-  // Rotte pubbliche accessibili: Landing ('/'), Corsi ('/corsi'), Zona Compiti ('/zona-compiti'), Prototipi Grazia ('/grazia'), Login ('/login'), n8n screencast e API
-  const isPublicRoute = isRootRoute || isCorsiRoute || isZonaCompitiRoute || isGraziaRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute
+  // Rotte pubbliche accessibili: Landing ('/'), Corsi ('/corsi'), Servizi AI ('/servizi-ai'), Zona Compiti ('/zona-compiti'), Prototipi Grazia ('/grazia'), Login ('/login'), n8n screencast e API
+  const isPublicRoute = isRootRoute || isCorsiRoute || isServiziAiRoute || isZonaCompitiRoute || isGraziaRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute
 
   // Se l'utente non è autenticato come membro del team e cerca di accedere a rotte riservate (/lavori, /posta, /chat, /files...),
   // viene reindirizzato a /login (solo in produzione per evitare loop di cookie bloccati nelle webview IDE)
