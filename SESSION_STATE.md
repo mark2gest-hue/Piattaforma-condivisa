@@ -1,24 +1,22 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-18 13:37
+Ultimo aggiornamento: 2026-09-18 20:40
 Stato corrente: 
 - Nuova rotta riservata Servizi AI (`/servizi-ai`):
   - Creata vetrina con estetica Anti-Slop per presentare le soluzioni pratiche (bollette, anti-spreco, foto, referti medici, fatture Excel).
   - Nessun pulsante o link pubblico presente nella landing o navbar (accessibile solo tramite URL diretto).
   - Deploy completato con successo sulla VPS Didattica (`80.225.81.150` via Nginx + PM2 `aiutiamoci`).
 - Semplificazione strategica Landing Page pubblica (`/`):
-  - Ridisegnato il funnel d'azione a 3 percorsi chiari nell'Hero: 
-    1. 📝 *Iscrizione Masterclass (Gratis)*: form snello a 3 campi (Nome, Email, Telefono/WhatsApp). Rimossi i pulsanti duplicati dalla navbar e dalle schede.
-    2. 💳 *Pagamento Diretto ATOMA*: per chi ha già seguito la diretta, con verifica server-side dell'email prima del redirect alla cassa ufficiale ATOMA (`https://www.atoma.com/checkout/?add-to-cart=6992`). Se non registrato, invita prima alla registrazione gratuita.
-    3. 🔑 *Area Corsisti (Codice)*: accesso immediato con Codice Univoco personale.
-  - Header ripulito: visibile solo il pulsante riservato `[🔒 Team]`.
-  - Hero superiore alleggerito: rimossi i 3 badge sopra il titolo per evitare distrazioni e aprire direttamente con la headline.
-  - Sezione Percorsi Formativi ("Scegli il livello più adatto a te") posizionata in alto subito dopo l'Hero per massima chiarezza e accessibilità.
-  - Riquadro prestigioso della "Certificazione Europea delle Competenze (Ente ATOMA)" posizionato direttamente sotto le schede dei corsi.
-  - Sostituito il banner visivo astratto con lo screenshot reale dell'interfaccia corsisti (`/images/real_platform_preview.png`) con player HD e chat @AI.
-  - Mantenuto chiaramente il box con lista d'attesa per il corso avanzato "AI Pro B2B".
+  - Ridisegnato il funnel d'azione a 3 percorsi chiari nell'Hero (Iscrizione Masterclass, Pagamento ATOMA, Area Corsisti).
+  - Header ripulito con pulsante `[🔒 Team]`.
+  - Sezione Percorsi Formativi ("Scegli il livello più adatto a te"): card con badge integrati negli header interni e hover zoom per le copertine dei corsi (AI Start e AI Pro).
+  - **Simulatore Interattivo Area Studenti** (Pattern A2UI / Generative UI) a 3 Tab:
+    1. `Video Player HD`: Screenshot interfaccia reale con player e trascrizioni.
+    2. `Tutor Didattico Virtuale @AI`: Simulazione live chat reattiva con esempio formula RCCF.
+    3. `Certificazione Ufficiale`: Anteprima attestato di completamento ATOMA con codice anticontraffazione.
+  - Sotto la sezione: Box lista d'attesa per "AI Pro B2B".
 - Area Corsisti (`/corsi`):
-  - Aggiunti pulsanti dedicati e ben visibili per la Community Telegram (`https://t.me/+QSql9PpGLlMzYmI0`) e per il bot didattico h24 (`@Corsi_Masterclass_bot`) nella barra dello studente e nell'header della chat.
+  - Aggiunti pulsanti dedicati per la Community Telegram e per il bot didattico h24 (`@Corsi_Masterclass_bot`).
 
 ---
 
