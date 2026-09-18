@@ -1,24 +1,20 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-17 20:25
+Ultimo aggiornamento: 2026-09-18 13:37
 Stato corrente: 
-- Aggiornato branding completo a `aiutiamoci` / `aiutiamoci.cloud` con suite icone e loghi ad alto contrasto (dark & light mode) e favicon vettoriale.
-- Implementata conformità legale completa: Cookie Consent Banner all'apertura con salvataggio preferenze, e modali dedicati per Privacy Policy (GDPR), Cookie Policy, Termini di Servizio e Disclaimer Didattico nel footer.
-- Architettura 16 Ore Certificate approvata e rilasciata: badge monte ore aggiornati, attestato canvas con codice crittografico e generazione del Dossier Tecnico Didattico per l'Ente di Certificazione ATOMA.
-- Generato Dossier Tecnico in PDF vettoriale su carta intestata istituzionale (salvato in Downloads, root progetto, link pubblico `/docs/` e Secondo Cervello Obsidian con anteprima embed).
-- Risolto e blindato invio email riunioni/videocall (`sendEventInvitationsAction`): fallback automatico Google Meet (`https://meet.google.com/wsv-bqxm-bvr`), box verde ad alta visibilità e pulsante responsive su due righe nel Calendario (`/calendario`).
-- Configurate e rilasciate in produzione le 4 Stanze Google Meet ufficiali permanenti (tutte titolate su Google Calendar eccetto Masterclass protetta):
-  - 👥 Soci & Team: `https://meet.google.com/mth-rqxp-bdf` (Titolo: "Stanza riservata ai soci")
-  - 🎓 Masterclass Corsisti: `https://meet.google.com/wsv-bqxm-bvr` (Stanza storica corsisti)
-  - 🤝 Clienti & Briefing B2B: `https://meet.google.com/yme-pyws-osa` (Titolo: "Clienti & Briefing")
-  - 🛠️ Lab Agenti AI Pro: `https://meet.google.com/dwe-rczj-uxz` (Titolo: "Laboratorio Agenti AI")
-- Implementata selezione stanza obbligatoria nella pagina Videocall (`/videocall`): all'apertura nessuna stanza è pre-selezionata; il tasto "Entra nella Stanza" e "Copia Link" rimangono disabilitati e si attivano solo al click su una delle 4 sale.
-- Gruppo Telegram Corsisti Community (`Aiutiamoci Corsi` - `https://t.me/+QSql9PpGLlMzYmI0`):
-  - Integrato link di accesso rapido nella stanza Masterclass Corsisti (`/videocall`) e nella zona compiti (`/workshop-agenti`).
-  - Rilasciato in produzione il Bot Tutor AI Corsisti (`@Corsi_Masterclass_bot`) con webhook dedicato `/api/telegram/tutor-webhook`.
-  - Vademecum automatico per nuovi membri e comando `/vademecum` in linguaggio naturale (zero gergo tecnico, attivabile sia con tag sia scrivendo "Tutor...").
-  - Routing istantaneo ai soci (Marco, Lorenzo, Stefano) con pulsanti inline che notificano la chat privata interna del team.
-  - Assistenza proattiva al recupero del Codice ID di accesso alla piattaforma.
+- Semplificazione strategica Landing Page pubblica (`/`):
+  - Ridisegnato il funnel d'azione a 3 percorsi chiari nell'Hero: 
+    1. 📝 *Iscrizione Masterclass (Gratis)*: form snello a 3 campi (Nome, Email, Telefono/WhatsApp). Rimossi i pulsanti duplicati dalla navbar e dalle schede.
+    2. 💳 *Pagamento Diretto ATOMA*: per chi ha già seguito la diretta, con verifica server-side dell'email prima del redirect alla cassa ufficiale ATOMA (`https://www.atoma.com/checkout/?add-to-cart=6992`). Se non registrato, invita prima alla registrazione gratuita.
+    3. 🔑 *Area Corsisti (Codice)*: accesso immediato con Codice Univoco personale.
+  - Header ripulito: visibile solo il pulsante riservato `[🔒 Team]`.
+  - Hero superiore alleggerito: rimossi i 3 badge sopra il titolo per evitare distrazioni e aprire direttamente con la headline.
+  - Sezione Percorsi Formativi ("Scegli il livello più adatto a te") posizionata in alto subito dopo l'Hero per massima chiarezza e accessibilità.
+  - Riquadro prestigioso della "Certificazione Europea delle Competenze (Ente ATOMA)" posizionato direttamente sotto le schede dei corsi.
+  - Sostituito il banner visivo astratto con lo screenshot reale dell'interfaccia corsisti (`/images/real_platform_preview.png`) con player HD e chat @AI.
+  - Mantenuto chiaramente il box con lista d'attesa per il corso avanzato "AI Pro B2B".
+- Area Corsisti (`/corsi`):
+  - Aggiunti pulsanti dedicati e ben visibili per la Community Telegram (`https://t.me/+QSql9PpGLlMzYmI0`) e per il bot didattico h24 (`@Corsi_Masterclass_bot`) nella barra dello studente e nell'header della chat.
 
 ---
 

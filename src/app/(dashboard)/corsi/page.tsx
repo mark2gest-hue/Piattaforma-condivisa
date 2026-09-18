@@ -1235,6 +1235,17 @@ function CorsiInnerContent() {
                     Studente: <strong>{activeStudent.name}</strong> ({activeStudent.code})
                   </span>
                 </Badge>
+                <a
+                  href="https://t.me/+QSql9PpGLlMzYmI0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs h-8 px-3 rounded-xl gap-1.5 border border-sky-500/40 bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 font-semibold shadow-xs inline-flex items-center transition-all shrink-0"
+                  title="Entra nella Community Telegram Ufficiale con il Tutor AI h24"
+                >
+                  <Send className="h-3.5 w-3.5 text-sky-400" />
+                  <span>Community Telegram & Tutor AI</span>
+                </a>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -1821,7 +1832,19 @@ function CorsiInnerContent() {
                     <p className="text-[10px] text-slate-400">Scrivi @AI per risposte automatiche sui 20 moduli</p>
                   </div>
                 </div>
-                <Badge variant="success" className="text-[9px] uppercase">Online 24/7</Badge>
+                <div className="flex items-center gap-2">
+                  <a
+                    href="https://t.me/Corsi_Masterclass_bot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[10px] font-bold transition-all"
+                    title="Apri il Tutor AI h24 su Telegram (@Corsi_Masterclass_bot)"
+                  >
+                    <Send className="h-3 w-3" />
+                    <span>Tutor Telegram</span>
+                  </a>
+                  <Badge variant="success" className="text-[9px] uppercase">Online 24/7</Badge>
+                </div>
               </div>
 
               <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs">

@@ -260,41 +260,14 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 text-xs font-semibold shrink-0">
-            <button
-              onClick={() => setIsStudentModalOpen(true)}
-              className="text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 border border-slate-800 rounded-xl bg-slate-900/80 hover:bg-slate-800"
-              title="Hai già il codice studente? Entra nell'Area Studio"
-            >
-              <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-400 shrink-0" />
-              <span className="hidden md:inline">Area Corsisti (Codice)</span>
-              <span className="md:hidden">Codice</span>
-            </button>
-
-            <button
-              onClick={() => setIsDirectPaymentModalOpen(true)}
-              className="text-emerald-300 hover:text-emerald-200 transition-colors flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 border border-emerald-800/80 rounded-xl bg-emerald-950/50 hover:bg-emerald-900/50"
-              title="Hai già partecipato alla Live? Vai al Pagamento Ufficiale"
-            >
-              <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 shrink-0" />
-              <span className="hidden sm:inline">Pagamento Diretto</span>
-              <span className="sm:hidden">Paga</span>
-            </button>
-
-            <button
-              onClick={() => setIsEnrollModalOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold transition-all shadow-md shadow-indigo-600/30 whitespace-nowrap"
-            >
-              <span>Iscriviti<span className="hidden sm:inline"> alla Masterclass</span></span>
-            </button>
-
+          <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/login"
-              className="text-slate-400 hover:text-slate-200 p-1.5 sm:px-2 sm:py-2 transition-colors flex items-center gap-1 border border-slate-800/60 sm:border-transparent rounded-lg bg-slate-900/40 sm:bg-transparent"
+              className="text-slate-400 hover:text-slate-200 px-3 py-1.5 transition-colors flex items-center gap-1.5 border border-slate-800/80 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-xs font-semibold"
               title="Accesso riservato al team di gestione"
             >
               <Lock className="h-3.5 w-3.5 text-slate-400" />
-              <span className="text-[11px] hidden sm:inline">Team</span>
+              <span>Team</span>
             </Link>
           </div>
         </div>
@@ -303,27 +276,6 @@ export default function LandingPage() {
       {/* HERO SECTION */}
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-12 lg:py-16 space-y-24">
         <div className="text-center space-y-6 max-w-4xl mx-auto">
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            <Badge className="py-1.5 px-4 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold rounded-full gap-2 inline-flex items-center">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-              Certificazione Europea delle Competenze con Ente ATOMA
-            </Badge>
-
-            <Badge className="py-1.5 px-4 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold rounded-full gap-2 inline-flex items-center">
-              <Zap className="h-3.5 w-3.5 text-amber-400" />
-              Corso Pratico in 20 Video Lezioni senza tecnicismi
-            </Badge>
-
-            <button
-              type="button"
-              onClick={() => setIsWaitlistModalOpen(true)}
-              className="py-1.5 px-4 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 text-xs font-bold rounded-full gap-1.5 inline-flex items-center transition-all cursor-pointer hover:scale-105 shadow-xs"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-              <span>🚀 Prossimo Lancio: <strong className="text-white underline decoration-purple-400">AI Pro</strong> (Agenti & Automazioni) • Entra in Lista</span>
-            </button>
-          </div>
-
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.08]">
             Domina l'Intelligenza Artificiale <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">da Zero</span>
           </h1>
@@ -362,26 +314,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* HERO SHOWCASE IMAGE BANNER WITH OVERLAY */}
-        <div className="relative max-w-5xl mx-auto rounded-3xl border border-slate-800 shadow-2xl shadow-indigo-500/20 overflow-hidden group">
-          <img
-            src="/images/ai_start_course_banner.jpg"
-            alt="AI Start Platform Showcase"
-            className="w-full h-[320px] sm:h-[450px] object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8 sm:p-12">
-            <div className="space-y-2 max-w-xl text-left">
-              <Badge className="bg-indigo-600 text-white border-0 text-[10px] uppercase font-bold">Interfaccia Studente & Player HD</Badge>
-              <h3 className="text-xl sm:text-2xl font-black text-white">Player Video HTML5 & Assistente @AI in tempo reale</h3>
-              <p className="text-xs text-slate-300 leading-relaxed hidden sm:block">
-                Fruisci delle lezioni con audio e video in streaming senza cookie di terze parti e poni domande all'IA durante lo studio.
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* SECTION SELETTORE DEI CORSI (CORSO 1 DISPONIBILE vs CORSO 2 AVANZATO PRO) */}
-        <div className="space-y-8">
+        <div id="corsi" className="space-y-8 scroll-mt-24">
           <div className="text-center space-y-2">
             <Badge variant="purple" className="text-[10px] uppercase font-bold tracking-widest">I Nostri Percorsi Formativi</Badge>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Scegli il livello più adatto a te</h2>
@@ -449,10 +383,13 @@ export default function LandingPage() {
               </div>
 
               <Button
-                onClick={() => setIsEnrollModalOpen(true)}
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                  setTimeout(() => setIsEnrollModalOpen(true), 300)
+                }}
                 className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-12 rounded-xl gap-2 shadow-lg shadow-indigo-600/30"
               >
-                <span>Iscriviti alla Masterclass (Registrazione)</span>
+                <span>Partecipa alla Masterclass Gratuita</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -515,6 +452,55 @@ export default function LandingPage() {
                 <BellRing className="h-4 w-4 text-purple-400" />
                 <span>Iscriviti alla Lista d'Attesa</span>
               </Button>
+            </div>
+          </div>
+
+          {/* BANNER CERTIFICAZIONE EUROPEA ATOMA SOTTO LE SCHEDE */}
+          <div className="max-w-4xl mx-auto p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900/80 to-emerald-950/40 border border-emerald-500/30 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div className="flex items-center gap-3.5">
+              <div className="h-11 w-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                  <span className="text-xs sm:text-sm font-extrabold text-white">
+                    Certificazione Europea delle Competenze
+                  </span>
+                  <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase py-0.5 px-2">
+                    Ente ATOMA
+                  </Badge>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Percorso formativo con rilascio di Attestato Ufficiale e Certificazione delle Competenze (Docente Autorizzato ATOMA).
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0">
+              <span className="text-[11px] font-mono font-semibold text-emerald-400/90 bg-emerald-950/60 border border-emerald-800/80 px-3 py-1.5 rounded-lg inline-block">
+                Valido ai fini professionali
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* HERO SHOWCASE IMAGE BANNER WITH OVERLAY - REAL STUDENT PLATFORM */}
+        <div className="relative max-w-5xl mx-auto rounded-3xl border-2 border-indigo-500/30 shadow-2xl shadow-indigo-500/20 overflow-hidden group bg-slate-950">
+          <img
+            src="/images/real_platform_preview.png"
+            alt="Interfaccia Reale Piattaforma Aiutiamoci"
+            className="w-full h-auto max-h-[500px] object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex items-end p-6 sm:p-10 pointer-events-none">
+            <div className="space-y-2 max-w-2xl text-left">
+              <Badge className="bg-emerald-600 text-white border-0 text-[10px] uppercase font-bold tracking-wider">
+                Anteprima Reale della Piattaforma Didattica
+              </Badge>
+              <h3 className="text-xl sm:text-2xl font-black text-white">
+                Player Video HD con Lezioni dei Docenti & Assistente @AI sempre attivo
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed hidden sm:block">
+                Interfaccia italiana, pulita e priva di distrazioni: segui i 20 moduli registrati dai docenti di <strong>aiutiamoci.cloud</strong> e fai domande in qualsiasi momento all&apos;assistente IA dedicato.
+              </p>
             </div>
           </div>
         </div>
