@@ -42,7 +42,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
-import { enrollStudentAction, joinWaitlistAction, submitCourseRegistrationAction } from '@/app/actions/student'
+import {
+  enrollStudentAction,
+  joinWaitlistAction,
+  submitCourseRegistrationAction,
+  checkStudentRegistrationByEmailAction,
+} from '@/app/actions/student'
 import { LegalModal, CookieBanner } from '@/components/legal/LegalModal'
 
 const MODULES_LIST = [
@@ -81,17 +86,20 @@ export default function LandingPage() {
   const supabase = createClient()
 
   // Form Iscrizione & Questionario AI Start
+  // Form Iscrizione Semplificato AI Start
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
   const [nameInput, setNameInput] = useState('')
   const [emailInput, setEmailInput] = useState('')
-  const [aiExperience, setAiExperience] = useState('Qualche prova (tipo ChatGPT ogni tanto)')
-  const [objective, setObjective] = useState('Migliorare il lavoro o il business')
-  const [blocker, setBlocker] = useState('Non so da dove iniziare')
-  const [expectation, setExpectation] = useState('Voglio sperimentare e capire')
-  const [referralSource, setReferralSource] = useState('Passaparola / Amico o Collega')
+  const [phoneInput, setPhoneInput] = useState('')
   const [referrerName, setReferrerName] = useState('')
   const [isRegistering, setIsRegistering] = useState(false)
   const [enrollSuccess, setEnrollSuccess] = useState(false)
+
+  // Modal Pagamento Diretto ATOMA
+  const [isDirectPaymentModalOpen, setIsDirectPaymentModalOpen] = useState(false)
+  const [directPaymentEmail, setDirectPaymentEmail] = useState('')
+  const [isCheckingPaymentEmail, setIsCheckingPaymentEmail] = useState(false)
+  const [paymentEmailError, setPaymentEmailError] = useState<string | null>(null)
 
   // Login Studente Rapido con Codice
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false)
@@ -125,7 +133,6 @@ export default function LandingPage() {
         if (activeRef) {
           const cleanRef = activeRef.trim().toUpperCase()
           setReferrerName(cleanRef)
-          setReferralSource('Passaparola / Amico o Collega')
           sessionStorage.setItem('course_referral_code', cleanRef)
         }
       }
@@ -142,6 +149,29 @@ export default function LandingPage() {
     router.push(`/corsi?tab=login&code=${encodeURIComponent(cleanCode)}`)
   }
 
+  // Verifica email prima del reindirizzamento alla cassa ATOMA
+  const handleDirectPaymentCheck = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const clean = directPaymentEmail.trim().toLowerCase()
+    if (!clean || !clean.includes('@')) {
+      setPaymentEmailError('Inserisci un indirizzo email valido.')
+      return
+    }
+
+    setIsCheckingPaymentEmail(true)
+    setPaymentEmailError(null)
+
+    const res = await checkStudentRegistrationByEmailAction(clean)
+    setIsCheckingPaymentEmail(false)
+
+    if (res.exists) {
+      // Reindirizza al checkout ufficiale ATOMA con il corso già nel carrello
+      window.location.href = 'https://www.atoma.com/checkout/?add-to-cart=6992'
+    } else {
+      setPaymentEmailError('Questa email non risulta ancora registrata. Prima di accedere al pagamento compila la registrazione gratuita per riservare il posto e ricevere il codice!')
+    }
+  }
+
   const handleEnrollSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!nameInput.trim() || !emailInput.trim()) return
@@ -150,20 +180,17 @@ export default function LandingPage() {
     const result = await submitCourseRegistrationAction({
       name: nameInput.trim(),
       email: emailInput.trim(),
-      ai_experience: aiExperience,
-      objective: objective,
-      blocker: blocker,
-      expectation: expectation,
-      referral_source: referralSource,
+      ai_experience: 'Partecipante Masterclass',
+      objective: 'Applicare l\'AI nel lavoro',
+      blocker: 'Nessuno',
+      expectation: 'Imparare strumenti pratici',
+      referral_source: 'Landing Page / Masterclass',
       referred_by: referrerName.trim() || undefined,
       raw_answers: {
-        experience: aiExperience,
-        goal: objective,
-        blocker: blocker,
-        mindset: expectation,
-        referral_source: referralSource,
+        phone: phoneInput.trim() || null,
         referred_by: referrerName.trim() || null,
-      }
+        source: 'Sito Web Aiutiamoci',
+      },
     })
 
     setIsRegistering(false)
@@ -237,18 +264,28 @@ export default function LandingPage() {
             <button
               onClick={() => setIsStudentModalOpen(true)}
               className="text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 border border-slate-800 rounded-xl bg-slate-900/80 hover:bg-slate-800"
-              title="Hai già il codice? Entra qui"
+              title="Hai già il codice studente? Entra nell'Area Studio"
             >
               <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-400 shrink-0" />
-              <span className="hidden md:inline">Hai già il codice? Entra qui</span>
+              <span className="hidden md:inline">Area Corsisti (Codice)</span>
               <span className="md:hidden">Codice</span>
+            </button>
+
+            <button
+              onClick={() => setIsDirectPaymentModalOpen(true)}
+              className="text-emerald-300 hover:text-emerald-200 transition-colors flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 border border-emerald-800/80 rounded-xl bg-emerald-950/50 hover:bg-emerald-900/50"
+              title="Hai già partecipato alla Live? Vai al Pagamento Ufficiale"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 shrink-0" />
+              <span className="hidden sm:inline">Pagamento Diretto</span>
+              <span className="sm:hidden">Paga</span>
             </button>
 
             <button
               onClick={() => setIsEnrollModalOpen(true)}
               className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl font-bold transition-all shadow-md shadow-indigo-600/30 whitespace-nowrap"
             >
-              <span>Iscriviti<span className="hidden sm:inline"> Ora</span></span>
+              <span>Iscriviti<span className="hidden sm:inline"> alla Masterclass</span></span>
             </button>
 
             <Link
@@ -295,14 +332,23 @@ export default function LandingPage() {
             L'Intelligenza Artificiale non è magia, è uno strumento. Impara a delegare la noia, potenziare la creatività e gestire il tempo con 20 lezioni guidate ed un assistente virtuale <strong className="text-white">@AI</strong> sempre al tuo fianco.
           </p>
 
-          {/* CTA MAIN BUTTONS */}
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
+          {/* CTA MAIN BUTTONS - 3 PERCORSI CHIARI */}
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-2xl mx-auto">
             <Button
               onClick={() => setIsEnrollModalOpen(true)}
               className="w-full sm:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold h-13 px-8 rounded-2xl gap-2 shadow-2xl shadow-indigo-600/40 text-base transition-all hover:scale-[1.02]"
             >
               <Sparkles className="h-5 w-5" />
-              <span>Inizia il Corso Completo</span>
+              <span>Iscriviti alla Masterclass (Gratis)</span>
+            </Button>
+
+            <Button
+              onClick={() => setIsDirectPaymentModalOpen(true)}
+              variant="outline"
+              className="w-full sm:w-auto border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 font-bold h-13 px-6 rounded-2xl gap-2 text-sm shadow-lg shadow-emerald-950/40"
+            >
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              <span>Hai visto la Live? Paga Ora</span>
             </Button>
 
             <Button
@@ -311,7 +357,7 @@ export default function LandingPage() {
               className="w-full sm:w-auto border-slate-800 bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold h-13 px-6 rounded-2xl gap-2 text-sm"
             >
               <Key className="h-4 w-4 text-blue-400" />
-              <span>Hai già il codice? Entra qui</span>
+              <span>Entra con Codice</span>
             </Button>
           </div>
         </div>
@@ -363,8 +409,10 @@ export default function LandingPage() {
                 <div className="flex items-center justify-between">
                   <Badge variant="purple" className="text-[10px] uppercase">Livello Principiante / Intermedio</Badge>
                   <div className="text-right">
-                    <span className="text-2xl font-black text-white font-mono">€ 149</span>
-                    <span className="block text-[10px] text-emerald-400 font-semibold">Gratuito con Codice Studente</span>
+                    <span className="text-xs text-amber-400 font-bold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full inline-block">
+                      Offerta Masterclass
+                    </span>
+                    <span className="block text-[10px] text-slate-400 mt-1">Posti riservati alla diretta</span>
                   </div>
                 </div>
 
@@ -404,7 +452,7 @@ export default function LandingPage() {
                 onClick={() => setIsEnrollModalOpen(true)}
                 className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-12 rounded-xl gap-2 shadow-lg shadow-indigo-600/30"
               >
-                <span>Iscriviti a AI Start</span>
+                <span>Iscriviti alla Masterclass (Registrazione)</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -470,9 +518,6 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-
-        {/* VETRINA INTERATTIVA: SECONDO CERVELLO & NEURAL KNOWLEDGE GRAPH */}
-        <SecondBrainSection />
 
         {/* DEMO PROMPT SIMULATOR INTERATTIVO */}
         <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-8 sm:p-10 space-y-6 max-w-4xl mx-auto shadow-2xl">
@@ -665,14 +710,114 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* MODAL 2: FORM QUESTIONARIO & ISCRIZIONE AI START */}
+      {/* MODAL 1B: VERIFICA EMAIL & PAGAMENTO DIRETTO ATOMA */}
+      {isDirectPaymentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-800 overflow-hidden my-8">
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-emerald-400" />
+                <h3 className="font-bold text-sm text-white">Pagamento Ufficiale • ATOMA Formazione</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setIsDirectPaymentModalOpen(false)
+                  setPaymentEmailError(null)
+                  setDirectPaymentEmail('')
+                }}
+                className="p-1 text-slate-400 hover:text-white rounded-lg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleDirectPaymentCheck} className="p-6 space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <p className="text-slate-300 leading-relaxed font-medium">
+                  Questo link è riservato a chi ha già partecipato alla Masterclass dal vivo o si è registrato alla piattaforma.
+                </p>
+                <p className="text-slate-400 text-[11px] leading-relaxed">
+                  Inserisci l&apos;email con cui ti sei registrato: verificheremo che il tuo profilo sia attivo e ti collegheremo subito alla cassa ufficiale di ATOMA con l&apos;offerta riservata.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-300">La tua Email di Registrazione *</label>
+                <Input
+                  autoFocus
+                  required
+                  type="email"
+                  value={directPaymentEmail}
+                  onChange={(e) => {
+                    setDirectPaymentEmail(e.target.value)
+                    setPaymentEmailError(null)
+                  }}
+                  placeholder="Es. mario.rossi@azienda.it"
+                  className="bg-slate-950 border-slate-800 text-white text-xs h-11"
+                />
+              </div>
+
+              {paymentEmailError && (
+                <div className="p-3.5 rounded-xl bg-amber-950/50 border border-amber-800/80 text-amber-200 text-xs space-y-2.5">
+                  <p className="leading-relaxed">{paymentEmailError}</p>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setEmailInput(directPaymentEmail)
+                      setIsDirectPaymentModalOpen(false)
+                      setIsEnrollModalOpen(true)
+                    }}
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg shadow-md"
+                  >
+                    Iscriviti Prima Gratuitamente
+                  </Button>
+                </div>
+              )}
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsDirectPaymentModalOpen(false)
+                    setPaymentEmailError(null)
+                    setDirectPaymentEmail('')
+                  }}
+                  className="border-slate-800 text-slate-400 text-xs"
+                >
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isCheckingPaymentEmail}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl flex items-center gap-1.5 shadow-lg shadow-emerald-900/40"
+                >
+                  {isCheckingPaymentEmail ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Verifica in corso...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Procedi al Pagamento</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: FORM REGISTRAZIONE SNELLO AI START */}
       {isEnrollModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg border border-slate-800 overflow-hidden my-8">
+          <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-800 overflow-hidden my-8">
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 text-indigo-400" />
-                <h3 className="font-bold text-sm text-white">Richiesta di Iscrizione: AI Start</h3>
+                <h3 className="font-bold text-sm text-white">Iscrizione Masterclass: AI Start</h3>
               </div>
               <button
                 onClick={() => {
@@ -690,35 +835,53 @@ export default function LandingPage() {
                 <div className="h-14 w-14 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
                   <Check className="h-7 w-7" />
                 </div>
-                <h4 className="font-bold text-lg text-white">Richiesta Ricevuta con Successo!</h4>
+                <h4 className="font-bold text-lg text-white">Iscrizione Registrata con Successo!</h4>
                 <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
-                  Grazie <strong>{nameInput}</strong>. Abbiamo registrato le tue risposte al questionario.
+                  Grazie <strong>{nameInput}</strong>. Abbiamo riservato il tuo posto per la Masterclass in videoconferenza del <strong>Giovedì alle 21:00</strong>.
                   <br /><br />
-                  Il nostro team verificherà la tua richiesta e ti invieremo un&apos;email a <strong>{emailInput}</strong> con il tuo <strong>Codice di Accesso personale</strong> non appena il profilo sarà approvato.
+                  Ti abbiamo inviato un&apos;email di conferma a <strong>{emailInput}</strong> con il link diretto per collegarti.
                 </p>
+
+                <div className="pt-3 border-t border-slate-800/80 space-y-2">
+                  <p className="text-[11px] text-amber-400 font-semibold">
+                    💡 Hai già partecipato alla Live e vuoi attivare subito il tuo Codice Ufficiale?
+                  </p>
+                  <Button
+                    onClick={() => {
+                      window.location.href = 'https://www.atoma.com/checkout/?add-to-cart=6992'
+                    }}
+                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl shadow-lg shadow-emerald-900/30"
+                  >
+                    <span>Procedi al Pagamento Ufficiale su ATOMA</span>
+                    <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                </div>
+
                 <Button
                   onClick={() => {
                     setIsEnrollModalOpen(false)
                     setEnrollSuccess(false)
                     setNameInput('')
                     setEmailInput('')
+                    setPhoneInput('')
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-6 py-2 rounded-xl mt-2"
+                  variant="outline"
+                  className="border-slate-800 text-slate-400 hover:text-white text-xs px-6 py-2 rounded-xl mt-1"
                 >
-                  Ho Capito
+                  Chiudi e Torna alla Home
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleEnrollSubmit} className="p-6 space-y-4 text-xs max-h-[80vh] overflow-y-auto">
-                <p className="text-slate-400 text-xs leading-relaxed">
-                  Compila questo breve questionario per richiedere l&apos;accesso gratuito al corso e alle registrazioni video.
+              <form onSubmit={handleEnrollSubmit} className="p-6 space-y-4 text-xs">
+                <p className="text-slate-300 text-xs leading-relaxed">
+                  Registrati per partecipare alla prossima Masterclass dal vivo e riservare l&apos;accesso prioritario alla piattaforma.
                 </p>
 
                 {referrerName && (
                   <div className="bg-emerald-950/50 border border-emerald-800/80 rounded-xl p-3 flex items-center gap-2.5 text-emerald-300 text-xs shadow-xs">
                     <Sparkles className="h-4 w-4 shrink-0 text-emerald-400" />
                     <div>
-                      <span>Sei stato invitato con codice referral: <strong className="font-mono text-emerald-200">{referrerName}</strong>!</span>
+                      <span>Sei stato invitato con codice: <strong className="font-mono text-emerald-200">{referrerName}</strong></span>
                       <p className="text-[10px] text-emerald-400/80 font-normal">Hai diritto all&apos;accreditamento prioritario.</p>
                     </div>
                   </div>
@@ -732,7 +895,7 @@ export default function LandingPage() {
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
                     placeholder="Es. Mario Rossi"
-                    className="bg-slate-950 border-slate-800 text-white text-xs"
+                    className="bg-slate-950 border-slate-800 text-white text-xs h-11"
                   />
                 </div>
 
@@ -744,94 +907,34 @@ export default function LandingPage() {
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     placeholder="Es. mario.rossi@azienda.it"
-                    className="bg-slate-950 border-slate-800 text-white text-xs"
+                    className="bg-slate-950 border-slate-800 text-white text-xs h-11"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-300">Esperienza attuale con l&apos;AI *</label>
-                  <select
-                    value={aiExperience}
-                    onChange={(e) => setAiExperience(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  >
-                    <option value="Mai">Mai usata</option>
-                    <option value="Qualche prova (tipo ChatGPT ogni tanto)">Qualche prova (tipo ChatGPT ogni tanto)</option>
-                    <option value="Li uso abbastanza spesso">Li uso abbastanza spesso</option>
-                    <option value="Li uso ogni giorno">Li uso ogni giorno</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-300">Il tuo Obiettivo principale *</label>
-                  <select
-                    value={objective}
-                    onChange={(e) => setObjective(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  >
-                    <option value="Migliorare il lavoro o il business">Migliorare il lavoro o il business</option>
-                    <option value="Trovare idee e fare brainstorming">Trovare idee e fare brainstorming</option>
-                    <option value="Scrivere testi e contenuti">Scrivere testi e contenuti</option>
-                    <option value="Altro">Altro / Curiosità personale</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-300">Cosa ti blocca o trovi più difficile? *</label>
-                  <select
-                    value={blocker}
-                    onChange={(e) => setBlocker(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  >
-                    <option value="Non so da dove iniziare">Non so da dove iniziare</option>
-                    <option value="Non capisco come usarla nel mio lavoro">Non capisco come usarla nel mio lavoro</option>
-                    <option value="Ho paura di usarla male">Ho paura di usarla male</option>
-                    <option value="Non ho tempo">Non ho tempo da dedicarci</option>
-                    <option value="Non ottengo risultati utili">Non ottengo risultati utili</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-300">Cosa ti aspetti dal percorso? *</label>
-                  <select
-                    value={expectation}
-                    onChange={(e) => setExpectation(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  >
-                    <option value="Voglio sperimentare e capire">Voglio sperimentare e capire</option>
-                    <option value="Voglio risultati pratici subito">Voglio risultati pratici subito</option>
-                    <option value="Voglio imparare le basi con calma">Voglio imparare le basi con calma</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-300">Come ci hai conosciuto? *</label>
-                  <select
-                    value={referralSource}
-                    onChange={(e) => setReferralSource(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  >
-                    <option value="Passaparola / Amico o Collega">Passaparola / Amico o Collega</option>
-                    <option value="Social Media (Instagram, Facebook, LinkedIn)">Social Media (Instagram, Facebook, LinkedIn)</option>
-                    <option value="Email / Newsletter">Email / Newsletter</option>
-                    <option value="Ricerca su Google / Web">Ricerca su Google / Web</option>
-                    <option value="Webinar / Evento">Webinar / Evento</option>
-                    <option value="Altro">Altro</option>
-                  </select>
+                  <label className="font-semibold text-slate-300">Telefono / WhatsApp (Consigliato)</label>
+                  <Input
+                    type="tel"
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    placeholder="Es. 333 1234567"
+                    className="bg-slate-950 border-slate-800 text-white text-xs h-11"
+                  />
+                  <span className="text-[10px] text-slate-400">Ti invieremo solo il promemoria e il link della Masterclass del Giovedì.</span>
                 </div>
 
                 <Button
                   type="submit"
                   disabled={isRegistering}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-indigo-600/20 mt-4"
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-indigo-600/20 mt-3 text-xs"
                 >
                   {isRegistering ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Invio della Richiesta...
+                      Registrazione in corso...
                     </>
                   ) : (
-                    'Invia Richiesta di Registrazione'
+                    'Conferma Iscrizione alla Masterclass'
                   )}
                 </Button>
               </form>

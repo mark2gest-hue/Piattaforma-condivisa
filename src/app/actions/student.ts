@@ -692,5 +692,50 @@ export async function deleteCourseRegistrationAction(registrationId: string) {
   }
 }
 
+export async function checkStudentRegistrationByEmailAction(email: string) {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const cleanEmail = email.trim().toLowerCase()
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return { success: false, exists: false, error: 'Inserisci un indirizzo email valido.' }
+    }
 
+    // 1. Controlla in course_registrations
+    const { data: reg } = await supabaseAdmin
+      .from('course_registrations')
+      .select('id, email, name, status, access_code')
+      .eq('email', cleanEmail)
+      .maybeSingle()
 
+    if (reg) {
+      return { success: true, exists: true, name: reg.name, status: reg.status }
+    }
+
+    // 2. Controlla in student_codes
+    const { data: code } = await supabaseAdmin
+      .from('student_codes')
+      .select('id, student_email, student_name, code')
+      .eq('student_email', cleanEmail)
+      .maybeSingle()
+
+    if (code) {
+      return { success: true, exists: true, name: code.student_name, isEnrolled: true, code: code.code }
+    }
+
+    // 3. Controlla in waitlist_leads
+    const { data: lead } = await supabaseAdmin
+      .from('waitlist_leads')
+      .select('id, email, name')
+      .eq('email', cleanEmail)
+      .maybeSingle()
+
+    if (lead) {
+      return { success: true, exists: true, name: lead.name }
+    }
+
+    return { success: true, exists: false }
+  } catch (error: any) {
+    console.error('Errore checkStudentRegistrationByEmailAction:', error)
+    return { success: false, exists: false, error: error.message || 'Errore verifica email' }
+  }
+}
