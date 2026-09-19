@@ -135,7 +135,7 @@ const INITIAL_BONUS_VIDEOS: BonusVideoItem[] = [
     category: 'News',
     duration: '14:20',
     date: '10/09/2026',
-    videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%201%20Benvenuti%20nel%20futuro_1080p_caption.mp4',
+    videoUrl: 'https://mission.mark2.cloud/videos/lesson_01_full_production.mp4',
     description: 'Analisi dei nuovi modelli "Reasoning": quando preferirli ai modelli tradizionali e come strutturare richieste passo-passo.',
   },
   {
@@ -144,7 +144,7 @@ const INITIAL_BONUS_VIDEOS: BonusVideoItem[] = [
     category: 'Tutorial',
     duration: '18:45',
     date: '08/09/2026',
-    videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%205%20La%20Formula%20Segreta%20RCCF_1080p_caption.mp4',
+    videoUrl: 'https://mission.mark2.cloud/videos/lesson_05_full_production.mp4',
     description: 'Guida passo-passo per impostare un flusso di lavoro che raccoglie notizie e crea report pronti per il team.',
   }
 ]
@@ -249,28 +249,28 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   },
 ]
 
-// Mappatura precisa dei 20 Moduli Video del Corso AI Start con gli URL MP4 reali e le rispettive Dispense PDF
+// Mappatura precisa dei 20 Moduli Video del Corso AI Start con gli URL MP4 Full HD 60fps serviti da VPS
 const AI_START_LESSONS: Lesson[] = [
-  { id: 1, title: '1 Benvenuti nel Futuro', duration: '10:30', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%201%20Benvenuti%20nel%20futuro_1080p_caption.mp4', resourcesPdfUrl: '/dispense/dispensa-modulo-1.pdf' },
-  { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '12:45', completed: true, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%202%20Breve%20Storia%20Evoluzione%20Lampo_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/9KVC7PNW74#pzsb1mevkrdG' },
-  { id: 3, title: '3 Sconfiggere il Foglio Bianco', duration: '15:20', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%203%20Sconfiggere%20il%20Foglio%20Bianco_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/PGCQEQEP2W#2fJfIEEX3haf' },
-  { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '14:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20Ai%20-%20Lezione%204%20Il%20Linguaggio%20della%20Chiarezza%20Prompt_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0WRQ83PPM0#Q2bU6vrD5eDq' },
-  { id: 5, title: '5 La Formula Segreta RCCF', duration: '18:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%205%20La%20Formula%20Segreta%20RCCF_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/ZXS9JPAN68#GfKQLK6zsh1T' },
-  { id: 6, title: '6 Iterazione', duration: '16:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%206%20Iterazione_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/4CNHYJAWX4#1zSh8fQrPQvq' },
-  { id: 7, title: '7 ChatGPT, Claude, Gemini, Perplexity', duration: '13:15', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%207%20ChatGPT%20Claude%20Gemini%20Perplexity_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/8EM9ZMNFZG#SWc1jc68JYPG' },
-  { id: 8, title: '8 Scrivere senza Sforzo', duration: '19:40', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%208%20Scrivere%20senza%20Sforzo_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/PN74SW8ZM4#oMcaEJevPyho' },
-  { id: 9, title: '9 Dipingere con le Parole', duration: '12:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%209%20Dipingere%20con%20le%20Parole_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/93EQ8FY9XW#OHV89RBcMuRh' },
-  { id: 10, title: '10 Anatomia di un Prompt Visivo', duration: '14:50', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2010%20Anatomia%20di%20un%20Prompt%20Visivo_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/N6MEE8SXBM#PuslYkHr62IZ' },
-  { id: 11, title: '11 Presentazioni in 5 Minuti', duration: '22:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2011%20Presentazioni%20in%205%20Minuti_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/171W4G7GEG#zOCUP4ZnDI2v' },
-  { id: 12, title: '12 Analisi Dati per Excel', duration: '25:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_12_Analisi_Dati_per_Excell_1080p_caption_with_captions.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0FGPGN9KFW#TsftLTJHOfVw' },
-  { id: 13, title: '13 L\'Agenda Intelligente', duration: '18:20', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2013%20L%20Agenda%20Intelligente_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/DY3BRC26QR#Up7qb2PZt2nS' },
-  { id: 14, title: '14 Studiare e Imparare ELI5', duration: '20:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2014%20Studiare%20e%20Imparare%20ELI5_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/W1YSH3C2EG#j7Zgqap4gFJk' },
-  { id: 15, title: '15 Allucinazioni: Quando l\'IA mente', duration: '15:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_15_Allucinazioni_Quando_IA_mente_1080p_caption_with_captions.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/3VNSBFA294#mY5efYQx1wbc' },
-  { id: 16, title: '16 Privacy e Sicurezza', duration: '18:45', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2016%20Privacy%20e%20Sicurezza_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/GXPHM2GHRM#2JXZB2yOSHXa' },
-  { id: 17, title: '17 Il Lavoro che Cambia', duration: '20:10', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2017%20Il%20Lavoro%20che%20Cambia_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/3HHGTCJPXG#JKj5qDgQWl7S' },
-  { id: 18, title: '18 Creare il proprio Workflow', duration: '16:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2018%20Creare%20il%20proprio%20Workflow_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/ESKYPPGA4W#UamcfXDH60f3' },
-  { id: 19, title: '19 La Tua Nuova Superpotenza', duration: '24:30', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/Video/Corso%20AI%20-%20Lezione%2019%20La%20Tua%20Nuova%20Superpotenza_1080p_caption.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/FXCXFGWRKC#h811Yab3Dslp' },
-  { id: 20, title: '20 Riepilogo Corso AI', duration: '15:00', completed: false, videoUrl: 'https://www.malaradio.com/CorsoAI/video/N-Corso_Ai_-_Lezione_20_Riepilogo_corso_AI_principianti_1080p_caption_with_captions.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0GVJ5F1D5C#as9OjF8kGN3Y' },
+  { id: 1, title: '1 Benvenuti nel Futuro', duration: '10:30', completed: true, videoUrl: 'https://mission.mark2.cloud/videos/lesson_01_full_production.mp4', resourcesPdfUrl: '/dispense/dispensa-modulo-1.pdf' },
+  { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '12:45', completed: true, videoUrl: 'https://mission.mark2.cloud/videos/lesson_02_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/9KVC7PNW74#pzsb1mevkrdG' },
+  { id: 3, title: '3 Sconfiggere il Foglio Bianco', duration: '15:20', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_03_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/PGCQEQEP2W#2fJfIEEX3haf' },
+  { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '14:10', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_04_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0WRQ83PPM0#Q2bU6vrD5eDq' },
+  { id: 5, title: '5 La Formula Segreta RCCF', duration: '18:00', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_05_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/ZXS9JPAN68#GfKQLK6zsh1T' },
+  { id: 6, title: '6 Iterazione', duration: '16:30', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_06_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/4CNHYJAWX4#1zSh8fQrPQvq' },
+  { id: 7, title: '7 ChatGPT, Claude, Gemini, Perplexity', duration: '13:15', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_07_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/8EM9ZMNFZG#SWc1jc68JYPG' },
+  { id: 8, title: '8 Scrivere senza Sforzo', duration: '19:40', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_08_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/PN74SW8ZM4#oMcaEJevPyho' },
+  { id: 9, title: '9 Dipingere con le Parole', duration: '12:00', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_09_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/93EQ8FY9XW#OHV89RBcMuRh' },
+  { id: 10, title: '10 Anatomia di un Prompt Visivo', duration: '14:50', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_10_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/N6MEE8SXBM#PuslYkHr62IZ' },
+  { id: 11, title: '11 Presentazioni in 5 Minuti', duration: '22:10', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_11_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/171W4G7GEG#zOCUP4ZnDI2v' },
+  { id: 12, title: '12 Analisi Dati per Excel', duration: '25:00', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_12_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0FGPGN9KFW#TsftLTJHOfVw' },
+  { id: 13, title: '13 L\'Agenda Intelligente', duration: '18:20', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_13_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/DY3BRC26QR#Up7qb2PZt2nS' },
+  { id: 14, title: '14 Studiare e Imparare ELI5', duration: '20:00', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_14_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/W1YSH3C2EG#j7Zgqap4gFJk' },
+  { id: 15, title: '15 Allucinazioni: Quando l\'IA mente', duration: '15:30', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_15_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/3VNSBFA294#mY5efYQx1wbc' },
+  { id: 16, title: '16 Privacy e Sicurezza', duration: '18:45', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_16_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/GXPHM2GHRM#2JXZB2yOSHXa' },
+  { id: 17, title: '17 Il Lavoro che Cambia', duration: '20:10', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_17_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/3HHGTCJPXG#JKj5qDgQWl7S' },
+  { id: 18, title: '18 Creare il proprio Workflow', duration: '16:00', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_18_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/ESKYPPGA4W#UamcfXDH60f3' },
+  { id: 19, title: '19 La Tua Nuova Superpotenza', duration: '24:30', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_19_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/FXCXFGWRKC#h811Yab3Dslp' },
+  { id: 20, title: '20 Riepilogo Corso AI', duration: '15:00', completed: false, videoUrl: 'https://mission.mark2.cloud/videos/lesson_20_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0GVJ5F1D5C#as9OjF8kGN3Y' },
 ]
 
 // 10 Moduli del Secondo Corso: AI Pro (Automazioni & Agenti)
