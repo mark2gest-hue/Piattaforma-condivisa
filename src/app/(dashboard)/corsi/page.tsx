@@ -560,8 +560,17 @@ function CorsiInnerContent() {
       if (savedLessons !== null) {
         const parsed = JSON.parse(savedLessons)
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setLessons(parsed)
-          setActiveLesson((prev) => parsed.find((l: any) => l.id === prev.id) || parsed[0])
+          // Auto-sync official VPS high-speed video URLs over any obsolete cached URLs
+          const updated = parsed.map((saved: any) => {
+            const official = AI_START_LESSONS.find(o => o.id === saved.id)
+            if (official && (saved.videoUrl?.includes('malaradio.com') || !saved.videoUrl)) {
+              return { ...saved, videoUrl: official.videoUrl, duration: official.duration }
+            }
+            return saved
+          })
+          setLessons(updated)
+          setActiveLesson((prev) => updated.find((l: any) => l.id === prev.id) || updated[0])
+          localStorage.setItem('ti_aiuto_lessons_custom', JSON.stringify(updated))
         }
       }
     } catch (e) {
