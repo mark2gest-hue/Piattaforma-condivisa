@@ -73,6 +73,9 @@ const MODULES_LIST = [
   { num: '20', title: '20. Riepilogo Corso AI', category: 'Modulo 5 – Futuro', desc: 'Sintesi del percorso formativo, attestato finale e prossimi passi.' },
 ]
 
+// Link Pagamento Esterno ATOMA (configurabile da .env)
+const ATOMA_PAYMENT_URL = process.env.NEXT_PUBLIC_ATOMA_PAYMENT_URL || 'https://www.atoma.com/checkout/?add-to-cart=6992'
+
 const FAQS = [
   { q: 'I corsi rilasciano una certificazione ufficiale?', a: 'Certamente! I nostri percorsi formativi rilasciano la Certificazione delle Competenze a livello europeo, emessa in collaborazione con l\'Ente Certificatore ATOMA tramite docente qualificato ed autorizzato.' },
   { q: 'Serve saper programmare o avere competenze tecniche?', a: 'Assolutamente no! AI Start è stato progettato appositamente per chi parte da zero. Spieghiamo tutto in modo chiaro, senza tecnicismi.' },
@@ -169,7 +172,7 @@ export default function LandingPage() {
 
     if (res.exists) {
       // Reindirizza al checkout ufficiale ATOMA con il corso già nel carrello
-      window.location.href = 'https://www.atoma.com/checkout/?add-to-cart=6992'
+      window.location.href = ATOMA_PAYMENT_URL
     } else {
       setPaymentEmailError('Questa email non risulta ancora registrata. Prima di accedere al pagamento compila la registrazione gratuita per riservare il posto e ricevere il codice!')
     }
@@ -294,7 +297,7 @@ export default function LandingPage() {
               className="w-full sm:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold h-13 px-8 rounded-2xl gap-2 shadow-2xl shadow-indigo-600/40 text-base transition-all hover:scale-[1.02]"
             >
               <Sparkles className="h-5 w-5" />
-              <span>Iscriviti alla Masterclass (Gratis)</span>
+              <span>Iscriviti alla Live (Gratis)</span>
             </Button>
 
             <Button
@@ -502,11 +505,10 @@ export default function LandingPage() {
               <button
                 type="button"
                 onClick={() => setShowcaseTab('player')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  showcaseTab === 'player'
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${showcaseTab === 'player'
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                }`}
+                  }`}
               >
                 <PlayCircle className="h-3.5 w-3.5" />
                 <span>1. Video Player HD</span>
@@ -515,11 +517,10 @@ export default function LandingPage() {
               <button
                 type="button"
                 onClick={() => setShowcaseTab('chat')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  showcaseTab === 'chat'
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${showcaseTab === 'chat'
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                }`}
+                  }`}
               >
                 <Bot className="h-3.5 w-3.5 text-emerald-400" />
                 <span>2. Tutor @AI 24/7</span>
@@ -528,11 +529,10 @@ export default function LandingPage() {
               <button
                 type="button"
                 onClick={() => setShowcaseTab('certificate')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  showcaseTab === 'certificate'
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${showcaseTab === 'certificate'
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                }`}
+                  }`}
               >
                 <Award className="h-3.5 w-3.5 text-amber-400" />
                 <span>3. Attestato Ufficiale</span>
@@ -1072,18 +1072,24 @@ export default function LandingPage() {
                   Ti abbiamo inviato un&apos;email di conferma a <strong>{emailInput}</strong> con il link diretto per collegarti.
                 </p>
 
-                <div className="pt-3 border-t border-slate-800/80 space-y-2">
-                  <p className="text-[11px] text-amber-400 font-semibold">
-                    💡 Hai già partecipato alla Live e vuoi attivare subito il tuo Codice Ufficiale?
-                  </p>
+                <div className="pt-4 border-t border-slate-800/80 space-y-3 bg-emerald-950/20 p-4 rounded-2xl border border-emerald-500/20">
+                  <div className="text-left space-y-1">
+                    <p className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                      <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                      <span>Completa l'Iscrizione con il Pagamento</span>
+                    </p>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      Ora che sei registrato, puoi completare l'acquisto per attivare immediatamente il tuo Codice Ufficiale e sbloccare tutte le lezioni.
+                    </p>
+                  </div>
                   <Button
                     onClick={() => {
-                      window.location.href = 'https://www.atoma.com/checkout/?add-to-cart=6992'
+                      window.location.href = ATOMA_PAYMENT_URL
                     }}
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl shadow-lg shadow-emerald-900/30"
+                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-bold py-3 rounded-xl shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
                   >
-                    <span>Procedi al Pagamento Ufficiale su ATOMA</span>
-                    <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                    <span>Paga Ora su ATOMA Formazione</span>
+                    <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
 
@@ -1437,9 +1443,8 @@ function SecondBrainSection() {
             <button
               type="button"
               onClick={() => setActiveNodeId('core')}
-              className={`p-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-extrabold text-sm shadow-xl shadow-indigo-600/40 flex items-center gap-3 transition-all hover:scale-105 border-2 ${
-                activeNodeId === 'core' ? 'border-white ring-4 ring-indigo-500/40 scale-105' : 'border-indigo-400/40'
-              }`}
+              className={`p-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-extrabold text-sm shadow-xl shadow-indigo-600/40 flex items-center gap-3 transition-all hover:scale-105 border-2 ${activeNodeId === 'core' ? 'border-white ring-4 ring-indigo-500/40 scale-105' : 'border-indigo-400/40'
+                }`}
             >
               <div className="h-8 w-8 rounded-xl bg-white/20 flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-white" />
@@ -1461,11 +1466,10 @@ function SecondBrainSection() {
                     key={node.id}
                     type="button"
                     onClick={() => setActiveNodeId(node.id)}
-                    className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2 relative group overflow-hidden ${
-                      isSelected
+                    className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2 relative group overflow-hidden ${isSelected
                         ? 'bg-slate-800/90 border-indigo-400 ring-2 ring-indigo-500/40 shadow-lg scale-102'
                         : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className={`h-7 w-7 rounded-lg bg-gradient-to-tr ${node.color} text-white flex items-center justify-center shadow-xs`}>
