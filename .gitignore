@@ -44,6 +44,7 @@ ca.png
 cb.png
 
 # Video rendering artifacts & raw media
+scripts/.cache_render/
 public/*.mp4
 public/*.wav
 public/*.mp3

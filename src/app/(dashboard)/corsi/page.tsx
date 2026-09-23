@@ -63,7 +63,7 @@ import {
   verifyStudentCodeAction,
   upgradeStudentTierAction,
 } from '@/app/actions/student'
-import { LESSON_SUMMARIES } from '@/lib/course-data'
+import { LESSON_SUMMARIES, CHECKPOINT_TESTS, CheckpointTest } from '@/lib/course-data'
 import { askStudentAiAction, generateLessonQuizAction, QuizQuestion } from '@/app/actions/ai'
 import { CourseRegistration } from '@/types/index'
 import { StudentTasksZone } from '@/app/workshop-agenti/components/StudentTasksZone'
@@ -251,27 +251,28 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
 
 // Mappatura precisa dei 20 Moduli Video del Corso AI Start con gli URL MP4 Full HD 60fps serviti da VPS
 const AI_START_LESSONS: Lesson[] = [
-  { id: 1, title: '1 Benvenuti nel Futuro', duration: '10:30', completed: true, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_01_full_production.mp4', resourcesPdfUrl: '/dispense/dispensa-modulo-1.pdf' },
-  { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '12:45', completed: true, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_02_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/9KVC7PNW74#pzsb1mevkrdG' },
-  { id: 3, title: '3 Sconfiggere il Foglio Bianco', duration: '15:20', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_03_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/PGCQEQEP2W#2fJfIEEX3haf' },
-  { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '14:10', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_04_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0WRQ83PPM0#Q2bU6vrD5eDq' },
-  { id: 5, title: '5 La Formula Segreta RCCF', duration: '18:00', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_05_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/ZXS9JPAN68#GfKQLK6zsh1T' },
-  { id: 6, title: '6 Iterazione', duration: '16:30', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_06_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/4CNHYJAWX4#1zSh8fQrPQvq' },
-  { id: 7, title: '7 ChatGPT, Claude, Gemini, Perplexity', duration: '13:15', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_07_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/8EM9ZMNFZG#SWc1jc68JYPG' },
-  { id: 8, title: '8 Scrivere senza Sforzo', duration: '19:40', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_08_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/PN74SW8ZM4#oMcaEJevPyho' },
-  { id: 9, title: '9 Dipingere con le Parole', duration: '12:00', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_09_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/93EQ8FY9XW#OHV89RBcMuRh' },
-  { id: 10, title: '10 Anatomia di un Prompt Visivo', duration: '14:50', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_10_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/N6MEE8SXBM#PuslYkHr62IZ' },
-  { id: 11, title: '11 Presentazioni in 5 Minuti', duration: '22:10', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_11_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/171W4G7GEG#zOCUP4ZnDI2v' },
-  { id: 12, title: '12 Analisi Dati per Excel', duration: '25:00', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_12_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0FGPGN9KFW#TsftLTJHOfVw' },
-  { id: 13, title: '13 L\'Agenda Intelligente', duration: '18:20', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_13_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/DY3BRC26QR#Up7qb2PZt2nS' },
-  { id: 14, title: '14 Studiare e Imparare ELI5', duration: '20:00', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_14_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/W1YSH3C2EG#j7Zgqap4gFJk' },
-  { id: 15, title: '15 Allucinazioni: Quando l\'IA mente', duration: '15:30', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_15_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/3VNSBFA294#mY5efYQx1wbc' },
-  { id: 16, title: '16 Privacy e Sicurezza', duration: '18:45', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_16_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/GXPHM2GHRM#2JXZB2yOSHXa' },
-  { id: 17, title: '17 Il Lavoro che Cambia', duration: '20:10', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_17_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/3HHGTCJPXG#JKj5qDgQWl7S' },
-  { id: 18, title: '18 Creare il proprio Workflow', duration: '16:00', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_18_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/ESKYPPGA4W#UamcfXDH60f3' },
-  { id: 19, title: '19 La Tua Nuova Superpotenza', duration: '24:30', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_19_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/FXCXFGWRKC#h811Yab3Dslp' },
-  { id: 20, title: '20 Riepilogo Corso AI', duration: '15:00', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_20_full_production.mp4', resourcesPdfUrl: 'https://drive.proton.me/urls/0GVJ5F1D5C#as9OjF8kGN3Y' },
+  { id: 1, title: '1 Benvenuti nel Futuro', duration: '10:18', completed: true, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_01_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: '/dispense/dispensa-modulo-1.pdf' },
+  { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '10:31', completed: true, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_02_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/9KVC7PNW74#pzsb1mevkrdG' },
+  { id: 3, title: '3 Sconfiggere il Foglio Bianco', duration: '08:59', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_03_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/PGCQEQEP2W#2fJfIEEX3haf' },
+  { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '08:40', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_04_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/0WRQ83PPM0#Q2bU6vrD5eDq' },
+  { id: 5, title: '5 La Formula Segreta RCCF', duration: '10:09', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_05_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/ZXS9JPAN68#GfKQLK6zsh1T' },
+  { id: 6, title: '6 Iterazione', duration: '08:15', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_06_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/4CNHYJAWX4#1zSh8fQrPQvq' },
+  { id: 7, title: '7 ChatGPT, Claude, Gemini, Perplexity', duration: '09:45', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_07_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/8EM9ZMNFZG#SWc1jc68JYPG' },
+  { id: 8, title: '8 Scrivere senza Sforzo', duration: '08:41', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_08_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/PN74SW8ZM4#oMcaEJevPyho' },
+  { id: 9, title: '9 Dipingere con le Parole', duration: '11:08', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_09_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/93EQ8FY9XW#OHV89RBcMuRh' },
+  { id: 10, title: '10 Anatomia di un Prompt Visivo', duration: '09:52', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_10_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/N6MEE8SXBM#PuslYkHr62IZ' },
+  { id: 11, title: '11 Presentazioni in 5 Minuti', duration: '09:08', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_11_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/171W4G7GEG#zOCUP4ZnDI2v' },
+  { id: 12, title: '12 Analisi Dati per Excel', duration: '09:37', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_12_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/0FGPGN9KFW#TsftLTJHOfVw' },
+  { id: 13, title: '13 L\'Agenda Intelligente', duration: '10:39', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_13_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/DY3BRC26QR#Up7qb2PZt2nS' },
+  { id: 14, title: '14 Studiare e Imparare ELI5', duration: '09:11', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_14_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/W1YSH3C2EG#j7Zgqap4gFJk' },
+  { id: 15, title: '15 Allucinazioni: Quando l\'IA mente', duration: '08:41', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_15_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/3VNSBFA294#mY5efYQx1wbc' },
+  { id: 16, title: '16 Privacy e Sicurezza', duration: '09:41', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_16_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/GXPHM2GHRM#2JXZB2yOSHXa' },
+  { id: 17, title: '17 Il Lavoro che Cambia', duration: '09:39', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_17_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/3HHGTCJPXG#JKj5qDgQWl7S' },
+  { id: 18, title: '18 Creare il proprio Workflow', duration: '09:41', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_18_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/ESKYPPGA4W#UamcfXDH60f3' },
+  { id: 19, title: '19 La Tua Nuova Superpotenza', duration: '09:05', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_19_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/FXCXFGWRKC#h811Yab3Dslp' },
+  { id: 20, title: '20 Riepilogo Corso AI', duration: '10:08', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_20_full_production.mp4?v=20260923_master_v3', resourcesPdfUrl: 'https://drive.proton.me/urls/0GVJ5F1D5C#as9OjF8kGN3Y' },
 ]
+
 
 // 10 Moduli del Secondo Corso: AI Pro (Automazioni & Agenti)
 const AI_PRO_LESSONS: Lesson[] = [
@@ -788,6 +789,60 @@ function CorsiInnerContent() {
   const [quizSubmitted, setQuizSubmitted] = useState(false)
   const [quizTargetLesson, setQuizTargetLesson] = useState<Lesson>(lessons[0])
 
+  // State 3 Test Checkpoint Obbligatori (Inizio, Metà, Fine)
+  const [activeCheckpointTest, setActiveCheckpointTest] = useState<CheckpointTest | null>(null)
+  const [isCheckpointModalOpen, setIsCheckpointModalOpen] = useState(false)
+  const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, number>>({})
+  const [checkpointSubmitted, setCheckpointSubmitted] = useState(false)
+  const [passedTests, setPassedTests] = useState<Record<'entry' | 'midterm' | 'final', boolean>>({
+    entry: false,
+    midterm: false,
+    final: false,
+  })
+
+  // Caricamento test superati da localStorage
+  useEffect(() => {
+    try {
+      const savedTests = localStorage.getItem('ti_aiuto_checkpoint_tests')
+      if (savedTests) {
+        setPassedTests(JSON.parse(savedTests))
+      }
+    } catch (e) {
+      console.error('Errore lettura test checkpoint:', e)
+    }
+  }, [])
+
+  const handleOpenCheckpointTest = (testId: 'entry' | 'midterm' | 'final') => {
+    const test = CHECKPOINT_TESTS[testId]
+    setActiveCheckpointTest(test)
+    setCheckpointAnswers({})
+    setCheckpointSubmitted(false)
+    setIsCheckpointModalOpen(true)
+  }
+
+  const handleCompleteCheckpointTest = () => {
+    if (!activeCheckpointTest) return
+    const total = activeCheckpointTest.questions.length
+    let correct = 0
+    activeCheckpointTest.questions.forEach((q, idx) => {
+      if (checkpointAnswers[idx] === q.correctIndex) correct++
+    })
+    const scorePct = Math.round((correct / total) * 100)
+    const passed = scorePct >= activeCheckpointTest.passThresholdPercent
+
+    if (passed) {
+      const updated = { ...passedTests, [activeCheckpointTest.id]: true }
+      setPassedTests(updated)
+      try {
+        localStorage.setItem('ti_aiuto_checkpoint_tests', JSON.stringify(updated))
+      } catch (e) {
+        console.error(e)
+      }
+      playNotificationSound('chat')
+    }
+    setCheckpointSubmitted(true)
+  }
+
   const handleOpenQuizForLesson = async (lesson: Lesson) => {
     setQuizTargetLesson(lesson)
     setIsQuizModalOpen(true)
@@ -1191,6 +1246,19 @@ function CorsiInnerContent() {
     const list = selectedCourseId === 'ai-start' ? lessons : lessonsPro
     if (isTeamMember || list.every((l) => l.completed)) return true
     if (index === 0) return true
+    
+    // Per AI Start applichiamo i checkpoint obbligatori
+    if (selectedCourseId === 'ai-start') {
+      // Moduli 2-10 richiedono il superamento del Test d'Ingresso (dopo modulo 1)
+      if (index >= 1 && !passedTests.entry) {
+        return false
+      }
+      // Moduli 11-20 richiedono il superamento del Test Intermedio (dopo modulo 10)
+      if (index >= 10 && !passedTests.midterm) {
+        return false
+      }
+    }
+
     return list[index - 1].completed
   }
 
@@ -1538,7 +1606,7 @@ function CorsiInnerContent() {
             <div className="lg:col-span-8 space-y-4">
               <div className="bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden relative aspect-video flex items-center justify-center group">
                 <video
-                  key={(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id}
+                  key={`${(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id}-${(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).videoUrl}`}
                   controls
                   playsInline
                   preload="metadata"
@@ -1721,8 +1789,100 @@ function CorsiInnerContent() {
                   </div>
                 )}
 
+                {/* Banner 3 Checkpoint Obbligatori (AI Start) */}
+                {selectedCourseId === 'ai-start' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
+                    {/* 1. Test Iniziale */}
+                    <div className={`p-2.5 rounded-xl border flex flex-col justify-between gap-2 transition-all ${passedTests.entry ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20' : 'border-amber-500/50 bg-amber-50/30 dark:bg-amber-950/20'}`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Modulo 1</span>
+                        {passedTests.entry ? (
+                          <Badge className="bg-emerald-500 text-white text-[9px] px-1.5 py-0 gap-1">
+                            <CheckCircle2 className="h-2.5 w-2.5" /> SUPERATO
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-amber-600 border-amber-500 text-[9px] px-1.5 py-0">
+                            OBBLIGATORIO
+                          </Badge>
+                        )}
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-xs text-slate-900 dark:text-white">🏁 Test d'Ingresso</h5>
+                        <p className="text-[10px] text-slate-500 line-clamp-1">Sblocca i Moduli 2-10</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={passedTests.entry ? "outline" : "default"}
+                        onClick={() => handleOpenCheckpointTest('entry')}
+                        className={`w-full text-[11px] h-7 font-bold ${passedTests.entry ? 'text-emerald-700 dark:text-emerald-300' : 'bg-amber-500 hover:bg-amber-600 text-slate-950'}`}
+                      >
+                        {passedTests.entry ? 'Rivedi Test ✓' : 'Esegui Test'}
+                      </Button>
+                    </div>
+
+                    {/* 2. Test Intermedio */}
+                    <div className={`p-2.5 rounded-xl border flex flex-col justify-between gap-2 transition-all ${passedTests.midterm ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20' : !lessons.slice(0, 10).every(l => l.completed) ? 'opacity-60 border-slate-200 dark:border-slate-800' : 'border-indigo-500/50 bg-indigo-50/30 dark:bg-indigo-950/20'}`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Modulo 10</span>
+                        {passedTests.midterm ? (
+                          <Badge className="bg-emerald-500 text-white text-[9px] px-1.5 py-0 gap-1">
+                            <CheckCircle2 className="h-2.5 w-2.5" /> SUPERATO
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-indigo-600 border-indigo-500 text-[9px] px-1.5 py-0">
+                            OBBLIGATORIO
+                          </Badge>
+                        )}
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-xs text-slate-900 dark:text-white">⚖️ Test Metà Corso</h5>
+                        <p className="text-[10px] text-slate-500 line-clamp-1">Sblocca i Moduli 11-20</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        disabled={!lessons.slice(0, 10).every(l => l.completed) && !isTeamMember}
+                        variant={passedTests.midterm ? "outline" : "default"}
+                        onClick={() => handleOpenCheckpointTest('midterm')}
+                        className={`w-full text-[11px] h-7 font-bold ${passedTests.midterm ? 'text-emerald-700 dark:text-emerald-300' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
+                      >
+                        {passedTests.midterm ? 'Rivedi Test ✓' : 'Esegui Test'}
+                      </Button>
+                    </div>
+
+                    {/* 3. Esame Finale */}
+                    <div className={`p-2.5 rounded-xl border flex flex-col justify-between gap-2 transition-all ${passedTests.final ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20' : !lessons.every(l => l.completed) ? 'opacity-60 border-slate-200 dark:border-slate-800' : 'border-purple-500/50 bg-purple-50/30 dark:bg-purple-950/20'}`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Modulo 20</span>
+                        {passedTests.final ? (
+                          <Badge className="bg-emerald-500 text-white text-[9px] px-1.5 py-0 gap-1">
+                            <CheckCircle2 className="h-2.5 w-2.5" /> SUPERATO
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-purple-600 border-purple-500 text-[9px] px-1.5 py-0">
+                            CERTIFICAZIONE
+                          </Badge>
+                        )}
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-xs text-slate-900 dark:text-white">🎓 Esame Finale 16 Ore</h5>
+                        <p className="text-[10px] text-slate-500 line-clamp-1">Sblocca Attestato Ufficiale</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        disabled={!lessons.every(l => l.completed) && !isTeamMember}
+                        variant={passedTests.final ? "outline" : "default"}
+                        onClick={() => handleOpenCheckpointTest('final')}
+                        className={`w-full text-[11px] h-7 font-bold ${passedTests.final ? 'text-emerald-700 dark:text-emerald-300' : 'bg-purple-600 hover:bg-purple-700 text-white'}`}
+                      >
+                        {passedTests.final ? 'Rivedi Esame ✓' : 'Sostieni Esame'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Banner Completamento & Attestato */}
-                {(selectedCourseId === 'ai-start' ? lessons : lessonsPro).every((l) => l.completed) && (
+                {((selectedCourseId === 'ai-start' && lessons.every((l) => l.completed) && passedTests.final) ||
+                  (selectedCourseId === 'ai-pro' && lessonsPro.every((l) => l.completed))) && (
                   <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-indigo-500/20 to-purple-500/20 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
@@ -1730,7 +1890,7 @@ function CorsiInnerContent() {
                       </div>
                       <div>
                         <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-                          🎉 Complimenti! Hai completato il percorso {selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start'}!
+                          🎉 Complimenti! Hai completato e superato con successo {selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start (16 Ore Certificate)'}!
                         </h4>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           Il tuo Attestato Ufficiale di Completamento è pronto per essere scaricato.
@@ -1742,7 +1902,7 @@ function CorsiInnerContent() {
                       className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs h-9 px-4 gap-1.5 shrink-0 shadow-xs"
                     >
                       <Award className="h-4 w-4" />
-                      <span>Scarica Attestato</span>
+                      <span>Scarica Attestato Ufficiale</span>
                     </Button>
                   </div>
                 )}
@@ -3680,6 +3840,154 @@ function CorsiInnerContent() {
               ) : (
                 <div className="text-center text-slate-500 text-xs">Nessuna domanda disponibile per questa lezione.</div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 3 Test Checkpoint Obbligatori (Inizio, Metà, Fine) */}
+      {isCheckpointModalOpen && activeCheckpointTest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[85vh]">
+            {/* Header Modal */}
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <Award className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                    {activeCheckpointTest.title}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {activeCheckpointTest.subtitle} • Soglia minima: {activeCheckpointTest.passThresholdPercent}%
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setIsCheckpointModalOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body Domande */}
+            <div className="p-6 space-y-5 overflow-y-auto">
+              {activeCheckpointTest.questions.map((q, qIdx) => {
+                const isAnswered = checkpointAnswers[qIdx] !== undefined
+                return (
+                  <div key={qIdx} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white">
+                      {qIdx + 1}. {q.question}
+                    </p>
+
+                    <div className="space-y-2">
+                      {q.options.map((opt, optIdx) => {
+                        const isSelected = checkpointAnswers[qIdx] === optIdx
+                        const isCorrect = q.correctIndex === optIdx
+                        let btnStyle = 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+
+                        if (checkpointSubmitted) {
+                          if (isCorrect) {
+                            btnStyle = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold'
+                          } else if (isSelected && !isCorrect) {
+                            btnStyle = 'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-bold'
+                          }
+                        } else if (isSelected) {
+                          btnStyle = 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-semibold'
+                        }
+
+                        return (
+                          <button
+                            key={optIdx}
+                            disabled={checkpointSubmitted}
+                            onClick={() => setCheckpointAnswers({ ...checkpointAnswers, [qIdx]: optIdx })}
+                            className={`w-full text-left p-3 rounded-xl border text-xs transition-all flex items-center justify-between ${btnStyle}`}
+                          >
+                            <span>{opt}</span>
+                            {checkpointSubmitted && isCorrect && <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />}
+                            {checkpointSubmitted && isSelected && !isCorrect && <X className="h-4 w-4 text-red-600 shrink-0" />}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    {checkpointSubmitted && (
+                      <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-[11px] text-indigo-900 dark:text-indigo-200">
+                        💡 <strong>Spiegazione:</strong> {q.explanation}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Box Esito del Test */}
+              {checkpointSubmitted && (
+                <div className="p-4 rounded-2xl border text-center space-y-2 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+                  {(() => {
+                    const total = activeCheckpointTest.questions.length
+                    let correct = 0
+                    activeCheckpointTest.questions.forEach((q, i) => {
+                      if (checkpointAnswers[i] === q.correctIndex) correct++
+                    })
+                    const score = Math.round((correct / total) * 100)
+                    const passed = score >= activeCheckpointTest.passThresholdPercent
+
+                    return (
+                      <>
+                        <div className="text-2xl font-black">
+                          {passed ? '🎉 TEST SUPERATO!' : '⚠️ TEST NON SUPERATO'}
+                        </div>
+                        <p className="text-xs text-slate-600 dark:text-slate-300">
+                          Punteggio conseguito: <strong>{correct}/{total}</strong> ({score}%) • Soglia minima: {activeCheckpointTest.passThresholdPercent}%
+                        </p>
+                        {passed ? (
+                          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                            Il checkpoint è stato registrato con successo. I moduli collegati sono stati sbloccati!
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-red-500 font-semibold">
+                            Rivedi i concetti delle lezioni e riprova il test per proseguire il percorso.
+                          </p>
+                        )}
+                      </>
+                    )
+                  })()}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Modal */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 shrink-0">
+              <span className="text-[11px] text-slate-500">
+                {Object.keys(checkpointAnswers).length} di {activeCheckpointTest.questions.length} risposte selezionate
+              </span>
+              <div className="flex gap-2">
+                {!checkpointSubmitted ? (
+                  <Button
+                    disabled={Object.keys(checkpointAnswers).length < activeCheckpointTest.questions.length}
+                    onClick={handleCompleteCheckpointTest}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4"
+                  >
+                    Valuta Risposte
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setCheckpointAnswers({})
+                        setCheckpointSubmitted(false)
+                      }}
+                      className="text-xs h-9 px-3"
+                    >
+                      Ripeti Test
+                    </Button>
+                    <Button
+                      onClick={() => setIsCheckpointModalOpen(false)}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4"
+                    >
+                      Chiudi e Continua
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

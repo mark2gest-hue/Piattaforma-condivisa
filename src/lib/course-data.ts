@@ -203,3 +203,182 @@ export const LESSON_SUMMARIES: Record<number, { title: string; summary: string; 
     exercise: 'Scarica il tuo Attestato Ufficiale di Completamento e condividi il tuo traguardo!'
   }
 }
+
+export interface CheckpointTestQuestion {
+  question: string
+  options: string[]
+  correctIndex: number
+  explanation: string
+}
+
+export interface CheckpointTest {
+  id: 'entry' | 'midterm' | 'final'
+  title: string
+  subtitle: string
+  requiredLessonId: number
+  passThresholdPercent: number
+  questions: CheckpointTestQuestion[]
+}
+
+export const CHECKPOINT_TESTS: Record<'entry' | 'midterm' | 'final', CheckpointTest> = {
+  entry: {
+    id: 'entry',
+    title: '🏁 Test d\'Ingresso — Alfabetizzazione & Competenze Base',
+    subtitle: 'Valutazione iniziale obbligatoria per consolidare i concetti cardine e proseguire nel corso.',
+    requiredLessonId: 1,
+    passThresholdPercent: 70,
+    questions: [
+      {
+        question: 'Qual è la differenza fondamentale tra un motore di ricerca tradizionale e un modello di IA generativa (LLM)?',
+        options: [
+          'Il motore di ricerca indicizza pagine web esistenti, mentre l\'LLM comprende il contesto e genera risposte inedite in linguaggio naturale.',
+          'L\'IA generativa cerca solo file PDF sul computer.',
+          'I motori di ricerca non utilizzano Internet, l\'IA sì.',
+          'Non c\'è alcuna differenza tecnica o funzionale.'
+        ],
+        correctIndex: 0,
+        explanation: 'I motori di ricerca tradizionali restituiscono link esistenti; i modelli generativi elaborano e creano contenuti contestualizzati su misura.'
+      },
+      {
+        question: 'Qual è l\'approccio mentale raccomandato per interagire efficacemente con l\'IA generativa?',
+        options: [
+          'Considerarla come un collaboratore/stagista instancabile a cui fornire contesto chiaro e feedback.',
+          'Considerarla un oracolo infallibile che non richiede mai verifiche o revisioni.',
+          'Usarla solo con comandi telegrafici di una singola parola.',
+          'Evitare di darle dettagli sulla propria azienda o sul compito.'
+        ],
+        correctIndex: 0,
+        explanation: 'Trattare l\'IA come un collaboratore a cui spiegare obiettivi e dare indicazioni è il segreto per risultati di eccellenza.'
+      },
+      {
+        question: 'Cosa significa che un modello di linguaggio è "probabilistico"?',
+        options: [
+          'Prevede e genera le parole successive più coerenti in base al contesto e all\'addestramento ricevuto.',
+          'Significa che funziona solo il 50% delle volte.',
+          'Significa che risponde solo se lanci un dado virtuale.',
+          'Significa che non può elaborare testi scritti in italiano.'
+        ],
+        correctIndex: 0,
+        explanation: 'Gli LLM funzionano calcolando la probabilità statistica dei token (parole/sotto-parole) più appropriati al contesto.'
+      }
+    ]
+  },
+  midterm: {
+    id: 'midterm',
+    title: '⚖️ Test Intermedio — Prompt Engineering & Metodo RCCF',
+    subtitle: 'Verifica operativa obbligatoria a metà percorso (Modulo 10) prima di sbloccare i moduli avanzati.',
+    requiredLessonId: 10,
+    passThresholdPercent: 75,
+    questions: [
+      {
+        question: 'Cosa rappresentano le 4 lettere della formula segreta RCCF?',
+        options: [
+          'Ruolo, Contesto, Contenuto, Formato',
+          'Ricerca, Codice, Controllo, File',
+          'Risposta, Chiarezza, Firma, Font',
+          'Robot, Calcolo, Foto, Formattazione'
+        ],
+        correctIndex: 0,
+        explanation: 'RCCF sta per: Ruolo (chi impersona), Contesto (la situazione), Contenuto (il compito), Formato (la struttura visiva di output).'
+      },
+      {
+        question: 'Cos\'è la tecnica del "Few-Shot Prompting"?',
+        options: [
+          'Fornire all\'IA 1 o 2 esempi pratici di input/output desiderati all\'interno del prompt.',
+          'Scrivere un prompt in meno di 5 secondi.',
+          'Fare una sola domanda e chiudere la chat.',
+          'Scattare una fotografia dello schermo.'
+        ],
+        correctIndex: 0,
+        explanation: 'Il Few-Shot Prompting consiste nel dare esempi concreti all\'IA per impostare lo stile, il formato e il livello di dettaglio atteso.'
+      },
+      {
+        question: 'Nel prompting per immagini visive (es. Midjourney, DALL-E), quale elemento NON dovrebbe mancare?',
+        options: [
+          'Soggetto principale, ambientazione/luce e stile visivo o tipo di lente.',
+          'Aggettivi vaghi come "fallo bellissimo e stupendo".',
+          'Solo il nome di un colore casuale.',
+          'Comandi testuali privi di descrizioni compositive.'
+        ],
+        correctIndex: 0,
+        explanation: 'La chiarezza descrittiva (soggetto, luce, atmosfera, fotocamera) produce risultati fotorealistici infinitamente superiori ad aggettivi generici.'
+      },
+      {
+        question: 'Perché l\'iterazione continua è fondamentale nel lavoro con i modelli linguistici?',
+        options: [
+          'Perché il primo output è una base di partenza che va raffinata e calibrata con feedback mirati.',
+          'Perché l\'IA rifiuta sempre la prima risposta.',
+          'Perché serve a consumare più tempo.',
+          'Perché i modelli non ricordano la domanda precedente.'
+        ],
+        correctIndex: 0,
+        explanation: 'L\'interazione con l\'IA è un dialogo collaborativo: affinare il tiro con feedback successivi porta a risultati perfetti.'
+      }
+    ]
+  },
+  final: {
+    id: 'final',
+    title: '🎓 Esame Finale Ufficiale — Certificazione AI Masterclass',
+    subtitle: 'Test conclusivo su tutto il programma. Punteggio minimo: 75% per il rilascio dell\'Attestato 16 Ore.',
+    requiredLessonId: 20,
+    passThresholdPercent: 75,
+    questions: [
+      {
+        question: 'Cosa si intende con il termine "Allucinazione" nei modelli di intelligenza artificiale?',
+        options: [
+          'Quando il modello genera informazioni false o inventate presentandole con sicurezza come fatti reali.',
+          'Quando lo schermo del computer sfarfalla durante l\'elaborazione.',
+          'Quando il modello rifiuta di rispondere per motivi di copyright.',
+          'Quando l\'IA traduce un testo da una lingua all\'altra.'
+        ],
+        correctIndex: 0,
+        explanation: 'L\'allucinazione è la generazione di fatti inventati o non verificati; si previene fornendo documenti sorgente (Grounding) e chiedendo citazioni.'
+      },
+      {
+        question: 'Qual è la buona pratica fondamentale per garantire la privacy e la sicurezza dei dati aziendali con l\'IA?',
+        options: [
+          'Disattivare il training sui propri dati, anonimizzare i dati sensibili (PII) e preferire API aziendali a zero-retention.',
+          'Condividere password e codici IBAN direttamente nella chat pubblica.',
+          'Utilizzare sempre account condivisi senza autenticazione a due fattori.',
+          'Non controllare mai le impostazioni di privacy fornite dal provider.'
+        ],
+        correctIndex: 0,
+        explanation: 'La sicurezza aziendale impone l\'anonimizzazione dei dati sensibili e la disattivazione del salvataggio cronologia per l\'addestramento pubblico.'
+      },
+      {
+        question: 'Come può l\'IA essere impiegata per dominare fogli di calcolo come Microsoft Excel o Google Sheets?',
+        options: [
+          'Generando formule complesse (CERCA.X, matriciali), script VBA/Apps Script e analizzando anomalie nei dati tabellari.',
+          'Sostituendo fisicamente la tastiera del computer.',
+          'Cancellando automaticamente tutte le celle duplicate senza avvisare.',
+          'Creando solo file di testo senza numeri.'
+        ],
+        correctIndex: 0,
+        explanation: 'L\'IA è un assistente formidabile per scrivere formule, creare macro VBA e sintetizzare grandi moli di dati strutturati.'
+      },
+      {
+        question: 'Cosa sono le "Custom Instructions" (Istruzioni Personalizzate) in strumenti come ChatGPT o Claude?',
+        options: [
+          'Direttive permanenti che definiscono il tuo profilo, professione e formato di risposta preferito per tutte le nuove chat.',
+          'Un manuale cartaceo inviato via posta.',
+          'Comandi che possono essere digitati solo da ingegneri informatici.',
+          'Impostazioni che cancellano la cronologia ogni 5 minuti.'
+        ],
+        correctIndex: 0,
+        explanation: 'Le Custom Instructions evitano di dover ripetere ad ogni sessione chi sei, per chi lavori e come vuoi che l\'IA formatti i testi.'
+      },
+      {
+        question: 'Nel nuovo paradigma lavorativo potenziato dall\'IA, qual è il ruolo più prezioso dell\'essere umano?',
+        options: [
+          'Agire come "Direttore d\'Orchestra": pensiero critico, strategia, validazione dei risultati, etica ed empatia relazionale.',
+          'Digitare a mano milioni di parole senza mai usare strumenti digitali.',
+          'Imparare a memoria tutti i parametri matematici dei modelli.',
+          'Evitare qualsiasi forma di automazione per timore del cambiamento.'
+        ],
+        correctIndex: 0,
+        explanation: 'Il professionista potenziato guida e valida l\'IA, focalizzandosi sulle decisioni strategiche e sulle relazioni umane ad alto valore aggiunto.'
+      }
+    ]
+  }
+}
+
