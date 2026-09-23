@@ -560,21 +560,29 @@ function CorsiInnerContent() {
       if (savedLessons !== null) {
         const parsed = JSON.parse(savedLessons)
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Auto-sync official VPS high-speed video URLs over any obsolete cached URLs
-          const updated = parsed.map((saved: any) => {
-            const official = AI_START_LESSONS.find(o => o.id === saved.id)
-            if (official && (saved.videoUrl?.includes('malaradio.com') || saved.videoUrl?.includes('mission.mark2.cloud') || !saved.videoUrl || saved.videoUrl !== official.videoUrl)) {
-              return { ...saved, videoUrl: official.videoUrl, duration: official.duration }
+          // Forzatura categorica: abbina lo stato di completamento dell'utente ma FORZA SEMPRE l'URL ufficiale del video VPS
+          const updated = AI_START_LESSONS.map((official) => {
+            const saved = parsed.find((s: any) => s.id === official.id)
+            return {
+              ...official,
+              completed: saved ? !!saved.completed : official.completed
             }
-            return saved
           })
           setLessons(updated)
           setActiveLesson((prev) => updated.find((l: any) => l.id === prev.id) || updated[0])
           localStorage.setItem('ti_aiuto_lessons_custom', JSON.stringify(updated))
+        } else {
+          setLessons(AI_START_LESSONS)
+          setActiveLesson(AI_START_LESSONS[0])
         }
+      } else {
+        setLessons(AI_START_LESSONS)
+        setActiveLesson(AI_START_LESSONS[0])
       }
     } catch (e) {
       console.error('Errore lettura da localStorage:', e)
+      setLessons(AI_START_LESSONS)
+      setActiveLesson(AI_START_LESSONS[0])
     }
   }, [])
 
