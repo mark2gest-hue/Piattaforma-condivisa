@@ -45,6 +45,15 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/accademy',
+        destination: '/academy',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

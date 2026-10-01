@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Lezione 15 — Guida alla Regia & Copione Docenza per Stefano</title>
+<style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+    @bottom-left {
+      content: "aiutiamoci.cloud • Masterclass AI Pro — Lezione 15 (Corso 20 Ore)";
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #64748b;
+    }
+    @bottom-right {
+      content: "Pagina " counter(page) " di " counter(pages);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #64748b;
+      font-weight: bold;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.4;
+    font-size: 8.8pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  .header {
+    border-bottom: 2.5px solid #0284c7;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    display: table;
+    width: 100%;
+  }
+  .header-left {
+    display: table-cell;
+    vertical-align: middle;
+    width: 65%;
+  }
+  .header-right {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+    width: 35%;
+  }
+  .brand-title {
+    font-size: 13pt;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .brand-subtitle {
+    font-size: 8pt;
+    color: #0284c7;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 1px;
+  }
+  .badge-doc {
+    display: inline-block;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    font-weight: 700;
+    font-size: 7.5pt;
+    padding: 2px 7px;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+
+  .hero-box {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border: 1px solid #334155;
+  }
+  .hero-box h1 {
+    font-size: 11.5pt;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    color: #38bdf8;
+    letter-spacing: -0.01em;
+  }
+  .hero-box p {
+    font-size: 8.4pt;
+    color: #e2e8f0;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  h2 {
+    font-size: 10.5pt;
+    color: #0f172a;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 2px;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+
+  .module-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    page-break-inside: avoid;
+    background: #ffffff;
+  }
+  .module-header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 5px 8px;
+    display: table;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .module-title {
+    display: table-cell;
+    font-size: 8.5pt;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .module-time {
+    display: table-cell;
+    text-align: right;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #0284c7;
+  }
+  .module-body {
+    padding: 6px 8px;
+  }
+
+  .step-box {
+    margin-bottom: 4px;
+    padding: 6px 8px;
+    background: #f1f5f9;
+    border-left: 3px solid #0284c7;
+    border-radius: 0 5px 5px 0;
+  }
+  .step-label {
+    font-size: 7pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #0369a1;
+    margin-bottom: 2px;
+  }
+  .action-text {
+    font-size: 8.2pt;
+    color: #334155;
+    margin-bottom: 4px;
+  }
+  .speech-box {
+    background: #ffffff;
+    border: 1px dashed #94a3b8;
+    border-radius: 5px;
+    padding: 6px 8px;
+    font-size: 8.2pt;
+    color: #0f172a;
+    line-height: 1.35;
+  }
+  .speech-box strong {
+    color: #0284c7;
+  }
+
+  .tip-box {
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-left: 3.5px solid #f59e0b;
+    padding: 6px 8px;
+    border-radius: 0 5px 5px 0;
+    font-size: 7.8pt;
+    color: #92400e;
+    margin-top: 6px;
+  }
+
+  .checklist {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+  .checklist ul {
+    margin: 2px 0 0 0;
+    padding-left: 14px;
+    font-size: 7.8pt;
+    color: #334155;
+  }
+  .checklist li {
+    margin-bottom: 1px;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ==================== PAGINA 1: INTRODUZIONE & FASE 1 ==================== -->
+  <div class="header">
+    <div class="header-left">
+      <h1 class="brand-title">LEZIONE 15: RAG AZIENDALE (PARTE 1) — CARICARE DOCUMENTI & MANUALI INTERNI</h1>
+      <div class="brand-subtitle">Masterclass AI Pro (Percorso 20 Ore) • Guida alla Regia per Stefano</div>
+    </div>
+    <div class="header-right">
+      <span class="badge-doc">Lezione 15 • Conoscenza Aziendale</span>
+      <div style="font-size: 7.5pt; color: #64748b; margin-top: 1px;">Durata Stimata: 18 - 20 Minuti</div>
+    </div>
+  </div>
+
+  <div class="hero-box">
+    <h1>🎯 Obiettivo della Lezione</h1>
+    <p>Capire cos'è il RAG (dare una biblioteca all'AI), come caricare documenti lunghi (PDF, regolamenti, cataloghi tecnici) e preparare la base di conoscenza interna senza inviare dati sensibili all'esterno.</p>
+  </div>
+
+  <div class="checklist">
+    <strong style="color: #0f172a; font-size: 8pt;">📋 Preparazione Desktop Prima di Iniziare:</strong>
+    <ul>
+      <li><strong>Documento PDF di esempio (es. Guida Aziendale o Catalogo Prodotti):</strong> Documento PDF di esempio (es. Guida Aziendale o Catalogo Prodotti)</li><li><strong>Piattaforma con knowledge base o cartella documenti:</strong> Piattaforma con knowledge base o cartella documenti</li><li><strong>Spiegare la differenza tra memoria generale e memoria aziendale:</strong> Spiegare la differenza tra memoria generale e memoria aziendale</li>
+    </ul>
+  </div>
+
+  <h2>SCALETTA OPERATIVA ESPANSA (5 FASI DA ~3.5-4 MINUTI CIASCUNA)</h2>
+
+  
+            
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 1: Perché i Modelli AI non Conoscono i Tuoi Dati Interni</div>
+                <div class="module-time">⏱️ Minuti 00:00 - 04:00</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Webcam frontale di Stefano, poi mostra una cartella con 10 PDF aziendali.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Bentornati nella quindicesima lezione della Masterclass AI Pro!<br><br>Oggi entriamo nel <strong>Pilastro 4</strong> e parliamo della tecnologia più rivoluzionaria in assoluto per le aziende: il <strong>RAG (Retrieval-Augmented Generation)</strong>.<br><br>ChatGPT e Gemini conoscono tutto lo scibile umano su internet, ma non sanno nulla della vostra azienda: non conoscono i vostri listini speciali, le garanzie dei vostri prodotti, le procedure interne o i contratti dei vostri clienti.<br><br>Oggi impariamo come dare all'AI una <strong>biblioteca privata e sicura</strong> con tutti i vostri documenti, per farla diventare un'esperta assoluta della vostra azienda."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="page-break"></div>
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 2: La Metafora della Biblioteca — Come Funziona il RAG</div>
+                <div class="module-time">⏱️ Minuti 04:00 - 08:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Grafica esplicativa: Domanda -> Il RAG cerca nei PDF aziendali -> Estrae la pagina esatta -> L'AI formula la risposta.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Come funziona il RAG? Pensate a uno studente che deve sostenere un esame.<br><br>Se gli fate una domanda a memoria su un dettaglio microscopico, potrebbe sbagliare o tirare a indovinare.<br><br>Ma se l'esame è <strong>a libro aperto</strong>, lo studente apre il manuale aziendale alla pagina esatta, legge la clausola contrattuale e vi risponde con precisione millimetrica citando la fonte.<br><br>Questo è il RAG: prima cerca nei vostri PDF le 2 o 3 pagine rilevanti, e poi usa l'AI solo per spiegarvele in modo chiaro ed esatto."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 3: Caricare il Documento nella Knowledge Base</div>
+                <div class="module-time">⏱️ Minuti 08:30 - 12:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">1. Prendi un file PDF aziendale (es. 'Regolamento_Interno_Garanzie.pdf').<br>2. Trascinalo nella sezione Conoscenza / Knowledge Base.<br>3. Mostra l'indicizzazione dei paragrafi (Chunking).</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Carichiamo il nostro documento aziendale: trascino il file <code>Regolamento_Garanzie.pdf</code> nella nostra cartella di conoscenza.<br><br>Cosa sta facendo il sistema? Sta suddividendo il PDF in piccoli blocchetti logici chiamati <em>Chunks</em>.<br><br>Ogni paragrafo viene etichettato e memorizzato: in questo modo, quando faremo una domanda, il sistema saprà istantaneamente in quale pagina e riga si trova l'informazione cercata."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="page-break"></div>
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 4: Privacy & Sicurezza dei Documenti Aziendali</div>
+                <div class="module-time">⏱️ Minuti 12:30 - 16:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Mostra lo schema di sicurezza: i documenti restano sul server privato e non vengono usati per riaddestrare modelli pubblici.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Una domanda fondamentale che ogni imprenditore fa: <em>'I miei documenti riservati sono al sicuro?'</em>.<br><br>La risposta è sì: tramite le API aziendali e i sistemi RAG privati, i vostri documenti <strong>NON vengono mai utilizzati per addestrare modelli pubblici</strong>.<br><br>I dati restano al 100% di vostra proprietà esclusiva nel vostro spazio privato, conformi alle direttive europee GDPR e sulla privacy."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 5: Esercizio Pratico & Lancio Lezione 16 (Interrogazione con Fonti)</div>
+                <div class="module-time">⏱️ Minuti 16:30 - 19:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Webcam frontale con riepilogo del documento caricato.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Avete appena creato la memoria storica e documentale della vostra azienda!<br><br><strong>Esercizio per oggi</strong>: prendete un PDF reale (una brochure di prodotto o un regolamento) e caricatelo nella cartella di lavoro.<br><br>Nella <strong>Lezione 16</strong> faremo la magia finale: interrogheremo l'AI su clausole contrattuali complesse e vedremo come risponde <strong>senza allucinare e citando esattamente la pagina e il paragrafo di origine</strong>!<br><br>Ci vediamo alla Lezione 16!"
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+
+  <div class="tip-box">
+    <strong>💡 Consiglio di Regia per Stefano:</strong> Mantieni un ritmo calmo e rassicurante. Mostra con il mouse ogni click sul browser o su n8n: questa chiarezza visiva garantisce la perfetta comprensione dello studente e porta la lezione esattamente a 18-20 minuti!
+  </div>
+
+</body>
+</html>

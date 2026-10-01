@@ -43,14 +43,18 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = pathname.startsWith('/login')
   const isApiRoute = pathname.startsWith('/api')
   const isCorsiRoute = pathname.startsWith('/corsi')
+  const isDispenseRoute = pathname.startsWith('/dispense')
+  const isCervelloRoute = pathname.startsWith('/cervello')
+  const isCorsoBaseRoute = pathname.startsWith('/corso-base')
   const isZonaCompitiRoute = pathname.startsWith('/zona-compiti')
   const isGraziaRoute = pathname.startsWith('/grazia')
   const isN8nScreencastRoute = pathname.startsWith('/n8n-screencast')
   const isServiziAiRoute = pathname.startsWith('/servizi-ai')
+  const isAcademyRoute = pathname.startsWith('/academy') || pathname.startsWith('/accademy')
   const isRootRoute = pathname === '/'
 
-  // Rotte pubbliche accessibili: Landing ('/'), Corsi ('/corsi'), Servizi AI ('/servizi-ai'), Zona Compiti ('/zona-compiti'), Prototipi Grazia ('/grazia'), Login ('/login'), n8n screencast e API
-  const isPublicRoute = isRootRoute || isCorsiRoute || isServiziAiRoute || isZonaCompitiRoute || isGraziaRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute
+  // Rotte pubbliche accessibili a studenti e visitatori (senza richiedere login amministratore Supabase Auth)
+  const isPublicRoute = isRootRoute || isAcademyRoute || isCorsiRoute || isDispenseRoute || isCervelloRoute || isCorsoBaseRoute || isServiziAiRoute || isZonaCompitiRoute || isGraziaRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute
 
   // Se l'utente non è autenticato come membro del team e cerca di accedere a rotte riservate (/lavori, /posta, /chat, /files...),
   // viene reindirizzato a /login (solo in produzione per evitare loop di cookie bloccati nelle webview IDE)

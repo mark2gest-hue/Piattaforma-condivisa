@@ -21,12 +21,44 @@ export async function sendSharedEmail(formData: {
 
     console.log(`[Resend] Invio email da: ${chosenFrom} a: ${formData.to} | Oggetto: ${formData.subject}`)
 
-    // Invio effettivo tramite Resend SDK
+    // Generazione HTML formattato pulito per supporto multi-part (HTML + Plain Text)
+    const formattedHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #0f172a; }
+          .container { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 28px; }
+          .header { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 20px; border-bottom: 2px solid #0284c7; padding-bottom: 12px; }
+          .content { font-size: 14px; line-height: 1.6; color: #334155; white-space: pre-wrap; }
+          .footer { margin-top: 28px; padding-top: 16px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #94a3b8; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">aiutiamoci • Campus Formativo AI</div>
+          <div class="content">${formData.body.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+          <div class="footer">
+            Ricevi questa email perché iscritto su aiutiamoci.cloud.<br>
+            Per assistenza rispondi direttamente a questa email o contatta info@aiutiamoci.cloud.
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+
+    // Invio effettivo tramite Resend SDK con headers completi antispam
     const resendResponse = await resend.emails.send({
       from: chosenFrom,
       to: formData.to,
+      replyTo: 'info@aiutiamoci.cloud',
       subject: formData.subject,
       text: formData.body,
+      html: formattedHtml,
+      headers: {
+        'X-Entity-Ref-ID': `aiutiamoci-${Date.now()}`,
+      },
     })
 
     if (resendResponse.error) {
@@ -118,6 +150,48 @@ export async function markEmailsAsReadBulk(emailIds: string[]) {
     return { success: true, count: emailIds.length }
   } catch (err: any) {
     console.error('Errore markEmailsAsReadBulk:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+export async function archiveSharedEmail(emailId: string) {
+  return updateEmailStatus(emailId, 'archived')
+}
+
+export async function unarchiveSharedEmail(emailId: string) {
+  return updateEmailStatus(emailId, 'read')
+}
+
+export async function archiveEmailsBulk(emailIds: string[]) {
+  try {
+    if (!emailIds || emailIds.length === 0) return { success: true, count: 0 }
+    const supabase = await createClient()
+    const { error } = await (supabase as any)
+      .from('emails')
+      .update({ status: 'archived', updated_at: new Date().toISOString() })
+      .in('id', emailIds)
+
+    if (error) throw error
+    return { success: true, count: emailIds.length }
+  } catch (err: any) {
+    console.error('Errore archiveEmailsBulk:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+export async function unarchiveEmailsBulk(emailIds: string[]) {
+  try {
+    if (!emailIds || emailIds.length === 0) return { success: true, count: 0 }
+    const supabase = await createClient()
+    const { error } = await (supabase as any)
+      .from('emails')
+      .update({ status: 'read', updated_at: new Date().toISOString() })
+      .in('id', emailIds)
+
+    if (error) throw error
+    return { success: true, count: emailIds.length }
+  } catch (err: any) {
+    console.error('Errore unarchiveEmailsBulk:', err)
     return { success: false, error: err.message }
   }
 }

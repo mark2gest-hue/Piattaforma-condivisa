@@ -31,6 +31,13 @@ import {
   CheckSquare,
   Square,
   Zap,
+  Archive,
+  Folder,
+  FolderPlus,
+  FolderOpen,
+  Tag,
+  ChevronDown,
+  CornerUpLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,15 +53,19 @@ import {
   deleteSharedEmail,
   deleteSharedEmailsBulk,
   markEmailsAsReadBulk,
+  archiveSharedEmail,
+  unarchiveSharedEmail,
+  archiveEmailsBulk,
+  unarchiveEmailsBulk,
   analyzeEmailWithAI,
   EmailAIAnalysis,
 } from './actions'
-import { AVAILABLE_FROM_EMAILS, ArubaMailboxConfig, DEFAULT_IMAP_ACCOUNTS } from './constants'
+import { AVAILABLE_FROM_EMAILS, ArubaMailboxConfig, DEFAULT_IMAP_ACCOUNTS, DEFAULT_CUSTOM_FOLDERS, EmailFolder } from './constants'
 import { useRouter } from 'next/navigation'
 
 type EmailWithSender = Email & { senderProfile?: Profile }
-type FolderFilter = 'inbox' | 'sent' | 'unread' | 'all'
-type AccountFilter = 'all' | 'team@aiutiamoci.cloud' | 'info@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mar2.cloud' | 'support@mar2.cloud'
+type FolderFilter = 'inbox' | 'sent' | 'unread' | 'archived' | 'all' | string
+type AccountFilter = 'all' | 'team@aiutiamoci.cloud' | 'info@aiutiamoci.cloud' | 'pagamenti@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mar2.cloud' | 'support@mar2.cloud'
 
 function getToArray(to_address: any): string[] {
   if (!to_address) return []
@@ -112,6 +123,14 @@ export default function PostaCondivisaPage() {
   const [selectedEmailIds, setSelectedEmailIds] = useState<Set<string>>(new Set())
   const [isBulkOperating, setIsBulkOperating] = useState(false)
 
+  // Cartelle Personalizzate & Archiviazione
+  const [customFolders, setCustomFolders] = useState<EmailFolder[]>(DEFAULT_CUSTOM_FOLDERS)
+  const [emailFolderMap, setEmailFolderMap] = useState<Record<string, string>>({})
+  const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [newFolderColor, setNewFolderColor] = useState('blue')
+  const [isMoveMenuOpen, setIsMoveMenuOpen] = useState(false)
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -132,10 +151,35 @@ export default function PostaCondivisaPage() {
             return found ? { ...def, password: found.password || '' } : def
           })
           setImapAccounts(merged)
-          return
         }
       } catch (e) {
         console.error('Errore parsing accounts IMAP salvati', e)
+      }
+    }
+
+    // Carica Cartelle Personalizzate da localStorage
+    const savedFolders = localStorage.getItem('piattaforma_email_folders')
+    if (savedFolders) {
+      try {
+        const parsed = JSON.parse(savedFolders)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCustomFolders(parsed)
+        }
+      } catch (e) {
+        console.error('Errore parsing cartelle salvate', e)
+      }
+    }
+
+    // Carica Mappatura Email -> Cartella da localStorage
+    const savedMap = localStorage.getItem('piattaforma_email_folder_map')
+    if (savedMap) {
+      try {
+        const parsed = JSON.parse(savedMap)
+        if (parsed && typeof parsed === 'object') {
+          setEmailFolderMap(parsed)
+        }
+      } catch (e) {
+        console.error('Errore parsing mappa email/cartelle', e)
       }
     }
   }, [])
@@ -205,16 +249,27 @@ export default function PostaCondivisaPage() {
   // Conteggi per badge
   const counts = useMemo(() => {
     const list = Array.isArray(emails) ? emails : []
-    const inbound = list.filter((e) => e && e.direction === 'inbound')
-    const unread = inbound.filter((e) => e && e.status === 'received')
-    const sent = list.filter((e) => e && e.direction === 'outbound')
+    const notArchived = list.filter((e) => e && e.status !== 'archived')
+    const inbound = notArchived.filter((e) => e.direction === 'inbound')
+    const unread = inbound.filter((e) => e.status === 'received')
+    const sent = notArchived.filter((e) => e.direction === 'outbound')
+    const archived = list.filter((e) => e && e.status === 'archived')
+
+    // Conteggi per cartella personalizzata
+    const folderCounts: Record<string, number> = {}
+    customFolders.forEach((f) => {
+      folderCounts[f.id] = list.filter((e) => e && emailFolderMap[e.id] === f.id).length
+    })
+
     return {
       inbox: inbound.length,
       unread: unread.length,
       sent: sent.length,
+      archived: archived.length,
       all: list.length,
+      folders: folderCounts,
     }
-  }, [emails])
+  }, [emails, customFolders, emailFolderMap])
 
   // Filtro ed elenco cercato
   const filteredEmails = useMemo(() => {
@@ -222,10 +277,21 @@ export default function PostaCondivisaPage() {
     return list.filter((em) => {
       if (!em) return false
 
-      // 1. Filtro cartella
-      if (currentFilter === 'inbox' && em.direction !== 'inbound') return false
-      if (currentFilter === 'sent' && em.direction !== 'outbound') return false
-      if (currentFilter === 'unread' && (em.direction !== 'inbound' || em.status !== 'received')) return false
+      // 1. Filtro cartella principale
+      if (currentFilter === 'inbox') {
+        if (em.direction !== 'inbound' || em.status === 'archived') return false
+      } else if (currentFilter === 'sent') {
+        if (em.direction !== 'outbound' || em.status === 'archived') return false
+      } else if (currentFilter === 'unread') {
+        if (em.direction !== 'inbound' || em.status !== 'received') return false
+      } else if (currentFilter === 'archived') {
+        if (em.status !== 'archived') return false
+      } else if (currentFilter === 'all') {
+        // Mostra tutto
+      } else {
+        // Filtro per Cartella Personalizzata (es: 'clienti', 'corsi', etc.)
+        if (emailFolderMap[em.id] !== currentFilter) return false
+      }
 
       const toList = getToArray(em.to_address)
 
@@ -248,7 +314,7 @@ export default function PostaCondivisaPage() {
 
       return true
     })
-  }, [emails, currentFilter, accountFilter, searchQuery])
+  }, [emails, currentFilter, accountFilter, searchQuery, emailFolderMap])
 
   // Segna come letta al click
   const handleSelectEmail = async (em: EmailWithSender) => {
@@ -355,6 +421,147 @@ export default function PostaCondivisaPage() {
       })
     } else {
       alert(`Impossibile eliminare l'email: ${result.error}`)
+    }
+  }
+
+  // Archiviazione email singola
+  const handleArchiveEmail = async (emailId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    const result = await archiveSharedEmail(emailId)
+    if (result.success) {
+      setEmails((prev) =>
+        prev.map((em) => (em.id === emailId ? { ...em, status: 'archived' as const } : em))
+      )
+      if (selectedEmail?.id === emailId) {
+        setSelectedEmail((prev) => (prev ? { ...prev, status: 'archived' as const } : null))
+      }
+    } else {
+      alert(`Errore archiviazione: ${result.error}`)
+    }
+  }
+
+  // Ripristino email da archivio
+  const handleUnarchiveEmail = async (emailId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    const result = await unarchiveSharedEmail(emailId)
+    if (result.success) {
+      setEmails((prev) =>
+        prev.map((em) => (em.id === emailId ? { ...em, status: 'read' as const } : em))
+      )
+      if (selectedEmail?.id === emailId) {
+        setSelectedEmail((prev) => (prev ? { ...prev, status: 'read' as const } : null))
+      }
+    } else {
+      alert(`Errore ripristino: ${result.error}`)
+    }
+  }
+
+  // Archiviazione multipla in blocco
+  const handleArchiveBulk = async () => {
+    const ids = Array.from(selectedEmailIds)
+    if (ids.length === 0) return
+
+    setIsBulkOperating(true)
+    try {
+      const result = await archiveEmailsBulk(ids)
+      if (result.success) {
+        setEmails((prev) =>
+          prev.map((em) => (selectedEmailIds.has(em.id) ? { ...em, status: 'archived' as const } : em))
+        )
+        setSelectedEmailIds(new Set())
+      } else {
+        alert(`Errore archiviazione multipla: ${result.error}`)
+      }
+    } finally {
+      setIsBulkOperating(false)
+    }
+  }
+
+  // Ripristino multiplo in blocco
+  const handleUnarchiveBulk = async () => {
+    const ids = Array.from(selectedEmailIds)
+    if (ids.length === 0) return
+
+    setIsBulkOperating(true)
+    try {
+      const result = await unarchiveEmailsBulk(ids)
+      if (result.success) {
+        setEmails((prev) =>
+          prev.map((em) => (selectedEmailIds.has(em.id) ? { ...em, status: 'read' as const } : em))
+        )
+        setSelectedEmailIds(new Set())
+      } else {
+        alert(`Errore ripristino multiplo: ${result.error}`)
+      }
+    } finally {
+      setIsBulkOperating(false)
+    }
+  }
+
+  // Assegnazione di una o più email a una cartella personalizzata
+  const handleAssignFolder = (targetEmailIds: string[], folderId: string | null) => {
+    setEmailFolderMap((prev) => {
+      const next = { ...prev }
+      targetEmailIds.forEach((id) => {
+        if (folderId) {
+          next[id] = folderId
+        } else {
+          delete next[id]
+        }
+      })
+      localStorage.setItem('piattaforma_email_folder_map', JSON.stringify(next))
+      return next
+    })
+    setIsMoveMenuOpen(false)
+  }
+
+  // Creazione nuova cartella personalizzata
+  const handleCreateFolder = (e: React.FormEvent) => {
+    e.preventDefault()
+    const trimmed = newFolderName.trim()
+    if (!trimmed) return
+
+    const id = trimmed.toLowerCase().replace(/[^a-z0-9]/g, '_')
+    if (customFolders.some((f) => f.id === id)) {
+      alert('Una cartella con questo nome esiste già.')
+      return
+    }
+
+    const newFolder: EmailFolder = {
+      id,
+      name: trimmed,
+      color: newFolderColor || 'blue',
+      icon: 'Folder',
+    }
+
+    const updated = [...customFolders, newFolder]
+    setCustomFolders(updated)
+    localStorage.setItem('piattaforma_email_folders', JSON.stringify(updated))
+    setNewFolderName('')
+    setIsNewFolderModalOpen(false)
+  }
+
+  // Eliminazione cartella personalizzata
+  const handleDeleteFolder = (folderId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm('Vuoi eliminare questa cartella? Le email al suo interno non verranno cancellate.')) return
+
+    const updated = customFolders.filter((f) => f.id !== folderId)
+    setCustomFolders(updated)
+    localStorage.setItem('piattaforma_email_folders', JSON.stringify(updated))
+
+    // Rimuovi associazioni a questa cartella
+    setEmailFolderMap((prev) => {
+      const next = { ...prev }
+      Object.keys(next).forEach((k) => {
+        if (next[k] === folderId) delete next[k]
+      })
+      localStorage.setItem('piattaforma_email_folder_map', JSON.stringify(next))
+      return next
+    })
+
+    if (currentFilter === folderId) {
+      setCurrentFilter('inbox')
     }
   }
 
@@ -557,7 +764,7 @@ export default function PostaCondivisaPage() {
               <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                 Posta Condivisa
                 <Badge variant="outline" className="text-[11px] font-mono font-medium text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/60">
-                  5 Caselle Aruba
+                  6 Caselle Aruba
                 </Badge>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -653,19 +860,19 @@ export default function PostaCondivisaPage() {
               )}
             </div>
 
-            {/* Folder Tabs */}
-            <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300">
+            {/* Folder Tabs (In arrivo, Non lette, Inviate, Archivio, Tutte) */}
+            <div className="grid grid-cols-5 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-[11px] font-medium text-slate-600 dark:text-slate-300">
               <button
                 onClick={() => setCurrentFilter('inbox')}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${currentFilter === 'inbox'
+                className={`py-1.5 px-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${currentFilter === 'inbox'
                     ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
                   }`}
               >
-                <ArrowDownLeft className="h-3.5 w-3.5" />
+                <ArrowDownLeft className="h-3 w-3" />
                 <span>In arrivo</span>
                 {counts.unread > 0 && (
-                  <span className="ml-0.5 px-1.5 py-0.2 bg-blue-600 text-white text-[10px] rounded-full font-bold">
+                  <span className="ml-0.5 px-1 py-0.2 bg-blue-600 text-white text-[9px] rounded-full font-bold">
                     {counts.unread}
                   </span>
                 )}
@@ -673,95 +880,117 @@ export default function PostaCondivisaPage() {
 
               <button
                 onClick={() => setCurrentFilter('unread')}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${currentFilter === 'unread'
+                className={`py-1.5 px-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${currentFilter === 'unread'
                     ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
                   }`}
               >
                 <span>Non lette</span>
-                <span className="text-[10px] opacity-75">({counts.unread})</span>
+                <span className="text-[9px] opacity-75">({counts.unread})</span>
               </button>
 
               <button
                 onClick={() => setCurrentFilter('sent')}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${currentFilter === 'sent'
+                className={`py-1.5 px-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${currentFilter === 'sent'
                     ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
                   }`}
               >
-                <ArrowUpRight className="h-3.5 w-3.5" />
+                <ArrowUpRight className="h-3 w-3" />
                 <span>Inviate</span>
-                <span className="text-[10px] opacity-75">({counts.sent})</span>
+                <span className="text-[9px] opacity-75">({counts.sent})</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentFilter('archived')}
+                className={`py-1.5 px-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${currentFilter === 'archived'
+                    ? 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs font-semibold'
+                    : 'hover:text-slate-900 dark:hover:text-white'
+                  }`}
+              >
+                <Archive className="h-3 w-3" />
+                <span>Archivio</span>
+                <span className="text-[9px] opacity-75">({counts.archived})</span>
               </button>
 
               <button
                 onClick={() => setCurrentFilter('all')}
-                className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition-all ${currentFilter === 'all'
+                className={`py-1.5 px-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${currentFilter === 'all'
                     ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
                   }`}
               >
                 <span>Tutte</span>
-                <span className="text-[10px] opacity-75">({counts.all})</span>
+                <span className="text-[9px] opacity-75">({counts.all})</span>
               </button>
             </div>
 
-            {/* Account Selector Pills (4 Caselle Aruba) */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[10px] scrollbar-none pt-1 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => setAccountFilter('all')}
-                className={`px-2 py-1 rounded-lg font-semibold whitespace-nowrap transition-all ${accountFilter === 'all'
-                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
-                    : 'bg-slate-100 dark:bg-slate-800/60 text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-              >
-                Tutte ({emails.length})
-              </button>
-              <button
-                onClick={() => setAccountFilter('team@aiutiamoci.cloud')}
-                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${accountFilter === 'team@aiutiamoci.cloud'
-                    ? 'bg-emerald-600 text-white shadow-xs font-bold'
-                    : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100'
-                  }`}
-              >
-                team@aiutiamoci
-              </button>
-              <button
-                onClick={() => setAccountFilter('info@aiutiamoci.cloud')}
-                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${accountFilter === 'info@aiutiamoci.cloud'
-                    ? 'bg-blue-600 text-white shadow-xs font-bold'
-                    : 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100'
-                  }`}
-              >
-                info@aiutiamoci
-              </button>
-              <button
-                onClick={() => setAccountFilter('assistenza@aiutiamoci.cloud')}
-                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${accountFilter === 'assistenza@aiutiamoci.cloud'
-                    ? 'bg-indigo-600 text-white shadow-xs font-bold'
-                    : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100'
-                  }`}
-              >
-                assistenza@aiutiamoci
-              </button>
-              <button
-                onClick={() => setAccountFilter('info@mar2.cloud')}
-                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${accountFilter === 'info@mar2.cloud'
-                    ? 'bg-purple-600 text-white shadow-xs font-bold'
-                    : 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100'
-                  }`}
-              >
-                info@mar2
-              </button>
-              <button
-                onClick={() => setAccountFilter('support@mar2.cloud')}
-                className={`px-2 py-1 rounded-lg font-mono whitespace-nowrap transition-all ${accountFilter === 'support@mar2.cloud'
-                    ? 'bg-amber-600 text-white shadow-xs font-bold'
-                    : 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 hover:bg-amber-100'
-                  }`}
-              >
-                support@mar2
-              </button>
+            {/* Dropdown Filters: Cartelle & Account */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+              {/* Menu a tendina: Cartelle */}
+              <div className="flex items-center gap-1.5">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-slate-400">
+                    <Folder className="h-3.5 w-3.5 text-blue-500" />
+                  </div>
+                  <select
+                    value={['inbox', 'unread', 'sent', 'archived', 'all'].includes(currentFilter) ? '' : currentFilter}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setCurrentFilter(e.target.value as any)
+                      }
+                    }}
+                    className="w-full pl-7 pr-7 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-medium"
+                  >
+                    <option value="">📁 Cartelle ({customFolders.length})...</option>
+                    {customFolders.map((f) => {
+                      const countInFolder = counts.folders[f.id] || 0
+                      return (
+                        <option key={f.id} value={f.id}>
+                          {f.name} {countInFolder > 0 ? `(${countInFolder})` : ''}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                    <ChevronDown className="h-3 w-3" />
+                  </div>
+                </div>
+
+                {/* Pulsante Nuova Cartella */}
+                <button
+                  type="button"
+                  onClick={() => setIsNewFolderModalOpen(true)}
+                  className="px-2 py-1.5 text-xs bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100 border border-blue-200 dark:border-blue-900 rounded-lg font-semibold flex items-center gap-1 shrink-0 transition-colors"
+                  title="Crea una nuova cartella"
+                >
+                  <PlusCircle className="h-3 w-3" />
+                  <span>Nuova</span>
+                </button>
+              </div>
+
+              {/* Menu a tendina: Account / Casella Aruba */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-slate-400">
+                  <Mail className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                </div>
+                <select
+                  value={accountFilter}
+                  onChange={(e) => setAccountFilter(e.target.value as AccountFilter)}
+                  className="w-full pl-7 pr-7 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-mono font-medium"
+                >
+                  <option value="all">✉️ Tutte le caselle ({emails.length})</option>
+                  <option value="team@aiutiamoci.cloud">team@aiutiamoci.cloud</option>
+                  <option value="info@aiutiamoci.cloud">info@aiutiamoci.cloud</option>
+                  <option value="pagamenti@aiutiamoci.cloud">pagamenti@aiutiamoci.cloud</option>
+                  <option value="assistenza@aiutiamoci.cloud">assistenza@aiutiamoci.cloud</option>
+                  <option value="info@mar2.cloud">info@mar2.cloud</option>
+                  <option value="support@mar2.cloud">support@mar2.cloud</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                  <ChevronDown className="h-3 w-3" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -811,6 +1040,53 @@ export default function PostaCondivisaPage() {
                   <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" />
                   Lette
                 </Button>
+
+                {currentFilter === 'archived' ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleUnarchiveBulk}
+                    disabled={isBulkOperating}
+                    className="h-7 text-xs px-2 text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300"
+                    title="Ripristina selezionate"
+                  >
+                    <CornerUpLeft className="h-3.5 w-3.5 mr-1" />
+                    Ripristina
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleArchiveBulk}
+                    disabled={isBulkOperating}
+                    className="h-7 text-xs px-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    title="Archivia selezionate"
+                  >
+                    <Archive className="h-3.5 w-3.5 mr-1 text-slate-500" />
+                    Archivia
+                  </Button>
+                )}
+
+                {/* Sposta in cartella bulk */}
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const fId = e.target.value === '__none' ? null : e.target.value
+                      handleAssignFolder(Array.from(selectedEmailIds), fId)
+                      e.target.value = ''
+                    }
+                  }}
+                  defaultValue=""
+                  className="h-7 text-xs px-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
+                  title="Assegna cartella alle selezionate"
+                >
+                  <option value="" disabled>Sposta in...</option>
+                  {customFolders.map((f) => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                  <option value="__none">Rimuovi cartella</option>
+                </select>
+
                 <Button
                   size="sm"
                   variant="destructive"
@@ -949,6 +1225,30 @@ export default function PostaCondivisaPage() {
                               {isUnread ? 'Da Leggere' : 'Letta'}
                             </Badge>
 
+                            {em.status === 'archived' && (
+                              <Badge
+                                variant="outline"
+                                className="text-[9px] px-1.5 py-0 border-purple-300 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 flex items-center gap-1"
+                              >
+                                <Archive className="h-2.5 w-2.5" />
+                                Archiviata
+                              </Badge>
+                            )}
+
+                            {emailFolderMap[em.id] && (() => {
+                              const assigned = customFolders.find((f) => f.id === emailFolderMap[em.id])
+                              if (!assigned) return null
+                              return (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[9px] px-1.5 py-0 border-blue-200 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center gap-1"
+                                >
+                                  <Folder className="h-2.5 w-2.5 text-blue-500" />
+                                  {assigned.name}
+                                </Badge>
+                              )
+                            })()}
+
                             {aiAnalysisMap[em.id] && (
                               <Badge
                                 variant="outline"
@@ -1084,6 +1384,83 @@ export default function PostaCondivisaPage() {
                         {viewMode === 'html' ? 'Testo' : 'HTML'}
                       </Button>
                     )}
+
+                    {/* Archivia / Ripristina */}
+                    {selectedEmail.status === 'archived' ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleUnarchiveEmail(selectedEmail.id)}
+                        className="h-8 px-2.5 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 gap-1.5"
+                        title="Ripristina nella posta in arrivo"
+                      >
+                        <CornerUpLeft className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Ripristina</span>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleArchiveEmail(selectedEmail.id)}
+                        className="h-8 px-2.5 text-xs text-slate-700 hover:text-slate-900 border-slate-200 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 gap-1.5"
+                        title="Archivia questa email"
+                      >
+                        <Archive className="h-3.5 w-3.5 text-slate-500" />
+                        <span className="hidden sm:inline">Archivia</span>
+                      </Button>
+                    )}
+
+                    {/* Assegna Cartella Dropdown */}
+                    <div className="relative">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsMoveMenuOpen(!isMoveMenuOpen)}
+                        className="h-8 px-2.5 text-xs text-slate-700 border-slate-200 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 gap-1"
+                        title="Sposta o assegna a cartella"
+                      >
+                        <Folder className="h-3.5 w-3.5 text-blue-500" />
+                        <span className="hidden sm:inline">Cartella</span>
+                        <ChevronDown className="h-3 w-3 opacity-60" />
+                      </Button>
+
+                      {isMoveMenuOpen && (
+                        <div className="absolute right-0 top-9 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-1.5 z-50 text-xs">
+                          <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                            Assegna a:
+                          </div>
+                          {customFolders.map((f) => (
+                            <button
+                              key={f.id}
+                              type="button"
+                              onClick={() => handleAssignFolder([selectedEmail.id], f.id)}
+                              className={`w-full text-left px-3 py-1.5 flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+                                emailFolderMap[selectedEmail.id] === f.id
+                                  ? 'font-bold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/40'
+                                  : 'text-slate-700 dark:text-slate-300'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                {f.name}
+                              </span>
+                              {emailFolderMap[selectedEmail.id] === f.id && (
+                                <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                              )}
+                            </button>
+                          ))}
+                          {emailFolderMap[selectedEmail.id] && (
+                            <button
+                              type="button"
+                              onClick={() => handleAssignFolder([selectedEmail.id], null)}
+                              className="w-full text-left px-3 py-1.5 text-rose-600 dark:text-rose-400 border-t border-slate-100 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors mt-1"
+                            >
+                              Rimuovi da cartelle
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
                     <Button
                       variant="ghost"
@@ -1627,6 +2004,74 @@ export default function PostaCondivisaPage() {
                       Salva e Sincronizza Ora
                     </>
                   )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Nuova Cartella Personalizzata */}
+      {isNewFolderModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <FolderPlus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuova Cartella</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsNewFolderModalOpen(false)}
+                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleCreateFolder} className="p-4 space-y-3.5 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Nome Cartella *</label>
+                <Input
+                  autoFocus
+                  required
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder="Es. Fornitori, Contratti, Marketing"
+                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Colore Etichetta</label>
+                <div className="flex items-center gap-2 pt-1">
+                  {[
+                    { id: 'blue', bg: 'bg-blue-500' },
+                    { id: 'emerald', bg: 'bg-emerald-500' },
+                    { id: 'amber', bg: 'bg-amber-500' },
+                    { id: 'purple', bg: 'bg-purple-500' },
+                    { id: 'rose', bg: 'bg-rose-500' },
+                    { id: 'indigo', bg: 'bg-indigo-500' },
+                  ].map((col) => (
+                    <button
+                      key={col.id}
+                      type="button"
+                      onClick={() => setNewFolderColor(col.id)}
+                      className={`h-6 w-6 rounded-full ${col.bg} transition-all ${
+                        newFolderColor === col.id ? 'ring-2 ring-offset-2 ring-blue-600 dark:ring-offset-slate-900 scale-110' : 'opacity-70 hover:opacity-100'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <Button type="button" variant="outline" size="sm" onClick={() => setIsNewFolderModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                  Crea Cartella
                 </Button>
               </div>
             </form>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Lezione 20 — Guida alla Regia & Copione Docenza per Stefano</title>
+<style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+    @bottom-left {
+      content: "aiutiamoci.cloud • Masterclass AI Pro — Lezione 20 (Corso 20 Ore)";
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #64748b;
+    }
+    @bottom-right {
+      content: "Pagina " counter(page) " di " counter(pages);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #64748b;
+      font-weight: bold;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.4;
+    font-size: 8.8pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  .header {
+    border-bottom: 2.5px solid #0284c7;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    display: table;
+    width: 100%;
+  }
+  .header-left {
+    display: table-cell;
+    vertical-align: middle;
+    width: 65%;
+  }
+  .header-right {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+    width: 35%;
+  }
+  .brand-title {
+    font-size: 13pt;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .brand-subtitle {
+    font-size: 8pt;
+    color: #0284c7;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 1px;
+  }
+  .badge-doc {
+    display: inline-block;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    font-weight: 700;
+    font-size: 7.5pt;
+    padding: 2px 7px;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+
+  .hero-box {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border: 1px solid #334155;
+  }
+  .hero-box h1 {
+    font-size: 11.5pt;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    color: #38bdf8;
+    letter-spacing: -0.01em;
+  }
+  .hero-box p {
+    font-size: 8.4pt;
+    color: #e2e8f0;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  h2 {
+    font-size: 10.5pt;
+    color: #0f172a;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 2px;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+
+  .module-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    page-break-inside: avoid;
+    background: #ffffff;
+  }
+  .module-header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 5px 8px;
+    display: table;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .module-title {
+    display: table-cell;
+    font-size: 8.5pt;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .module-time {
+    display: table-cell;
+    text-align: right;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #0284c7;
+  }
+  .module-body {
+    padding: 6px 8px;
+  }
+
+  .step-box {
+    margin-bottom: 4px;
+    padding: 6px 8px;
+    background: #f1f5f9;
+    border-left: 3px solid #0284c7;
+    border-radius: 0 5px 5px 0;
+  }
+  .step-label {
+    font-size: 7pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #0369a1;
+    margin-bottom: 2px;
+  }
+  .action-text {
+    font-size: 8.2pt;
+    color: #334155;
+    margin-bottom: 4px;
+  }
+  .speech-box {
+    background: #ffffff;
+    border: 1px dashed #94a3b8;
+    border-radius: 5px;
+    padding: 6px 8px;
+    font-size: 8.2pt;
+    color: #0f172a;
+    line-height: 1.35;
+  }
+  .speech-box strong {
+    color: #0284c7;
+  }
+
+  .tip-box {
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-left: 3.5px solid #f59e0b;
+    padding: 6px 8px;
+    border-radius: 0 5px 5px 0;
+    font-size: 7.8pt;
+    color: #92400e;
+    margin-top: 6px;
+  }
+
+  .checklist {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+  .checklist ul {
+    margin: 2px 0 0 0;
+    padding-left: 14px;
+    font-size: 7.8pt;
+    color: #334155;
+  }
+  .checklist li {
+    margin-bottom: 1px;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ==================== PAGINA 1: INTRODUZIONE & FASE 1 ==================== -->
+  <div class="header">
+    <div class="header-left">
+      <h1 class="brand-title">LEZIONE 20: CHECKPOINT 3 FINALE — DEPLOY IN PRODUZIONE & ATTESTATO UFFICIALE</h1>
+      <div class="brand-subtitle">Masterclass AI Pro (Percorso 20 Ore) • Guida alla Regia per Stefano</div>
+    </div>
+    <div class="header-right">
+      <span class="badge-doc">🎓 Checkpoint 3 • Traguardo Finale</span>
+      <div style="font-size: 7.5pt; color: #64748b; margin-top: 1px;">Durata Stimata: 18 - 20 Minuti</div>
+    </div>
+  </div>
+
+  <div class="hero-box">
+    <h1>🎯 Obiettivo della Lezione</h1>
+    <p>Mettere in produzione l'intero ecosistema aziendale (Agente Locale + n8n Cloud + Sheets + Telegram), eseguire il test di certificazione finale e rilasciare l'Attestato Ufficiale di Competenza della Masterclass AI Pro.</p>
+  </div>
+
+  <div class="checklist">
+    <strong style="color: #0f172a; font-size: 8pt;">📋 Preparazione Desktop Prima di Iniziare:</strong>
+    <ul>
+      <li><strong>Ecosistema completo attivo e collegato:</strong> Ecosistema completo attivo e collegato</li><li><strong>Modello grafico dell'Attestato Ufficiale con nome studente:</strong> Modello grafico dell'Attestato Ufficiale con nome studente</li><li><strong>Tono trionfale, celebrativo ed emozionante per il completamento delle 20 ore!:</strong> Tono trionfale, celebrativo ed emozionante per il completamento delle 20 ore!</li>
+    </ul>
+  </div>
+
+  <h2>SCALETTA OPERATIVA ESPANSA (5 FASI DA ~3.5-4 MINUTI CIASCUNA)</h2>
+
+  
+            
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 1: Celebrazione del Percorso Completo (20 Ore Formative Conquistate!)</div>
+                <div class="module-time">⏱️ Minuti 00:00 - 04:00</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Webcam frontale di Stefano con grafica trionfale e logo ufficiale Aiutiamoci.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Congratulazioni e benvenuti alla ventesima e ultima lezione della Masterclass AI Pro!<br><br>Oggi tagliamo un traguardo straordinario: avete completato un percorso formativo di <strong>20 ore di altissimo livello</strong> sull'Intelligenza Artificiale applicata e le automazioni aziendali.<br><br>Non siete più spettatori dell'innovazione tecnologica: oggi siete professionisti capaci di progettare, costruire e governare una vera squadra di Agenti ed automazioni autonome.<br><br>In questa lezione finale facciamo il collaudo generale del sistema in produzione e celebriamo il rilascio del vostro <strong>Attestato Ufficiale</strong>."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="page-break"></div>
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 2: Il Collaudo Generale dell'Ecosistema in Produzione</div>
+                <div class="module-time">⏱️ Minuti 04:00 - 08:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Mostra l'intero flusso a schermo: 1. Candidatura/Email -> 2. AI Gemini/GPT -> 3. Google Sheets -> 4. Telegram con tasti Approva/Rifiuta -> 5. Generazione PDF.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Guardate la meraviglia dell'architettura che abbiamo costruito insieme passo dopo passo:<br><br>1. Un cliente invia una richiesta dal sito o via email.<br>2. Il <strong>Webhook</strong> cattura l'evento in tempo reale.<br>3. L'<strong>AI</strong> consulta il listino prezzi e redige la proposta commerciale.<br>4. I dati vengono salvati automaticamente su <strong>Google Sheets</strong>.<br>5. Ricevete la notifica su <strong>Telegram</strong> e con un tocco date l'approvazione finale al PDF.<br><br>Tutto questo lavora per voi in background, 24 ore su 24, 365 giorni all'anno."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 3: L'Attivazione H24 in Produzione (Active Toggle)</div>
+                <div class="module-time">⏱️ Minuti 08:30 - 12:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">1. Su n8n sposta l'interruttore in alto a destra su 'Active' (Verde).<br>2. Mostra lo stato 'Workflow is active and running in background'.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Facciamo il gesto definitivo: andiamo su n8n e spostiamo l'interruttore in alto a destra su <strong>ACTIVE (Verde)</strong>.<br><br>Da questo istante l'automazione è ufficialmente <strong>in produzione</strong>.<br><br>Potete spegnere il computer, andare a dormire o dedicarvi ai vostri clienti: il vostro ufficio digitale continuerà a rispondere, smistare ed elaborare senza sosta."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="page-break"></div>
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 4: Esame Finale & Rilascio dell'Attestato Ufficiale</div>
+                <div class="module-time">⏱️ Minuti 12:30 - 16:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Mostra l'Attestato Ufficiale di Competenza della Masterclass AI Pro con badge oro e codice di verifica univoco.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Ecco il riconoscimento formale del vostro impegno: l'<strong>Attestato Ufficiale di Competenza della Masterclass AI Pro</strong> rilasciato da Aiutiamoci.cloud.<br><br>Questo certificato attesta che possedete le competenze pratiche per implementare Agenti AI, gestire API, creare flussi n8n e proteggere i dati aziendali.<br><br>Un valore aggiunto enorme per il vostro curriculum, per la vostra azienda e per posizionarvi come leader nella trasformazione digitale del vostro settore."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 5: Saluto Finale, Community Permanente & Prossimi Passi</div>
+                <div class="module-time">⏱️ Minuti 16:30 - 20:00</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Webcam frontale con link alla Community Telegram permanente e ringraziamenti finali.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Questo non è un punto di arrivo, ma l'inizio della vostra nuova era lavorativa.<br><br>Il nostro supporto non finisce qui: la nostra <strong>Community Telegram riservata</strong> e il nostro <strong>Tutor AI h24</strong> rimangono a vostra disposizione permanente per confrontarvi, risolvere dubbi e continuare a crescere insieme durante le dirette del giovedì.<br><br>A nome mio, di Marco e di tutto il team di <strong>Aiutiamoci.cloud</strong>, grazie di cuore per la fiducia e per aver intrapreso questo viaggio con noi.<br><br>Buon lavoro con i vostri Agenti AI e ci vediamo nella community!"
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+
+  <div class="tip-box">
+    <strong>💡 Consiglio di Regia per Stefano:</strong> Mantieni un ritmo calmo e rassicurante. Mostra con il mouse ogni click sul browser o su n8n: questa chiarezza visiva garantisce la perfetta comprensione dello studente e porta la lezione esattamente a 18-20 minuti!
+  </div>
+
+</body>
+</html>

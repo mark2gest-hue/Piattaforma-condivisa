@@ -1,0 +1,4 @@
+file '/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/scratch/antigravity_video/scene_01_clip.mp4'
+file '/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/scratch/antigravity_video/scene_02_clip.mp4'
+file '/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/scratch/antigravity_video/scene_03_clip.mp4'
+file '/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/scratch/antigravity_video/scene_04_clip.mp4'

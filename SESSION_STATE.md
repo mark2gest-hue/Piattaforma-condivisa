@@ -53,7 +53,12 @@ Stato corrente:
 - [x] **Posta Condivisa (`/posta`)**:
   - Webmail centralizzata multi-inbox con 5 caselle Aruba (`team@aiutiamoci.cloud`, `info@aiutiamoci.cloud`, `assistenza@aiutiamoci.cloud`, `info@mar2.cloud`, `support@mar2.cloud`).
   - Sincronizzazione IMAP server-side con `imapflow` e `mailparser` (`/api/email/imap-sync`) con merge automatico credenziali e ripristino predefiniti.
-  - Selezione multipla con checkbox (singola o "Seleziona tutte") e barra azioni bulk per eliminazione multipla (`deleteSharedEmailsBulk`) e marcatura in blocco come lette (`markEmailsAsReadBulk`).
+  - **Sistema di Archiviazione & Cartelle Personalizzate**:
+    - Cartella **Archivio** dedicata (`counts.archived`) con pulsanti rapidi "Archivia" e "Ripristina" (singola e in blocco).
+    - Creazione dinamica di **Cartelle su misura** (+ Nuova Cartella con selettore colore: Clienti, Corsi, Fatture, Assistenza Risolta, ecc.).
+    - Assegnazione email con menu a tendina "Cartella" nel dettaglio e "Sposta in..." nella barra multipla (bulk).
+    - Badge colorati delle cartelle e dello stato archiviata direttamente sulle card della lista email.
+  - Selezione multipla con checkbox (singola o "Seleziona tutte") e barra azioni bulk per eliminazione multipla (`deleteSharedEmailsBulk`), archiviazione in blocco (`archiveEmailsBulk`) e marcatura come lette (`markEmailsAsReadBulk`).
   - Copilota AI per analisi email: categorizzazione, priorità e bozza di risposta rapida (`/api/ai/email-agent`).
   - Invio email e risposte via Resend.
 - [x] **Documenti & Cloud Storage (`/files`)**:

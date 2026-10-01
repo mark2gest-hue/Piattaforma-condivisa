@@ -335,6 +335,8 @@ export interface Database {
           access_tier: string
           is_active: boolean
           expires_at: string | null
+          active_session_id?: string | null
+          last_accessed_at?: string | null
           created_at: string
           updated_at: string
         }
@@ -347,6 +349,8 @@ export interface Database {
           access_tier?: string
           is_active?: boolean
           expires_at?: string | null
+          active_session_id?: string | null
+          last_accessed_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -359,6 +363,8 @@ export interface Database {
           access_tier?: string
           is_active?: boolean
           expires_at?: string | null
+          active_session_id?: string | null
+          last_accessed_at?: string | null
           created_at?: string
           updated_at?: string
         }

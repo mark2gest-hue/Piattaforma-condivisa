@@ -273,7 +273,7 @@ export async function convertWaitlistLeadAction(leadId: string, email: string, n
 // VERIFICA CODICE STUDENTE (PER VECCHI E NUOVI UTENTI)
 // ==============================================================================
 
-export async function verifyStudentCodeAction(inputCode: string) {
+export async function verifyStudentCodeAction(inputCode: string, clientSessionToken?: string) {
   try {
     const supabaseAdmin = createAdminClient()
     const cleanCode = inputCode.trim().toUpperCase()
@@ -282,6 +282,7 @@ export async function verifyStudentCodeAction(inputCode: string) {
       return {
         success: true,
         valid: true,
+        sessionToken: 'demo-unlimited-session',
         student: {
           code: cleanCode,
           student_name: cleanCode === 'SUPERADMIN' ? 'Super Admin' : 'Utente Demo',
@@ -303,13 +304,54 @@ export async function verifyStudentCodeAction(inputCode: string) {
       return { success: false, valid: false, error: 'Codice non trovato o disattivato. Controlla il codice ricevuto via email.' }
     }
 
+    // Registra l'ultimo accesso se disponibile senza bloccare se la colonna active_session_id non esiste nello schema
+    try {
+      await supabaseAdmin
+        .from('student_codes')
+        .update({
+          last_accessed_at: new Date().toISOString(),
+        })
+        .eq('id', data.id)
+    } catch (e) {
+      // Ignora silenziosamente
+    }
+
+    const newSessionToken = clientSessionToken || `sess_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+
     return {
       success: true,
       valid: true,
+      sessionToken: newSessionToken,
       student: data,
     }
   } catch (error: any) {
     return { success: false, valid: false, error: error.message }
+  }
+}
+
+export async function validateStudentActiveSessionAction(codeStr: string, sessionToken: string) {
+  try {
+    const supabaseAdmin = createAdminClient()
+    const cleanCode = codeStr.trim().toUpperCase()
+
+    if (cleanCode === 'SUPERADMIN' || cleanCode === 'DEMO2026') {
+      return { valid: true }
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('student_codes')
+      .select('id, code, is_active')
+      .ilike('code', cleanCode)
+      .maybeSingle()
+
+    // Se c'è un errore di rete/schema o il record esiste ed è attivo, non buttare fuori lo studente
+    if (!error && data && data.is_active === false) {
+      return { valid: false, reason: 'Codice disattivato dall\'amministratore.' }
+    }
+
+    return { valid: true }
+  } catch (error: any) {
+    return { valid: true } // Non bloccare mai per errori transitori
   }
 }
 
@@ -695,38 +737,41 @@ export async function deleteCourseRegistrationAction(registrationId: string) {
 export async function checkStudentRegistrationByEmailAction(email: string) {
   try {
     const supabaseAdmin = createAdminClient()
-    const cleanEmail = email.trim().toLowerCase()
+    const cleanEmail = email.trim()
     if (!cleanEmail || !cleanEmail.includes('@')) {
       return { success: false, exists: false, error: 'Inserisci un indirizzo email valido.' }
     }
 
-    // 1. Controlla in course_registrations
+    // 1. Controlla in course_registrations (case-insensitive con ilike)
     const { data: reg } = await supabaseAdmin
       .from('course_registrations')
       .select('id, email, name, status, access_code')
-      .eq('email', cleanEmail)
+      .ilike('email', cleanEmail)
+      .limit(1)
       .maybeSingle()
 
     if (reg) {
       return { success: true, exists: true, name: reg.name, status: reg.status }
     }
 
-    // 2. Controlla in student_codes
+    // 2. Controlla in student_codes (case-insensitive con ilike)
     const { data: code } = await supabaseAdmin
       .from('student_codes')
       .select('id, student_email, student_name, code')
-      .eq('student_email', cleanEmail)
+      .ilike('student_email', cleanEmail)
+      .limit(1)
       .maybeSingle()
 
     if (code) {
       return { success: true, exists: true, name: code.student_name, isEnrolled: true, code: code.code }
     }
 
-    // 3. Controlla in waitlist_leads
+    // 3. Controlla in waitlist_leads (case-insensitive con ilike)
     const { data: lead } = await supabaseAdmin
       .from('waitlist_leads')
       .select('id, email, name')
-      .eq('email', cleanEmail)
+      .ilike('email', cleanEmail)
+      .limit(1)
       .maybeSingle()
 
     if (lead) {

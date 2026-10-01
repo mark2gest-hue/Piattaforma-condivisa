@@ -191,6 +191,13 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           icon: Award,
           badge: 'Certificati',
         },
+        {
+          title: 'Servizi AI & Soluzioni',
+          subtitle: 'Consulenza & Sviluppo PMI',
+          href: '/servizi-ai',
+          icon: Sparkles,
+          badge: 'Soluzioni',
+        },
         ...(isAdmin
           ? [
               {

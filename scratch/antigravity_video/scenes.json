@@ -1,0 +1,58 @@
+[
+  {
+    "id": "scene_01",
+    "title": "BENVENUTI IN ANTIGRAVITY",
+    "subtitle": "L'Ambiente di Sviluppo Potenziato dall'Intelligenza Artificiale",
+    "badge": "MODULO 1 \u2022 PRIMI PASSI",
+    "voice_text": "Benvenuti su Antigravity. Oggi vediamo insieme come impostare l'ambiente di lavoro ideale per collaborare a quattro mani con l'intelligenza artificiale.",
+    "icon": "\ud83d\ude80",
+    "details": [
+      "Pair-programming avanzato con AI Agents",
+      "Controllo totale del codice e dei file di progetto",
+      "Automazione dei test, build e deploy con un click"
+    ],
+    "duration": 10.536
+  },
+  {
+    "id": "scene_02",
+    "title": "LA CABINA DI REGIA",
+    "subtitle": "Spazio di Lavoro Unificato e Navigazione Chirurgica",
+    "badge": "INTERFACCIA & TOOLS",
+    "voice_text": "All'apertura di Antigravity troviamo una cabina di regia completa. A sinistra l'albero dei file, al centro l'editor di testo, e sulla destra la chat agentica sempre attiva.",
+    "icon": "\u26a1",
+    "details": [
+      "File Explorer con supporto multi-workspace",
+      "Terminali persistenti integrati in zsh",
+      "Memoria di contesto e Secondo Cervello condiviso"
+    ],
+    "duration": 12.744
+  },
+  {
+    "id": "scene_03",
+    "title": "I COMANDI FONDAMENTALI",
+    "subtitle": "Come Istruire l'Agente Senza Confusione",
+    "badge": "WORKFLOW OPERATIVO",
+    "voice_text": "Per ottenere il massimo basta usare i comandi chiave: barra plan per pianificare prima di toccare il codice, e la menzione dei file per lavorare in modo chirurgico e sicuro.",
+    "icon": "\ud83c\udfaf",
+    "details": [
+      "/plan : Crea il piano d'azione prima delle modifiche",
+      "/goal : Esecuzione autonoma di task complessi",
+      "Zero rischio di modifiche incontrollate"
+    ],
+    "duration": 11.52
+  },
+  {
+    "id": "scene_04",
+    "title": "PRONTI A PARTIRE",
+    "subtitle": "Inizia Subito il Tuo Prossimo Progetto",
+    "badge": "ACCADEMIA & RISORSE",
+    "voice_text": "Ora il tuo ambiente \u00e8 configurato e pronto. Nei prossimi moduli vedremo come creare applicazioni web, automazioni aziendali ed agenti autonomi.",
+    "icon": "\ud83c\udfc6",
+    "details": [
+      "Dispense e cheat-sheet scaricabili in PDF",
+      "Supporto continuativo nella community Telegram",
+      "Prossima lezione: Tecniche avanzate di Prompting"
+    ],
+    "duration": 11.232
+  }
+]

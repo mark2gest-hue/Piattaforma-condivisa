@@ -48,3 +48,13 @@
 Le skill sono gestite a livello globale in:
 - `~/.gemini/config/skills/project-core`
 - `~/.copilot/agents/project-core`
+
+# Infrastruttura di Produzione (Oracle Cloud VPS - aiutiamoci.cloud)
+- **Host VPS**: `80.225.81.150` (Ubuntu Linux)
+- **SSH Key**: `/Users/marco/.ssh/keys/vps-stefano/ssh-key-2026-09-15.key` (User: `ubuntu`)
+- **Cartella App su Server**: `/var/www/aiutiamoci/`
+- **Cartella Video Master**: `/var/www/videos/`
+- **Gestore Processi**: PM2 (`pm2 restart aiutiamoci`)
+- **Web Server**: Nginx con certificati SSL Let's Encrypt per `aiutiamoci.cloud`
+- **NO VERCEL**: Questo progetto NON è gestito da Vercel in produzione. Ogni deploy va eseguito esclusivamente sulla VPS Oracle.
+- **Comando Deploy Rapido**: `npm run deploy`

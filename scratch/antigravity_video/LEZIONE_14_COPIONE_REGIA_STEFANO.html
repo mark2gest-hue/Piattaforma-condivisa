@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Lezione 14 — Guida alla Regia & Copione Docenza per Stefano</title>
+<style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+    @bottom-left {
+      content: "aiutiamoci.cloud • Masterclass AI Pro — Lezione 14 (Corso 20 Ore)";
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #64748b;
+    }
+    @bottom-right {
+      content: "Pagina " counter(page) " di " counter(pages);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #64748b;
+      font-weight: bold;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.4;
+    font-size: 8.8pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  .header {
+    border-bottom: 2.5px solid #0284c7;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    display: table;
+    width: 100%;
+  }
+  .header-left {
+    display: table-cell;
+    vertical-align: middle;
+    width: 65%;
+  }
+  .header-right {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+    width: 35%;
+  }
+  .brand-title {
+    font-size: 13pt;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .brand-subtitle {
+    font-size: 8pt;
+    color: #0284c7;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 1px;
+  }
+  .badge-doc {
+    display: inline-block;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    font-weight: 700;
+    font-size: 7.5pt;
+    padding: 2px 7px;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+
+  .hero-box {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border: 1px solid #334155;
+  }
+  .hero-box h1 {
+    font-size: 11.5pt;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    color: #38bdf8;
+    letter-spacing: -0.01em;
+  }
+  .hero-box p {
+    font-size: 8.4pt;
+    color: #e2e8f0;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  h2 {
+    font-size: 10.5pt;
+    color: #0f172a;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 2px;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+
+  .module-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    page-break-inside: avoid;
+    background: #ffffff;
+  }
+  .module-header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 5px 8px;
+    display: table;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .module-title {
+    display: table-cell;
+    font-size: 8.5pt;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .module-time {
+    display: table-cell;
+    text-align: right;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #0284c7;
+  }
+  .module-body {
+    padding: 6px 8px;
+  }
+
+  .step-box {
+    margin-bottom: 4px;
+    padding: 6px 8px;
+    background: #f1f5f9;
+    border-left: 3px solid #0284c7;
+    border-radius: 0 5px 5px 0;
+  }
+  .step-label {
+    font-size: 7pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #0369a1;
+    margin-bottom: 2px;
+  }
+  .action-text {
+    font-size: 8.2pt;
+    color: #334155;
+    margin-bottom: 4px;
+  }
+  .speech-box {
+    background: #ffffff;
+    border: 1px dashed #94a3b8;
+    border-radius: 5px;
+    padding: 6px 8px;
+    font-size: 8.2pt;
+    color: #0f172a;
+    line-height: 1.35;
+  }
+  .speech-box strong {
+    color: #0284c7;
+  }
+
+  .tip-box {
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-left: 3.5px solid #f59e0b;
+    padding: 6px 8px;
+    border-radius: 0 5px 5px 0;
+    font-size: 7.8pt;
+    color: #92400e;
+    margin-top: 6px;
+  }
+
+  .checklist {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+  .checklist ul {
+    margin: 2px 0 0 0;
+    padding-left: 14px;
+    font-size: 7.8pt;
+    color: #334155;
+  }
+  .checklist li {
+    margin-bottom: 1px;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ==================== PAGINA 1: INTRODUZIONE & FASE 1 ==================== -->
+  <div class="header">
+    <div class="header-left">
+      <h1 class="brand-title">LEZIONE 14: L'ASSISTENTE PREVENTIVI — DA RICHIESTA CLIENTE A BOZZA PDF</h1>
+      <div class="brand-subtitle">Masterclass AI Pro (Percorso 20 Ore) • Guida alla Regia per Stefano</div>
+    </div>
+    <div class="header-right">
+      <span class="badge-doc">Lezione 14 • Vendite & Preventivi</span>
+      <div style="font-size: 7.5pt; color: #64748b; margin-top: 1px;">Durata Stimata: 18 - 20 Minuti</div>
+    </div>
+  </div>
+
+  <div class="hero-box">
+    <h1>🎯 Obiettivo della Lezione</h1>
+    <p>Creare un flusso che riceve una richiesta di quotazione, incrocia i dati con un listino prezzi aziendale e genera automaticamente un documento PDF di proposta commerciale elegante.</p>
+  </div>
+
+  <div class="checklist">
+    <strong style="color: #0f172a; font-size: 8pt;">📋 Preparazione Desktop Prima di Iniziare:</strong>
+    <ul>
+      <li><strong>Listino prezzi semplice in JSON o tabella:</strong> Listino prezzi semplice in JSON o tabella</li><li><strong>Template HTML per il preventivo PDF:</strong> Template HTML per il preventivo PDF</li><li><strong>Mostrare il PDF finale generato in 2 secondi:</strong> Mostrare il PDF finale generato in 2 secondi</li>
+    </ul>
+  </div>
+
+  <h2>SCALETTA OPERATIVA ESPANSA (5 FASI DA ~3.5-4 MINUTI CIASCUNA)</h2>
+
+  
+            
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 1: Il Collo di Bottiglia Commerciale nei Preventivi</div>
+                <div class="module-time">⏱️ Minuti 00:00 - 04:00</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Webcam frontale di Stefano, poi mostra una richiesta di preventivo tipica arrivata da un cliente.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Bentornati nella quattordicesima lezione della Masterclass AI Pro!<br><br>Nelle vendite esiste una regola aurea: <strong>chi risponde per primo con una proposta chiara e professionale vince l'80% delle trattative</strong>.<br><br>Spesso però i preventivi restano fermi sulla scrivania per giorni perché bisogna calcolare i prezzi, scrivere il testo e impaginare il documento.<br><br>Oggi costruiamo l'<strong>Assistente Preventivi Automatico</strong>: prende la richiesta del cliente, consulta il vostro listino prezzi ufficiale e genera una proposta commerciale in formato PDF pronta per la revisione in 3 secondi netti."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="page-break"></div>
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 2: Il Listino Prezzi Grounding (Nessun Errore sui Prezzi)</div>
+                <div class="module-time">⏱️ Minuti 04:00 - 08:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Mostra il listino aziendale: Corso Base: 490€, Corso Pro: 990€, Bundle Completo: 1290€, Consulenza: 150€/ora.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "La prima regola per un preventivo è la sicurezza: l'AI non deve MAI inventare i prezzi.<br><br>Inseriamo nel prompt il nostro <strong>Listino Prezzi Ufficiale</strong> blindato: definiamo i pacchetti e le tariffe orarie.<br><br>Diciamo all'Agente: <em>'Calcola i totali e applica l'IVA al 22% solo in base a queste voci ufficiali'</em>.<br><br>In questo modo abbiamo la certezza matematica della correttezza economica del preventivo."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 3: Il Template Grafico HTML del Preventivo</div>
+                <div class="module-time">⏱️ Minuti 08:30 - 12:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Mostra il template HTML con logo aziendale, tabella prezzi ordinata e totale con IVA.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Per avere un preventivo che trasmetta autorevolezza e qualità, usiamo un <strong>Template HTML elegante</strong> con il logo della nostra azienda, i dati del cliente e la tabella dei servizi.<br><br>L'AI compila i segnaposto del template inserendo il nome del cliente, la data e le righe di calcolo con i totali corretti.<br><br>Il risultato è una grafica pulita, moderna e altamente professionale."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="page-break"></div>
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 4: Conversione in PDF & Salvataggio Automatico</div>
+                <div class="module-time">⏱️ Minuti 12:30 - 16:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">1. Aggiungi nodo di conversione HTML to PDF o visualizzazione browser.<br>2. Esegui il flusso completo.<br>3. Apri il PDF generato a schermo: perfetto, formattato e pronto.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Facciamo partire il flusso: guardate cosa accade in 2 secondi!<br><br>La richiesta del cliente entra nel sistema, l'AI consulta il listino, popola il documento e genera il file <code>Preventivo_Mario_Rossi.pdf</code>.<br><br>Apriamo il PDF a schermo: intestazione impeccabile, voci di spesa chiare, totale calcolato al centesimo e firma aziendale.<br><br>Una velocità di risposta commerciale che lascia i vostri concorrenti a distanza siderale."
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="module-card">
+              <div class="module-header">
+                <div class="module-title">FASE 5: Esercizio Pratico & Lancio Lezioni 15-16 (Il RAG)</div>
+                <div class="module-time">⏱️ Minuti 16:30 - 19:30</div>
+              </div>
+              <div class="module-body">
+                <div class="step-box">
+                  <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+                  <div class="action-text">Webcam frontale con riepilogo dell'assistente preventivi.</div>
+                  <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+                  <div class="speech-box">
+                    "Avete creato uno strumento di vendita automatica formidabile!<br><br><strong>Esercizio per oggi</strong>: personalizzate il listino prezzi con i servizi della vostra azienda e generate il vostro primo preventivo di test.<br><br>Nelle <strong>Lezioni 15 e 16</strong> entriamo nel <strong>Pilastro 4</strong>: scopriremo il <strong>RAG (Retrieval-Augmented Generation)</strong>, la tecnologia che permette all'AI di studiare centinaia di pagine di PDF, manuali e contratti aziendali per rispondere senza mai allucinare!<br><br>A tra poco!"
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+
+  <div class="tip-box">
+    <strong>💡 Consiglio di Regia per Stefano:</strong> Mantieni un ritmo calmo e rassicurante. Mostra con il mouse ogni click sul browser o su n8n: questa chiarezza visiva garantisce la perfetta comprensione dello studente e porta la lezione esattamente a 18-20 minuti!
+  </div>
+
+</body>
+</html>

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "deploy": "rsync -avz --exclude 'node_modules' --exclude '.next' --exclude '.git' --exclude 'public/*.mp4' -e \"ssh -i /Users/marco/.ssh/keys/vps-stefano/ssh-key-2026-09-15.key -o StrictHostKeyChecking=no\" ./ ubuntu@80.225.81.150:/var/www/aiutiamoci/ && ssh -i /Users/marco/.ssh/keys/vps-stefano/ssh-key-2026-09-15.key -o StrictHostKeyChecking=no ubuntu@80.225.81.150 \"cd /var/www/aiutiamoci && npm run build && pm2 restart aiutiamoci\"",
     "sync:vault": "node scripts/sync-vault.mjs"
   },
   "dependencies": {

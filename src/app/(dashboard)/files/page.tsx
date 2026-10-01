@@ -26,6 +26,9 @@ import {
   Copy,
   Pencil,
   FolderInput,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -48,6 +51,19 @@ export default function FilesManagerPage() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Sorting State (default: ordinamento naturale per nome A-Z / 01 -> 20)
+  const [sortBy, setSortBy] = useState<'name' | 'size' | 'created_at'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
+  const handleToggleSort = (field: 'name' | 'size' | 'created_at') => {
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortBy(field)
+      setSortOrder('asc')
+    }
+  }
 
   // Folder & Breadcrumb Navigation State
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
@@ -612,8 +628,36 @@ export default function FilesManagerPage() {
   })
 
   // Separiamo le cartelle dai file per mostrare le cartelle in cima
-  const currentFolders = currentLevelItems.filter((i) => i.mime_type === 'folder')
-  const currentFiles = currentLevelItems.filter((i) => i.mime_type !== 'folder')
+  const sortComparator = (a: FileWithUploader, b: FileWithUploader) => {
+    let result = 0
+    if (sortBy === 'name') {
+      result = a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    } else if (sortBy === 'size') {
+      result = (a.size_bytes || 0) - (b.size_bytes || 0)
+    } else if (sortBy === 'created_at') {
+      result = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    }
+    return sortOrder === 'asc' ? result : -result
+  }
+
+  const currentFolders = currentLevelItems
+    .filter((i) => i.mime_type === 'folder')
+    .sort(sortComparator)
+
+  const currentFiles = currentLevelItems
+    .filter((i) => i.mime_type !== 'folder')
+    .sort(sortComparator)
+
+  const renderSortIndicator = (field: 'name' | 'size' | 'created_at') => {
+    if (sortBy !== field) {
+      return <ArrowUpDown className="h-3 w-3 text-slate-400 opacity-60 group-hover:opacity-100 ml-1 inline-block" />
+    }
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 font-bold ml-1 inline-block" />
+    ) : (
+      <ArrowDown className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 font-bold ml-1 inline-block" />
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -711,11 +755,35 @@ export default function FilesManagerPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                <th className="py-3 px-4">Nome Elemento</th>
-                <th className="py-3 px-4">Tipo / Dimensione</th>
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none">
+                <th
+                  onClick={() => handleToggleSort('name')}
+                  className="py-3 px-4 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-colors group"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Nome Elemento</span>
+                    {renderSortIndicator('name')}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleToggleSort('size')}
+                  className="py-3 px-4 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-colors group"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Tipo / Dimensione</span>
+                    {renderSortIndicator('size')}
+                  </div>
+                </th>
                 <th className="py-3 px-4">Creato Da</th>
-                <th className="py-3 px-4">Data</th>
+                <th
+                  onClick={() => handleToggleSort('created_at')}
+                  className="py-3 px-4 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-colors group"
+                >
+                  <div className="flex items-center gap-1">
+                    <span>Data</span>
+                    {renderSortIndicator('created_at')}
+                  </div>
+                </th>
                 <th className="py-3 px-4 text-right">Azioni</th>
               </tr>
             </thead>

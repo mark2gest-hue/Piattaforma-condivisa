@@ -1,0 +1,434 @@
+import os
+
+OUTPUT_HTML = "scratch/antigravity_video/LEZIONE_01_COPIONE_REGIA_STEFANO.html"
+
+html_doc = """<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Lezione 01 — Guida alla Regia & Copione Docenza per Stefano (18-20 Minuti)</title>
+<style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+    @bottom-left {
+      content: "aiutiamoci.cloud • Masterclass AI Pro — Lezione 01 (Corso 20 Ore)";
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #64748b;
+    }
+    @bottom-right {
+      content: "Pagina " counter(page) " di " counter(pages);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #64748b;
+      font-weight: bold;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.4;
+    font-size: 8.8pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  .header {
+    border-bottom: 2.5px solid #0284c7;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    display: table;
+    width: 100%;
+  }
+  .header-left {
+    display: table-cell;
+    vertical-align: middle;
+    width: 65%;
+  }
+  .header-right {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+    width: 35%;
+  }
+  .brand-title {
+    font-size: 13.5pt;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .brand-subtitle {
+    font-size: 8pt;
+    color: #0284c7;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 1px;
+  }
+  .badge-doc {
+    display: inline-block;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    font-weight: 700;
+    font-size: 7.5pt;
+    padding: 2px 7px;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+
+  /* SCHEDA DI BENVENUTO HERO */
+  .welcome-box {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border: 1px solid #334155;
+  }
+  .welcome-box h1 {
+    font-size: 12pt;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    color: #38bdf8;
+    letter-spacing: -0.01em;
+  }
+  .welcome-box p {
+    font-size: 8.4pt;
+    color: #e2e8f0;
+    margin: 0 0 6px 0;
+    line-height: 1.35;
+  }
+
+  .pillars-grid {
+    display: table;
+    width: 100%;
+    margin-top: 8px;
+    border-top: 1px solid #334155;
+    padding-top: 8px;
+  }
+  .pillar-col {
+    display: table-cell;
+    width: 25%;
+    vertical-align: top;
+    padding-right: 6px;
+  }
+  .pillar-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid #475569;
+    border-radius: 6px;
+    padding: 6px 8px;
+  }
+  .pillar-num {
+    font-size: 7pt;
+    font-weight: 800;
+    color: #38bdf8;
+    text-transform: uppercase;
+  }
+  .pillar-title {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 1px 0 2px 0;
+  }
+  .pillar-desc {
+    font-size: 7.2pt;
+    color: #94a3b8;
+    line-height: 1.25;
+  }
+
+  h2 {
+    font-size: 10.5pt;
+    color: #0f172a;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 2px;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+
+  .module-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    page-break-inside: avoid;
+    background: #ffffff;
+  }
+  .module-header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 5px 8px;
+    display: table;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .module-title {
+    display: table-cell;
+    font-size: 8.5pt;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .module-time {
+    display: table-cell;
+    text-align: right;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #0284c7;
+  }
+  .module-body {
+    padding: 6px 8px;
+  }
+
+  .step-box {
+    margin-bottom: 4px;
+    padding: 6px 8px;
+    background: #f1f5f9;
+    border-left: 3px solid #0284c7;
+    border-radius: 0 5px 5px 0;
+  }
+  .step-label {
+    font-size: 7pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #0369a1;
+    margin-bottom: 2px;
+  }
+  .action-text {
+    font-size: 8.2pt;
+    color: #334155;
+    margin-bottom: 4px;
+  }
+  .speech-box {
+    background: #ffffff;
+    border: 1px dashed #94a3b8;
+    border-radius: 5px;
+    padding: 6px 8px;
+    font-size: 8.2pt;
+    color: #0f172a;
+    line-height: 1.35;
+  }
+  .speech-box strong {
+    color: #0284c7;
+  }
+
+  .tip-box {
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-left: 3.5px solid #f59e0b;
+    padding: 6px 8px;
+    border-radius: 0 5px 5px 0;
+    font-size: 7.8pt;
+    color: #92400e;
+    margin-top: 6px;
+  }
+
+  .checklist {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+  .checklist ul {
+    margin: 2px 0 0 0;
+    padding-left: 14px;
+    font-size: 7.8pt;
+    color: #334155;
+  }
+  .checklist li {
+    margin-bottom: 1px;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ==================== PAGINA 1: BENVENUTO & PANORAMICA ==================== -->
+  <div class="header">
+    <div class="header-left">
+      <h1 class="brand-title">LEZIONE 01: BENVENUTO & DA CARTELLA VUOTA AL PRIMO AGENTE</h1>
+      <div class="brand-subtitle">Masterclass AI Pro (Percorso 20 Ore) • Guida alla Regia per Stefano</div>
+    </div>
+    <div class="header-right">
+      <span class="badge-doc">Scheda Singola • Lezione 01</span>
+      <div style="font-size: 7.5pt; color: #64748b; margin-top: 1px;">Durata Stimata: 18 - 20 Minuti</div>
+    </div>
+  </div>
+
+  <div class="welcome-box">
+    <h1>🚀 BENVENUTI NELLA MASTERCLASS AI PRO (PERCORSO 20 ORE FORMATIVE)</h1>
+    <p>
+      Iniziamo il nostro percorso completo di 20 ore tra video on-demand, esercitazioni pratiche e dirette live settimanali. L'obiettivo è trasformare l'Intelligenza Artificiale da semplice chat in una <strong>squadra operativa autonoma</strong> al servizio del vostro lavoro.
+    </p>
+
+    <!-- I 4 PILASTRI DEL CORSO -->
+    <div class="pillars-grid">
+      <div class="pillar-col">
+        <div class="pillar-card">
+          <div class="pillar-num">PILASTRO 1</div>
+          <div class="pillar-title">🤖 Agenti Autonomi</div>
+          <div class="pillar-desc">Antigravity & Regole AGENTS.md per lavorare direttamente sui file aziendali.</div>
+        </div>
+      </div>
+      <div class="pillar-col">
+        <div class="pillar-card">
+          <div class="pillar-num">PILASTRO 2</div>
+          <div class="pillar-title">🔑 API & Modelli</div>
+          <div class="pillar-desc">Google AI Studio (Gemini gratis) e OpenAI Platform con budget cap a 5€.</div>
+        </div>
+      </div>
+      <div class="pillar-col">
+        <div class="pillar-card">
+          <div class="pillar-num">PILASTRO 3</div>
+          <div class="pillar-title">⚡ Automazioni n8n</div>
+          <div class="pillar-desc">Flussi visivi no-code, webhook, email automatiche e preventivi.</div>
+        </div>
+      </div>
+      <div class="pillar-col" style="padding-right: 0;">
+        <div class="pillar-card">
+          <div class="pillar-num">PILASTRO 4</div>
+          <div class="pillar-title">🧠 RAG & Telegram</div>
+          <div class="pillar-desc">Conoscenza aziendale senza allucinazioni e bot interattivi con controllo umano.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>SCALETTA OPERATIVA ESPANSA (5 FASI DA ~3.5-4 MINUTI CIASCUNA)</h2>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 1: Cosa sono gli Agenti e Perché Cambiano le Regole del Gioco</div>
+      <div class="module-time">⏱️ Minuti 00:00 - 04:00</div>
+    </div>
+    <div class="module-body">
+      <div class="step-box">
+        <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+        <div class="action-text">Webcam a tutto schermo di Stefano (oppure schermata di benvenuto del corso).</div>
+        <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+        <div class="speech-box">
+          "Ciao a tutti e benvenuti nella prima lezione della Masterclass AI Pro di Aiutiamoci!<br><br>
+          Questo corso si articola su 20 ore formative complete: alterneremo queste lezioni video passo-passo, laboratori pratici che farete sul vostro computer e le nostre consuete dirette del giovedì per chiarire ogni dubbio dal vivo.<br><br>
+          Nel corso base abbiamo imparato a interagire con ChatGPT e i modelli linguistici. Ma quella era una <strong>chat passiva</strong>: voi facevate una domanda, l'AI rispondeva, e poi il lavoro pratico di copiare, incollare e formattare i dati toccava ancora a voi.<br><br>
+          In questo percorso avanzato facciamo il vero salto di qualità entrando nel mondo degli <strong>Agenti Intelligenti</strong>. Un Agente non si limita a rispondere: ha le 'mani', cioè ha il permesso di aprire la cartella del vostro computer, leggere i documenti aziendali, creare fogli Excel puliti, organizzare i file e dialogare con strumenti esterni come Telegram, Gmail o i gestionali. Diventa a tutti gli effetti il vostro <strong>collaboratore operativo digitale</strong>."
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- ==================== PAGINA 2: FASI 2 & 3 ==================== -->
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 2: Libertà di Piattaforma & Perché Consigliamo Antigravity</div>
+      <div class="module-time">⏱️ Minuti 04:00 - 08:00</div>
+    </div>
+    <div class="module-body">
+      <div class="step-box">
+        <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+        <div class="action-text">Mostra l'icona di Antigravity spiegando che i principi valgono ovunque.</div>
+        <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+        <div class="speech-box">
+          "Prima di mettere le mani sul computer, voglio fare una premessa fondamentale: <strong>voi siete liberi al 100% di utilizzare la piattaforma che preferite</strong>.<br><br>
+          Oggi esistono diversi ambienti per lavorare con gli agenti (come Cursor, Windsurf, Claude Code o estensioni per VS Code). Le indicazioni, il metodo e le logiche che vi insegneremo in questo corso sono <strong>universali e funzionano esattamente allo stesso modo su qualsiasi software</strong>.<br><br>
+          Perché durante le nostre lezioni vi mostreremo <strong>Google Antigravity</strong>?<br>
+          Per un motivo molto semplice ed economico: con un account a pagamento di base da una cifra piccolissima, Antigravity vi permette di fare una quantità enorme di prove ed esperimenti senza spendere cifre esorbitanti.<br><br>
+          In più ha già tutto integrato: visualizzatore di file, terminale e cabina di regia dell'Agente in una sola schermata pulita. Se volete seguirci passo-passo vi consigliamo di partire con questa, ma se già usate altri ambienti vi troverete a vostro agio fin dal primo secondo."
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 3: Da Cartella Vuota all'Apertura di Antigravity</div>
+      <div class="module-time">⏱️ Minuti 08:00 - 12:00</div>
+    </div>
+    <div class="module-body">
+      <div class="step-box">
+        <div class="step-label">🖥️ Cosa fare a schermo:</div>
+        <div class="action-text">
+          1. Mostra il desktop pulito e crea la cartella <code>Laboratorio-AI-Pro</code>.<br>
+          2. Apri Antigravity e clicca su <em>File -> Apri Cartella</em> selezionando <code>Laboratorio-AI-Pro</code>.<br>
+          3. Sposta il mouse per mostrare la finestra a 3 colonne.
+        </div>
+        <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+        <div class="speech-box">
+          "Passiamo alla pratica. Vedete qui sul desktop? Ho creato una cartella completamente vuota e l'ho chiamata 'Laboratorio-AI-Pro'.<br><br>
+          Apriamo Antigravity, andiamo su <em>File -> Apri Cartella</em> e selezioniamo questa cartella vuota. Da questo momento, questo spazio diventa il nostro laboratorio condiviso con l'Agente.<br><br>
+          Diamo un'occhiata all'interfaccia, è divisa in 3 sezioni intuitive:<br>
+          • <strong>A sinistra</strong>: l'albero dei file della nostra cartella (ora vuoto, ma si riempirà subito).<br>
+          • <strong>Al centro</strong>: l'editor dove visualizziamo e modifichiamo i documenti.<br>
+          • <strong>A destra</strong>: la chat di comando dell'Agente AI.<br><br>
+          L'Agente è 'agganciato' a questa cartella: tutto ciò che faremo accadrà in totale sicurezza dentro questo spazio."
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- ==================== PAGINA 3: FASI 4 & 5 (COMPLETAMENTO 18-20 MINUTI) ==================== -->
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 4: Il Primo Comando — Creazione del File di Regole `AGENTS.md`</div>
+      <div class="module-time">⏱️ Minuti 12:00 - 16:00</div>
+    </div>
+    <div class="module-body">
+      <div class="step-box">
+        <div class="step-label">🖥️ Cosa fare a schermo:</div>
+        <div class="action-text">
+          1. Digita nella chat dell'Agente: <code>Crea un file AGENTS.md per la nostra azienda. Regole: rispondi sempre in italiano, usa un tono sintetico e professionale, e organizza i risultati in elenchi puntati o tabelle.</code><br>
+          2. Premi Invio, mostra l'Agente che pensa (<em>Thinking</em>) e scrive il file.<br>
+          3. Fai clic sul file <code>AGENTS.md</code> comparso a sinistra per aprirlo al centro.
+        </div>
+        <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+        <div class="speech-box">
+          "Guardate cosa succede quando invio il comando: l'Agente analizza la richiesta e crea fisicamente il file <code>AGENTS.md</code> dentro la nostra cartella.<br><br>
+          Pensate a questo file come al <strong>contratto di lavoro</strong> o alla costituzione del nostro assistente. Invece di dovergli ripetere ogni giorno chi siete e come volete le risposte, le scriviamo qui dentro una volta sola.<br><br>
+          Ogni volta che gli daremo un compito, l'Agente leggerà prima questo documento per ricordarsi esattamente come comportarsi."
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 5: Esercizio Pratico per lo Studente & Saluti di Chiusura</div>
+      <div class="module-time">⏱️ Minuti 16:00 - 19:30</div>
+    </div>
+    <div class="module-body">
+      <div class="step-box">
+        <div class="step-label">🖥️ Cosa mostrare a schermo:</div>
+        <div class="action-text">Mostra la schermata con Antigravity e il file aperto, e poi torna con la webcam frontale.</div>
+        <div class="step-label">🗣️ Cosa dire a voce (Copione per Stefano):</div>
+        <div class="speech-box">
+          "Per questa prima lezione abbiamo posto le fondamenta perfette.<br><br>
+          <strong>Il vostro compito per oggi</strong>: create sul vostro computer la cartella di lavoro, aprite Antigravity e fate creare al vostro Agente il vostro primo file <code>AGENTS.md</code> personalizzato con il nome della vostra azienda o della vostra attività.<br><br>
+          Nella <strong>Lezione 2</strong> andremo a blindare queste regole inserendo la protezione anti-allucinazione e la sicurezza con controllo umano obbligatorio prima di modificare qualsiasi documento!<br><br>
+          Buona pratica e ci vediamo alla prossima lezione!"
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <strong>💡 Consiglio di Regia per Stefano:</strong> Prendi il tuo tempo in ogni fase. Fai delle brevi pause tra una spiegazione e l'altra e mostra con il cursore del mouse i punti esatti di cui stai parlando. Questa cadenza rilassata porta il video esattamente sui 18-20 minuti ideali!
+  </div>
+
+</body>
+</html>
+"""
+
+with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
+    f.write(html_doc)
+
+print("📄 File HTML Lezione 01 (18-20 Min) creato con successo!")
