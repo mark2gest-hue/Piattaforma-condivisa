@@ -768,17 +768,17 @@ export default function LandingPage() {
               <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-            {/* Foto dei 3 Soci / Docenti */}
-            <div className="md:col-span-5 flex justify-center">
-              <div className="relative rounded-3xl overflow-hidden border-2 border-indigo-500/40 shadow-2xl shadow-indigo-500/20 max-w-sm group">
+            {/* Foto dei 3 Soci / Docenti (Orizzontale / Ambientata) */}
+            <div className="md:col-span-6 flex justify-center">
+              <div className="relative rounded-3xl overflow-hidden border-2 border-indigo-500/40 shadow-2xl shadow-indigo-500/20 w-full group">
                 <img
                   src="/images/team_docenti.jpg"
                   alt="I Docenti di Aiutiamoci: Marco, Stefano e Lorenzo"
-                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-auto aspect-video sm:aspect-auto object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80 pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none"></div>
                 <div className="absolute bottom-3 left-3 right-3 text-center pointer-events-none">
-                  <span className="text-[11px] font-bold text-white bg-slate-950/80 border border-slate-800 px-3 py-1 rounded-full backdrop-blur-md">
+                  <span className="text-[11px] font-bold text-white bg-slate-950/85 border border-slate-700/80 px-3.5 py-1 rounded-full backdrop-blur-md shadow-lg">
                     Marco • Stefano • Lorenzo
                   </span>
                 </div>
@@ -786,7 +786,7 @@ export default function LandingPage() {
             </div>
 
             {/* Testo di Presentazione Umana */}
-            <div className="md:col-span-7 space-y-5 text-left">
+            <div className="md:col-span-6 space-y-5 text-left">
               <div className="space-y-2">
                 <Badge variant="purple" className="text-[10px] uppercase font-bold tracking-widest">
                   Docenti & Fondatori
