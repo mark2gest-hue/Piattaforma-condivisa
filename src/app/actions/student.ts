@@ -868,3 +868,148 @@ export async function checkStudentRegistrationByEmailAction(email: string) {
     return { success: false, exists: false, error: error.message || 'Errore verifica email' }
   }
 }
+
+/**
+ * Pulisce i record duplicati salvaguardando rigorosamente chi è già approvato.
+ * Elimina:
+ * 1. Richieste in course_registrations con approved=false che hanno la stessa email di un'altra richiesta o di uno studente già attivo/approvato.
+ * 2. Richieste in course_registrations con approved=false che hanno lo stesso nominativo normalizzato di uno studente già approvato.
+ * 3. Eventuali record duplicati nella rubrica clients (mantiene il record più recente).
+ */
+export async function cleanDuplicateRegistrationsAction() {
+  try {
+    await requireAuthUser()
+    const supabaseAdmin = createAdminClient()
+
+    // 1. Carica registrazioni, studenti attivi e clienti
+    const { data: allRegs, error: regErr } = await supabaseAdmin
+      .from('course_registrations')
+      .select('id, email, name, approved, status, created_at')
+      .order('created_at', { ascending: false })
+
+    if (regErr) throw regErr
+
+    const { data: activeStudents, error: stdErr } = await supabaseAdmin
+      .from('student_codes')
+      .select('id, student_email, student_name, code, is_active')
+
+    if (stdErr) throw stdErr
+
+    const { data: allClients, error: cliErr } = await supabaseAdmin
+      .from('clients')
+      .select('id, email, first_name, last_name, company, created_at')
+      .order('created_at', { ascending: false })
+
+    if (cliErr) throw cliErr
+
+    // Mappe di chi è GIA' APPROVATO (IMMUTABILI - NON VENGONO CANCELLATI)
+    const approvedEmails = new Set<string>();
+    const approvedNames = new Set<string>();
+
+    // Studenti con codice attivo sono considerati approvati
+    const safeStudents = (activeStudents as any[]) || []
+    safeStudents.forEach((s) => {
+      if (s.student_email) approvedEmails.add(s.student_email.toLowerCase().trim())
+      if (s.student_name) approvedNames.add(s.student_name.toLowerCase().trim())
+    })
+
+    // Registrazioni approvate esplicite
+    const safeRegs = (allRegs as any[]) || []
+    safeRegs.forEach((r) => {
+      if (r.approved === true || r.status === 'approved') {
+        if (r.email) approvedEmails.add(r.email.toLowerCase().trim())
+        if (r.name) approvedNames.add(r.name.toLowerCase().trim())
+      }
+    })
+
+    const regsToDelete: { id: string; name: string; email: string; reason: string }[] = []
+    const seenUnapprovedEmails = new Set<string>()
+
+    // Scansiona registrazioni NON APPROVATE
+    const unapprovedRegs = (allRegs || []).filter(
+      (r) => r.approved !== true && r.status !== 'approved'
+    )
+
+    for (const reg of unapprovedRegs) {
+      const cleanEmail = (reg.email || '').toLowerCase().trim()
+      const cleanName = (reg.name || '').toLowerCase().trim()
+
+      // Motivo 1: Persona già approvata con la stessa email
+      if (cleanEmail && approvedEmails.has(cleanEmail)) {
+        regsToDelete.push({
+          id: reg.id,
+          name: reg.name,
+          email: reg.email,
+          reason: 'Email già presente tra i corsisti approvati',
+        })
+        continue
+      }
+
+      // Motivo 2: Persona già approvata con lo stesso nominativo
+      if (cleanName && approvedNames.has(cleanName)) {
+        regsToDelete.push({
+          id: reg.id,
+          name: reg.name,
+          email: reg.email,
+          reason: 'Nominativo già presente tra i corsisti approvati',
+        })
+        continue
+      }
+
+      // Motivo 3: Duplicato tra le stesse non-approvate (doppio invio form)
+      if (cleanEmail && seenUnapprovedEmails.has(cleanEmail)) {
+        regsToDelete.push({
+          id: reg.id,
+          name: reg.name,
+          email: reg.email,
+          reason: 'Invio duplicato in attesa di approvazione',
+        })
+        continue
+      }
+
+      if (cleanEmail) seenUnapprovedEmails.add(cleanEmail)
+    }
+
+    // Esegui cancellazione delle sole registrazioni non approvate
+    if (regsToDelete.length > 0) {
+      const idsToDelete = regsToDelete.map((r) => r.id)
+      const { error: delErr } = await supabaseAdmin
+        .from('course_registrations')
+        .delete()
+        .in('id', idsToDelete)
+
+      if (delErr) {
+        console.error('Errore delete registrazioni duplicate:', delErr)
+        throw delErr
+      }
+    }
+
+    // 2. Pulizia duplicati in 'clients' (mantiene il primo/più recente, elimina i doppioni)
+    const clientEmailsSeen = new Set<string>()
+    const clientIdsToDelete: string[] = []
+
+    for (const c of allClients || []) {
+      const em = (c.email || '').toLowerCase().trim()
+      if (!em) continue
+      if (clientEmailsSeen.has(em)) {
+        clientIdsToDelete.push(c.id)
+      } else {
+        clientEmailsSeen.add(em)
+      }
+    }
+
+    if (clientIdsToDelete.length > 0) {
+      await supabaseAdmin.from('clients').delete().in('id', clientIdsToDelete)
+    }
+
+    return {
+      success: true,
+      removedRegistrationsCount: regsToDelete.length,
+      removedClientsCount: clientIdsToDelete.length,
+      details: regsToDelete,
+    }
+  } catch (error: any) {
+    console.error('Errore cleanDuplicateRegistrationsAction:', error)
+    return { success: false, error: error.message || 'Errore durante la pulizia dei duplicati' }
+  }
+}

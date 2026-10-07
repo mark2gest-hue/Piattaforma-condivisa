@@ -65,6 +65,7 @@ import {
   validateStudentActiveSessionAction,
   upgradeStudentTierAction,
   toggleStudentExamUnlockAction,
+  cleanDuplicateRegistrationsAction,
 } from '@/app/actions/student'
 import {
   LESSON_SUMMARIES,
@@ -996,6 +997,41 @@ function CorsiInnerContent() {
       setCourseRegistrations((prev) => prev.filter((r) => r.id !== id))
     } else {
       alert(`Errore eliminazione: ${res.error}`)
+    }
+  }
+
+  const [isCleaningDuplicates, setIsCleaningDuplicates] = useState(false)
+  const handleCleanDuplicates = async () => {
+    const confirmMsg =
+      "Vuoi procedere alla pulizia automatica dei duplicati?\n\n" +
+      "⚠️ REGOLE DI SICUREZZA:\n" +
+      "• Verranno eliminate ESCLUSIVAMENTE le registrazioni duplicate NON APPROVATE.\n" +
+      "• Chiunque sia già approvato o abbia un codice attivo NON verrà toccato.\n" +
+      "• Eventuali clienti duplicati con stessa email verranno consolidati."
+
+    if (!confirm(confirmMsg)) return
+
+    setIsCleaningDuplicates(true)
+    const res = await cleanDuplicateRegistrationsAction()
+    setIsCleaningDuplicates(false)
+
+    if (res.success) {
+      playNotificationSound('chat')
+      const totalRemoved = (res.removedRegistrationsCount || 0) + (res.removedClientsCount || 0)
+      if (totalRemoved === 0) {
+        alert("✨ Nessun duplicato non approvato trovato. Il database è già perfettamente allineato e pulito!")
+      } else {
+        alert(
+          `✅ Pulizia completata con successo!\n\n` +
+          `• Richieste duplicate non approvate rimosse: ${res.removedRegistrationsCount || 0}\n` +
+          `• Clienti duplicati consolidati: ${res.removedClientsCount || 0}\n\n` +
+          `I corsisti approvati sono rimasti intatti al 100%.`
+        )
+        await loadCourseRegistrations()
+        await loadStudentCodes()
+      }
+    } else {
+      alert(`Errore pulizia duplicati: ${res.error}`)
     }
   }
 
@@ -3716,15 +3752,33 @@ function CorsiInnerContent() {
               </button>
             </div>
 
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={loadCourseRegistrations}
-              className="text-xs h-8 gap-1.5 border-slate-200 dark:border-slate-700"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loadingRegistrations ? 'animate-spin' : ''}`} />
-              <span>Ricarica</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isCleaningDuplicates}
+                onClick={handleCleanDuplicates}
+                className="text-xs h-8 gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 font-semibold"
+                title="Rimuove automaticamente le registrazioni doppie NON approvate"
+              >
+                {isCleaningDuplicates ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-500" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5 text-amber-500" />
+                )}
+                <span>Pulisci Duplicati</span>
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={loadCourseRegistrations}
+                className="text-xs h-8 gap-1.5 border-slate-200 dark:border-slate-700"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${loadingRegistrations ? 'animate-spin' : ''}`} />
+                <span>Ricarica</span>
+              </Button>
+            </div>
           </div>
 
           {/* TABELLA 1: REGISTRAZIONI & QUESTIONARIO (COME NELLA FOTO) */}

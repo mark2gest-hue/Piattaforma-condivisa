@@ -1,7 +1,12 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-07 16:25
+Ultimo aggiornamento: 2026-10-07 16:48
 Stato corrente: 
+- **Pulizia Automatica Duplicati Non Approvati (`/corsi`) COMPLETATO**:
+  - Implementata server action `cleanDuplicateRegistrationsAction` in `src/app/actions/student.ts` con protezione ferrea: non tocca in alcun modo gli iscritti approvati o attivi.
+  - Elimina automaticamente solo le registrazioni in attesa (`approved: false`) che risultano doppioni di utenti già attivi/approvati o invii multipli accidentali del questionario.
+  - Consolida record duplicati nella rubrica `clients` preservando il record principale.
+  - Aggiunto pulsante operativo `[🧹 Pulisci Duplicati]` nella barra del registro registrazioni (`/corsi`) con popup di conferma preventiva e alert con riepilogo puntuale delle rimozioni.
 - **Selettore Contatti dal Database nel Calendario (`/calendario`) COMPLETATO**:
   - Aggiunto pulsante rapido `[👥 Scegli dal Database]` nella sezione destinatari del modale di creazione evento.
   - Implementata server action `getSelectableRecipientsAction` in `src/app/actions/event-invitations.ts` per recuperare in modo unificato contatti da `student_codes` (studenti con codici), `clients` (rubrica clienti B2B) e `waitlist_leads` (lead lista d'attesa).
