@@ -112,22 +112,37 @@ export default function CalendarioPage() {
   const [dbSourceFilter, setDbSourceFilter] = useState<'all' | 'student' | 'client' | 'lead'>('all')
 
   const loadDatabaseContacts = async () => {
-    if (dbContacts.length > 0) {
-      setIsDbPickerOpen(true)
-      return
-    }
-    setLoadingContacts(true)
+    // Inizializza i contatti già selezionati se presenti in customEmails
+    const current = customEmails
+      .split(/[,;\n]/)
+      .map((e) => e.trim().toLowerCase())
+      .filter((e) => e.length > 0)
+    setSelectedDbEmails(current)
     setIsDbPickerOpen(true)
-    const res = await getSelectableRecipientsAction()
-    if (res.success && res.recipients) {
-      setDbContacts(res.recipients)
+
+    if (dbContacts.length === 0) {
+      setLoadingContacts(true)
+      try {
+        const res = await getSelectableRecipientsAction()
+        if (res.success && res.recipients) {
+          setDbContacts(res.recipients)
+        } else if (res.error) {
+          console.error('Errore getSelectableRecipientsAction:', res.error)
+        }
+      } catch (err) {
+        console.error('Eccezione caricamento contatti:', err)
+      } finally {
+        setLoadingContacts(false)
+      }
     }
-    setLoadingContacts(false)
   }
 
   const toggleSelectContact = (email: string) => {
+    const cleanEmail = email.trim().toLowerCase()
     setSelectedDbEmails((prev) =>
-      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
+      prev.includes(cleanEmail)
+        ? prev.filter((e) => e !== cleanEmail)
+        : [...prev, cleanEmail]
     )
   }
 
@@ -141,7 +156,10 @@ export default function CalendarioPage() {
       .split(/[,;\n]/)
       .map((e) => e.trim())
       .filter((e) => e.length > 0)
-    const merged = Array.from(new Set([...existing, ...selectedDbEmails]))
+    const existingLower = existing.map((e) => e.toLowerCase())
+    const newItems = selectedDbEmails.filter((e) => !existingLower.includes(e))
+    const merged = [...existing, ...newItems]
+    
     setCustomEmails(merged.join(', '))
     if (!recipientCategories.includes('single')) {
       setRecipientCategories((prev) => [...prev, 'single'])
@@ -1312,7 +1330,7 @@ export default function CalendarioPage() {
       {/* Modal Selettore Contatti dal Database */}
       {isDbPickerOpen && (
         <div
-          className="fixed inset-0 z-60 flex items-center justify-center bg-black/75 backdrop-blur-xs p-3 sm:p-6 overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto"
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsDbPickerOpen(false)
           }}
