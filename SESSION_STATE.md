@@ -1,7 +1,12 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-07 10:50
+Ultimo aggiornamento: 2026-10-07 16:25
 Stato corrente: 
+- **Selettore Contatti dal Database nel Calendario (`/calendario`) COMPLETATO**:
+  - Aggiunto pulsante rapido `[👥 Scegli dal Database]` nella sezione destinatari del modale di creazione evento.
+  - Implementata server action `getSelectableRecipientsAction` in `src/app/actions/event-invitations.ts` per recuperare in modo unificato contatti da `student_codes` (studenti con codici), `clients` (rubrica clienti B2B) e `waitlist_leads` (lead lista d'attesa).
+  - Finestra di selezione modale con filtri per categoria (Tutti, Studenti, Clienti, Lead), barra di ricerca live e checkbox per selezionare puntualmente 2, 3 o 5 destinatari.
+  - Aggancio automatico degli indirizzi selezionati al campo di invio email e alla spedizione della comunicazione via Resend.
 - **Upload e Visualizzazione Allegati nella Chat (`/chat`) COMPLETATO**:
   - Implementato supporto completo per allegare e inviare foto (PNG, JPG, WebP, GIF) e documenti (PDF, DOCX, XLSX, TXT, CSV, ZIP).
   - Upload sicuro su Supabase Storage (`team-files/chat-attachments/`).

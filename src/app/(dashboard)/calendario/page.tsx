@@ -17,6 +17,11 @@ import {
   Mail,
   Send,
   Share2,
+  Users,
+  Search,
+  CheckSquare,
+  Square,
+  Database,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -24,7 +29,11 @@ import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound } from '@/lib/notifications'
 import { notifyCalendarEventCreatedAction } from '@/app/actions/notifications'
-import { sendEventInvitationsAction } from '@/app/actions/event-invitations'
+import {
+  sendEventInvitationsAction,
+  getSelectableRecipientsAction,
+  SelectableRecipient,
+} from '@/app/actions/event-invitations'
 
 interface CalendarEvent {
   id: string
@@ -93,6 +102,52 @@ export default function CalendarioPage() {
   const [isSendingInvitations, setIsSendingInvitations] = useState(false)
   const [sendingEventId, setSendingEventId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Selezione puntuale contatti dal Database
+  const [isDbPickerOpen, setIsDbPickerOpen] = useState(false)
+  const [dbContacts, setDbContacts] = useState<SelectableRecipient[]>([])
+  const [loadingContacts, setLoadingContacts] = useState(false)
+  const [dbSearchQuery, setDbSearchQuery] = useState('')
+  const [selectedDbEmails, setSelectedDbEmails] = useState<string[]>([])
+  const [dbSourceFilter, setDbSourceFilter] = useState<'all' | 'student' | 'client' | 'lead'>('all')
+
+  const loadDatabaseContacts = async () => {
+    if (dbContacts.length > 0) {
+      setIsDbPickerOpen(true)
+      return
+    }
+    setLoadingContacts(true)
+    setIsDbPickerOpen(true)
+    const res = await getSelectableRecipientsAction()
+    if (res.success && res.recipients) {
+      setDbContacts(res.recipients)
+    }
+    setLoadingContacts(false)
+  }
+
+  const toggleSelectContact = (email: string) => {
+    setSelectedDbEmails((prev) =>
+      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
+    )
+  }
+
+  const applySelectedDbContacts = () => {
+    if (selectedDbEmails.length === 0) {
+      setIsDbPickerOpen(false)
+      return
+    }
+    // Aggiungi a customEmails senza duplicare
+    const existing = customEmails
+      .split(/[,;\n]/)
+      .map((e) => e.trim())
+      .filter((e) => e.length > 0)
+    const merged = Array.from(new Set([...existing, ...selectedDbEmails]))
+    setCustomEmails(merged.join(', '))
+    if (!recipientCategories.includes('single')) {
+      setRecipientCategories((prev) => [...prev, 'single'])
+    }
+    setIsDbPickerOpen(false)
+  }
 
   const supabase = createClient()
 
@@ -985,31 +1040,49 @@ export default function CalendarioPage() {
                           </div>
                         )}
 
-                        {/* 5. Inserimento manuale email aggiuntive */}
-                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
-                          <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300 text-[11px] cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={recipientCategories.includes('single')}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setRecipientCategories([...recipientCategories, 'single'])
-                                } else {
-                                  setRecipientCategories(recipientCategories.filter(c => c !== 'single'))
-                                }
-                              }}
-                              className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
-                            />
-                            <span>➕ Aggiungi singole email esterne / soci:</span>
-                          </label>
+                        {/* 5. Inserimento manuale email aggiuntive / Selezione dal Database */}
+                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300 text-[11px] cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={recipientCategories.includes('single')}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setRecipientCategories([...recipientCategories, 'single'])
+                                  } else {
+                                    setRecipientCategories(recipientCategories.filter(c => c !== 'single'))
+                                  }
+                                }}
+                                className="rounded text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
+                              />
+                              <span>➕ Destinatari Specifici (Database / Singoli):</span>
+                            </label>
+
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={loadDatabaseContacts}
+                              className="h-6 text-[10px] gap-1 px-2 border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 font-semibold"
+                            >
+                              <Database className="h-3 w-3 text-blue-500" />
+                              <span>Scegli dal Database</span>
+                            </Button>
+                          </div>
 
                           {recipientCategories.includes('single') && (
-                            <Input
-                              value={customEmails}
-                              onChange={(e) => setCustomEmails(e.target.value)}
-                              placeholder="gianni@azienda.it, francesco@gmail.com..."
-                              className="text-xs dark:bg-slate-900 dark:border-slate-700"
-                            />
+                            <div className="space-y-1">
+                              <Input
+                                value={customEmails}
+                                onChange={(e) => setCustomEmails(e.target.value)}
+                                placeholder="gianni@azienda.it, francesco@gmail.com..."
+                                className="text-xs dark:bg-slate-900 dark:border-slate-700"
+                              />
+                              <p className="text-[10px] text-slate-400">
+                                💡 Clicca su <strong>"Scegli dal Database"</strong> per spuntare direttamente studenti, clienti o soci con un clic.
+                              </p>
+                            </div>
                           )}
                         </div>
 
@@ -1232,6 +1305,219 @@ export default function CalendarioPage() {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Selettore Contatti dal Database */}
+      {isDbPickerOpen && (
+        <div
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/75 backdrop-blur-xs p-3 sm:p-6 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsDbPickerOpen(false)
+          }}
+        >
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 flex flex-col max-h-[88vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/80 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                  <Database className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                    Scegli Destinatari dal Database
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Spunta le persone a cui inviare la comunicazione
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDbPickerOpen(false)}
+                className="h-8 w-8 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Barra di Ricerca & Filtri Sorgente */}
+            <div className="p-3.5 border-b border-slate-200/80 dark:border-slate-800 space-y-2 bg-slate-50/50 dark:bg-slate-900/40">
+              <div className="relative">
+                <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Input
+                  value={dbSearchQuery}
+                  onChange={(e) => setDbSearchQuery(e.target.value)}
+                  placeholder="Cerca per nome, email o azienda..."
+                  className="pl-8 text-xs h-8 bg-white dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="flex items-center justify-between gap-1 text-[11px]">
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setDbSourceFilter('all')}
+                    className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                      dbSourceFilter === 'all'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    Tutti ({dbContacts.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDbSourceFilter('student')}
+                    className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                      dbSourceFilter === 'student'
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    🎓 Studenti ({dbContacts.filter((c) => c.source === 'student').length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDbSourceFilter('client')}
+                    className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                      dbSourceFilter === 'client'
+                        ? 'bg-sky-600 text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    💼 Clienti ({dbContacts.filter((c) => c.source === 'client').length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDbSourceFilter('lead')}
+                    className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                      dbSourceFilter === 'lead'
+                        ? 'bg-purple-600 text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    📋 Lead ({dbContacts.filter((c) => c.source === 'lead').length})
+                  </button>
+                </div>
+
+                {selectedDbEmails.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDbEmails([])}
+                    className="text-[10px] text-red-500 hover:underline font-semibold"
+                  >
+                    Azzera ({selectedDbEmails.length})
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Lista Contatti Selezionabili */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-1.5 max-h-[420px]">
+              {loadingContacts ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400">
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                  <span className="text-xs">Caricamento contatti dal database...</span>
+                </div>
+              ) : (() => {
+                const filtered = dbContacts.filter((c) => {
+                  const matchFilter = dbSourceFilter === 'all' || c.source === dbSourceFilter
+                  const q = dbSearchQuery.trim().toLowerCase()
+                  const matchQuery =
+                    !q ||
+                    c.name.toLowerCase().includes(q) ||
+                    c.email.toLowerCase().includes(q) ||
+                    (c.detail && c.detail.toLowerCase().includes(q))
+                  return matchFilter && matchQuery
+                })
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="py-10 text-center text-xs text-slate-400">
+                      Nessun contatto trovato con questi criteri.
+                    </div>
+                  )
+                }
+
+                return filtered.map((c) => {
+                  const isChecked = selectedDbEmails.includes(c.email)
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => toggleSelectContact(c.email)}
+                      className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all ${
+                        isChecked
+                          ? 'bg-blue-500/10 border-blue-500/50 text-slate-900 dark:text-white shadow-xs'
+                          : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="shrink-0 text-blue-600 dark:text-blue-400">
+                          {isChecked ? (
+                            <CheckSquare className="h-4 w-4" />
+                          ) : (
+                            <Square className="h-4 w-4 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-xs truncate">{c.name}</span>
+                            <span
+                              className={`text-[9px] px-1.5 py-0.2 rounded font-semibold shrink-0 ${
+                                c.source === 'student'
+                                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                                  : c.source === 'client'
+                                  ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300'
+                                  : 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
+                              }`}
+                            >
+                              {c.source === 'student' ? 'Studente' : c.source === 'client' ? 'Cliente' : 'Lead'}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate font-mono">
+                            {c.email}
+                          </span>
+                          {c.detail && (
+                            <span className="text-[10px] text-slate-400 block truncate">
+                              {c.detail}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              })()}
+            </div>
+
+            {/* Footer con conferma e contatore */}
+            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-between shrink-0">
+              <span className="text-xs text-slate-600 dark:text-slate-300 font-semibold">
+                {selectedDbEmails.length} {selectedDbEmails.length === 1 ? 'persona selezionata' : 'persone selezionate'}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsDbPickerOpen(false)}
+                  className="h-8 text-xs"
+                >
+                  Annulla
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={applySelectedDbContacts}
+                  className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4"
+                >
+                  Conferma Selezione ({selectedDbEmails.length})
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}

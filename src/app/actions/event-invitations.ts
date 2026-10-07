@@ -7,6 +7,119 @@ import { createAdminClient } from '@/lib/supabase/server'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+export interface SelectableRecipient {
+  id: string
+  name: string
+  email: string
+  source: 'student' | 'client' | 'team' | 'lead'
+  detail?: string
+}
+
+export async function getSelectableRecipientsAction(): Promise<{
+  success: boolean
+  recipients?: SelectableRecipient[]
+  error?: string
+}> {
+  try {
+    const adminClient = createAdminClient()
+    const map = new Map<string, SelectableRecipient>()
+
+    // 1. Studenti (student_codes)
+    const { data: students } = await adminClient
+      .from('student_codes')
+      .select('id, student_email, student_name, access_tier, code')
+      .eq('is_active', true)
+
+    if (students) {
+      students.forEach((s) => {
+        const email = s.student_email?.trim()
+        if (email && email.includes('@')) {
+          const key = email.toLowerCase()
+          if (!map.has(key)) {
+            map.set(key, {
+              id: `std-${s.id}`,
+              name: s.student_name?.trim() || email.split('@')[0],
+              email,
+              source: 'student',
+              detail: `Studente (${s.access_tier || 'Corso'}) • Cod: ${s.code}`,
+            })
+          }
+        }
+      })
+    }
+
+    // 2. Clienti Rubrica (clients)
+    const { data: clients } = await adminClient
+      .from('clients')
+      .select('id, first_name, last_name, email, company, category')
+
+    if (clients) {
+      clients.forEach((c) => {
+        const email = c.email?.trim()
+        if (email && email.includes('@')) {
+          const key = email.toLowerCase()
+          if (!map.has(key)) {
+            const fullName = `${c.first_name || ''} ${c.last_name || ''}`.trim()
+            map.set(key, {
+              id: `client-${c.id}`,
+              name: fullName || c.company || email.split('@')[0],
+              email,
+              source: 'client',
+              detail: c.company ? `Cliente • ${c.company}` : `Cliente (${c.category || 'Rubrica'})`,
+            })
+          }
+        }
+      })
+    }
+
+    // 3. Soci & Membri Team (profiles)
+    const { data: profiles } = await adminClient
+      .from('profiles')
+      .select('id, full_name, role, is_agent')
+      .eq('is_agent', false)
+
+    if (profiles) {
+      profiles.forEach((p) => {
+        // I profili hanno tipicamente un'email ricavabile o nome
+        const name = p.full_name?.trim()
+        // Se non hanno colonna email in profiles, possiamo escludere o inserire se mappata
+      })
+    }
+
+    // 4. Lead lista d'attesa (waitlist_leads)
+    const { data: leads } = await adminClient
+      .from('waitlist_leads')
+      .select('id, email, name')
+
+    if (leads) {
+      leads.forEach((l) => {
+        const email = l.email?.trim()
+        if (email && email.includes('@')) {
+          const key = email.toLowerCase()
+          if (!map.has(key)) {
+            map.set(key, {
+              id: `lead-${l.id}`,
+              name: l.name?.trim() || email.split('@')[0],
+              email,
+              source: 'lead',
+              detail: 'Lead Lista Attesa',
+            })
+          }
+        }
+      })
+    }
+
+    const recipients = Array.from(map.values()).sort((a, b) =>
+      a.name.localeCompare(b.name, 'it', { sensitivity: 'base' })
+    )
+
+    return { success: true, recipients }
+  } catch (err: any) {
+    console.error('[getSelectableRecipientsAction] Errore:', err)
+    return { success: false, error: err.message, recipients: [] }
+  }
+}
+
 export interface SendEventInvitationsParams {
   eventTitle: string
   eventDate: string // YYYY-MM-DD
