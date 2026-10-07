@@ -64,6 +64,7 @@ import {
   verifyStudentCodeAction,
   validateStudentActiveSessionAction,
   upgradeStudentTierAction,
+  toggleStudentExamUnlockAction,
 } from '@/app/actions/student'
 import {
   LESSON_SUMMARIES,
@@ -87,6 +88,13 @@ interface StudentRegistration {
   registeredAt: string
   status: 'enrolled' | 'completed' | 'in_progress'
   accessTier?: 'ai-start' | 'ai-pro' | 'both'
+  progress?: {
+    total_hours: number
+    completed_lessons: number[]
+    completed_checkpoints?: Record<string, any>
+    is_exam_unlocked: boolean
+    last_activity_at?: string | null
+  }
 }
 
 interface WaitlistLead {
@@ -126,64 +134,179 @@ interface CourseResource {
   createdAt: string
 }
 
-export interface BonusVideoItem {
-  id: string
+export interface WeeklyPrompt {
   title: string
-  category: 'News' | 'Tutorial' | 'Approfondimento' | 'Tool AI'
-  duration: string
-  videoUrl: string
-  description?: string
-  date: string
-  resourcesUrl?: string
+  prompt: string
+  text?: string
+  goal?: string
+  expectedResult?: string
+  explanation?: string
+  notes?: string
 }
 
-// Lista iniziale di default per Video Bonus, News & Tutorial (Aggiornata settimanalmente)
-const INITIAL_BONUS_VIDEOS: BonusVideoItem[] = [
+export interface WeeklyUpdateItem {
+  id: string
+  title: string
+  category: 'prompt_tutorial' | 'news' | 'agent_preview' | 'video' | 'News' | 'Tutorial' | 'Approfondimento' | 'Tool AI'
+  type?: 'prompt_tutorial' | 'news' | 'agent_preview' | 'video'
+  badge?: string
+  badge_label?: string
+  duration: string
+  date: string
+  summary?: string
+  description?: string
+  full_content?: string
+  contentMarkdown?: string
+  prompts?: WeeklyPrompt[]
+  videoUrl?: string
+  resourcesUrl?: string
+  actionLabel?: string
+  actionUrl?: string
+}
+
+export type BonusVideoItem = WeeklyUpdateItem
+
+// Lista iniziale verificata per News generali, Tutorial Pratici con Prompt e Anteprime Agenti
+const INITIAL_BONUS_VIDEOS: WeeklyUpdateItem[] = [
   {
-    id: 'news-2026-w38-1',
-    title: 'Claude 3.7 Sonnet & Extended Thinking: Quando Attivare il Ragionamento Ibrido',
-    category: 'News',
-    duration: '12:15',
-    date: '23/09/2026',
-    videoUrl: 'https://aiutiamoci.cloud/videos/lesson_07_full_production.mp4',
-    description: 'Come sfruttare la nuova modalità ibrida di Anthropic: risposte istantanee per copy veloce vs catene di pensiero profondo per contratti e logica.',
+    id: 'upd-1',
+    title: 'Come Ottenere Risposte Perfette al Primo Tentativo: Il Framework RCCF',
+    category: 'prompt_tutorial',
+    badge_label: 'TUTORIAL PROMPT',
+    duration: '5 min lettura',
+    date: '05/10/2026',
+    summary: 'La differenza tra un prompt generico che produce allucinazioni e un prompt professionale che genera un risultato impeccabile al primo colpo.',
+    full_content: `Nel Corso Base abbiamo visto che i modelli IA danno il meglio solo quando ricevono un contesto chiaro e vincoli rigidi.
+
+Il metodo più veloce per non sprecare tempo in correzioni è usare sempre i 4 pilastri del Framework RCCF:
+1. **Ruolo (Role)**: Dichiara chi è l'IA (es. Direttore Commerciale B2B, Copywriter, Analista Dati).
+2. **Contesto (Context)**: In che situazione aziendale ci troviamo? Chi è il destinatario?
+3. **Compito (Constraint / Task)**: Cosa deve fare esattamente passo dopo passo?
+4. **Formato (Format)**: Come deve restituire il risultato? (es. Tabella a 3 colonne, elenco puntato senza preamboli, massimo 120 parole).
+
+Qui sotto trovi il prompt universale pronto da copiare e adattare alle tue esigenze quotidiane.`,
+    prompts: [
+      {
+        title: 'Prompt Universale RCCF per Revisione Documenti & Email',
+        prompt: `Agisci come un Direttore Commerciale B2B esperto in PMI italiane.
+
+Ho preparato questa bozza di risposta per un cliente che richiede chiarimenti sui nostri tempi di consegna:
+"""
+[INCOLLA QUI IL TUO TESTO]
+"""
+
+Il tuo compito è revisionare il testo seguendo questi vincoli rigidi:
+1. Tono professionale, empatico ma autorevole.
+2. Riduci la lunghezza eliminando parole inutili e giri di parole.
+3. Evidenzia la soluzione proposta nei primi due paragrafi.
+4. Formato di output: restituisci prima la versione migliorata pronta all'invio, e sotto in 3 punti secchi le motivazioni dei cambiamenti apportati.`,
+        notes: 'Incolla la bozza di testo al posto di [INCOLLA QUI IL TUO TESTO].',
+      },
+    ],
   },
   {
-    id: 'news-2026-w38-2',
-    title: 'Gemini 2.5 Flash & Live Audio: Analizzare Documenti e Video in Tempo Reale',
-    category: 'News',
-    duration: '10:40',
+    id: 'upd-2',
+    title: 'Ragionamento Ibrido e Contesti Estesi: Quando Conviene Attivare il Thinking',
+    category: 'news',
+    badge_label: 'NEWS AI',
+    duration: '4 min lettura',
+    date: '02/10/2026',
+    summary: 'Analisi pratica sull\'uso delle catene di pensiero profondo (Extended Thinking) vs risposte standard a latenza zero per il lavoro aziendale.',
+    full_content: `Le recenti evoluzioni dei modelli di punta hanno introdotto la possibilità di scegliere tra risposta immediata e ragionamento profondo (Reasoning / Extended Thinking).
+
+### Quando conviene attivare il Thinking:
+- **Analisi di Contratti o Normative**: Quando l'IA deve verificare clausole incrociate e non può permettersi sviste.
+- **Formule e Fogli di Calcolo Complessi**: Quando deve combinare più condizioni logiche prima di scrivere la formula.
+- **Piani Strategici Multi-Step**: Quando il task richiede di pianificare 5-10 azioni sequenziali.
+
+### Quando NON serve (e fa perdere solo tempo):
+- Scrittura di email brevi e messaggi operativi quotidiani.
+- Riassunti di testi semplici e traduzioni standard.
+- Brainstorming di titoli o bozze veloci.`,
+  },
+  {
+    id: 'upd-3',
+    title: 'Prompting per Fogli di Calcolo: Pulire e Formattare Dati CSV in 30 Secondi',
+    category: 'prompt_tutorial',
+    badge_label: 'TUTORIAL PROMPT',
+    duration: '6 min lettura',
+    date: '28/09/2026',
+    summary: 'Come dare in pasto all\'IA elenchi caotici o estratti gestionali per ottenere tabelle pulite pronte da incollare in Excel.',
+    full_content: `Uno dei compiti più noiosi in azienda è ripulire elenchi disordinati di contatti, indirizzi o codici articolo esportati dal gestionale.
+
+Invece di perdere ore a sistemare celle a mano, possiamo chiedere al modello di normalizzare i dati con un vincolo di output Markdown o CSV pronto da copiare.`,
+    prompts: [
+      {
+        title: 'Prompt per Normalizzazione Elenchi & Tabelle',
+        prompt: `Agisci come Data Cleansing Specialist.
+
+Ecco un elenco grezzo di contatti con dati disordinati:
+"""
+[INCOLLA QUI I TUOI DATI SPORCHI]
+"""
+
+Compito:
+1. Separa i dati in 4 colonne: Nome e Cognome, Azienda, Email, Città/Provincia.
+2. Correggi le maiuscole/minuscole nei nomi e normalizza i suffissi societari (es. Srl, SpA).
+3. Se un campo manca, inserisci "N/D".
+4. Restituisci il risultato ESCLUSIVAMENTE come tabella Markdown pronta da copiare e incollare direttamente in Excel/Fogli Google.`,
+        notes: 'Incolla la tabella generata direttamente in Excel o Fogli Google con Ctrl+V / Cmd+V.',
+      },
+    ],
+  },
+  {
+    id: 'upd-4',
+    title: 'Dalla Singola Chat agli Agenti Autonomi: Come Funziona una Squadra AI',
+    category: 'agent_preview',
+    badge_label: 'ANTEPRIMA AGENTI',
+    duration: '5 min lettura',
     date: '21/09/2026',
-    videoUrl: 'https://aiutiamoci.cloud/videos/lesson_09_full_production.mp4',
-    description: 'Panoramica sui nuovi contesti da 1M token e sull\'elaborazione in tempo reale di audio, tabelle complesse e scansioni.',
+    summary: 'Cosa succede quando un modello smette di essere una chat passiva e comincia a coordinare ricerche, bozze e approvazioni in autonomia.',
+    full_content: `Nel Corso Base impariamo a dialogare con l'IA "uno a uno": tu fai una domanda, l'IA risponde.
+
+Nel **Corso Avanzato sugli Agenti AI**, il paradigma cambia radicalmente:
+Non sei più tu a dover fare ogni singolo passaggio. Creiamo una **Squadra di Agenti Specializzati** che collaborano tra loro:
+
+1. **Marco (Director)**: Riceve il tuo obiettivo (es. "Trova 5 hotel a Rimini per offerta software"), pianifica la strategia e assegna i compiti.
+2. **Stefano (Scout)**: Naviga il web in autonomia, estrae i dati reali e verifica le email aziendali.
+3. **Chiara (Copywriter)**: Scrive le bozze commerciali iper-personalizzate per ciascun contatto usando il framework RCCF.
+4. **Lorenzo (Closer & Dispatch)**: Prepara l'invio e chiede la tua autorizzazione prima di registrare tutto sul CRM.
+
+Questo è il futuro dell'automazione aziendale: **l'imprenditore guida e valida, la squadra esegue.**`,
   },
   {
-    id: 'tutorial-2026-w38-3',
-    title: 'Tutorial Pratico: Costruire un Agente n8n per Smistamento Email & Preventivi',
-    category: 'Tutorial',
-    duration: '16:30',
-    date: '18/09/2026',
-    videoUrl: 'https://aiutiamoci.cloud/videos/lesson_18_full_production.mp4',
-    description: 'Guida operativa: collegare un Webhook n8n ad un modello AI per leggere email in arrivo, estrarre i dati e compilare una bozza di preventivo.',
+    id: 'upd-5',
+    title: 'Gestire Reclami e Richieste Difficili: Il Prompt "Cuscino & Soluzione"',
+    category: 'prompt_tutorial',
+    badge_label: 'TUTORIAL PROMPT',
+    duration: '4 min lettura',
+    date: '14/09/2026',
+    summary: 'Tecnica di prompting per trasformare una situazione di tensione commerciale in un\'opportunità di fidelizzazione.',
+    full_content: `Quando un cliente è scontento per un ritardo o un errore, la risposta d'impulso rischia di peggiorare le cose.
+
+La tecnica del "Cuscino & Soluzione" consiste nel far riconoscere all'IA la frustrazione del cliente (il cuscino) per poi passare immediatamente a una proposta concreta e misurabile (la soluzione), senza scuse difensive.`,
+    prompts: [
+      {
+        title: 'Prompt per Risposta a Reclamo Complesso',
+        prompt: `Agisci come Responsabile Customer Success & Relazioni Clienti Senior.
+
+Ho ricevuto questo reclamo da un cliente importante:
+"""
+[INCOLLA QUI IL RECLAMO DEL CLIENTE]
+"""
+
+La nostra posizione reale:
+- Causa del problema: [es. ritardo fornitore esterno]
+- Soluzione che possiamo offrire subito: [es. consegna parziale domani + sconto 10% sul prossimo ordine]
+
+Scrivi una risposta email che:
+1. Ringrazi il cliente per la segnalazione e riconosca il disagio senza usare toni burocratici o difensivi.
+2. Presenti la soluzione con date e azioni certe.
+3. Chiuda con un invito cordiale a una breve telefonata di allineamento.`,
+        notes: 'Ottimo per disinnescare tensioni con clienti storici o ordini urgenti.',
+      },
+    ],
   },
-  {
-    id: 'bonus-v-1',
-    title: 'DeepSeek R1 & Modelli Open Source: Come Cambia il Prompting Aziendale',
-    category: 'Approfondimento',
-    duration: '14:20',
-    date: '10/09/2026',
-    videoUrl: 'https://aiutiamoci.cloud/videos/lesson_01_full_production.mp4',
-    description: 'Analisi dei modelli a basso costo per l\'infrastruttura locale e integrazione con la privacy dei dati.',
-  },
-  {
-    id: 'bonus-v-2',
-    title: 'Tutorial Pratico: Ricerca di Mercato e Analisi Competitor con Perplexity',
-    category: 'Tool AI',
-    duration: '18:45',
-    date: '08/09/2026',
-    videoUrl: 'https://aiutiamoci.cloud/videos/lesson_05_full_production.mp4',
-    description: 'Guida passo-passo per impostare ricerche con citazione fonti e sintetizzare dossier aziendali in 5 minuti.',
-  }
 ]
 
 
@@ -464,9 +587,12 @@ function CorsiInnerContent() {
   const [activeZoomVideo, setActiveZoomVideo] = useState<ZoomRecording | null>(null)
   const [isAddZoomModalOpen, setIsAddZoomModalOpen] = useState(false)
 
-  // Video Bonus, News & Tutorial
+  // Video Bonus, News, Tutorial & Prompt Settimanali
   const [bonusVideos, setBonusVideos] = useState<BonusVideoItem[]>(INITIAL_BONUS_VIDEOS)
   const [activeBonusVideo, setActiveBonusVideo] = useState<BonusVideoItem | null>(null)
+  const [copiedPromptKey, setCopiedPromptKey] = useState<string | null>(null)
+  const [newsCategoryFilter, setNewsCategoryFilter] = useState<'all' | 'Tutorial' | 'News' | 'Approfondimento' | 'Tool AI'>('all')
+  const [isGeneratingWeekly, setIsGeneratingWeekly] = useState(false)
   const [isAddBonusVideoModalOpen, setIsAddBonusVideoModalOpen] = useState(false)
   const [bonusTitleInput, setBonusTitleInput] = useState('')
   const [bonusCategoryInput, setBonusCategoryInput] = useState<'News' | 'Tutorial' | 'Approfondimento' | 'Tool AI'>('News')
@@ -571,24 +697,53 @@ function CorsiInnerContent() {
         }
       }
 
-      const savedBonusVideos = localStorage.getItem('ti_aiuto_bonus_videos')
-      if (savedBonusVideos !== null) {
-        const parsed = JSON.parse(savedBonusVideos)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Unione: mantieni i video di default freschi e aggiungi eventuali video custom dell'utente
-          const merged = [...INITIAL_BONUS_VIDEOS]
-          parsed.forEach((customItem: any) => {
-            if (!merged.some((m) => m.id === customItem.id)) {
-              merged.push(customItem)
+      // Caricamento news & prompt tutorial da Supabase con fallback a INITIAL_BONUS_VIDEOS
+      ;(async () => {
+        try {
+          const { data, error } = await (supabase as any)
+            .from('course_weekly_updates')
+            .select('*')
+            .order('date', { ascending: false })
+          if (data && data.length > 0 && !error) {
+            const mapped: BonusVideoItem[] = data.map((row: any) => ({
+              id: row.id,
+              title: row.title,
+              category: row.category,
+              type: row.type || 'prompt_tutorial',
+              duration: row.duration || '5 min',
+              description: row.description || '',
+              date: row.date || '',
+              videoUrl: row.video_url || undefined,
+              resourcesUrl: row.resources_url || undefined,
+              badge: row.badge || undefined,
+              contentMarkdown: row.content_markdown || undefined,
+              prompts: row.prompts || undefined,
+              actionLabel: row.action_label || undefined,
+              actionUrl: row.action_url || undefined,
+            }))
+            setBonusVideos(mapped)
+            return
+          }
+        } catch (e) {}
+
+        const savedBonusVideos = localStorage.getItem('ti_aiuto_bonus_videos')
+        if (savedBonusVideos !== null) {
+          try {
+            const parsed = JSON.parse(savedBonusVideos)
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const merged = [...INITIAL_BONUS_VIDEOS]
+              parsed.forEach((customItem: any) => {
+                if (!merged.some((m) => m.id === customItem.id)) {
+                  merged.push(customItem)
+                }
+              })
+              setBonusVideos(merged)
+              return
             }
-          })
-          setBonusVideos(merged)
-        } else {
-          setBonusVideos(INITIAL_BONUS_VIDEOS)
+          } catch (e) {}
         }
-      } else {
         setBonusVideos(INITIAL_BONUS_VIDEOS)
-      }
+      })()
 
 
       // Lettura preventiva stato test checkpoint salvati
@@ -606,15 +761,13 @@ function CorsiInnerContent() {
         try {
           const parsed = JSON.parse(savedLessons)
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // Abbina lo stato di completamento dell'utente ma sanifica la vecchia anomalia delle prime 2 lezioni
             const updated = AI_START_LESSONS.map((official) => {
               const saved = parsed.find((s: any) => s.id === official.id)
               let isCompleted = saved ? !!saved.completed : official.completed
-              // Se il test d'ingresso non è mai stato superato, il modulo 2 e superiori NON possono essere completati
+              // Se il test d'ingresso non è superato, i moduli successivi al modulo 1 non possono essere completati
               if (official.id >= 2 && !isEntryTestPassed) {
                 isCompleted = false
               }
-              // Se l'utente non ha superato il test d'ingresso e il modulo 1 risultava completed, verifica se è anomalia
               return {
                 ...official,
                 completed: isCompleted
@@ -768,9 +921,33 @@ function CorsiInnerContent() {
         courseTitle: sc.course_title,
         accessTier: sc.access_tier,
         registeredAt: sc.created_at,
-        status: 'enrolled',
+        status: sc.progress?.completed_lessons?.length >= 20 ? 'completed' : ((sc.progress?.total_hours || 0) > 0 ? 'in_progress' : 'enrolled'),
+        progress: sc.progress,
       }))
       setRegistrations(formatted)
+    }
+  }
+
+  const handleToggleExamUnlock = async (studentCode: string, currentStatus: boolean) => {
+    const newStatus = !currentStatus
+    const res = await toggleStudentExamUnlockAction(studentCode, newStatus)
+    if (res.success) {
+      setRegistrations((prev) =>
+        prev.map((s) => {
+          if (s.code === studentCode) {
+            return {
+              ...s,
+              progress: {
+                ...(s.progress || { total_hours: 0, completed_lessons: [] }),
+                is_exam_unlocked: newStatus,
+              },
+            }
+          }
+          return s
+        })
+      )
+    } else {
+      alert(`Errore aggiornamento esame: ${res.error}`)
     }
   }
 
@@ -1326,6 +1503,27 @@ function CorsiInnerContent() {
     } catch (e) { }
   }
 
+  const handleTriggerWeeklyCron = async () => {
+    try {
+      setIsGeneratingWeekly(true)
+      const res = await fetch('/api/cron/weekly-course-updates', { method: 'POST' })
+      const data = await res.json()
+      if (data.success && Array.isArray(data.items)) {
+        setBonusVideos((prev) => {
+          const fresh = data.items.filter((item: any) => !prev.some((p) => p.id === item.id))
+          return [...fresh, ...prev]
+        })
+        alert(`✅ ${data.message || 'Aggiornamenti settimanali generati con successo!'}`)
+      } else {
+        alert(data.error || 'Errore durante la generazione automatica')
+      }
+    } catch (err: any) {
+      alert(`Errore di rete: ${err?.message || 'Impossibile completare la richiesta'}`)
+    } finally {
+      setIsGeneratingWeekly(false)
+    }
+  }
+
   const handleSaveResource = (e: React.FormEvent) => {
     e.preventDefault()
     if (!resTitleInput.trim() || !resUrlInput.trim()) return
@@ -1429,8 +1627,8 @@ function CorsiInnerContent() {
     }
   }
 
-  const isLessonUnlocked = (index: number) => {
-    const list = selectedCourseId === 'ai-start' ? lessons : lessonsPro
+  const isLessonUnlocked = (index: number, customList?: Lesson[]) => {
+    const list = customList || (selectedCourseId === 'ai-start' ? lessons : lessonsPro)
     if (isTeamMember || list.every((l) => l.completed)) return true
     if (index === 0) return true
     
@@ -1462,7 +1660,7 @@ function CorsiInnerContent() {
       }
     }
 
-    return list[index - 1].completed
+    return !!list[index - 1]?.completed
   }
 
   const toggleLessonCompleted = (lessonId: number) => {
@@ -1490,7 +1688,7 @@ function CorsiInnerContent() {
       const currentIndex = lessons.findIndex((l) => l.id === lessonId)
       if (currentIndex >= 0 && currentIndex < lessons.length - 1) {
         const nextIndex = currentIndex + 1
-        if (isLessonUnlocked(nextIndex)) {
+        if (isLessonUnlocked(nextIndex, updatedLessons)) {
           setActiveLesson(updatedLessons[nextIndex])
         }
       }
@@ -1519,7 +1717,7 @@ function CorsiInnerContent() {
       const currentIndex = lessonsPro.findIndex((l) => l.id === lessonId)
       if (currentIndex >= 0 && currentIndex < lessonsPro.length - 1) {
         const nextIndex = currentIndex + 1
-        if (isLessonUnlocked(nextIndex)) {
+        if (isLessonUnlocked(nextIndex, updatedLessonsPro)) {
           setActiveLessonPro(updatedLessonsPro[nextIndex])
         }
       }
@@ -1960,6 +2158,17 @@ function CorsiInnerContent() {
                               <span>📝 Esegui Test Metà Corso Ora</span>
                             </Button>
                           )}
+                          {selectedCourseId === 'ai-start' && activeIndex > 0 && !lessons[activeIndex - 1].completed && (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setActiveLesson(lessons[activeIndex - 1])
+                              }}
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-4 gap-2 rounded-xl"
+                            >
+                              <span>👉 Vai al Modulo {lessons[activeIndex - 1].id} per completarlo</span>
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
@@ -2095,13 +2304,9 @@ function CorsiInnerContent() {
 
                       <Button
                         size="sm"
-                        disabled={!isCurrentUnlocked || (!isTeamMember && !currentActive.completed && !videoCanComplete)}
+                        disabled={!isCurrentUnlocked}
                         onClick={() => {
                           if (isCurrentUnlocked) {
-                            if (!isTeamMember && !currentActive.completed && !videoCanComplete) {
-                              alert('Per favore guarda la video-lezione per completare il modulo.')
-                              return
-                            }
                             toggleLessonCompleted(currentActive.id)
                           }
                         }}
@@ -2110,11 +2315,8 @@ function CorsiInnerContent() {
                             ? 'opacity-50 cursor-not-allowed bg-slate-200 dark:bg-slate-800 text-slate-400 border border-slate-300 dark:border-slate-700'
                             : currentActive.completed
                             ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                            : !isTeamMember && !videoCanComplete
-                            ? 'opacity-60 bg-slate-200 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-slate-700 cursor-not-allowed'
                             : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                         }`}
-                        title={!isTeamMember && !currentActive.completed && !videoCanComplete ? 'Guarda almeno l\'88% del video per completare' : ''}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                         <span className="truncate">
@@ -2122,8 +2324,6 @@ function CorsiInnerContent() {
                             ? 'Modulo Bloccato'
                             : currentActive.completed
                             ? 'Completata ✓'
-                            : !isTeamMember && !videoCanComplete
-                            ? 'In visione...'
                             : 'Segna Completata'}
                         </span>
                       </Button>
@@ -2628,179 +2828,467 @@ function CorsiInnerContent() {
       {/* TAB: NEWS & TUTORIAL BONUS */}
       {activeTab === 'news-tutorial' && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          {/* Header & Filtri Categoria */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
             <div>
               <div className="flex items-center gap-2">
-                <Badge variant="purple" className="text-[10px] uppercase tracking-wider font-mono">Extra & Aggiornamenti</Badge>
-                <span className="text-xs text-slate-400 font-mono">• {bonusVideos.length} Video Disponibili</span>
+                <Badge variant="purple" className="text-[10px] uppercase tracking-wider font-mono">Aggiornamenti Continui</Badge>
+                <span className="text-xs text-slate-400 font-mono">• {bonusVideos.length} Risorse Disponibili</span>
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mt-1">
                 <Sparkles className="h-5 w-5 text-amber-500" />
-                News, Tutorial & Approfondimenti Continui
+                News AI, Prompt Pratici & Tutorial Settimanali
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Nuove pillole video, novità sui modelli IA (ChatGPT, Claude, Gemini, DeepSeek) e tutorial pratici oltre i 20 moduli base.
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
+                Notizie verificate sui modelli di Intelligenza Artificiale (ChatGPT, Claude, Gemini), prompt collaudati passo-passo coerenti con il corso base e pillole di automazione con gli Agenti AI.
               </p>
+
+              {/* Filtri rapidi */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-4">
+                <button
+                  onClick={() => setNewsCategoryFilter('all')}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    newsCategoryFilter === 'all'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  Tutti ({bonusVideos.length})
+                </button>
+                <button
+                  onClick={() => setNewsCategoryFilter('Tutorial')}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    newsCategoryFilter === 'Tutorial'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  💡 Prompt & Tutorial
+                </button>
+                <button
+                  onClick={() => setNewsCategoryFilter('News')}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    newsCategoryFilter === 'News'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  📰 News Verificate
+                </button>
+                <button
+                  onClick={() => setNewsCategoryFilter('Approfondimento')}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    newsCategoryFilter === 'Approfondimento'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  🤖 Anteprima Agenti
+                </button>
+                <button
+                  onClick={() => setNewsCategoryFilter('Tool AI')}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    newsCategoryFilter === 'Tool AI'
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  🛠️ Tool AI
+                </button>
+              </div>
             </div>
 
             {isTeamMember && (
-              <Button
-                onClick={() => {
-                  setBonusTitleInput('')
-                  setBonusUrlInput('')
-                  setBonusDescInput('')
-                  setBonusDateInput(new Date().toLocaleDateString('it-IT'))
-                  setBonusDurationInput('12:00')
-                  setBonusResUrlInput('')
-                  setIsAddBonusVideoModalOpen(true)
-                }}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs shrink-0"
-              >
-                <Plus className="h-4 w-4" />
-                <span>+ Aggiungi Video Bonus</span>
-              </Button>
+              <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
+                <Button
+                  onClick={handleTriggerWeeklyCron}
+                  disabled={isGeneratingWeekly}
+                  variant="outline"
+                  className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-bold text-xs h-10 px-3.5 rounded-xl gap-2 shadow-xs"
+                  title="Genera e pubblica subito gli aggiornamenti verificati di questa settimana"
+                >
+                  {isGeneratingWeekly ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-emerald-500" />
+                  )}
+                  <span>{isGeneratingWeekly ? 'Generazione...' : '⚡ Genera Aggiornamenti Ora'}</span>
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    setBonusTitleInput('')
+                    setBonusUrlInput('')
+                    setBonusDescInput('')
+                    setBonusDateInput(new Date().toLocaleDateString('it-IT'))
+                    setBonusDurationInput('5 min')
+                    setBonusResUrlInput('')
+                    setIsAddBonusVideoModalOpen(true)
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>+ Aggiungi Risorsa</span>
+                </Button>
+              </div>
             )}
           </div>
 
-          {/* PLAYER ATTIVO VIDEO BONUS */}
-          {activeBonusVideo && (
-            <div className="bg-slate-950 p-5 rounded-2xl border border-indigo-500/30 shadow-2xl space-y-4 animate-in fade-in">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-white border-b border-slate-800 pb-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={activeBonusVideo.category === 'News' ? 'secondary' : 'purple'} className="text-[10px]">
-                      {activeBonusVideo.category}
-                    </Badge>
-                    <span className="text-xs text-slate-400 font-mono">Durata: {activeBonusVideo.duration} • Data: {activeBonusVideo.date}</span>
-                  </div>
-                  <h4 className="font-bold text-base text-white flex items-center gap-2">
-                    <PlayCircle className="h-5 w-5 text-indigo-400" />
-                    {activeBonusVideo.title}
-                  </h4>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {activeBonusVideo.resourcesUrl && (
-                    <a
-                      href={activeBonusVideo.resourcesUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-950 border border-indigo-700 text-indigo-300 hover:bg-indigo-900 text-xs font-semibold"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Risorse collegate
-                    </a>
-                  )}
-                  <Button size="sm" variant="ghost" onClick={() => setActiveBonusVideo(null)} className="text-xs text-slate-400 hover:text-white">
-                    Chiudi Player
-                  </Button>
-                </div>
-              </div>
+          {/* SCHEDA ATTIVA: READER / PROMPT INTERATTIVI / PLAYER */}
+          {activeBonusVideo && (() => {
+            const activeBadge = activeBonusVideo.badge || activeBonusVideo.badge_label
+            const activeDesc = activeBonusVideo.description || activeBonusVideo.summary
+            const activeMd = activeBonusVideo.contentMarkdown || activeBonusVideo.full_content
+            const activeItemType = activeBonusVideo.type || (activeBonusVideo.category === 'News' ? 'news' : activeBonusVideo.category === 'Tutorial' ? 'prompt_tutorial' : 'agent_preview')
 
-              <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-slate-800">
-                <video
-                  key={activeBonusVideo.id}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  src={activeBonusVideo.videoUrl}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {activeBonusVideo.description && (
-                <p className="text-xs text-slate-300 bg-slate-900/60 p-3 rounded-xl border border-slate-800/80 leading-relaxed">
-                  💡 {activeBonusVideo.description}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* GRIGLIA VIDEO BONUS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {bonusVideos.map((video) => {
-              const isPlaying = activeBonusVideo?.id === video.id
-              return (
-                <div
-                  key={video.id}
-                  className={`p-5 rounded-2xl bg-white dark:bg-slate-900 border transition-all flex flex-col justify-between gap-4 ${
-                    isPlaying
-                      ? 'border-indigo-500 shadow-md ring-2 ring-indigo-500/20'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 shadow-xs'
-                  }`}
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          video.category === 'News'
-                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                            : video.category === 'Tutorial'
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                            : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
-                        }`}>
-                          {video.category}
+            return (
+              <div className="bg-slate-950 text-white p-6 sm:p-7 rounded-2xl border border-indigo-500/40 shadow-2xl space-y-6 animate-in fade-in">
+                {/* Header Scheda */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                        activeBonusVideo.category === 'News'
+                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                          : activeBonusVideo.category === 'Tutorial'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                      }`}>
+                        {activeBonusVideo.category}
+                      </span>
+                      {activeBadge && (
+                        <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold uppercase">
+                          {activeBadge}
                         </span>
-                        <span className="text-[11px] font-mono text-slate-400">{video.duration}</span>
-                      </div>
-                      <span className="text-[11px] text-slate-400 font-mono">{video.date}</span>
-                    </div>
-
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">
-                        {video.title}
-                      </h4>
-                      {video.description && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                          {video.description}
-                        </p>
                       )}
+                      <span className="text-xs text-slate-400 font-mono">
+                        ⏱️ {activeBonusVideo.duration} • 📅 {activeBonusVideo.date}
+                      </span>
                     </div>
+                    <h4 className="font-bold text-lg sm:text-xl text-white flex items-center gap-2">
+                      {activeItemType === 'prompt_tutorial' && <Sparkles className="h-5 w-5 text-emerald-400 shrink-0" />}
+                      {activeItemType === 'news' && <BookOpen className="h-5 w-5 text-blue-400 shrink-0" />}
+                      {activeItemType === 'agent_preview' && <Bot className="h-5 w-5 text-purple-400 shrink-0" />}
+                      {activeItemType === 'video' && <PlayCircle className="h-5 w-5 text-indigo-400 shrink-0" />}
+                      {activeBonusVideo.title}
+                    </h4>
+                    {activeDesc && (
+                      <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
+                        {activeDesc}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/60">
+                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                    {activeBonusVideo.resourcesUrl && (
+                      <a
+                        href={activeBonusVideo.resourcesUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-950 border border-indigo-700 text-indigo-300 hover:bg-indigo-900 text-xs font-semibold"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Link Esterno
+                      </a>
+                    )}
+                    {activeBonusVideo.actionUrl && (
+                      <Link
+                        href={activeBonusVideo.actionUrl}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors"
+                      >
+                        <span>{activeBonusVideo.actionLabel || 'Apri Strumento'}</span>
+                      </Link>
+                    )}
                     <Button
                       size="sm"
-                      onClick={() => setActiveBonusVideo(video)}
-                      className={`font-bold text-xs h-9 px-4 rounded-xl gap-2 shadow-xs ${
-                        isPlaying
-                          ? 'bg-slate-800 text-white hover:bg-slate-700'
-                          : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                      }`}
+                      variant="ghost"
+                      onClick={() => setActiveBonusVideo(null)}
+                      className="text-xs text-slate-400 hover:text-white"
                     >
-                      <PlayCircle className="h-4 w-4" />
-                      <span>{isPlaying ? 'In Riproduzione' : 'Guarda Video'}</span>
+                      <X className="h-4 w-4 mr-1" />
+                      Chiudi
                     </Button>
-
-                    <div className="flex items-center gap-1">
-                      {video.resourcesUrl && (
-                        <a
-                          href={video.resourcesUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="h-8 px-2.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs flex items-center gap-1 transition-colors"
-                          title="Risorse Collegate"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          <span className="text-[11px]">Link</span>
-                        </a>
-                      )}
-
-                      {isTeamMember && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteBonusVideo(video.id, video.title)}
-                          className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                          title="Elimina Video"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
                   </div>
                 </div>
-              )
-            })}
+
+                {/* Video Player (se presente URL video reale) */}
+                {activeBonusVideo.videoUrl && (
+                  <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-slate-800">
+                    <video
+                      key={activeBonusVideo.id}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      src={activeBonusVideo.videoUrl}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* SEZIONE PROMPT PRATICI DA COPIARE */}
+                {activeBonusVideo.prompts && activeBonusVideo.prompts.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h5 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4 text-emerald-400" />
+                        Prompt Pronti all&apos;Uso ({activeBonusVideo.prompts.length})
+                      </h5>
+                      <span className="text-[11px] text-slate-400">Clicca &ldquo;Copia Prompt&rdquo; per incollarlo in ChatGPT / Claude / Gemini</span>
+                    </div>
+
+                    <div className="space-y-4">
+                      {activeBonusVideo.prompts.map((promptItem, pIdx) => {
+                        const promptKey = `${activeBonusVideo.id}-prompt-${pIdx}`
+                        const isCopied = copiedPromptKey === promptKey
+                        const promptBody = promptItem.prompt || promptItem.text || ''
+                        const goalText = promptItem.goal || promptItem.notes
+
+                        return (
+                          <div
+                            key={pIdx}
+                            className="bg-slate-900/90 rounded-xl border border-slate-800 p-4 sm:p-5 space-y-3"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                                  <FileText className="h-3.5 w-3.5" />
+                                  {promptItem.title}
+                                </span>
+                                {goalText && (
+                                  <p className="text-[11px] text-slate-400 mt-0.5">
+                                    🎯 <strong>Obiettivo:</strong> {goalText}
+                                  </p>
+                                )}
+                              </div>
+
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(promptBody)
+                                  setCopiedPromptKey(promptKey)
+                                  setTimeout(() => setCopiedPromptKey(null), 2500)
+                                }}
+                                className={`h-8 px-3 rounded-lg text-xs font-bold transition-all shrink-0 gap-1.5 ${
+                                  isCopied
+                                    ? 'bg-emerald-500 text-white'
+                                    : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                                }`}
+                              >
+                                {isCopied ? (
+                                  <>
+                                    <Check className="h-3.5 w-3.5" />
+                                    <span>Copiato! ✅</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="h-3.5 w-3.5" />
+                                    <span>Copia Prompt</span>
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+
+                            {/* Blocco Testo Prompt con Stile Terminale */}
+                            <pre className="bg-slate-950 p-3.5 rounded-lg border border-slate-800/80 font-mono text-xs text-slate-200 whitespace-pre-wrap break-words leading-relaxed select-all">
+                              {promptBody}
+                            </pre>
+
+                            {/* Spiegazione & Risultato Atteso */}
+                            {(promptItem.expectedResult || promptItem.explanation) && (
+                              <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800 text-[11px] text-slate-300 space-y-1">
+                                {promptItem.explanation && (
+                                  <p>
+                                    <strong className="text-indigo-400">💡 Perché funziona:</strong> {promptItem.explanation}
+                                  </p>
+                                )}
+                                {promptItem.expectedResult && (
+                                  <p>
+                                    <strong className="text-emerald-400">✅ Risultato atteso:</strong> {promptItem.expectedResult}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* SEZIONE TESTO / ARTICOLO / NOTIZIA GUIDA */}
+                {activeMd && (
+                  <div className="bg-slate-900/90 rounded-xl border border-slate-800 p-5 space-y-3">
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                      <BookOpen className="h-4 w-4 text-blue-400" />
+                      Sintesi & Punti Chiave
+                    </h5>
+                    <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
+                      {activeMd.split('\n\n').map((paragraph: string, idx: number) => {
+                        if (paragraph.startsWith('### ')) {
+                          return (
+                            <h6 key={idx} className="font-bold text-sm text-white pt-2 text-indigo-300">
+                              {paragraph.replace('### ', '')}
+                            </h6>
+                          )
+                        }
+                        if (paragraph.startsWith('- ')) {
+                          const items = paragraph.split('\n')
+                          return (
+                            <ul key={idx} className="space-y-1 pl-4 list-disc text-slate-300">
+                              {items.map((item: string, itemIdx: number) => (
+                                <li key={itemIdx}>
+                                  {item.replace(/^- /, '')}
+                                </li>
+                              ))}
+                            </ul>
+                          )
+                        }
+                        return (
+                          <p key={idx} className="text-slate-300">
+                            {paragraph}
+                          </p>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
+          {/* GRIGLIA RISORSE, PROMPT & NOTIZIE */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {bonusVideos
+              .filter((item) => {
+                if (newsCategoryFilter === 'all') return true
+                return item.category === newsCategoryFilter
+              })
+              .map((item) => {
+                const isSelected = activeBonusVideo?.id === item.id
+                const hasPrompts = item.prompts && item.prompts.length > 0
+                const itemBadge = item.badge || item.badge_label
+                const itemDesc = item.description || item.summary
+                const itemType = item.type || (item.category === 'News' ? 'news' : item.category === 'Tutorial' ? 'prompt_tutorial' : 'agent_preview')
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`p-5 rounded-2xl bg-white dark:bg-slate-900 border transition-all flex flex-col justify-between gap-4 ${
+                      isSelected
+                        ? 'border-indigo-500 shadow-md ring-2 ring-indigo-500/20'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 shadow-xs'
+                    }`}
+                  >
+                    <div className="space-y-3">
+                      {/* Badge e Data */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            item.category === 'News'
+                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                              : item.category === 'Tutorial'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                              : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                          }`}>
+                            {item.category}
+                          </span>
+                          {itemBadge && (
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-mono font-bold">
+                              {itemBadge}
+                            </span>
+                          )}
+                          <span className="text-[11px] font-mono text-slate-400">{item.duration}</span>
+                        </div>
+                        <span className="text-[11px] text-slate-400 font-mono shrink-0">{item.date}</span>
+                      </div>
+
+                      {/* Titolo e Descrizione */}
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">
+                          {item.title}
+                        </h4>
+                        {itemDesc && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                            {itemDesc}
+                          </p>
+                        )}
+                        {hasPrompts && (
+                          <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold">
+                            <Sparkles className="h-3 w-3 text-emerald-500" />
+                            <span>{item.prompts!.length} prompt pronti da copiare</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Azioni Scheda */}
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/60">
+                      <Button
+                        size="sm"
+                        onClick={() => setActiveBonusVideo(item)}
+                        className={`font-bold text-xs h-9 px-4 rounded-xl gap-2 shadow-xs ${
+                          isSelected
+                            ? 'bg-slate-800 text-white hover:bg-slate-700'
+                            : item.category === 'Tutorial'
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            : item.category === 'News'
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                        }`}
+                      >
+                        {itemType === 'prompt_tutorial' ? (
+                          <>
+                            <Sparkles className="h-4 w-4" />
+                            <span>{isSelected ? 'Scheda Aperta' : '💡 Apri Prompt & Guida'}</span>
+                          </>
+                        ) : itemType === 'news' ? (
+                          <>
+                            <BookOpen className="h-4 w-4" />
+                            <span>{isSelected ? 'Notizia Aperta' : '📰 Leggi Notizia'}</span>
+                          </>
+                        ) : itemType === 'agent_preview' ? (
+                          <>
+                            <Bot className="h-4 w-4" />
+                            <span>{isSelected ? 'Scheda Aperta' : '🤖 Scopri Agenti AI'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <PlayCircle className="h-4 w-4" />
+                            <span>{isSelected ? 'In Riproduzione' : 'Guarda Video'}</span>
+                          </>
+                        )}
+                      </Button>
+
+                      <div className="flex items-center gap-1">
+                        {item.resourcesUrl && (
+                          <a
+                            href={item.resourcesUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="h-8 px-2.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs flex items-center gap-1 transition-colors"
+                            title="Risorsa Esterna"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            <span className="text-[11px]">Link</span>
+                          </a>
+                        )}
+
+                        {isTeamMember && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteBonusVideo(item.id, item.title)}
+                            className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                            title="Elimina Risorsa"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
           </div>
         </div>
       )}
@@ -3588,6 +4076,8 @@ function CorsiInnerContent() {
                         <th className="py-3 px-4">Nome Studente</th>
                         <th className="py-3 px-4">Email</th>
                         <th className="py-3 px-4">Corso Formativo</th>
+                        <th className="py-3 px-4">Progresso Ore / Lezioni</th>
+                        <th className="py-3 px-4">Esame Finale</th>
                         <th className="py-3 px-4">Stato Iscrizione</th>
                         <th className="py-3 px-4 text-right">Azioni</th>
                       </tr>
@@ -3637,6 +4127,33 @@ function CorsiInnerContent() {
                                   )}
                                 </div>
                               </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <div className="flex flex-col gap-1 min-w-[130px]">
+                                <div className="flex items-center justify-between text-[10px] font-semibold text-slate-700 dark:text-slate-300">
+                                  <span>{reg.progress?.total_hours ? `${Number(reg.progress.total_hours).toFixed(1)}h / 16h` : '0h / 16h'}</span>
+                                  <span className="text-indigo-600 dark:text-indigo-400 font-bold">{reg.progress?.completed_lessons?.length || 0}/20 lez</span>
+                                </div>
+                                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden border border-slate-200 dark:border-slate-700">
+                                  <div
+                                    className="bg-gradient-to-r from-indigo-500 to-emerald-500 h-1.5 rounded-full transition-all"
+                                    style={{ width: `${Math.min(100, Math.round(((reg.progress?.completed_lessons?.length || 0) / 20) * 100))}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <button
+                                onClick={() => handleToggleExamUnlock(reg.code, Boolean(reg.progress?.is_exam_unlocked))}
+                                className={`px-2 py-1 rounded-lg text-[9px] font-bold uppercase transition-all flex items-center gap-1 border cursor-pointer ${
+                                  reg.progress?.is_exam_unlocked
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
+                                    : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                }`}
+                                title="Clicca per sbloccare o bloccare l'accesso all'esame finale ATOMA"
+                              >
+                                {reg.progress?.is_exam_unlocked ? '🔓 Sbloccato' : '🔒 Bloccato'}
+                              </button>
                             </td>
                             <td className="py-3.5 px-4">
                               <Badge
@@ -3741,6 +4258,8 @@ function CorsiInnerContent() {
                         <th className="py-3 px-4">Nome Studente</th>
                         <th className="py-3 px-4">Email</th>
                         <th className="py-3 px-4">Livello d'Accesso</th>
+                        <th className="py-3 px-4">Progresso Ore / Moduli</th>
+                        <th className="py-3 px-4">Esame Finale</th>
                         <th className="py-3 px-4">Stato</th>
                         <th className="py-3 px-4 text-right">Azioni</th>
                       </tr>
@@ -3772,6 +4291,33 @@ function CorsiInnerContent() {
                                   <Badge variant="purple" className="text-[9px] font-mono">🚀 SOLO AI PRO</Badge>
                                 )}
                               </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <div className="flex flex-col gap-1 min-w-[130px]">
+                                <div className="flex items-center justify-between text-[10px] font-semibold text-slate-700 dark:text-slate-300">
+                                  <span>{reg.progress?.total_hours ? `${Number(reg.progress.total_hours).toFixed(1)}h / 16h` : '0h / 16h'}</span>
+                                  <span className="text-purple-600 dark:text-purple-400 font-bold">{reg.progress?.completed_lessons?.length || 0}/20 lez</span>
+                                </div>
+                                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden border border-slate-200 dark:border-slate-700">
+                                  <div
+                                    className="bg-gradient-to-r from-purple-500 to-indigo-500 h-1.5 rounded-full transition-all"
+                                    style={{ width: `${Math.min(100, Math.round(((reg.progress?.completed_lessons?.length || 0) / 20) * 100))}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <button
+                                onClick={() => handleToggleExamUnlock(reg.code, Boolean(reg.progress?.is_exam_unlocked))}
+                                className={`px-2 py-1 rounded-lg text-[9px] font-bold uppercase transition-all flex items-center gap-1 border cursor-pointer ${
+                                  reg.progress?.is_exam_unlocked
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
+                                    : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                }`}
+                                title="Clicca per sbloccare o bloccare l'accesso all'esame finale ATOMA"
+                              >
+                                {reg.progress?.is_exam_unlocked ? '🔓 Sbloccato' : '🔒 Bloccato'}
+                              </button>
                             </td>
                             <td className="py-3.5 px-4">
                               <Badge variant="success" className="text-[9px] uppercase">
@@ -4448,17 +4994,21 @@ function CorsiInnerContent() {
                         onClick={() => {
                           setQuizSubmitted(true)
                           playNotificationSound('chat')
+                          // Se il quiz viene completato, segna automaticamente la lezione come completata se non lo era
+                          if (quizTargetLesson && !quizTargetLesson.completed) {
+                            toggleLessonCompleted(quizTargetLesson.id)
+                          }
                         }}
                         className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs"
                       >
-                        Verifica Risposte
+                        Verifica Risposte & Completa Modulo
                       </Button>
                     ) : (
                       <Button
                         onClick={() => setIsQuizModalOpen(false)}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs"
                       >
-                        Completa e Chiudi
+                        Chiudi Finestra
                       </Button>
                     )}
                   </div>

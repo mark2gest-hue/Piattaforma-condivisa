@@ -1,19 +1,34 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Sparkles, Lock, Mail, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ShieldCheck,
+  AlertCircle,
+  Sparkles,
+  Check,
+  CheckCircle2
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const supabase = createClient()
 
@@ -33,97 +48,193 @@ export default function LoginPage() {
       return
     }
 
-    // Login riuscito -> reindirizza forzando il caricamento completo dei cookie di sessione
-    window.location.href = '/lavori'
+    // Login riuscito -> avvia l'animazione di chiusura fluida (fold/shrink) prima del redirect
+    setIsClosing(true)
+    setTimeout(() => {
+      window.location.href = '/lavori'
+    }, 600)
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Brand Header */}
-        <div className="flex flex-col items-center text-center space-y-2">
-          <img
-            src="/images/logo_full_dark.png"
-            alt="AI Sviluppo"
-            className="h-16 w-auto object-contain hidden dark:block"
-          />
-          <img
-            src="/images/logo_full_light.png"
-            alt="AI Sviluppo"
-            className="h-16 w-auto object-contain block dark:hidden"
-          />
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            aiutiamoci.cloud
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
-            Piattaforma Operativa, Corsi & Agenti AI
-          </p>
-        </div>
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#070A12] text-slate-100 font-sans relative overflow-hidden p-4 sm:p-6 selection:bg-blue-500 selection:text-white">
+      
+      {/* 3D Flowing Cyber-Blue & Indigo Fluid Ambient Glowing Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute -top-40 -left-20 w-[650px] h-[650px] bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-transparent rounded-full blur-[140px] animate-pulse" />
+        <div className="absolute -bottom-40 -right-20 w-[700px] h-[700px] bg-gradient-to-tl from-cyan-600/20 via-blue-700/15 to-transparent rounded-full blur-[150px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-radial from-blue-500/10 via-slate-900/40 to-transparent blur-[130px]" />
+        
+        {/* Subtle Tech Grid Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+      </div>
 
-        {/* Login Card */}
-        <Card className="border-slate-200 dark:border-slate-800 shadow-md bg-white dark:bg-slate-900">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-base font-bold text-slate-900 dark:text-white">Accedi alla piattaforma</CardTitle>
-            <CardDescription className="text-xs text-slate-500 dark:text-slate-400">
-              Inserisci le tue credenziali Supabase Auth autorizzate.
-            </CardDescription>
-          </CardHeader>
+      {/* Main Glassmorphic Futuristic Container con Animazione di Chiusura al Click */}
+      <div
+        className={`relative z-10 w-full max-w-[460px] transition-all duration-500 ease-in-out transform ${
+          isClosing
+            ? 'opacity-0 scale-75 -translate-y-12 blur-md rotate-1 pointer-events-none'
+            : mounted
+            ? 'opacity-100 scale-100 translate-y-0'
+            : 'opacity-0 scale-95 translate-y-6'
+        }`}
+      >
+        
+        {/* Top-Left Futuristic Corner Wing / Flap (Glow Blue) */}
+        <div className={`absolute -top-3.5 -left-3.5 w-16 h-16 border-t-2 border-l-2 border-blue-400 rounded-tl-2xl bg-blue-500/15 backdrop-blur-md pointer-events-none z-20 shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-all duration-300 ${isClosing ? 'scale-0' : 'animate-pulse'}`} />
+        
+        {/* Bottom-Right Futuristic Corner Wing / Flap (Glow Blue) */}
+        <div className={`absolute -bottom-3.5 -right-3.5 w-16 h-16 border-b-2 border-r-2 border-blue-400 rounded-br-2xl bg-blue-500/15 backdrop-blur-md pointer-events-none z-20 shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-all duration-300 ${isClosing ? 'scale-0' : 'animate-pulse'}`} />
 
-          <CardContent>
-            {errorMessage && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
+        {/* Card Body */}
+        <div className="relative bg-[#0d1424]/85 backdrop-blur-2xl border border-blue-500/30 rounded-3xl p-8 sm:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(59,130,246,0.15)] overflow-hidden">
+          
+          {/* Top Radial Highlight Beam */}
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-32 bg-blue-500/25 rounded-full blur-2xl pointer-events-none" />
 
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Aziendale</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="gerelmo@gmail.com"
-                    className="pl-9 text-xs dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="pl-9 text-xs dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold h-10 shadow-xs mt-2"
-              >
-                {loading ? 'Verifica credenziali...' : 'Entra nel Workspace'}
-                <ArrowRight className="h-4 w-4 ml-1.5" />
-              </Button>
-            </form>
-
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-              <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-              <span>Row Level Security attiva (Autenticazione Supabase)</span>
+          {/* Header */}
+          <div className="mb-8 text-left relative z-10">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-400/40 text-blue-300 text-[11px] font-bold tracking-wider uppercase mb-3 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>AIUTIAMOCI • WORKSPACE</span>
             </div>
-          </CardContent>
-        </Card>
+
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              Welcome <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 drop-shadow-[0_0_20px_rgba(59,130,246,0.4)]">Back</span>
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5 font-normal">
+              Enter your credentials to access your secure workspace
+            </p>
+          </div>
+
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="mb-6 p-3.5 rounded-xl bg-red-950/70 border border-red-500/50 text-red-300 text-xs flex items-center gap-2.5 animate-bounce shadow-lg shadow-red-950/50">
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+              <span className="font-medium">{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleLogin} className="space-y-5 relative z-10">
+            
+            {/* Email Field */}
+            <div className="space-y-1.5 text-left">
+              <label className="block text-xs font-bold text-slate-300 tracking-wide">
+                Email Address
+              </label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-400 transition-colors duration-200" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@domain.com"
+                  className="w-full bg-[#11192e]/90 border border-slate-700/80 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/25 shadow-inner transition-all duration-200"
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-1.5 text-left">
+              <label className="block text-xs font-bold text-slate-300 tracking-wide">
+                Password
+              </label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-400 transition-colors duration-200" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-[#11192e]/90 border border-slate-700/80 rounded-xl pl-11 pr-11 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/25 shadow-inner transition-all duration-200 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-300 transition-colors cursor-pointer p-1"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-blue-400" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between text-xs pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-slate-300 hover:text-white transition-colors">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="hidden"
+                />
+                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all duration-200 ${
+                  rememberMe
+                    ? 'bg-blue-500 border-blue-400 text-white font-black shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                    : 'border-slate-700 bg-slate-800/80'
+                }`}>
+                  {rememberMe && <Check className="w-3 h-3 stroke-[3]" />}
+                </div>
+                <span>Remember me</span>
+              </label>
+
+              <Link
+                href="/corso-base"
+                className="text-xs text-slate-400 hover:text-blue-400 transition-colors underline-offset-2 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            {/* Main Blue Glowing Submit CTA Button */}
+            <button
+              type="submit"
+              disabled={loading || isClosing}
+              className="group relative w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-sm tracking-wide uppercase shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:shadow-[0_0_40px_rgba(59,130,246,0.65)] hover:scale-[1.01] transition-all duration-200 active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 mt-4 overflow-hidden"
+            >
+              {/* Button Shimmer / Reflection Animation */}
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform ease-out pointer-events-none" />
+
+              {isClosing ? (
+                <div className="flex items-center gap-2 text-white font-bold animate-pulse">
+                  <CheckCircle2 className="w-5 h-5 text-cyan-300" />
+                  <span>Accesso Eseguito...</span>
+                </div>
+              ) : loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4 stroke-[2.5] group-hover:translate-x-1 transition-transform duration-200" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Footer Direct Assistance & Security Badge */}
+          <div className="mt-8 pt-5 border-t border-slate-800/80 flex flex-col items-center gap-3">
+            <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 font-medium">
+              <ShieldCheck className="h-3.5 w-3.5 text-blue-400/80" />
+              <span>Encrypted Session • Supabase Auth Guard</span>
+            </div>
+
+            <div className="text-center text-xs text-slate-400">
+              Hai problemi con il tuo account?{' '}
+              <Link
+                href="/servizi-ai"
+                className="font-bold text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                Assistenza AIutiamoci
+              </Link>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   )

@@ -31,7 +31,7 @@ interface CalendarEvent {
   title: string
   date: string // YYYY-MM-DD
   time?: string
-  category: 'task' | 'consulting' | 'course' | 'call'
+  category: 'task' | 'consulting' | 'course' | 'call' | 'notice'
   description?: string
   meet_url?: string
 }
@@ -73,14 +73,23 @@ export default function CalendarioPage() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const [eventTitle, setEventTitle] = useState('')
   const [eventTime, setEventTime] = useState('09:00')
-  const [eventCategory, setEventCategory] = useState<'task' | 'consulting' | 'course' | 'call'>('call')
+  const [eventCategory, setEventCategory] = useState<'task' | 'consulting' | 'course' | 'call' | 'notice'>('call')
   const [eventMeetUrl, setEventMeetUrl] = useState('https://meet.google.com/wsv-bqxm-bvr')
   const [eventDesc, setEventDesc] = useState('')
   const [recipientType, setRecipientType] = useState<'single' | 'ai-start' | 'ai-pro' | 'all' | 'pending'>('single')
   const [recipientCategories, setRecipientCategories] = useState<string[]>(['single'])
+  const [studentCohort, setStudentCohort] = useState<'new' | 'all'>('new')
   const [customEmails, setCustomEmails] = useState('')
+  const [senderProfile, setSenderProfile] = useState<'campus' | 'impresa'>('campus')
+  const [customSenderName, setCustomSenderName] = useState('')
   const [sendEmailInvite, setSendEmailInvite] = useState(true)
-  const [emailTiming, setEmailTiming] = useState<'now' | '1h' | '2h' | '24h'>('now')
+  const [emailTiming, setEmailTiming] = useState<'now' | 'scheduled'>('now')
+  const [scheduledDate, setScheduledDate] = useState(() => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
+  })
+  const [scheduledTime, setScheduledTime] = useState('08:30')
   const [isSendingInvitations, setIsSendingInvitations] = useState(false)
   const [sendingEventId, setSendingEventId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -119,8 +128,6 @@ export default function CalendarioPage() {
         if (match) {
           meetUrl = match[1].trim()
           cleanDesc = cleanDesc.replace(/\[MEET:\s*[^\]]+\]/, '').trim()
-        } else if (ev.category === 'call' || ev.category === 'course') {
-          meetUrl = 'https://meet.google.com/wsv-bqxm-bvr'
         }
 
         return {
@@ -215,35 +222,44 @@ export default function CalendarioPage() {
         category: eventCategory,
       }).catch((e) => console.error('Errore notifica Telegram evento calendario:', e))
 
-      // Invia inviti via email tramite Resend se abilitato
+      // Invia inviti o programma email tramite Resend se abilitato
       let emailReportMsg = ''
       const hasSelectedCategories = recipientCategories.length > 0 && (recipientCategories.some(c => c !== 'single') || customEmails.trim().length > 0)
       if (sendEmailInvite && hasSelectedCategories) {
-        if (emailTiming === 'now') {
-          setIsSendingInvitations(true)
-          const resEmail = await sendEventInvitationsAction({
-            eventTitle: eventTitle.trim(),
-            eventDate: selectedDateStr,
-            eventTime,
-            meetUrl: eventMeetUrl.trim(),
-            description: eventDesc.trim(),
-            recipientCategories: recipientCategories as any,
-            customEmails: customEmails.trim(),
-          })
-          setIsSendingInvitations(false)
+        setIsSendingInvitations(true)
+        
+        let scheduledIsoString: string | undefined = undefined
+        if (emailTiming === 'scheduled') {
+          // Calcola data e ora esatta in formato ISO 8601 per Resend
+          const [sYear, sMonth, sDay] = scheduledDate.split('-').map(Number)
+          const [sHour, sMin] = scheduledTime.split(':').map(Number)
+          const targetDateObj = new Date(sYear, sMonth - 1, sDay, sHour, sMin, 0)
+          scheduledIsoString = targetDateObj.toISOString()
+        }
 
-          if (resEmail.success) {
-            emailReportMsg = `\n✉️ Inviti inviati con successo a ${resEmail.sentCount} destinatari via Resend!`
+        const resEmail = await sendEventInvitationsAction({
+          eventTitle: eventTitle.trim(),
+          eventDate: selectedDateStr,
+          eventTime,
+          meetUrl: eventMeetUrl.trim(),
+          description: eventDesc.trim(),
+          recipientCategories: recipientCategories as any,
+          studentCohort,
+          customEmails: customEmails.trim(),
+          scheduledAt: scheduledIsoString,
+          senderProfile,
+          customSenderName: customSenderName.trim() || undefined,
+        })
+        setIsSendingInvitations(false)
+
+        if (resEmail.success) {
+          if (emailTiming === 'scheduled') {
+            emailReportMsg = `\n⏰ Invio programmato con successo per il ${scheduledDate} alle ore ${scheduledTime} (${resEmail.sentCount} destinatari via Resend).`
           } else {
-            emailReportMsg = `\n⚠️ Attenzione invio email: ${resEmail.error}`
+            emailReportMsg = `\n✉️ Inviti inviati subito con successo a ${resEmail.sentCount} destinatari via Resend!`
           }
         } else {
-          const timingLabels: Record<string, string> = {
-            '1h': '1 ora prima dell\'evento',
-            '2h': '2 ore prima dell\'evento',
-            '24h': '24 ore prima dell\'evento (il giorno prima)'
-          }
-          emailReportMsg = `\n⏰ Invio email programmato per: ${timingLabels[emailTiming] || emailTiming}. Puoi anche inviarle manualmente in qualsiasi momento dalla lista eventi!`
+          emailReportMsg = `\n⚠️ Attenzione invio email: ${resEmail.error}`
         }
       }
 
@@ -262,7 +278,9 @@ export default function CalendarioPage() {
   }
 
   const handleSendManualInvites = async (ev: CalendarEvent) => {
-    const confirmMsg = `Vuoi inviare ora le email di invito e promemoria per:\n\n"${ev.title}" (${ev.date} ore ${ev.time || '10:00'})?\n\nVerranno inclusi tutti gli studenti e contatti registrati.`
+    const isNotice = !ev.meet_url?.trim()
+    const actionLabel = isNotice ? 'la comunicazione' : 'gli inviti con link Meet'
+    const confirmMsg = `Vuoi inviare ora ${actionLabel} via email per:\n\n"${ev.title}" (${ev.date} ore ${ev.time || '10:00'})?\n\nVerranno inviate agli studenti della Nuova Edizione.`
     if (!confirm(confirmMsg)) return
 
     try {
@@ -271,16 +289,17 @@ export default function CalendarioPage() {
         eventTitle: ev.title,
         eventDate: ev.date,
         eventTime: ev.time || '10:00',
-        meetUrl: ev.meet_url?.trim() || 'https://meet.google.com/wsv-bqxm-bvr',
+        meetUrl: ev.meet_url?.trim() || '',
         description: ev.description,
-        recipientCategories: ['pending', 'ai-start', 'ai-pro', 'waitlist'],
+        recipientCategories: ['ai-start', 'ai-pro'],
+        studentCohort: 'new',
       })
       setSendingEventId(null)
 
       if (res.success) {
-        alert(`✉️ Inviti inviati con successo a ${res.sentCount} destinatari!`)
+        alert(`✉️ Invii completati con successo a ${res.sentCount} destinatari via Resend!`)
       } else {
-        alert(`Errore invio inviti: ${res.error}`)
+        alert(`Errore invio: ${res.error}`)
       }
     } catch (err: any) {
       setSendingEventId(null)
@@ -313,6 +332,8 @@ export default function CalendarioPage() {
         return <Badge variant="purple" className="text-[9px] px-1.5">Corso</Badge>
       case 'call':
         return <Badge variant="warning" className="text-[9px] px-1.5">Videocall</Badge>
+      case 'notice':
+        return <Badge className="text-[9px] px-1.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">Avviso</Badge>
       default:
         return <Badge variant="secondary" className="text-[9px] px-1.5">Task Kanban</Badge>
     }
@@ -326,6 +347,8 @@ export default function CalendarioPage() {
         return 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30'
       case 'call':
         return 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30'
+      case 'notice':
+        return 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
       default:
         return 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30'
     }
@@ -539,8 +562,9 @@ export default function CalendarioPage() {
                       </p>
                     )}
 
-                    {ev.meet_url && (
-                      <div className="pt-1.5 space-y-1.5">
+                    {/* Pulsanti Azione: Disponibili sia con Meet che per soli Avvisi/Comunicazioni */}
+                    <div className="pt-1.5 space-y-1.5">
+                      {ev.meet_url && (
                         <Button
                           size="sm"
                           onClick={() => window.open(ev.meet_url, '_blank')}
@@ -549,49 +573,54 @@ export default function CalendarioPage() {
                           <Video className="h-3.5 w-3.5" />
                           Partecipa su Google Meet
                         </Button>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const text = encodeURIComponent(
-                                `Ciao! Ti confermo la riunione "${ev.title}" per il ${ev.date} alle ${ev.time || '10:00'}.\nEcco il link Google Meet per collegarci: ${ev.meet_url}`
-                              )
-                              window.open(`https://wa.me/?text=${text}`, '_blank')
-                            }}
-                            className="h-7 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-[11px] font-semibold gap-1 justify-center"
-                            title="Invia promemoria su WhatsApp"
-                          >
-                            <Share2 className="h-3 w-3 text-emerald-500 shrink-0" />
-                            WhatsApp
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={sendingEventId === ev.id}
-                            onClick={() => handleSendManualInvites(ev)}
-                            className="h-7 border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 text-[11px] font-semibold gap-1 justify-center"
-                            title="Invia inviti ed email a tutti adesso via Resend"
-                          >
-                            {sendingEventId === ev.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin text-blue-500 shrink-0" />
-                            ) : (
-                              <Send className="h-3 w-3 text-blue-500 shrink-0" />
-                            )}
-                            Invia Email
-                          </Button>
-                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const meetText = ev.meet_url ? `\nEcco il link Google Meet: ${ev.meet_url}` : ''
+                            const text = encodeURIComponent(
+                              `Ciao! Ti confermo: "${ev.title}" per il ${ev.date} alle ${ev.time || '10:00'}.${meetText}\n\n${ev.description || ''}`
+                            )
+                            window.open(`https://wa.me/?text=${text}`, '_blank')
+                          }}
+                          className="h-7 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-[11px] font-semibold gap-1 justify-center"
+                          title="Invia promemoria su WhatsApp"
+                        >
+                          <Share2 className="h-3 w-3 text-emerald-500 shrink-0" />
+                          WhatsApp
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={sendingEventId === ev.id}
+                          onClick={() => handleSendManualInvites(ev)}
+                          className="h-7 border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 text-[11px] font-semibold gap-1 justify-center"
+                          title="Invia adesso l'email a tutti gli iscritti via Resend"
+                        >
+                          {sendingEventId === ev.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin text-blue-500 shrink-0" />
+                          ) : (
+                            <Send className="h-3 w-3 text-blue-500 shrink-0" />
+                          )}
+                          Invia Email
+                        </Button>
                       </div>
-                    )}
+                    </div>
 
                     <div className="flex items-center gap-3 text-[10px] text-slate-400 font-mono pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3 text-slate-400" />
                         {ev.time || '10:00'}
                       </span>
-                      {ev.meet_url && (
+                      {ev.meet_url ? (
                         <span className="text-sky-500 font-sans font-medium flex items-center gap-1 truncate max-w-[180px]">
                           📹 {ev.meet_url.replace('https://', '')}
+                        </span>
+                      ) : (
+                        <span className="text-emerald-500 font-sans font-medium flex items-center gap-1">
+                          📢 Comunicazione Email
                         </span>
                       )}
                     </div>
@@ -609,129 +638,169 @@ export default function CalendarioPage() {
 
       {/* Modal Creazione Nuovo Evento */}
       {isEventModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuovo Evento a Calendario</h3>
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-3 sm:p-6 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsEventModalOpen(false)
+          }}
+        >
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Header fisso con X sempre visibile */}
+            <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/80 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                  <CalendarIcon className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuovo Evento a Calendario</h3>
+                  <p className="text-[11px] text-slate-400">Pianifica videoconferenza o invia convocazioni via email</p>
+                </div>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsEventModalOpen(false)}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="h-8 w-8 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors"
+                title="Chiudi (Esc)"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
-            <form onSubmit={handleCreateEvent} className="p-5 space-y-4 text-xs">
+            {/* Corpo form con scrollbar fluida interna */}
+            <form onSubmit={handleCreateEvent} className="p-5 space-y-4 text-xs overflow-y-auto flex-1 overscroll-contain">
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo Evento / Appuntamento *</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                  {eventCategory === 'notice' ? 'Oggetto della Comunicazione *' : 'Titolo Evento / Appuntamento *'}
+                </label>
                 <Input
                   autoFocus
                   required
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
-                  placeholder="Es. Sessione Consulenza AlfaCorp, Videocall Team..."
+                  placeholder={eventCategory === 'notice' ? "Es. Aggiornamento Importante per i Corsisti, Guida Laboratorio..." : "Es. Sessione Consulenza AlfaCorp, Videocall Team..."}
                   className="text-xs dark:bg-slate-800 dark:border-slate-700"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Data Evento</label>
-                  <Input
-                    type="date"
-                    value={selectedDateStr}
-                    onChange={(e) => setSelectedDateStr(e.target.value)}
-                    className="text-xs dark:bg-slate-800 dark:border-slate-700"
-                  />
-                </div>
+              {eventCategory !== 'notice' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">Data Evento</label>
+                    <Input
+                      type="date"
+                      value={selectedDateStr}
+                      onChange={(e) => setSelectedDateStr(e.target.value)}
+                      className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                    />
+                  </div>
 
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Orario</label>
-                  <Input
-                    type="time"
-                    value={eventTime}
-                    onChange={(e) => setEventTime(e.target.value)}
-                    className="text-xs dark:bg-slate-800 dark:border-slate-700"
-                  />
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">Orario Riunione</label>
+                    <Input
+                      type="time"
+                      value={eventTime}
+                      onChange={(e) => setEventTime(e.target.value)}
+                      className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Categoria</label>
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Categoria Evento / Azione</label>
                 <select
                   value={eventCategory}
                   onChange={(e: any) => {
                     const val = e.target.value
                     setEventCategory(val)
-                    if (val === 'task' || val === 'consulting') {
+                    if (val === 'task') {
                       setSendEmailInvite(false)
+                    } else if (val === 'notice') {
+                      setSendEmailInvite(true)
+                      setEventMeetUrl('')
                     } else {
                       setSendEmailInvite(true)
+                      if (!eventMeetUrl) setEventMeetUrl('https://meet.google.com/wsv-bqxm-bvr')
                     }
                   }}
                   className="w-full h-9 rounded-md border border-slate-200 dark:border-slate-700 bg-background dark:bg-slate-800 px-3 text-xs"
                 >
-                  <option value="call">Riunione Videocall / Live Meet</option>
-                  <option value="course">Lezione Corso Formativo</option>
-                  <option value="consulting">Appuntamento / Consulenza Di Persona</option>
-                  <option value="task">Promemoria / Scadenza Interna</option>
+                  <option value="call">📹 Riunione Videocall / Live Meet (con Link)</option>
+                  <option value="course">🎓 Lezione Corso Formativo (con Link)</option>
+                  <option value="notice">📢 Comunicazione / Avviso Studenti (Senza Link Video)</option>
+                  <option value="consulting">🤝 Appuntamento / Consulenza Di Persona</option>
+                  <option value="task">📌 Promemoria / Scadenza Interna</option>
                 </select>
               </div>
 
-              {/* I campi Videocall e Inviti compaiono solo se è una call/lezione o se l'utente vuole aggiungere il link */}
-              {(eventCategory === 'call' || eventCategory === 'course') && (
-                <>
-                  {/* Campo Dedicato Link Videocall / Google Meet con Stanze Separate */}
-                  <div className="space-y-2 bg-sky-500/5 dark:bg-sky-500/10 p-3.5 rounded-xl border border-sky-500/20">
-                    <div className="flex items-center justify-between">
-                      <label className="font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-1.5 text-xs">
-                        <Video className="h-3.5 w-3.5 text-sky-500" />
-                        Stanza & Link Riunione
-                      </label>
-                      <span className="text-[10px] text-slate-400 font-medium">Seleziona stanza o incolla link</span>
-                    </div>
+              {/* Sezione Link Videocall (Opzionale o Modificabile) */}
+              <div className="space-y-2 bg-sky-500/5 dark:bg-sky-500/10 p-3.5 rounded-xl border border-sky-500/20">
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-1.5 text-xs">
+                    <Video className="h-3.5 w-3.5 text-sky-500" />
+                    Stanza & Link Riunione (Opzionale)
+                  </label>
+                  {eventMeetUrl.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setEventMeetUrl('')}
+                      className="text-[10px] text-red-500 hover:text-red-700 dark:hover:text-red-400 font-semibold cursor-pointer flex items-center gap-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                      Rimuovi Link (Solo Comunicazione)
+                    </button>
+                  )}
+                </div>
 
-                    {/* Chips Stanze Separate Dedicate */}
-                    <div className="grid grid-cols-2 gap-1.5 pt-0.5">
-                      {PRESET_MEET_ROOMS.map((room) => {
-                        const isSelected = eventMeetUrl.trim().toLowerCase() === room.url.toLowerCase()
-                        return (
-                          <button
-                            key={room.id}
-                            type="button"
-                            onClick={() => setEventMeetUrl(room.url)}
-                            className={`px-2.5 py-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
-                              isSelected
-                                ? 'bg-sky-600 border-sky-600 text-white shadow-xs'
-                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-sky-400'
-                            }`}
-                          >
-                            <span className="font-bold text-[11px] truncate">{room.label}</span>
-                            <span className={`text-[9px] truncate ${isSelected ? 'text-sky-100' : 'text-slate-400'}`}>
-                              {room.desc}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
+                {/* Chips Stanze Separate Dedicate */}
+                <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                  {PRESET_MEET_ROOMS.map((room) => {
+                    const isSelected = eventMeetUrl.trim().toLowerCase() === room.url.toLowerCase()
+                    return (
+                      <button
+                        key={room.id}
+                        type="button"
+                        onClick={() => setEventMeetUrl(room.url)}
+                        className={`px-2.5 py-1.5 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-center ${
+                          isSelected
+                            ? 'bg-sky-600 border-sky-600 text-white shadow-xs'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-sky-400'
+                        }`}
+                      >
+                        <span className="font-bold text-[11px] truncate">{room.label}</span>
+                        <span className={`text-[9px] truncate ${isSelected ? 'text-sky-100' : 'text-slate-400'}`}>
+                          {room.desc}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
 
-                    <div className="pt-1">
-                      <Input
-                        value={eventMeetUrl}
-                        onChange={(e) => setEventMeetUrl(e.target.value)}
-                        placeholder="https://meet.google.com/xyz-abc-def"
-                        className="text-xs bg-white dark:bg-slate-900 border-sky-500/30 text-sky-600 dark:text-sky-300 font-mono h-8"
-                      />
-                      <p className="text-[10px] text-slate-400 mt-1">
-                        💡 Puoi cliccare un preset sopra o incollare qualsiasi link personalizzato (Zoom, Teams, Google Meet).
-                      </p>
-                    </div>
+                <div className="pt-1">
+                  <div className="relative flex items-center">
+                    <Input
+                      value={eventMeetUrl}
+                      onChange={(e) => setEventMeetUrl(e.target.value)}
+                      placeholder="Nessun link (es. solo avviso/comunicazione) o incolla Google Meet/Zoom..."
+                      className="text-xs bg-white dark:bg-slate-900 border-sky-500/30 text-sky-600 dark:text-sky-300 font-mono h-8 pr-7"
+                    />
+                    {eventMeetUrl.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setEventMeetUrl('')}
+                        className="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        title="Cancella link"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    💡 Lascia il campo vuoto se vuoi inviare solo una comunicazione scritta senza pulsante di videochiamata.
+                  </p>
+                </div>
+              </div>
 
                   {/* Sezione Destinatari & Notifiche Email */}
                   <div className="space-y-3 bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -872,6 +941,50 @@ export default function CalendarioPage() {
                           </label>
                         </div>
 
+                        {/* Filtro Target Coorte Edizione Studenti */}
+                        {(recipientCategories.includes('ai-start') || recipientCategories.includes('ai-pro')) && (
+                          <div className="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/50 rounded-xl p-2.5 space-y-1.5 animate-fadeIn">
+                            <label className="text-[11px] font-bold text-blue-900 dark:text-blue-200 flex items-center justify-between">
+                              <span>🎯 Target Edizione Studenti:</span>
+                              <span className="text-[10px] font-normal text-blue-600 dark:text-blue-400">Filtro automatico anti-spam vecchi corsisti</span>
+                            </label>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <button
+                                type="button"
+                                onClick={() => setStudentCohort('new')}
+                                className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                                  studentCohort === 'new'
+                                    ? 'bg-blue-600 text-white font-bold border-blue-600 shadow-xs ring-2 ring-blue-400/40'
+                                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400'
+                                }`}
+                              >
+                                <span className="block font-bold text-[11px] flex items-center gap-1">
+                                  ✨ Solo Nuova Edizione
+                                </span>
+                                <span className={`block text-[10px] ${studentCohort === 'new' ? 'text-blue-100' : 'text-slate-500'}`}>
+                                  Iscritti Settembre - Ottobre (12 Nuovi)
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setStudentCohort('all')}
+                                className={`p-2 rounded-lg border text-left transition-all cursor-pointer ${
+                                  studentCohort === 'all'
+                                    ? 'bg-blue-600 text-white font-bold border-blue-600 shadow-xs ring-2 ring-blue-400/40'
+                                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400'
+                                }`}
+                              >
+                                <span className="block font-bold text-[11px]">
+                                  📚 Tutti gli Studenti
+                                </span>
+                                <span className={`block text-[10px] ${studentCohort === 'all' ? 'text-blue-100' : 'text-slate-500'}`}>
+                                  Inclusi i 28 storici di Maggio
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         {/* 5. Inserimento manuale email aggiuntive */}
                         <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
                           <label className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300 text-[11px] cursor-pointer">
@@ -900,78 +1013,175 @@ export default function CalendarioPage() {
                           )}
                         </div>
 
-                        {/* 6. Selettore Orario Invio (Timing) */}
-                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-1.5">
-                          <label className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] flex items-center gap-1.5">
-                            <Clock className="h-3 w-3 text-blue-500" />
-                            Quando vuoi inviare le email?
+                        {/* 5.bis Selezione Profilo Mittente (Campus vs Impresa) & Nome Mittente Visibile */}
+                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2">
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <span>📮 Profilo Mittente & Indirizzo di Risposta:</span>
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-normal">Personalizzabile per Business / Corsi</span>
                           </label>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            {/* Campus Option */}
+                            <button
+                              type="button"
+                              onClick={() => setSenderProfile('campus')}
+                              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                senderProfile === 'campus'
+                                  ? 'bg-blue-500/10 border-blue-500/50 text-blue-950 dark:text-blue-200 ring-2 ring-blue-400/40 shadow-xs'
+                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-blue-400'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-[11px] flex items-center gap-1">
+                                  🎓 aiutiamoci Campus
+                                </span>
+                                {senderProfile === 'campus' && <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">✓ Attivo</span>}
+                              </div>
+                              <span className="text-[10px] text-slate-500 block mt-0.5 font-mono">
+                                Da: info@aiutiamoci.cloud
+                              </span>
+                              <span className="text-[9px] text-slate-400 block mt-0.5">
+                                Risposte a: info@aiutiamoci.cloud
+                              </span>
+                            </button>
+
+                            {/* Impresa Option */}
+                            <button
+                              type="button"
+                              onClick={() => setSenderProfile('impresa')}
+                              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                senderProfile === 'impresa'
+                                  ? 'bg-sky-500/15 border-sky-500/60 text-sky-950 dark:text-sky-200 ring-2 ring-sky-400/40 shadow-xs'
+                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-sky-400'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-[11px] flex items-center gap-1">
+                                  💼 aiutiamoci Impresa
+                                </span>
+                                {senderProfile === 'impresa' && <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold">✓ Attivo</span>}
+                              </div>
+                              <span className="text-[10px] text-sky-600 dark:text-sky-400 block mt-0.5 font-mono">
+                                Da: impresa@aiutiamoci.cloud
+                              </span>
+                              <span className="text-[9px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                                Risposte a: <strong className="text-slate-700 dark:text-slate-200">info@mark2.cloud</strong>
+                              </span>
+                            </button>
+                          </div>
+
+                          {/* Personalizzazione Nome Visualizzato (Display Name) */}
+                          <div className="pt-1.5 flex items-center gap-2">
+                            <label className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap font-medium">
+                              Nome che vedrà il cliente:
+                            </label>
+                            <Input
+                              value={customSenderName}
+                              onChange={(e) => setCustomSenderName(e.target.value)}
+                              placeholder={senderProfile === 'impresa' ? 'aiutiamoci Impresa' : 'aiutiamoci'}
+                              className="text-xs h-7 dark:bg-slate-900 dark:border-slate-700"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 6. Selettore Modalità Invio (Subito vs Programmato con Data e Ora) */}
+                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2">
+                          <label className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <Clock className="h-3.5 w-3.5 text-blue-500" />
+                              Tempistica di Spedizione:
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-normal">Gestito da Resend Scheduler</span>
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
                             <button
                               type="button"
                               onClick={() => setEmailTiming('now')}
-                              className={`px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
+                              className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
                                 emailTiming === 'now'
-                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs ring-2 ring-blue-400/30'
                                   : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400'
                               }`}
                             >
-                              ⚡ Subito
+                              <span className="block font-bold text-[11px]">⚡ Invia Subito</span>
+                              <span className={`block text-[10px] ${emailTiming === 'now' ? 'text-blue-100' : 'text-slate-400'}`}>
+                                Al salvataggio
+                              </span>
                             </button>
                             <button
                               type="button"
-                              onClick={() => setEmailTiming('1h')}
-                              className={`px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
-                                emailTiming === '1h'
-                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                              onClick={() => setEmailTiming('scheduled')}
+                              className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                                emailTiming === 'scheduled'
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs ring-2 ring-blue-400/30'
                                   : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400'
                               }`}
                             >
-                              1 ora prima
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEmailTiming('2h')}
-                              className={`px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
-                                emailTiming === '2h'
-                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
-                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400'
-                              }`}
-                            >
-                              2 ore prima
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEmailTiming('24h')}
-                              className={`px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-all ${
-                                emailTiming === '24h'
-                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
-                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-400'
-                              }`}
-                            >
-                              24h prima
+                              <span className="block font-bold text-[11px]">⏰ Programma Invio</span>
+                              <span className={`block text-[10px] ${emailTiming === 'scheduled' ? 'text-blue-100' : 'text-slate-400'}`}>
+                                Scegli giorno e ora
+                              </span>
                             </button>
                           </div>
-                          <p className="text-[10px] text-slate-400 leading-tight">
-                            {emailTiming === 'now' 
-                              ? 'Le email partono immediatamente al salvataggio dell\'evento.' 
-                              : `Invio programmato. Dalla schermata eventi potrai anche forzare l'invio in ogni momento con il tasto "Invia Email".`}
-                          </p>
+
+                          {/* Date & Time Picker per invio programmato */}
+                          {emailTiming === 'scheduled' && (
+                            <div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-200/80 dark:border-blue-800/60 space-y-2 animate-fadeIn">
+                              <p className="text-[11px] font-bold text-blue-900 dark:text-blue-200">
+                                📅 Quando vuoi che parta la spedizione automatica?
+                              </p>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">Giorno Spedizione:</label>
+                                  <Input
+                                    type="date"
+                                    value={scheduledDate}
+                                    onChange={(e) => setScheduledDate(e.target.value)}
+                                    className="text-xs bg-white dark:bg-slate-900 h-8 dark:border-slate-700"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">Orario Partenza:</label>
+                                  <Input
+                                    type="time"
+                                    value={scheduledTime}
+                                    onChange={(e) => setScheduledTime(e.target.value)}
+                                    className="text-xs bg-white dark:bg-slate-900 h-8 dark:border-slate-700"
+                                  />
+                                </div>
+                              </div>
+                              <p className="text-[10px] text-blue-700 dark:text-blue-300 leading-tight">
+                                ✨ L'email verrà inviata automaticamente all'orario indicato anche a piattaforma chiusa e computer spento.
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
-                </>
-              )}
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione (Opzionale)</label>
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <span>📝 Testo del Messaggio / Comunicazione</span>
+                    {!eventMeetUrl.trim() && (
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                        Corpo Email
+                      </span>
+                    )}
+                  </label>
+                  <span className="text-[10px] text-slate-400">
+                    {!eventMeetUrl.trim() ? 'Questo testo sarà il corpo principale dell\'email' : 'Opzionale'}
+                  </span>
+                </div>
                 <textarea
-                  rows={2}
+                  rows={4}
                   value={eventDesc}
                   onChange={(e) => setEventDesc(e.target.value)}
-                  placeholder="Dettagli aggiuntivi per i partecipanti..."
-                  className="w-full text-xs p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  placeholder="Scrivi qui il messaggio per gli studenti (es. Benvenuti nel nuovo percorso formativo, vi informiamo che il materiale didattico è ora disponibile...)"
+                  className="w-full text-xs p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[90px] leading-relaxed shadow-inner"
                 />
               </div>
 
@@ -1000,17 +1210,22 @@ export default function CalendarioPage() {
                   <Button
                     type="submit"
                     disabled={isSendingInvitations}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-9 px-4 gap-1.5"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-9 px-4 gap-1.5 cursor-pointer shadow-xs"
                   >
                     {isSendingInvitations ? (
                       <>
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Invio in corso...
+                        Programmazione in corso...
+                      </>
+                    ) : emailTiming === 'scheduled' ? (
+                      <>
+                        <Clock className="h-3.5 w-3.5" />
+                        Salva e Programma Invio
                       </>
                     ) : (
                       <>
                         <Send className="h-3.5 w-3.5" />
-                        Salva e Invia Inviti
+                        Salva e Invia Subito
                       </>
                     )}
                   </Button>

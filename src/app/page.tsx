@@ -24,6 +24,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { LegalModal, CookieBanner } from '@/components/legal/LegalModal'
+import { TiltCard } from '@/components/landing/TiltCard'
 
 export default function GatewayPage() {
   const router = useRouter()
@@ -98,7 +99,7 @@ export default function GatewayPage() {
       {/* MAIN SPLIT GATEWAY HERO */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-16 flex-1 flex flex-col justify-center">
         {/* Intestazione Centrale */}
-        <div className="text-center space-y-4 max-w-3xl mx-auto mb-10 sm:mb-14">
+        <div className="text-center space-y-4 max-w-3xl mx-auto mb-8 sm:mb-10">
           <Badge className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 px-3.5 py-1 text-xs font-semibold rounded-full uppercase tracking-wider">
             Scegli la tua porta d'accesso
           </Badge>
@@ -110,126 +111,148 @@ export default function GatewayPage() {
           </p>
         </div>
 
-        {/* 2 PORTE MACRO (SPLIT CARDS) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-6xl mx-auto w-full">
+        {/* 2 PORTE MACRO (SPLIT CARDS CINEMATIC 3D) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 max-w-6xl mx-auto w-full my-4">
           
           {/* PORTA 1: AIUTIAMOCI ACADEMY (Formazione & Studenti) */}
-          <div className="group relative rounded-3xl bg-gradient-to-b from-slate-900/90 via-slate-900/60 to-slate-950 border-2 border-indigo-500/40 hover:border-indigo-400 transition-all duration-300 p-6 sm:p-9 flex flex-col justify-between shadow-2xl shadow-indigo-500/10 hover:shadow-indigo-500/20 hover:-translate-y-1 overflow-hidden">
-            {/* Ambient Glow */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/15 rounded-full blur-3xl group-hover:bg-indigo-600/25 transition-all pointer-events-none" />
+          <TiltCard glowColor="indigo" className="rounded-[32px] bg-[#080d1e]/90 border border-indigo-500/40 hover:border-indigo-400/80 backdrop-blur-2xl p-7 sm:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(99,102,241,0.15)] hover:shadow-[0_40px_100px_rgba(0,0,0,0.95),0_0_70px_rgba(99,102,241,0.35)] overflow-hidden group">
+            {/* Corner Wing Glow Accents */}
+            <div className="absolute -top-3 -left-3 w-12 h-12 border-t-2 border-l-2 border-indigo-400 rounded-tl-2xl bg-indigo-500/10 pointer-events-none z-20 shadow-[0_0_20px_rgba(99,102,241,0.5)]" />
+            <div className="absolute -bottom-3 -right-3 w-12 h-12 border-b-2 border-r-2 border-purple-400 rounded-br-2xl bg-purple-500/10 pointer-events-none z-20 shadow-[0_0_20px_rgba(168,85,247,0.5)]" />
+
+            {/* Ambient Neon Volumetric Light */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-indigo-600/20 via-purple-600/15 to-transparent rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
+            <div className="absolute -bottom-10 left-10 w-60 h-40 bg-blue-600/15 rounded-full blur-2xl pointer-events-none" />
 
             <div className="space-y-6 relative z-10">
               {/* Badge & Icona */}
               <div className="flex items-center justify-between">
-                <div className="h-14 w-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
-                  <GraduationCap className="h-7 w-7" />
+                <div className="h-16 w-16 rounded-2xl bg-indigo-500/15 border border-indigo-400/40 flex items-center justify-center text-indigo-300 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_25px_rgba(99,102,241,0.3)]">
+                  <GraduationCap className="h-8 w-8" />
                 </div>
-                <Badge className="bg-blue-500/10 text-blue-300 border-blue-500/30 text-[11px] font-bold uppercase tracking-wider px-3 py-1">
+                <Badge className="bg-gradient-to-r from-blue-500/20 to-indigo-500/20 text-indigo-300 border border-indigo-400/50 text-xs font-black uppercase tracking-wider px-3.5 py-1.5 shadow-[0_0_15px_rgba(99,102,241,0.25)]">
                   Per Privati & Professionisti
                 </Badge>
               </div>
 
               {/* Titoli */}
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
                   Aiutiamoci Academy
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
                   Percorsi pratici di formazione step-by-step per imparare a usare l'IA nel lavoro quotidiano, con certificazione ufficiale e tutor intelligente.
                 </p>
               </div>
 
               {/* Highlights */}
-              <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
-                <div className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300">
-                  <CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+              <div className="space-y-3 pt-3 border-t border-slate-800/90">
+                <div className="flex items-start gap-3 text-xs sm:text-sm text-slate-300">
+                  <div className="mt-0.5 p-1 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 shadow-[0_0_10px_rgba(99,102,241,0.3)] shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </div>
                   <span><strong>AI Start (Fondamenta)</strong>: 20 video lezioni, dispense PDF, tutor @AI e certificazione europea</span>
                 </div>
-                <div className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300">
-                  <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 text-xs sm:text-sm text-slate-300">
+                  <div className="mt-0.5 p-1 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.3)] shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </div>
                   <span><strong>AI Pro (Agentistica & B2B)</strong>: Creazione di Agenti Autonomi, sistemi multi-agente, RAG e flussi operativi</span>
                 </div>
-                <div className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300">
-                  <CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 text-xs sm:text-sm text-slate-300">
+                  <div className="mt-0.5 p-1 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 shadow-[0_0_10px_rgba(99,102,241,0.3)] shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </div>
                   <span><strong>Tutor @AI 24/7 & Community</strong>: Supporto continuo durante lo studio ed esercizi pratici</span>
                 </div>
               </div>
             </div>
 
             {/* Azioni Academy */}
-            <div className="pt-8 space-y-3 relative z-10">
+            <div className="pt-8 space-y-3.5 relative z-10">
               <Link href="/academy" className="block w-full">
-                <Button className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold h-13 rounded-2xl gap-2 shadow-xl shadow-indigo-600/30 text-sm sm:text-base transition-all group-hover:scale-[1.01]">
+                <Button className="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-black h-13 rounded-2xl gap-2 shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:shadow-[0_0_40px_rgba(99,102,241,0.65)] text-sm sm:text-base transition-all duration-300 group-hover:scale-[1.01]">
                   <span>Entra in Aiutiamoci Academy</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
                 </Button>
               </Link>
 
               <button
                 type="button"
                 onClick={() => setIsStudentModalOpen(true)}
-                className="w-full py-2.5 px-4 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-800/80 text-xs text-slate-300 font-semibold transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-xl border border-slate-800/90 hover:border-indigo-500/50 bg-[#0d1527]/70 hover:bg-[#131d36] text-xs text-slate-300 font-semibold transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <Key className="h-3.5 w-3.5 text-indigo-400" />
                 <span>Hai già un codice d'accesso? Accedi all'Area Corsi</span>
               </button>
             </div>
-          </div>
+          </TiltCard>
 
           {/* PORTA 2: AIUTIAMOCI PER LE IMPRESE (B2B / Mark2.cloud) */}
-          <div className="group relative rounded-3xl bg-gradient-to-b from-slate-900/90 via-slate-900/60 to-slate-950 border-2 border-emerald-500/40 hover:border-emerald-400 transition-all duration-300 p-6 sm:p-9 flex flex-col justify-between shadow-2xl shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:-translate-y-1 overflow-hidden">
-            {/* Ambient Glow */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/15 rounded-full blur-3xl group-hover:bg-emerald-600/25 transition-all pointer-events-none" />
+          <TiltCard glowColor="emerald" className="rounded-[32px] bg-[#071318]/90 border border-emerald-500/40 hover:border-emerald-400/80 backdrop-blur-2xl p-7 sm:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(16,185,129,0.15)] hover:shadow-[0_40px_100px_rgba(0,0,0,0.95),0_0_70px_rgba(16,185,129,0.35)] overflow-hidden group">
+            {/* Corner Wing Glow Accents */}
+            <div className="absolute -top-3 -left-3 w-12 h-12 border-t-2 border-l-2 border-emerald-400 rounded-tl-2xl bg-emerald-500/10 pointer-events-none z-20 shadow-[0_0_20px_rgba(16,185,129,0.5)]" />
+            <div className="absolute -bottom-3 -right-3 w-12 h-12 border-b-2 border-r-2 border-cyan-400 rounded-br-2xl bg-cyan-500/10 pointer-events-none z-20 shadow-[0_0_20px_rgba(6,182,212,0.5)]" />
+
+            {/* Ambient Neon Volumetric Light */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-emerald-600/20 via-teal-600/15 to-transparent rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
+            <div className="absolute -bottom-10 left-10 w-60 h-40 bg-cyan-600/15 rounded-full blur-2xl pointer-events-none" />
 
             <div className="space-y-6 relative z-10">
               {/* Badge & Icona */}
               <div className="flex items-center justify-between">
-                <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
-                  <Building2 className="h-7 w-7" />
+                <div className="h-16 w-16 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 flex items-center justify-center text-emerald-300 group-hover:scale-110 transition-transform duration-300 shadow-[0_0_25px_rgba(16,185,129,0.3)]">
+                  <Building2 className="h-8 w-8" />
                 </div>
-                <Badge className="bg-emerald-500/10 text-emerald-300 border-emerald-500/30 text-[11px] font-bold uppercase tracking-wider px-3 py-1">
+                <Badge className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border border-emerald-400/50 text-xs font-black uppercase tracking-wider px-3.5 py-1.5 shadow-[0_0_15px_rgba(16,185,129,0.25)]">
                   Per Imprese & Professionisti
                 </Badge>
               </div>
 
               {/* Titoli */}
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
                   Aiutiamoci per le Imprese
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
                   Soluzioni personalizzate, audit di processo e sviluppo di agenti AI autonomi per moltiplicare l'efficienza e ridurre i costi aziendali.
                 </p>
               </div>
 
               {/* Highlights */}
-              <div className="space-y-2.5 pt-2 border-t border-slate-800/80">
-                <div className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="space-y-3 pt-3 border-t border-slate-800/90">
+                <div className="flex items-start gap-3 text-xs sm:text-sm text-slate-300">
+                  <div className="mt-0.5 p-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)] shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </div>
                   <span><strong>Audit di Flusso & Discovery</strong>: Analisi rapida dei colli di bottiglia e ROI dei progetti AI</span>
                 </div>
-                <div className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 text-xs sm:text-sm text-slate-300">
+                  <div className="mt-0.5 p-1 rounded-lg bg-teal-500/20 border border-teal-500/40 text-teal-300 shadow-[0_0_10px_rgba(20,184,166,0.3)] shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </div>
                   <span><strong>Agenti & Centralini AI</strong>: Automazione del customer care, gestione documenti e presa appuntamenti</span>
                 </div>
-                <div className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-300">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 text-xs sm:text-sm text-slate-300">
+                  <div className="mt-0.5 p-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)] shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </div>
                   <span><strong>Integrazione su Misura</strong>: Connessione con CRM, ERP, WhatsApp Business e gestionali aziendali</span>
                 </div>
               </div>
             </div>
 
             {/* Azioni Imprese */}
-            <div className="pt-8 space-y-3 relative z-10">
+            <div className="pt-8 space-y-3.5 relative z-10">
               <a
                 href="https://www.mark2.cloud"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full"
               >
-                <Button className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold h-13 rounded-2xl gap-2 shadow-xl shadow-emerald-600/30 text-sm sm:text-base transition-all group-hover:scale-[1.01]">
+                <Button className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-black h-13 rounded-2xl gap-2 shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:shadow-[0_0_40px_rgba(16,185,129,0.65)] text-sm sm:text-base transition-all duration-300 group-hover:scale-[1.01]">
                   <span>Scopri le Soluzioni Imprese</span>
-                  <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <ExternalLink className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
                 </Button>
               </a>
 
@@ -237,13 +260,13 @@ export default function GatewayPage() {
                 href="https://auditflow.mark2.cloud"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-2.5 px-4 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-800/80 text-xs text-slate-300 font-semibold transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-xl border border-slate-800/90 hover:border-emerald-500/50 bg-[#0a1b1d]/70 hover:bg-[#0e272a] text-xs text-slate-300 font-semibold transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <Zap className="h-3.5 w-3.5 text-emerald-400" />
                 <span>Richiedi un Audit Rapido di Fattibilità AI</span>
               </a>
             </div>
-          </div>
+          </TiltCard>
 
         </div>
 

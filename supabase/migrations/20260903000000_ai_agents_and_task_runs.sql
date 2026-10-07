@@ -1,4 +1,5 @@
 -- Migrazione: Supporto Agenti AI e Tracciamento Esecuzioni Task (Human-in-the-Loop)
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 -- 1. Estensione tabella profiles per supportare agenti virtuali
 ALTER TABLE public.profiles
@@ -57,7 +58,7 @@ INSERT INTO auth.users (
   'authenticated',
   'authenticated',
   'nemotron.agent@system.local',
-  crypt('agent_secure_pass_123', gen_salt('bf')),
+  extensions.crypt('agent_secure_pass_123', extensions.gen_salt('bf')),
   now(),
   '{"provider":"email","providers":["email"]}',
   '{"full_name":"Nemotron Lead Agent"}',

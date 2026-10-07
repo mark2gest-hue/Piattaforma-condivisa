@@ -345,6 +345,7 @@ export default function KanbanBoardPage() {
   // Main View: 'kanban' | 'projects'
   const [mainView, setMainView] = useState<'kanban' | 'projects'>('kanban')
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('all')
+  const [currentUserName, setCurrentUserName] = useState<string>('Marco')
 
   // Task Modal State
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
@@ -387,6 +388,7 @@ export default function KanbanBoardPage() {
 
   useEffect(() => {
     fetchData()
+    fetchUser()
 
     // Realtime listener
     const channel = supabase
@@ -403,6 +405,34 @@ export default function KanbanBoardPage() {
       supabase.removeChannel(channel)
     }
   }, [])
+
+  const fetchUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.full_name?.trim()) {
+        setCurrentUserName(profile.full_name.trim().split(' ')[0])
+      } else if (user.user_metadata?.full_name?.trim()) {
+        setCurrentUserName(user.user_metadata.full_name.trim().split(' ')[0])
+      } else if (user.email) {
+        if (user.email.toLowerCase().includes('gerelmo') || user.email.toLowerCase().includes('marco')) {
+          setCurrentUserName('Marco')
+        } else {
+          const namePart = user.email.split('@')[0]
+          setCurrentUserName(namePart.charAt(0).toUpperCase() + namePart.slice(1))
+        }
+      }
+    } catch (e) {
+      console.error('Errore recupero utente corrente in Lavori:', e)
+    }
+  }
 
   const fetchData = async (showLoading = true) => {
     if (showLoading) setLoading(true)
@@ -701,7 +731,7 @@ export default function KanbanBoardPage() {
   return (
     <div className="space-y-6 flex flex-col min-h-[calc(100vh-8rem)]">
       {/* Cockpit Operativo "Oggi" */}
-      <CockpitOggi tasks={tasks} userName="Marco" />
+      <CockpitOggi tasks={tasks} userName={currentUserName} />
 
       {/* Header with Switcher */}
       <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">

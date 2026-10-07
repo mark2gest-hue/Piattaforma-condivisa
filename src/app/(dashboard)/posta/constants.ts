@@ -6,12 +6,13 @@ export interface EmailSenderOption {
 }
 
 export const AVAILABLE_FROM_EMAILS: EmailSenderOption[] = [
-  { id: 'team-aiutiamoci', email: 'team@aiutiamoci.cloud', label: 'Team aiutiamoci <team@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
+  { id: 'impresa-aiutiamoci', email: 'impresa@aiutiamoci.cloud', label: 'aiutiamoci Impresa <impresa@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
   { id: 'info-aiutiamoci', email: 'info@aiutiamoci.cloud', label: 'aiutiamoci <info@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
+  { id: 'team-aiutiamoci', email: 'team@aiutiamoci.cloud', label: 'Team aiutiamoci <team@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
   { id: 'pagamenti-aiutiamoci', email: 'pagamenti@aiutiamoci.cloud', label: 'Pagamenti aiutiamoci <pagamenti@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
   { id: 'assistenza-aiutiamoci', email: 'assistenza@aiutiamoci.cloud', label: 'Assistenza aiutiamoci <assistenza@aiutiamoci.cloud>', domain: 'aiutiamoci.cloud' },
-  { id: 'info-mar2', email: 'info@mar2.cloud', label: 'Mar2 <info@mar2.cloud>', domain: 'mar2.cloud' },
-  { id: 'support-mar2', email: 'support@mar2.cloud', label: 'Support Mar2 <support@mar2.cloud>', domain: 'mar2.cloud' },
+  { id: 'info-mark2', email: 'info@mark2.cloud', label: 'Mark2 <info@mark2.cloud>', domain: 'mark2.cloud' },
+  { id: 'support-mark2', email: 'support@mark2.cloud', label: 'Support Mark2 <support@mark2.cloud>', domain: 'mark2.cloud' },
 ]
 
 export interface ArubaMailboxConfig {
@@ -21,12 +22,13 @@ export interface ArubaMailboxConfig {
 }
 
 export const DEFAULT_IMAP_ACCOUNTS: ArubaMailboxConfig[] = [
-  { email: 'team@aiutiamoci.cloud', label: 'team@aiutiamoci.cloud', password: '' },
+  { email: 'impresa@aiutiamoci.cloud', label: 'impresa@aiutiamoci.cloud', password: '' },
   { email: 'info@aiutiamoci.cloud', label: 'info@aiutiamoci.cloud', password: '' },
+  { email: 'team@aiutiamoci.cloud', label: 'team@aiutiamoci.cloud', password: '' },
   { email: 'pagamenti@aiutiamoci.cloud', label: 'pagamenti@aiutiamoci.cloud', password: '' },
   { email: 'assistenza@aiutiamoci.cloud', label: 'assistenza@aiutiamoci.cloud', password: '' },
-  { email: 'info@mar2.cloud', label: 'info@mar2.cloud', password: '' },
-  { email: 'support@mar2.cloud', label: 'support@mar2.cloud', password: '' },
+  { email: 'info@mark2.cloud', label: 'info@mark2.cloud', password: '' },
+  { email: 'support@mark2.cloud', label: 'support@mark2.cloud', password: '' },
 ]
 
 export interface EmailFolder {

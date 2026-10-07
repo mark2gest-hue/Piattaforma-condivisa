@@ -9,7 +9,17 @@ const execAsync = promisify(exec);
 
 export async function POST(req: Request) {
   try {
-    const { title, hook, target, tone } = await req.json();
+    const {
+      title,
+      hook,
+      bullet1,
+      bullet2,
+      bullet3,
+      cta,
+      badge,
+      target,
+      tone
+    } = await req.json();
 
     if (!title) {
       return NextResponse.json({ error: 'Titolo/argomento obbligatorio' }, { status: 400 });
@@ -25,27 +35,52 @@ export async function POST(req: Request) {
     const outputPath = path.join(publicVideosDir, outputFilename);
     const framePngPath = path.join(publicVideosDir, `${videoId}-frame.png`);
 
-    const cleanTitle = title.replace(/[^a-zA-Z0-9 àèéìòùÀÈÉÌÒÙ]/g, ' ').replace(/\s+/g, ' ').trim();
-    const hookText = (hook || `Se passi ancora ore su ${cleanTitle} fermati stai sprecando tempo`)
-      .replace(/[^a-zA-Z0-9 àèéìòùÀÈÉÌÒÙ]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const cleanTitle = title.trim();
+    const cleanBadge = badge ? badge.trim() : 'AIUTIAMOCI.CLOUD • SOLUZIONI PRATICHE';
+    const cleanHook = hook ? hook.trim() : `Come risolvere ${cleanTitle} in pochi secondi con l'AI`;
+    const cleanB1 = bullet1 ? bullet1.trim() : '⚡ 1. Risparmia fino a 2 ore al giorno';
+    const cleanB2 = bullet2 ? bullet2.trim() : '📊 2. Zero errori e formule complesse';
+    const cleanB3 = bullet3 ? bullet3.trim() : '🛡️ 3. Risultati immediati testati sul campo';
+    const cleanCta = cta ? cta.trim() : 'COMMENTA "GUIDA" SOTTO 👇';
 
-    const scene1 = `Ecco come risolvere ${cleanTitle} in 3 semplici passaggi con l intelligenza artificiale.`;
-    const scene2 = `Zero formule matematiche, zero codice. Solo comandi pratici in italiano.`;
-    const ctaText = `Commenta GUIDA per ricevere il template e lo sconto del 50 per cento.`;
-
-    // 1. Sintesi Vocale Audio con macOS TTS
+    // 1. Sintesi Vocale Audio Cross-Platform
     const audioPath = path.join(publicVideosDir, `${videoId}.aiff`);
     const wavPath = path.join(publicVideosDir, `${videoId}.wav`);
     
-    const voiceScript = `${hookText}. ${scene1}. ${scene2}. ${ctaText}`;
+    const voiceScript = `${cleanHook}. ${cleanB1}. ${cleanB2}. ${cleanB3}. ${cleanCta}`;
+    const cleanScript = voiceScript.replace(/["'`\\]/g, '').replace(/\n/g, ' ');
+    
+    let audioGenerated = false;
+
+    // Tentativo 1: macOS say
     try {
-      await execAsync(`say -v Federica -r 170 -o "${audioPath}" "${voiceScript.replace(/"/g, '')}"`);
+      await execAsync(`say -v Federica -r 170 -o "${audioPath}" "${cleanScript}"`);
       await execAsync(`ffmpeg -y -i "${audioPath}" -ar 44100 -ac 2 "${wavPath}"`);
-    } catch (e) {
-      await execAsync(`say -r 170 -o "${audioPath}" "${voiceScript.replace(/"/g, '')}"`);
-      await execAsync(`ffmpeg -y -i "${audioPath}" -ar 44100 -ac 2 "${wavPath}"`);
+      audioGenerated = true;
+    } catch (_) {
+      try {
+        await execAsync(`say -r 170 -o "${audioPath}" "${cleanScript}"`);
+        await execAsync(`ffmpeg -y -i "${audioPath}" -ar 44100 -ac 2 "${wavPath}"`);
+        audioGenerated = true;
+      } catch (_) {}
+    }
+
+    // Tentativo 2: Linux edge-tts / espeak
+    if (!audioGenerated) {
+      try {
+        await execAsync(`edge-tts --voice it-IT-DiegoNeural --text "${cleanScript}" --write-media "${wavPath}"`);
+        audioGenerated = true;
+      } catch (_) {
+        try {
+          await execAsync(`espeak -v it -s 150 -w "${wavPath}" "${cleanScript}"`);
+          audioGenerated = true;
+        } catch (_) {}
+      }
+    }
+
+    // Tentativo 3: Fallback silenzioso sincronizzato 15s
+    if (!audioGenerated) {
+      await execAsync(`ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=stereo -t 15 "${wavPath}"`);
     }
 
     // 2. Durata audio
@@ -53,7 +88,7 @@ export async function POST(req: Request) {
     const { stdout: durationStdout } = await execAsync(durationCmd);
     const audioDuration = parseFloat(durationStdout.trim()) || 15;
 
-    // 3. Rendering Grafico Perfetto 1080x1920 con Playwright (Anti-Slop, Ultra-Definito)
+    // 3. Rendering Grafico Pulito & Minimale 1080x1920 con Playwright
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage({
       viewport: { width: 1080, height: 1920 },
@@ -70,120 +105,120 @@ export async function POST(req: Request) {
         body {
           width: 1080px;
           height: 1920px;
-          background: linear-gradient(180deg, #090D16 0%, #0F172A 50%, #06090E 100%);
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          background: #07090E;
+          background-image: 
+            radial-gradient(at 50% 15%, rgba(16, 185, 129, 0.12) 0px, transparent 60%),
+            radial-gradient(at 50% 85%, rgba(79, 70, 229, 0.15) 0px, transparent 60%);
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
           color: #F8FAFC;
-          padding: 80px 70px;
+          padding: 100px 75px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
         }
+        
         .top-badge {
           align-self: center;
-          background: rgba(16, 185, 129, 0.15);
+          background: rgba(16, 185, 129, 0.12);
           border: 2px solid rgba(16, 185, 129, 0.4);
           color: #34D399;
-          font-size: 30px;
+          font-size: 26px;
           font-weight: 800;
-          letter-spacing: 2px;
-          padding: 16px 40px;
+          letter-spacing: 3px;
+          padding: 14px 40px;
           border-radius: 999px;
-          text-align: center;
-        }
-        .hero-card {
-          background: rgba(30, 41, 59, 0.95);
-          border: 3px solid #334155;
-          border-radius: 36px;
-          padding: 44px;
-          text-align: center;
-        }
-        .hero-title {
-          font-size: 48px;
-          font-weight: 900;
-          color: #FFFFFF;
-          line-height: 1.2;
           text-transform: uppercase;
         }
-        .hero-sub {
+
+        .main-card {
+          background: rgba(15, 23, 42, 0.85);
+          border: 2px solid rgba(51, 65, 85, 0.9);
+          border-radius: 40px;
+          padding: 60px 50px;
+          box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+        }
+
+        .title {
+          font-size: 54px;
+          font-weight: 900;
+          line-height: 1.15;
+          letter-spacing: -0.5px;
+          color: #FFFFFF;
+          margin-bottom: 24px;
+          text-transform: uppercase;
+        }
+
+        .hook-box {
+          background: rgba(30, 41, 59, 0.8);
+          border-left: 6px solid #F59E0B;
+          border-radius: 16px;
+          padding: 24px 30px;
           font-size: 30px;
           font-weight: 600;
-          color: #94A3B8;
-          margin-top: 14px;
+          line-height: 1.35;
+          color: #E2E8F0;
+          margin-bottom: 40px;
         }
-        .hook-pill {
-          background: #0F172A;
+
+        .bullets-list {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .bullet-row {
+          background: rgba(15, 23, 42, 0.6);
+          border: 1.5px solid rgba(51, 65, 85, 0.6);
           border-radius: 20px;
-          padding: 20px 30px;
-          margin-top: 24px;
-          font-size: 28px;
-          font-weight: 700;
-          color: #F59E0B;
-        }
-        .content-card {
-          background: rgba(15, 23, 42, 0.98);
-          border: 3px solid rgba(16, 185, 129, 0.4);
-          border-radius: 36px;
-          padding: 50px 44px;
-        }
-        .content-card h3 {
-          font-size: 34px;
-          font-weight: 800;
-          color: #10B981;
-          margin-bottom: 34px;
-          letter-spacing: 1px;
-        }
-        .step-item {
+          padding: 24px 30px;
           font-size: 32px;
-          font-weight: 600;
-          margin-bottom: 28px;
+          font-weight: 700;
+          color: #F1F5F9;
           display: flex;
           align-items: center;
-          gap: 16px;
         }
-        .step-cert {
-          color: #38BDF8;
-        }
-        .cta-banner {
-          background: linear-gradient(90deg, #10B981 0%, #06B6D4 100%);
+
+        .cta-box {
+          background: linear-gradient(135deg, #10B981 0%, #06B6D4 100%);
           border-radius: 36px;
-          padding: 40px;
+          padding: 44px 30px;
           text-align: center;
-          color: #090C10;
+          color: #04130E;
+          box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
         }
+
         .cta-title {
-          font-size: 44px;
+          font-size: 46px;
           font-weight: 900;
           letter-spacing: 1px;
+          text-transform: uppercase;
         }
+
         .cta-sub {
-          font-size: 28px;
-          font-weight: 800;
+          font-size: 26px;
+          font-weight: 700;
           color: #064E3B;
           margin-top: 10px;
         }
       </style>
     </head>
     <body>
-      <div class="top-badge">AIUTIAMOCI.CLOUD • SCUOLA PRATICA AI</div>
+      <div class="top-badge">${cleanBadge}</div>
 
-      <div class="hero-card">
-        <div class="hero-title">${cleanTitle}</div>
-        <div class="hero-sub">Guida Rapida in 3 Passaggi</div>
-        <div class="hook-pill">💡 Gancio: ${hookText.slice(0, 44)}...</div>
+      <div class="main-card">
+        <div class="title">${cleanTitle}</div>
+        <div class="hook-box">💡 ${cleanHook}</div>
+
+        <div class="bullets-list">
+          <div class="bullet-row">${cleanB1}</div>
+          <div class="bullet-row">${cleanB2}</div>
+          <div class="bullet-row">${cleanB3}</div>
+        </div>
       </div>
 
-      <div class="content-card">
-        <h3>COSA IMPARI IN QUESTO VIDEO:</h3>
-        <div class="step-item">⚡ 1. Delegare compiti ripetitivi in 10 secondi</div>
-        <div class="step-item">📊 2. Creare tabelle e bozze senza errori</div>
-        <div class="step-item">🛡️ 3. Prompt pronti testati anti-allucinazione</div>
-        <div class="step-item step-cert">🎓 4. 16 Ore Certificate EQF DigComp 2.2</div>
-        <div class="step-item">👥 5. Live Q&A e correzione diretta con i docenti</div>
-      </div>
-
-      <div class="cta-banner">
-        <div class="cta-title">COMMENTA "GUIDA" SOTTO 👇</div>
-        <div class="cta-sub">Per ricevere il coupon 50% e i prompt gratuiti</div>
+      <div class="cta-box">
+        <div class="cta-title">${cleanCta}</div>
+        <div class="cta-sub">Per ricevere la guida pratica e il coupon 50%</div>
       </div>
     </body>
     </html>
@@ -193,7 +228,7 @@ export async function POST(req: Request) {
     await page.screenshot({ path: framePngPath });
     await browser.close();
 
-    // 4. Montaggio Video MP4 ad Alta Definizione (H.264 + AAC)
+    // 4. Montaggio Video MP4 ad Alta Definizione
     const ffmpegCommand = `ffmpeg -y -loop 1 -i "${framePngPath}" -i "${wavPath}" -c:v libx264 -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest "${outputPath}"`;
     await execAsync(ffmpegCommand);
 
@@ -209,11 +244,11 @@ export async function POST(req: Request) {
       videoId,
       videoUrl: `/generated-reels/${outputFilename}`,
       title: cleanTitle,
-      hook: hookText,
+      hook: cleanHook,
       duration: Math.round(audioDuration),
-      postCopy: `Se passi ancora le tue giornate lavorative a fare compiti ripetitivi su ${cleanTitle}, stai letteralmente regalando ore della tua vita.\n\nEcco cosa puoi fare oggi stesso con l'Intelligenza Artificiale:\n✅ Automatizzare la formattazione e le bozze in 10 secondi\n✅ Eliminare la paura di sbagliare formule o testi\n✅ Risparmiare fino a 2 ore al giorno da dedicare a ciò che conta davvero\n\nNel percorso pratico di 16 ore di Aiutiamoci insegniamo esattamente questo a chi parte da zero.\n\n👉 Commenta con la parola "GUIDA" qui sotto e ti invio in privato il prompt completo e il coupon speciale del 50%!`,
-      firstComment: `🚀 Accedi al programma completo e al coupon SCONTO50 qui: https://aiutiamoci.cloud/corso-base (Posti limitati con tutoraggio live)`,
-      hashtags: ['#Aiutiamoci', '#FormazioneAI', '#Produttività', '#PiccoleMedieImprese', '#Over40AI']
+      postCopy: `Se passi ancora le tue giornate a fare compiti ripetitivi su ${cleanTitle}, stai letteralmente regalando ore della tua vita.\n\nEcco cosa puoi fare oggi stesso con l'Intelligenza Artificiale:\n✅ ${cleanB1}\n✅ ${cleanB2}\n✅ ${cleanB3}\n\n👉 ${cleanCta} qui sotto e ti invio in privato il prompt completo e il coupon speciale!`,
+      firstComment: `🚀 Accedi a tutti i template e al corso su https://aiutiamoci.cloud/servizi-ai (Usa il coupon SCONTO50)`,
+      hashtags: ['#Aiutiamoci', '#Produttività', '#FormazioneAI', '#PMI']
     };
 
     return NextResponse.json(result);

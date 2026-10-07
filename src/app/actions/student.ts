@@ -685,7 +685,7 @@ export async function getStudentCodesAction() {
   try {
     await requireAuthUser()
     const supabaseAdmin = createAdminClient()
-    const { data, error } = await supabaseAdmin
+    const { data: codes, error } = await supabaseAdmin
       .from('student_codes')
       .select('*')
       .order('created_at', { ascending: false })
@@ -695,10 +695,94 @@ export async function getStudentCodesAction() {
       return { success: false, error: error.message, studentCodes: [] }
     }
 
-    return { success: true, studentCodes: data || [] }
+    // Carica la mappa dei progressi per ciascun codice studente
+    const { data: progressList } = await supabaseAdmin
+      .from('student_progress')
+      .select('*')
+
+    const progressMap = new Map<string, any>()
+    if (progressList) {
+      for (const p of progressList) {
+        if (p.student_code) {
+          progressMap.set(p.student_code, p)
+        }
+      }
+    }
+
+    const mergedCodes = (codes || []).map((sc: any) => {
+      const prog = progressMap.get(sc.code)
+      return {
+        ...sc,
+        progress: prog ? {
+          total_hours: Number(prog.total_hours || 0),
+          completed_lessons: Array.isArray(prog.completed_lessons) ? prog.completed_lessons : [],
+          completed_checkpoints: prog.completed_checkpoints || {},
+          is_exam_unlocked: Boolean(prog.is_exam_unlocked),
+          last_activity_at: prog.last_activity_at
+        } : {
+          total_hours: 0,
+          completed_lessons: [],
+          completed_checkpoints: {},
+          is_exam_unlocked: false,
+          last_activity_at: null
+        }
+      }
+    })
+
+    return { success: true, studentCodes: mergedCodes }
   } catch (error: any) {
     console.error('Errore getStudentCodesAction:', error)
     return { success: false, error: error.message, studentCodes: [] }
+  }
+}
+
+export async function toggleStudentExamUnlockAction(studentCode: string, isUnlocked: boolean) {
+  try {
+    const user = await requireAuthUser()
+    const supabaseAdmin = createAdminClient()
+
+    const { data: existing } = await supabaseAdmin
+      .from('student_progress')
+      .select('id')
+      .eq('student_code', studentCode)
+      .maybeSingle()
+
+    if (existing) {
+      const { error } = await supabaseAdmin
+        .from('student_progress')
+        .update({
+          is_exam_unlocked: isUnlocked,
+          manual_unlock_by: user.id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('student_code', studentCode)
+      if (error) throw error
+    } else {
+      const { data: codeData } = await supabaseAdmin
+        .from('student_codes')
+        .select('student_email, access_tier')
+        .eq('code', studentCode)
+        .maybeSingle()
+
+      const { error } = await supabaseAdmin
+        .from('student_progress')
+        .insert({
+          student_code: studentCode,
+          student_email: codeData?.student_email || null,
+          course_id: codeData?.access_tier === 'ai-pro' ? 'ai-pro' : 'ai-start',
+          is_exam_unlocked: isUnlocked,
+          manual_unlock_by: user.id,
+          total_hours: 0,
+          completed_lessons: [],
+          completed_checkpoints: {}
+        })
+      if (error) throw error
+    }
+
+    return { success: true, isUnlocked }
+  } catch (error: any) {
+    console.error('Errore toggleStudentExamUnlockAction:', error)
+    return { success: false, error: error.message || 'Errore aggiornamento stato esame' }
   }
 }
 

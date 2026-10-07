@@ -59,13 +59,15 @@ import {
   unarchiveEmailsBulk,
   analyzeEmailWithAI,
   EmailAIAnalysis,
+  getImapAccountsConfig,
+  saveImapAccountsConfig,
 } from './actions'
 import { AVAILABLE_FROM_EMAILS, ArubaMailboxConfig, DEFAULT_IMAP_ACCOUNTS, DEFAULT_CUSTOM_FOLDERS, EmailFolder } from './constants'
 import { useRouter } from 'next/navigation'
 
 type EmailWithSender = Email & { senderProfile?: Profile }
 type FolderFilter = 'inbox' | 'sent' | 'unread' | 'archived' | 'all' | string
-type AccountFilter = 'all' | 'team@aiutiamoci.cloud' | 'info@aiutiamoci.cloud' | 'pagamenti@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mar2.cloud' | 'support@mar2.cloud'
+type AccountFilter = 'all' | 'impresa@aiutiamoci.cloud' | 'info@aiutiamoci.cloud' | 'team@aiutiamoci.cloud' | 'pagamenti@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mark2.cloud' | 'support@mark2.cloud'
 
 function getToArray(to_address: any): string[] {
   if (!to_address) return []
@@ -88,7 +90,7 @@ export default function PostaCondivisaPage() {
   const [emails, setEmails] = useState<EmailWithSender[]>([])
   const [selectedEmail, setSelectedEmail] = useState<EmailWithSender | null>(null)
   const [replyText, setReplyText] = useState('')
-  const [replyFrom, setReplyFrom] = useState<string>('aiutiamoci <info@aiutiamoci.cloud>')
+  const [replyFrom, setReplyFrom] = useState<string>('aiutiamoci Impresa <impresa@aiutiamoci.cloud>')
   const [isSending, setIsSending] = useState(false)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -104,7 +106,7 @@ export default function PostaCondivisaPage() {
 
   // Modal Nuova Email
   const [isComposeModalOpen, setIsComposeModalOpen] = useState(false)
-  const [composeFrom, setComposeFrom] = useState<string>('aiutiamoci <info@aiutiamoci.cloud>')
+  const [composeFrom, setComposeFrom] = useState<string>('aiutiamoci Impresa <impresa@aiutiamoci.cloud>')
   const [composeTo, setComposeTo] = useState('')
   const [composeSubject, setComposeSubject] = useState('')
   const [composeBody, setComposeBody] = useState('')
@@ -140,22 +142,48 @@ export default function PostaCondivisaPage() {
   }, [])
 
   useEffect(() => {
-    // Carica configurazione IMAP da localStorage ed esegue il merge con DEFAULT_IMAP_ACCOUNTS
-    const saved = localStorage.getItem('piattaforma_imap_accounts')
-    if (saved) {
+    // Carica configurazione IMAP prioritariamente da DB Supabase, con fallback a localStorage
+    const loadImapConfig = async () => {
+      let savedAccounts: ArubaMailboxConfig[] = []
+
+      // 1. Prova prima da DB Supabase
       try {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed)) {
-          const merged = DEFAULT_IMAP_ACCOUNTS.map((def) => {
-            const found = parsed.find((p: ArubaMailboxConfig) => p.email?.toLowerCase() === def.email.toLowerCase())
-            return found ? { ...def, password: found.password || '' } : def
-          })
-          setImapAccounts(merged)
+        const dbRes = await getImapAccountsConfig()
+        if (dbRes.success && dbRes.accounts && Array.isArray(dbRes.accounts) && dbRes.accounts.length > 0) {
+          savedAccounts = dbRes.accounts
+          // Sincronizza anche localmente per velocità
+          localStorage.setItem('piattaforma_imap_accounts', JSON.stringify(dbRes.accounts))
         }
       } catch (e) {
-        console.error('Errore parsing accounts IMAP salvati', e)
+        console.warn('Errore lettura IMAP da DB:', e)
+      }
+
+      // 2. Se vuoto su DB, prova da localStorage
+      if (savedAccounts.length === 0) {
+        const saved = localStorage.getItem('piattaforma_imap_accounts')
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved)
+            if (Array.isArray(parsed)) {
+              savedAccounts = parsed
+            }
+          } catch (e) {
+            console.error('Errore parsing accounts IMAP salvati', e)
+          }
+        }
+      }
+
+      // 3. Esegui il merge con la lista di DEFAULT_IMAP_ACCOUNTS
+      if (savedAccounts.length > 0) {
+        const merged = DEFAULT_IMAP_ACCOUNTS.map((def) => {
+          const found = savedAccounts.find((p: ArubaMailboxConfig) => p.email?.toLowerCase() === def.email.toLowerCase())
+          return found ? { ...def, password: found.password || '' } : def
+        })
+        setImapAccounts(merged)
       }
     }
+
+    loadImapConfig()
 
     // Carica Cartelle Personalizzate da localStorage
     const savedFolders = localStorage.getItem('piattaforma_email_folders')
@@ -683,10 +711,19 @@ export default function PostaCondivisaPage() {
     }
   }
 
-  const handleSaveImapAccounts = (e: React.FormEvent) => {
+  const handleSaveImapAccounts = async (e: React.FormEvent) => {
     e.preventDefault()
+    // 1. Salva localmente per reattività immediata
     localStorage.setItem('piattaforma_imap_accounts', JSON.stringify(imapAccounts))
     setIsImapModalOpen(false)
+
+    // 2. Salva in modo permanente nel database Supabase (così non si cancellano mai più)
+    try {
+      await saveImapAccountsConfig(imapAccounts)
+    } catch (err) {
+      console.warn('Avviso salvataggio imap config su DB:', err)
+    }
+
     handleSyncImap()
   }
 
@@ -764,11 +801,11 @@ export default function PostaCondivisaPage() {
               <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                 Posta Condivisa
                 <Badge variant="outline" className="text-[11px] font-mono font-medium text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/60">
-                  6 Caselle Aruba
+                  7 Caselle Aruba
                 </Badge>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                aiutiamoci.cloud & mar2.cloud con sincronizzazione IMAP diretta.
+                aiutiamoci.cloud & mark2.cloud con sincronizzazione IMAP diretta e invio Resend.
               </p>
             </div>
           </div>
@@ -980,12 +1017,13 @@ export default function PostaCondivisaPage() {
                   className="w-full pl-7 pr-7 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-mono font-medium"
                 >
                   <option value="all">✉️ Tutte le caselle ({emails.length})</option>
-                  <option value="team@aiutiamoci.cloud">team@aiutiamoci.cloud</option>
+                  <option value="impresa@aiutiamoci.cloud">impresa@aiutiamoci.cloud</option>
                   <option value="info@aiutiamoci.cloud">info@aiutiamoci.cloud</option>
+                  <option value="team@aiutiamoci.cloud">team@aiutiamoci.cloud</option>
                   <option value="pagamenti@aiutiamoci.cloud">pagamenti@aiutiamoci.cloud</option>
                   <option value="assistenza@aiutiamoci.cloud">assistenza@aiutiamoci.cloud</option>
-                  <option value="info@mar2.cloud">info@mar2.cloud</option>
-                  <option value="support@mar2.cloud">support@mar2.cloud</option>
+                  <option value="info@mark2.cloud">info@mark2.cloud</option>
+                  <option value="support@mark2.cloud">support@mark2.cloud</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
                   <ChevronDown className="h-3 w-3" />
@@ -1978,13 +2016,12 @@ export default function PostaCondivisaPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      localStorage.removeItem('piattaforma_imap_accounts')
                       setImapAccounts(DEFAULT_IMAP_ACCOUNTS)
                     }}
                     className="text-[11px] text-slate-500 hover:text-red-500"
-                    title="Reimposta la lista completa delle 5 caselle predefinite"
+                    title="Reimposta l'elenco delle caselle predefinite"
                   >
-                    Ripristina 5 Caselle
+                    Reimposta Elenco
                   </Button>
                 </div>
                 <Button

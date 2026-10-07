@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import {
   Bell,
   Search,
@@ -12,6 +13,9 @@ import {
   CheckCircle2,
   Volume2,
   Loader2,
+  LogOut,
+  Bot,
+  Video,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -240,6 +244,36 @@ export function Navbar({
           {/* Theme Toggle */}
           <ThemeToggle />
 
+          {/* Quick AI Agents Studio Button */}
+          <Link
+            href="/agenti/"
+            className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 transition-all shadow-xs"
+            title="Apri l'Orchestratore e la Squadra Agenti AI"
+          >
+            <Bot className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+            <span>Agenti AI</span>
+            <span className="text-[9px] px-1 py-0.2 bg-purple-500/20 rounded font-mono uppercase">HQ</span>
+          </Link>
+
+          {/* Quick Video Studio Factory Button (Single-Sign-On con token sicuro) */}
+          <a
+            href={`https://video.aiutiamoci.cloud/?auth_pin=2026&user=${
+              (userName || '').toLowerCase().includes('lorenzo')
+                ? 'lorenzo'
+                : (userName || '').toLowerCase().includes('stefano')
+                ? 'stefano'
+                : 'marco'
+            }`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 transition-all shadow-xs"
+            title="Apri Video Studio Factory (HyperFrames & Neural Video)"
+          >
+            <Video className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+            <span>Video Studio</span>
+            <span className="text-[9px] px-1 py-0.2 bg-cyan-500/20 rounded font-mono uppercase">Factory</span>
+          </a>
+
           {/* Quick New Task Button */}
           <Button
             size="sm"
@@ -335,7 +369,7 @@ export function Navbar({
             </div>
           )}
 
-          {/* User Card */}
+          {/* User Card & Logout */}
           <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200 dark:border-slate-800">
             <Avatar
               src={currentUser.avatarUrl}
@@ -354,6 +388,21 @@ export function Navbar({
               </div>
               <span className="text-[11px] text-slate-400 leading-tight mt-0.5">{currentUser.email}</span>
             </div>
+
+            {/* Logout Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                await supabase.auth.signOut()
+                window.location.href = '/login'
+              }}
+              className="ml-1 h-8 px-2.5 text-xs text-red-600 dark:text-red-400 hover:text-white hover:bg-red-600 dark:hover:bg-red-600 border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Disconnetti ed esci dalla piattaforma"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline font-semibold">Esci</span>
+            </Button>
           </div>
         </div>
       </header>

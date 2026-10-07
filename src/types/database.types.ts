@@ -17,6 +17,63 @@ export type EmailStatus = 'received' | 'read' | 'draft' | 'sent' | 'archived'
 export interface Database {
   public: {
     Tables: {
+      clients: {
+        Relationships: []
+        Row: {
+          id: string
+          first_name: string
+          last_name: string
+          email: string
+          phone?: string | null
+          company?: string | null
+          category: 'academy' | 'business' | 'partner' | 'lead'
+          address?: string | null
+          city?: string | null
+          province?: string | null
+          postal_code?: string | null
+          notes?: string | null
+          status: 'active' | 'prospect' | 'inactive'
+          created_by?: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          first_name: string
+          last_name?: string
+          email: string
+          phone?: string | null
+          company?: string | null
+          category?: 'academy' | 'business' | 'partner' | 'lead'
+          address?: string | null
+          city?: string | null
+          province?: string | null
+          postal_code?: string | null
+          notes?: string | null
+          status?: 'active' | 'prospect' | 'inactive'
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          first_name?: string
+          last_name?: string
+          email?: string
+          phone?: string | null
+          company?: string | null
+          category?: 'academy' | 'business' | 'partner' | 'lead'
+          address?: string | null
+          city?: string | null
+          province?: string | null
+          postal_code?: string | null
+          notes?: string | null
+          status?: 'active' | 'prospect' | 'inactive'
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       profiles: {
         Relationships: []
         Row: {
@@ -365,6 +422,51 @@ export interface Database {
           expires_at?: string | null
           active_session_id?: string | null
           last_accessed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      student_progress: {
+        Relationships: []
+        Row: {
+          id: string
+          student_code: string
+          student_email: string | null
+          course_id: string
+          completed_lessons: Json
+          completed_checkpoints: Json
+          total_hours: number
+          is_exam_unlocked: boolean
+          manual_unlock_by: string | null
+          last_activity_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          student_code: string
+          student_email?: string | null
+          course_id?: string
+          completed_lessons?: Json
+          completed_checkpoints?: Json
+          total_hours?: number
+          is_exam_unlocked?: boolean
+          manual_unlock_by?: string | null
+          last_activity_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          student_code?: string
+          student_email?: string | null
+          course_id?: string
+          completed_lessons?: Json
+          completed_checkpoints?: Json
+          total_hours?: number
+          is_exam_unlocked?: boolean
+          manual_unlock_by?: string | null
+          last_activity_at?: string
           created_at?: string
           updated_at?: string
         }

@@ -83,3 +83,26 @@ export async function notifyFileUploadAction(fileName: string, isFolder: boolean
     return { success: false, error: err.message }
   }
 }
+
+export async function notifyChatMessageAction(channel: string, content: string, senderName?: string) {
+  try {
+    const userName = senderName || (await getCurrentUserProfileName())
+    const channelLabel = `#${channel}`
+
+    const message =
+      `💬 <b>Nuovo Messaggio in Chat (${escapeHtml(channelLabel)})</b>\n\n` +
+      `👤 <b>Da:</b> ${escapeHtml(userName)}\n` +
+      `📝 <b>Messaggio:</b> <i>"${escapeHtml(content)}"</i>\n\n` +
+      `🔗 <a href="https://aiutiamoci.cloud/chat">Apri la Chat su Aiutiamoci</a>`
+
+    const res = await sendTelegramMessage(message)
+    if (!res.success) {
+      console.error('[notifyChatMessageAction] Telegram send failed:', res.error)
+    }
+    return res
+  } catch (err: any) {
+    console.error('Errore notifyChatMessageAction:', err)
+    return { success: false, error: err.message }
+  }
+}
+

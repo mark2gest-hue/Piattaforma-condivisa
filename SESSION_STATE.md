@@ -1,7 +1,32 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-09-18 20:40
+Ultimo aggiornamento: 2026-10-07 10:50
 Stato corrente: 
+- **Upload e Visualizzazione Allegati nella Chat (`/chat`) COMPLETATO**:
+  - Implementato supporto completo per allegare e inviare foto (PNG, JPG, WebP, GIF) e documenti (PDF, DOCX, XLSX, TXT, CSV, ZIP).
+  - Upload sicuro su Supabase Storage (`team-files/chat-attachments/`).
+  - Rendering ricco nei messaggi: anteprima immagini con zoom modale a 1-click e card documenti con icona, dimensione formattata e pulsante download.
+  - Barra anteprima file selezionati prima dell'invio con rimozione rapida.
+  - Pulsante graffetta `[📎]` attivo su desktop e mobile.
+- **Fix Chat Mobile Responsive (`/chat`) COMPLETATO**:
+  - Risolto il problema di sovrapposizione e schiacciamento della chat su dispositivi mobili.
+  - Implementato drawer laterale a comparsa per i canali tematici e la lista membri del team con backdrop e pulsante toggle `[#canale]`.
+  - Ottimizzato lo spazio viewport per massimizzare la visibilità dei messaggi (`h-[calc(100dvh-8rem)]`) e barra di input fissa a fondo schermo.
+  - Eliminati finti video e link irrilevanti: il player video compare solo in presenza di video reali.
+  - Implementato supporto completo per contenuti testuali: Prompt pronti con copia a 1-click (`navigator.clipboard`), framework RCCF, obiettivo e risultato atteso.
+  - Creata API route CRON (`/api/cron/weekly-course-updates` in [src/app/api/cron/weekly-course-updates/route.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/api/cron/weekly-course-updates/route.ts)) che genera ogni lunedì 2 item (alternanza News Verificate / Tutorial Prompt) + 1 Pillola Agenti e li salva in Supabase (`course_weekly_updates`).
+  - Aggiunto pulsante di trigger immediato per il team (`⚡ Genera Aggiornamenti Ora`) per test e generazione manuale.
+  - Creata migrazione Supabase [supabase/migrations/20261006000000_course_weekly_updates.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261006000000_course_weekly_updates.sql).
+- **Tracciamento Ore Studenti (16h), Avanzamento Lezioni & Sblocco Esame ATOMA COMPLETATO**:
+  - Creata tabella e migrazione SQL `student_progress` ([20261005000000_student_progress.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261005000000_student_progress.sql)) con RLS, indici e trigger `updated_at`.
+  - Aggiornata server action `getStudentCodesAction` per estrarre congiuntamente `total_hours`, `completed_lessons` e `is_exam_unlocked`.
+  - Aggiunta server action `toggleStudentExamUnlockAction` per sblocco/blocco manuale 1-click dell'esame ATOMA.
+  - Aggiornata la vista Registro Corsisti ([src/app/(dashboard)/corsi/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/corsi/page.tsx)) con barra di progresso ore/lezioni e pulsante toggle di sblocco esame sia nella tabella Studenti Corso 1 sia nella tabella Studenti Corso 2.
+- **Migrazione Database GDPR in Europa (Francoforte - `eu-central-1`) COMPLETATA**:
+  - Creato nuovo progetto Supabase EU `omrciqisxdrwuhstinbw` (`Piattaforma Condivisa EU` a Francoforte).
+  - Applicate con successo tutte le 15 migrazioni dello schema SQL (`supabase db push`).
+  - Importati e sincronizzati con successo al 100% tutti i record storici e dati live (4 profili soci + auth, 67 compiti kanban, 43 codici studenti, 97 registrazioni corsi, 94 metadati file, eventi calendario e lead).
+  - Backup locale conservato in `supabase/backups/`.
 - Nuova rotta riservata Servizi AI (`/servizi-ai`):
   - Creata vetrina con estetica Anti-Slop per presentare le soluzioni pratiche (bollette, anti-spreco, foto, referti medici, fatture Excel).
   - Nessun pulsante o link pubblico presente nella landing o navbar (accessibile solo tramite URL diretto).
@@ -171,12 +196,26 @@ Stato corrente:
 ---
 
 ## 5. Prossimi Passi Immediati (Next Actions)
-1. **Masterclass 20 Lezioni — Nuovo Motore Remotion (React + Motion Spring) APPROVATO**:
+1. **Lead Magnet Social & Micro-App AI Funnel (IN STANDBY — Pronto su Richiesta)**:
+   - **Obiettivo**: Regalare l'uso 1-shot di singole micro-app funzionali sui social (TikTok, Instagram, LinkedIn) per attrarre lead qualificati e convertirli a caldo verso i percorsi formativi ("Vuoi imparare a crearla da zero? Iscriviti al corso qui").
+   - **Micro-App Candidate di Punta**:
+     1. ⚡ `Analisi & Tutela Bollette` (Consumi, costi nascosti e bozza reclamo formale via Gemini 2.5 Flash Vision).
+     2. 📖 `Storie & Fiabe Illustrate per Bambini` (Fiaba personalizzata con nome del bimbo, morale e illustrazioni acquerello in PDF stampabile — *appeal emotivo e viralità altissima per genitori e nonni sui social*).
+     3. 🧾 `Estrattore Tabellare Fatture/Scontrini in Excel` (Da foto/PDF cartaceo a tabella CSV/Excel scaricabile per P.IVA).
+     4. 🎙️ `Da Vocale WhatsApp a Verbale & Task` (Trascrizione audio ➔ lista to-do + messaggio di conferma).
+   - **Architettura & Protezione Anti-Abuso (3 Livelli)**:
+     - *Livello 1 (Browser)*: Token cifrato in LocalStorage per bloccare l'accesso al 2° tentativo con modale *"Hai esaurito la prova gratuita"*.
+     - *Livello 2 (Server/IP)*: Rate limiting su Supabase / Edge per bloccare tentativi multipli in incognito dallo stesso IP (max 1 test/giorno).
+     - *Livello 3 (Gated Lead Capture)*: Per visualizzare/scaricare il report completo è richiesta l'email (salvata automaticamente in `waitlist_leads` / `clients`).
+   - **CTA Finale a Caldo**: Box visibile sotto l'output con gancio *"🚀 Vuoi imparare a costruire micro-app intelligenti come questa in meno di 1 ora e senza programmare? ➔ Iscriviti al Corso"*.
+   - **Stato**: In standby per confronto con i soci. Al via libera, l'agente collegherà la Server Action reale con Gemini e la rotta pubblica standalone isolata (es. `/app/bollette`).
+
+2. **Masterclass 20 Lezioni — Nuovo Motore Remotion (React + Motion Spring) APPROVATO**:
    - Validato con pieno successo il test comparativo con Remotion (`masterclass_remotion_comparison.mp4`): grafica vettoriale, animazioni elastiche Apple-style (`spring`), CSS Glassmorphism e sorgenti native pulite senza residui.
    - **In attesa**: Invio dei link definitivi dei 20 video da parte di Stefano Maraisi.
    - **Azione successiva**: Al ricevimento dei link/file, rifinire il template master della Lezione 1 con Remotion (audio + sottotitoli + card didattiche + PiP) e lanciare la pipeline batch automatizzata per assemblare tutte e 20 le lezioni in parallelo ad altissima fedeltà.
-2. **Roadmap AG-UI Protocol (In Memoria)**:
+3. **Roadmap AG-UI Protocol (In Memoria)**:
    - Nota tecnica archiviata in Obsidian: `KnowledgeBase/06_Corso_Agenti_AI/AG_UI_Protocol_Architecture.md`.
    - Adottare per gradi il pattern Generative UI (event-driven streaming) per Agente Mira (`/workshop-agenti`) per renderizzare componenti interattivi (quiz, form, slider) e integrare il concetto come lezione di punta nel Modulo 7 del Corso Pro.
-3. Eseguire validazione periodica typecheck e monitorare le route di produzione su `aiutiamoci.cloud`.
+4. Eseguire validazione periodica typecheck e monitorare le route di produzione su `aiutiamoci.cloud`.
 

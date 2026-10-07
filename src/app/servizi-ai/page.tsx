@@ -330,42 +330,62 @@ export default function ServiziAIPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 selection:bg-neutral-800 selection:text-white font-sans antialiased">
+    <div className="min-h-screen bg-[#07090e] text-slate-100 selection:bg-indigo-500 selection:text-white font-sans antialiased relative overflow-x-hidden">
       
-      {/* Top Bar Istituzionale e Sobria */}
-      <header className="sticky top-0 z-40 bg-neutral-950/95 backdrop-blur border-b border-neutral-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      {/* Background Cyber-Industrial Glowing Ambient Gradients */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-40 left-1/3 w-[650px] h-[500px] bg-gradient-to-br from-indigo-600/15 via-blue-600/10 to-transparent rounded-full blur-[140px]" />
+        <div className="absolute top-1/3 -right-32 w-[550px] h-[450px] bg-gradient-to-tl from-cyan-600/10 via-indigo-600/10 to-transparent rounded-full blur-[130px]" />
+        <div className="absolute -bottom-20 left-10 w-[600px] h-[400px] bg-gradient-to-tr from-emerald-600/10 via-slate-900 to-transparent rounded-full blur-[140px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b15_1px,transparent_1px),linear-gradient(to_bottom,#1e293b15_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_30%,#000_70%,transparent_100%)]" />
+      </div>
+
+      {/* Top Bar Cyber-Glassmorphism */}
+      <header className="sticky top-0 z-40 bg-[#07090e]/80 backdrop-blur-xl border-b border-slate-800/80 transition-all duration-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-md bg-white text-neutral-950 font-bold flex items-center justify-center text-sm tracking-tighter">
+            <Link href="/" className="group flex items-center gap-3 transition-transform active:scale-[0.98]">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-700 text-white font-black flex items-center justify-center text-sm tracking-tight shadow-[0_0_25px_rgba(99,102,241,0.4)] group-hover:shadow-[0_0_35px_rgba(99,102,241,0.65)] group-hover:scale-105 transition-all border border-indigo-400/30">
                 AI
               </div>
               <div className="flex flex-col">
-                <span className="font-semibold text-sm tracking-tight text-white flex items-center gap-2">
-                  AIutiamoci <span className="text-[10px] font-mono uppercase bg-neutral-900 border border-neutral-800 text-neutral-400 px-1.5 py-0.5 rounded">Sportello Servizi</span>
+                <span className="font-bold text-base tracking-tight text-white flex items-center gap-2">
+                  AIutiamoci <span className="text-[10px] font-mono font-semibold uppercase bg-indigo-950/80 border border-indigo-800/60 text-indigo-300 px-2 py-0.5 rounded-full tracking-wider shadow-inner">Hub Servizi</span>
                 </span>
-                <span className="text-[11px] text-neutral-400">Strumenti Pratici & Valore Quotidiano</span>
+                <span className="text-xs text-slate-400 font-normal">Intelligenza Pratica per la Vita Reale</span>
               </div>
             </Link>
           </div>
 
-          {/* Saldo Borsellino Utente */}
+          {/* Saldo Borsellino Utente Interattivo */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-1.5 shadow-sm">
-              <Coins className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-xs text-neutral-400 font-mono">Saldo:</span>
-              <span className="text-xs font-semibold text-white">{simulatedUserCredits} Crediti</span>
+            <div className="flex items-center gap-2.5 bg-slate-900/90 hover:bg-slate-900 border border-indigo-900/40 hover:border-indigo-700/60 rounded-full px-4 py-1.5 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all duration-200">
+              <div className="relative flex items-center justify-center">
+                <span className="absolute w-2 h-2 rounded-full bg-amber-400/60 animate-ping" />
+                <Coins className="w-4 h-4 text-amber-400 relative z-10" />
+              </div>
+              <span className="text-xs text-slate-400 font-mono">Borsellino:</span>
+              <span className="text-xs font-bold text-amber-300 tracking-tight tabular-nums">{simulatedUserCredits} Crediti</span>
+              <div className="w-[1px] h-3 bg-slate-800" />
               <button
                 onClick={() => setActiveTab('crediti')}
-                className="ml-2 text-[11px] font-medium text-neutral-300 hover:text-white underline underline-offset-2"
+                className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors underline-offset-2 hover:underline"
               >
-                Ricarica
+                + Ricarica
               </button>
             </div>
 
             <Link
+              href="/growth-studio"
+              className="text-xs font-bold text-emerald-300 hover:text-white bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 px-3.5 py-2 rounded-xl transition-all duration-200 hidden sm:inline-flex items-center gap-1.5 active:scale-[0.97] shadow-sm"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Studio Social</span>
+            </Link>
+
+            <Link
               href="/corsi"
-              className="text-xs text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 px-3 py-1.5 rounded-lg transition-colors hidden sm:inline-block"
+              className="text-xs font-semibold text-slate-200 hover:text-white bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 px-4 py-2 rounded-xl transition-all duration-200 hidden sm:inline-block active:scale-[0.97] shadow-sm"
             >
               Area Corsisti
             </Link>
@@ -373,51 +393,54 @@ export default function ServiziAIPage() {
         </div>
       </header>
 
-      {/* Hero Section Tipografica (Anti-Slop: Niente Gradienti Neon Giganti) */}
-      <section className="pt-12 pb-10 px-4 sm:px-6 border-b border-neutral-900 bg-neutral-950">
+      {/* Hero Section Cyber-Industrial: Slate & Indigo Gradient Focus */}
+      <section className="relative z-10 pt-16 pb-12 px-4 sm:px-6 border-b border-slate-800/80">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-neutral-800 bg-neutral-900/80 text-neutral-300 text-xs font-mono uppercase tracking-wider mb-5">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            Nessuna Teoria Astratta • Solo Utilità Quotidiana
+          
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-950/60 text-indigo-300 text-xs font-mono uppercase tracking-widest mb-6 shadow-[0_0_20px_rgba(99,102,241,0.15)] backdrop-blur-md">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Zero Teoria Astratta <span className="text-indigo-600 mx-2">•</span> 100% Utilità Quotidiana</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-white mb-4 leading-tight">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6 leading-[1.12] text-balance">
             L’Intelligenza Artificiale applicata alle <br className="hidden sm:block" />
-            <span className="text-neutral-300 underline decoration-neutral-700 underline-offset-8">esigenze reali di ogni giorno</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-blue-200 to-cyan-300">
+              esigenze reali di ogni giorno
+            </span>
           </h1>
 
-          <p className="text-sm sm:text-base text-neutral-400 max-w-2xl mx-auto leading-relaxed mb-8">
+          <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10 font-normal text-balance">
             Dalla lettura semplificata delle bollette e dei referti medici, fino al restauro dei ricordi di famiglia e all’estrazione dei documenti di lavoro. Soluzioni con un clic, senza dover imparare a programmare.
           </p>
 
-          {/* Navigazione a Schede */}
-          <div className="inline-flex p-1 rounded-xl bg-neutral-900 border border-neutral-800 text-xs sm:text-sm font-medium">
+          {/* Navigazione a Schede Segmented Cyber-Pills */}
+          <div className="inline-flex p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800/90 text-xs sm:text-sm font-semibold shadow-2xl backdrop-blur-xl">
             <button
               onClick={() => setActiveTab('servizi')}
-              className={`px-4 py-2 rounded-lg transition-all ${
+              className={`relative px-5 py-2.5 rounded-xl transition-all duration-200 ${
                 activeTab === 'servizi'
-                  ? 'bg-neutral-800 text-white shadow-sm font-semibold'
-                  : 'text-neutral-400 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)] border border-indigo-400/40 font-bold'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
               }`}
             >
               Catalogo Servizi ({TOOL_SERVICES.length})
             </button>
             <button
               onClick={() => setActiveTab('crediti')}
-              className={`px-4 py-2 rounded-lg transition-all ${
+              className={`relative px-5 py-2.5 rounded-xl transition-all duration-200 ${
                 activeTab === 'crediti'
-                  ? 'bg-neutral-800 text-white shadow-sm font-semibold'
-                  : 'text-neutral-400 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)] border border-indigo-400/40 font-bold'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
               }`}
             >
               Borsellino Crediti
             </button>
             <button
               onClick={() => setActiveTab('trasparenza')}
-              className={`px-4 py-2 rounded-lg transition-all ${
+              className={`relative px-5 py-2.5 rounded-xl transition-all duration-200 ${
                 activeTab === 'trasparenza'
-                  ? 'bg-neutral-800 text-white shadow-sm font-semibold'
-                  : 'text-neutral-400 hover:text-white'
+                  ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)] border border-indigo-400/40 font-bold'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
               }`}
             >
               Abbonamento & Modelli (BYOK)
@@ -434,10 +457,10 @@ export default function ServiziAIPage() {
         {/* ======================================================================= */}
         {activeTab === 'servizi' && (
           <div>
-            {/* Filtro Semplificato */}
-            <div className="flex items-center justify-between flex-wrap gap-4 mb-8 border-b border-neutral-800/80 pb-4">
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-neutral-400 mr-2 font-mono uppercase">Settore:</span>
+            {/* Filtro Semplificato con Segmented Cyber-Pills */}
+            <div className="flex items-center justify-between flex-wrap gap-4 mb-8 border-b border-slate-800/80 pb-5">
+              <div className="flex items-center gap-1.5 p-1.5 bg-slate-900/80 border border-slate-800/90 rounded-xl text-xs backdrop-blur-md shadow-inner">
+                <span className="text-[11px] text-slate-400 font-mono uppercase px-2.5 py-1">Ambito:</span>
                 {[
                   { id: 'tutti', label: 'Tutti i Servizi' },
                   { id: 'casa', label: 'Casa & Risparmio' },
@@ -447,10 +470,10 @@ export default function ServiziAIPage() {
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3 py-1.5 rounded-md border text-xs transition-colors ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                       selectedCategory === cat.id
-                        ? 'bg-white text-neutral-950 font-semibold border-white'
-                        : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700'
+                        ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] border border-indigo-400/50'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                     }`}
                   >
                     {cat.label}
@@ -458,213 +481,231 @@ export default function ServiziAIPage() {
                 ))}
               </div>
 
-              <div className="text-xs text-neutral-400 font-mono">
-                Costo per operazione: da 1 a 4 crediti (€0,12 - €0,48)
+              <div className="text-xs text-slate-400 font-mono flex items-center gap-2 bg-slate-900/60 border border-slate-800/80 px-3 py-1.5 rounded-xl">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                Costo per operazione: <span className="text-indigo-300 font-bold">1 - 4 crediti</span> (€0,12 - €0,48)
               </div>
             </div>
 
-            {/* Grid dei Servizi con Anteprime "Prima / Dopo" Tangibili */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Grid dei Servizi con Cyber-Industrial Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredTools.map((tool) => (
                 <div
                   key={tool.id}
-                  className="rounded-xl bg-neutral-900/60 border border-neutral-800 hover:border-neutral-700 transition-all p-5 flex flex-col justify-between group"
+                  className="group relative rounded-2xl bg-gradient-to-b from-slate-900/90 via-slate-900/60 to-[#0b0f19] border border-slate-800/90 hover:border-indigo-500/50 transition-all duration-300 p-5 flex flex-col justify-between hover:shadow-[0_10px_35px_rgba(79,70,229,0.15)] hover:-translate-y-1"
                 >
+                  {/* Neon Top Highlight Accent */}
+                  <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent group-hover:via-indigo-400/80 transition-all" />
+
                   <div>
                     {/* Header Card */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-neutral-800 bg-neutral-900 text-neutral-400 font-medium">
+                    <div className="flex items-center justify-between gap-2 mb-3.5">
+                      <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full border border-indigo-900/50 bg-indigo-950/40 text-indigo-300 font-semibold tracking-wider shadow-inner">
                         {tool.badge}
                       </span>
-                      <span className="text-xs font-mono font-medium text-amber-300/90 flex items-center gap-1 bg-amber-950/40 border border-amber-900/40 px-2 py-0.5 rounded">
-                        <Coins className="w-3 h-3 text-amber-400" />
+                      <span className="text-[11px] font-mono font-bold text-amber-300 flex items-center gap-1.5 bg-amber-950/40 border border-amber-800/50 px-2.5 py-0.5 rounded-full shadow-inner">
+                        <Coins className="w-3.5 h-3.5 text-amber-400" />
                         {tool.creditsCost} {tool.creditsCost === 1 ? 'Credito' : 'Crediti'}
                       </span>
                     </div>
 
-                    <h3 className="text-base font-semibold text-white mb-1.5 group-hover:text-neutral-200">
+                    <h3 className="text-base font-bold text-white mb-2 tracking-tight group-hover:text-indigo-200 transition-colors">
                       {tool.title}
                     </h3>
 
-                    <p className="text-xs text-neutral-400 leading-relaxed mb-4">
+                    <p className="text-xs text-slate-400 leading-relaxed mb-4 font-normal">
                       {tool.tagline}
                     </p>
 
-                    {/* Anteprima Visiva Tangibile Specifica del Servizio */}
-                    <div className="rounded-lg bg-neutral-950 border border-neutral-800/80 p-3 mb-4 text-[11px] font-mono">
+                    {/* Anteprima Visiva Terminale Cyber */}
+                    <div className="rounded-xl bg-[#04060a] border border-slate-800/90 p-3.5 mb-4 text-[11px] font-mono shadow-inner relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
+                      
                       {tool.previewType === 'bolletta' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 flex items-center justify-between border-b border-neutral-800 pb-1">
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 flex items-center justify-between border-b border-slate-800/80 pb-1.5">
                             <span>Fattura Enel/A2A:</span>
-                            <span className="text-rose-400">€ 142,30</span>
+                            <span className="text-rose-400 font-bold">€ 142,30</span>
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ Spesa non dovuta: €24,50 (oneri di sistema pregressi)
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Spesa non dovuta: €24,50</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
+                          <div className="text-slate-400 text-[10px]">
                             Bozza reclamo generata per storno immediato.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'ricetta' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1">
-                            Ingredienti rilevati: Uova, Zucchine, Parmigiano
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5">
+                            Ingredienti: Uova, Zucchine, Parmigiano
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ Tortino soffice alle zucchine in padella (15 min)
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Tortino soffice in padella (15 min)</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
+                          <div className="text-slate-400 text-[10px]">
                             Zero acquisti extra, zero sprechi.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'foto' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5 flex justify-between">
                             <span>Scansione originale:</span>
-                            <span className="text-neutral-400">B/N Sbiadita</span>
+                            <span className="text-slate-400">B/N Sbiadita</span>
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ Ripristino volti & Colori storici HD
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Ripristino volti & Colori storici HD</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
+                          <div className="text-slate-400 text-[10px]">
                             File restaurato a 300 DPI per album o quadro.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'medico' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1">
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5">
                             Valutazione referto clinico / INPS:
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ Sintesi in 3 righe comprensibili
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Sintesi in 3 righe comprensibili</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
+                          <div className="text-slate-400 text-[10px]">
                             + 3 domande mirate per il medico curante.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'favola' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5 flex justify-between">
                             <span>Protagonista:</span>
-                            <span className="text-neutral-300">Marco & Il Draghetto</span>
+                            <span className="text-cyan-300 font-semibold">Marco & Il Draghetto</span>
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ 4 Pagine illustrate con disegni ad acquerello
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>4 Pagine illustrate ad acquerello</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
+                          <div className="text-slate-400 text-[10px]">
                             PDF impaginato per lettura su tablet o stampa.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'fattura' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5 flex justify-between">
                             <span>Documento:</span>
-                            <span className="text-neutral-300">Fattura Cartacea #48</span>
+                            <span className="text-cyan-300 font-semibold">Fattura Cartacea #48</span>
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ Tabella Excel: P.IVA, Data, Imponibile, IVA
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Excel: P.IVA, Data, Imponibile, IVA</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
+                          <div className="text-slate-400 text-[10px]">
                             Export .XLS pronto per il commercialista.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'video' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5 flex justify-between">
                             <span>Formato:</span>
-                            <span className="text-neutral-300">Reel Verticale 9:16</span>
+                            <span className="text-cyan-300 font-semibold">Reel Verticale 9:16</span>
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ Voce narrante + B-roll 4K + Sottotitoli
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Voce narrante + B-roll 4K + Subs</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
+                          <div className="text-slate-400 text-[10px]">
                             Pronto da pubblicare su Instagram e WhatsApp.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'preventivo' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5 flex justify-between">
                             <span>Incarico:</span>
-                            <span className="text-neutral-300">Lavoro Professionale (€2.400)</span>
+                            <span className="text-cyan-300 font-semibold">Lavoro (€2.400)</span>
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ Acconto 30% obbligatorio + Extra a tariffa
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Acconto 30% + Extra a tariffa</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
-                            Preventivo PDF formale con clausola anti-fuori-sacco.
+                          <div className="text-slate-400 text-[10px]">
+                            Preventivo PDF con clausola anti-fuori-sacco.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'sollecito' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
-                            <span>Fattura #08 (scaduta da 28gg):</span>
-                            <span className="text-rose-400">€ 1.850,00</span>
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5 flex justify-between">
+                            <span>Fattura #08 (ritardo 28gg):</span>
+                            <span className="text-rose-400 font-bold">€ 1.850,00</span>
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ 3 Livelli pronti: Promemoria, Sollecito, Diffida
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>3 Livelli: Promemoria, Sollecito, Diffida</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
+                          <div className="text-slate-400 text-[10px]">
                             Include coordinate bancarie e D.Lgs. 231/02.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'audio' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5 flex justify-between">
                             <span>Vocale WhatsApp:</span>
-                            <span className="text-neutral-300">Audio 3 min 40 sec</span>
+                            <span className="text-cyan-300 font-semibold">Audio 3 min 40 sec</span>
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ Lista 4 task operativi + Messaggio di conferma
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>4 task + Messaggio di conferma</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
+                          <div className="text-slate-400 text-[10px]">
                             Niente più fraintendimenti su cosa fare.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'bando' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5 flex justify-between">
                             <span>Bando Regionale:</span>
-                            <span className="text-neutral-300">Fondo Digitale (PDF 64 pag.)</span>
+                            <span className="text-cyan-300 font-semibold">Fondo Digitale (PDF 64p)</span>
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ Fondo perduto 50% • Requisiti ATECO
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Fondo perduto 50% • ATECO ammessi</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
-                            Scheda 1-pagina con scadenze e documenti obbligatori.
+                          <div className="text-slate-400 text-[10px]">
+                            Scheda 1-pagina con scadenze obbligatorie.
                           </div>
                         </div>
                       )}
 
                       {tool.previewType === 'tasse' && (
-                        <div className="space-y-1.5">
-                          <div className="text-neutral-400 border-b border-neutral-800 pb-1 flex justify-between">
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="text-slate-400 border-b border-slate-800/80 pb-1.5 flex justify-between">
                             <span>Fattura Incassata:</span>
-                            <span className="text-neutral-300">€ 4.500 (Forfettario 5%)</span>
+                            <span className="text-cyan-300 font-semibold">€ 4.500 (Forfettario)</span>
                           </div>
-                          <div className="text-emerald-400 font-sans text-xs">
-                            ✓ Netto spendibile: € 3.240 • Riserva F24: € 1.260
+                          <div className="text-emerald-400 font-sans text-xs flex items-center gap-1.5 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>Netto: €3.240 • Riserva F24: €1.260</span>
                           </div>
-                          <div className="text-neutral-400 text-[10px]">
+                          <div className="text-slate-400 text-[10px]">
                             Zero ansia o sorprese alla scadenza tasse.
                           </div>
                         </div>
@@ -672,17 +713,17 @@ export default function ServiziAIPage() {
                     </div>
                   </div>
 
-                  {/* Azione di Prova */}
-                  <div className="pt-3 border-t border-neutral-800 flex items-center justify-between">
-                    <span className="text-[11px] text-neutral-400">
-                      Destinatari: {tool.targetAudience}
+                  {/* Azione di Prova - Button Glow Magnetico */}
+                  <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between">
+                    <span className="text-[11px] text-slate-400 truncate max-w-[170px]">
+                      {tool.targetAudience}
                     </span>
                     <button
                       onClick={() => handleSimulateTool(tool)}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold bg-neutral-100 hover:bg-white text-neutral-950 px-3 py-1.5 rounded-md transition-colors"
+                      className="inline-flex items-center gap-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.35)] transition-all duration-200 active:scale-[0.95] group/btn"
                     >
-                      Avvia
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>Avvia Tool</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-indigo-200 transition-transform duration-200 group-hover/btn:translate-x-1" />
                     </button>
                   </div>
                 </div>
@@ -697,10 +738,10 @@ export default function ServiziAIPage() {
         {activeTab === 'crediti' && (
           <div className="max-w-4xl mx-auto">
             <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-white mb-1">
+              <h2 className="text-2xl font-bold text-white mb-1 tracking-tight">
                 Ricariche Flessibili a Consumo
               </h2>
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-slate-400">
                 Nessun vincolo mensile: i crediti non scadono e possono essere usati liberamente per qualsiasi servizio della piattaforma.
               </p>
             </div>
@@ -709,36 +750,45 @@ export default function ServiziAIPage() {
               {CREDIT_PACKAGES.map((pack) => (
                 <div
                   key={pack.id}
-                  className={`rounded-xl p-6 flex flex-col justify-between border ${
+                  className={`relative rounded-2xl p-6 flex flex-col justify-between border transition-all duration-300 hover:-translate-y-1.5 ${
                     pack.popular
-                      ? 'bg-neutral-900 border-white shadow-md'
-                      : 'bg-neutral-900/50 border-neutral-800'
+                      ? 'bg-gradient-to-b from-indigo-950/80 via-slate-900/90 to-[#0b0f19] border-indigo-500/80 shadow-[0_15px_45px_rgba(79,70,229,0.25)]'
+                      : 'bg-gradient-to-b from-slate-900/80 to-[#0b0f19] border-slate-800 hover:border-slate-700 shadow-lg'
                   }`}
                 >
+                  {pack.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-blue-600 text-white text-[10px] font-mono font-black uppercase tracking-widest px-3.5 py-1 rounded-full shadow-[0_0_15px_rgba(99,102,241,0.6)] border border-indigo-300/40">
+                      {pack.badge}
+                    </div>
+                  )}
+
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-semibold text-neutral-300">{pack.name}</span>
-                      <span className="text-[10px] font-mono uppercase bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded">
-                        {pack.badge}
-                      </span>
+                      <span className="text-sm font-bold text-white tracking-tight">{pack.name}</span>
+                      {!pack.popular && (
+                        <span className="text-[10px] font-mono uppercase bg-slate-800 text-slate-400 px-2.5 py-0.5 rounded-full border border-slate-700/60">
+                          {pack.badge}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-baseline gap-1 mb-1">
-                      <span className="text-3xl font-semibold text-white">€{pack.priceEur.toFixed(2)}</span>
-                      <span className="text-xs text-neutral-400">una tantum</span>
+                    <div className="flex items-baseline gap-1.5 mb-1">
+                      <span className="text-3xl font-black text-white tracking-tight">€{pack.priceEur.toFixed(2)}</span>
+                      <span className="text-xs text-slate-400 font-normal">una tantum</span>
                     </div>
 
-                    <div className="text-xs text-neutral-300 font-mono mb-4">
+                    <div className="text-xs text-amber-300 font-mono mb-4 font-semibold">
                       {pack.credits} Crediti ({pack.pricePerCredit})
                     </div>
 
                     {pack.bonusCredits && (
-                      <div className="text-xs font-semibold text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 px-2.5 py-1 rounded mb-4">
-                        {pack.bonusCredits}
+                      <div className="text-xs font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1.5 rounded-xl mb-4 flex items-center gap-1.5 shadow-inner">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>{pack.bonusCredits}</span>
                       </div>
                     )}
 
-                    <p className="text-xs text-neutral-400 mb-6 leading-relaxed">
+                    <p className="text-xs text-slate-400 mb-6 leading-relaxed font-normal">
                       {pack.description}
                     </p>
                   </div>
@@ -748,10 +798,10 @@ export default function ServiziAIPage() {
                       alert(`Ricarica simulata: ${pack.credits} crediti accreditati al tuo saldo!`);
                       setSimulatedUserCredits((prev) => prev + pack.credits);
                     }}
-                    className={`w-full py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                    className={`w-full py-3 rounded-xl text-xs font-bold transition-all duration-200 active:scale-[0.97] ${
                       pack.popular
-                        ? 'bg-white text-neutral-950 hover:bg-neutral-200'
-                        : 'bg-neutral-800 hover:bg-neutral-700 text-white'
+                        ? 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white hover:from-indigo-400 hover:to-blue-500 shadow-[0_0_20px_rgba(99,102,241,0.4)]'
+                        : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
                     }`}
                   >
                     Acquista {pack.credits} Crediti
@@ -761,16 +811,16 @@ export default function ServiziAIPage() {
             </div>
 
             {/* Nota per gli iscritti al corso */}
-            <div className="mt-8 p-4 rounded-xl border border-neutral-800 bg-neutral-900/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400">
+            <div className="mt-8 p-4 rounded-2xl border border-indigo-900/40 bg-indigo-950/20 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
               <div className="flex items-center gap-3">
                 <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
                 <div>
-                  <span className="font-semibold text-white">Iscritto al Corso AI Start o AI Pro?</span> I primi 10 crediti operativi sono già inclusi nel tuo codice studente.
+                  <span className="font-bold text-white">Iscritto al Corso AI Start o AI Pro?</span> I primi 10 crediti operativi sono già inclusi nel tuo codice studente.
                 </div>
               </div>
               <Link
                 href="/corsi"
-                className="text-white hover:underline font-medium whitespace-nowrap"
+                className="text-indigo-400 hover:text-indigo-300 underline font-semibold whitespace-nowrap"
               >
                 Verifica il tuo Codice Corsista ➔
               </Link>
@@ -784,42 +834,42 @@ export default function ServiziAIPage() {
         {activeTab === 'trasparenza' && (
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="mb-6">
-              <h2 className="text-2xl font-semibold text-white mb-1">
+              <h2 className="text-2xl font-bold text-white mb-1 tracking-tight">
                 Due Modi di Vivere l’Intelligenza Artificiale
               </h2>
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-slate-400">
                 Massima comodità chiavi in mano con crediti, oppure totale autonomia senza intermediari.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Opzione 1: Abbonamento Tutor */}
-              <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-6 flex flex-col justify-between">
+              <div className="rounded-2xl border border-indigo-500/50 bg-gradient-to-b from-indigo-950/40 via-slate-900/80 to-[#0b0f19] p-6 flex flex-col justify-between shadow-[0_10px_35px_rgba(79,70,229,0.15)]">
                 <div>
-                  <span className="text-[10px] font-mono uppercase bg-neutral-800 text-neutral-300 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-mono uppercase bg-indigo-950 border border-indigo-800/60 text-indigo-300 px-2.5 py-1 rounded-full font-bold">
                     Formula Tutor H24
                   </span>
-                  <h3 className="text-lg font-semibold text-white mt-2 mb-1">Abbonamento Campus & Tool</h3>
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <span className="text-3xl font-semibold text-white">€ 9,90</span>
-                    <span className="text-xs text-neutral-400">/ mese</span>
+                  <h3 className="text-lg font-bold text-white mt-3 mb-1 tracking-tight">Abbonamento Campus & Tool</h3>
+                  <div className="flex items-baseline gap-1.5 mb-1">
+                    <span className="text-3xl font-black text-white tracking-tight">€ 9,90</span>
+                    <span className="text-xs text-slate-400">/ mese</span>
                   </div>
-                  <div className="text-xs text-neutral-400 mb-6">Disdici in qualsiasi momento con un clic.</div>
+                  <div className="text-xs text-slate-400 mb-6">Disdici in qualsiasi momento con un clic.</div>
 
-                  <ul className="space-y-2.5 text-xs text-neutral-300 mb-8">
-                    <li className="flex items-center gap-2">
+                  <ul className="space-y-3 text-xs text-slate-300 mb-8">
+                    <li className="flex items-center gap-2.5">
                       <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span><strong>50 Crediti mensili inclusi</strong> per tutti gli strumenti pratici.</span>
                     </li>
-                    <li className="flex items-center gap-2">
+                    <li className="flex items-center gap-2.5">
                       <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span><strong>Tutor Didattico AI dedicato h24</strong> per chiarire ogni dubbio sulle lezioni.</span>
                     </li>
-                    <li className="flex items-center gap-2">
+                    <li className="flex items-center gap-2.5">
                       <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span>Accesso prioritario ai modelli linguistici più recenti.</span>
                     </li>
-                    <li className="flex items-center gap-2">
+                    <li className="flex items-center gap-2.5">
                       <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span>Gruppo Community Telegram con i docenti.</span>
                     </li>
@@ -828,40 +878,40 @@ export default function ServiziAIPage() {
 
                 <button
                   onClick={() => alert('Attivazione abbonamento Campus simulata (€9,90/mese con Stripe)')}
-                  className="w-full py-2.5 rounded-lg text-xs font-semibold bg-white text-neutral-950 hover:bg-neutral-200 transition-colors"
+                  className="w-full py-3 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-all active:scale-[0.97] shadow-[0_0_15px_rgba(79,70,229,0.35)]"
                 >
                   Attiva Abbonamento Campus
                 </button>
               </div>
 
               {/* Opzione 2: BYOK Personale */}
-              <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-6 flex flex-col justify-between">
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] font-mono uppercase bg-neutral-900 border border-neutral-800 text-neutral-400 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-mono uppercase bg-slate-800/80 border border-slate-700 text-slate-400 px-2.5 py-1 rounded-full font-semibold">
                     Per Utenti Avanzati
                   </span>
-                  <h3 className="text-lg font-semibold text-white mt-2 mb-1">Porta la Tua Chiave (BYOK)</h3>
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <span className="text-3xl font-semibold text-white">Gratuito</span>
-                    <span className="text-xs text-neutral-400">sulla nostra piattaforma</span>
+                  <h3 className="text-lg font-bold text-white mt-3 mb-1 tracking-tight">Porta la Tua Chiave (BYOK)</h3>
+                  <div className="flex items-baseline gap-1.5 mb-1">
+                    <span className="text-3xl font-black text-white tracking-tight">Gratuito</span>
+                    <span className="text-xs text-slate-400">sulla nostra piattaforma</span>
                   </div>
-                  <div className="text-xs text-neutral-400 mb-6">Paghi direttamente il fornitore al costo di costo.</div>
+                  <div className="text-xs text-slate-400 mb-6">Paghi direttamente il fornitore al costo di costo.</div>
 
-                  <ul className="space-y-2.5 text-xs text-neutral-300 mb-8">
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-neutral-400 shrink-0" />
+                  <ul className="space-y-3 text-xs text-slate-300 mb-8">
+                    <li className="flex items-center gap-2.5">
+                      <Check className="w-4 h-4 text-slate-400 shrink-0" />
                       <span>Inserisci la tua chiave <strong>OpenRouter</strong> o <strong>DeepSeek</strong>.</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-neutral-400 shrink-0" />
+                    <li className="flex items-center gap-2.5">
+                      <Check className="w-4 h-4 text-slate-400 shrink-0" />
                       <span>Costo reale di circa <strong>0,0002€ a risposta</strong> (frazioni di centesimo).</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-neutral-400 shrink-0" />
+                    <li className="flex items-center gap-2.5">
+                      <Check className="w-4 h-4 text-slate-400 shrink-0" />
                       <span>Nessuna commissione trattenuta da AIutiamoci.</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-neutral-400 shrink-0" />
+                    <li className="flex items-center gap-2.5">
+                      <Check className="w-4 h-4 text-slate-400 shrink-0" />
                       <span>La procedura viene spiegata passo-passo durante il corso.</span>
                     </li>
                   </ul>
@@ -869,7 +919,7 @@ export default function ServiziAIPage() {
 
                 <button
                   onClick={() => alert('Apertura pannello inserimento chiave personale')}
-                  className="w-full py-2.5 rounded-lg text-xs font-semibold bg-neutral-800 hover:bg-neutral-700 text-neutral-200 transition-colors"
+                  className="w-full py-3 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all active:scale-[0.97]"
                 >
                   Configura Chiave Personale (BYOK)
                 </button>
@@ -877,9 +927,9 @@ export default function ServiziAIPage() {
             </div>
 
             {/* Box Etico di Trasparenza */}
-            <div className="p-5 rounded-xl border border-neutral-800 bg-neutral-900/40 text-xs leading-relaxed text-neutral-400">
-              <div className="font-semibold text-neutral-200 mb-1 flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-white" />
+            <div className="p-5 rounded-2xl border border-indigo-900/30 bg-slate-900/60 backdrop-blur-md text-xs leading-relaxed text-slate-400">
+              <div className="font-bold text-slate-200 mb-1.5 flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-indigo-400" />
                 La nostra politica: Nessun "Lock-In" o costo ingannevole
               </div>
               Crediamo nella vera formazione digitale: a differenza di molti servizi online che nascondono i costi dei modelli AI dietro abbonamenti da 30€ al mese, qui ogni studente impara esattamente cosa c'è dietro. Puoi usare la comodità dei crediti ricaricabili oppure diventare totalmente indipendente collegando il tuo account all'ingrosso.
@@ -892,22 +942,22 @@ export default function ServiziAIPage() {
       {/* MODALE DI SIMULAZIONE ESECUZIONE (SU MISURA PER OGNI STRUMENTO)         */}
       {/* ======================================================================= */}
       {activeModalTool && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-xl rounded-2xl bg-neutral-900 border border-neutral-700 p-6 shadow-2xl my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl overflow-y-auto animate-in fade-in duration-200">
+          <div className="w-full max-w-xl rounded-2xl bg-[#090d16]/95 border border-indigo-500/40 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(79,70,229,0.2)] my-8 transform transition-all animate-in zoom-in-95 duration-200">
             
             {/* Header Modale */}
-            <div className="flex items-start justify-between gap-3 mb-5 pb-4 border-b border-neutral-800">
+            <div className="flex items-start justify-between gap-3 mb-5 pb-4 border-b border-slate-800/80">
               <div>
-                <span className="text-[10px] font-mono uppercase text-neutral-300 bg-neutral-800 border border-neutral-700 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-mono uppercase text-indigo-300 bg-indigo-950/80 border border-indigo-800/60 px-2.5 py-0.5 rounded-full font-bold">
                   {activeModalTool.badge}
                 </span>
-                <h3 className="text-base font-semibold text-white mt-1.5 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-white mt-2 flex items-center gap-2 tracking-tight">
                   {activeModalTool.title}
                 </h3>
               </div>
               <button
                 onClick={() => setActiveModalTool(null)}
-                className="text-neutral-400 hover:text-white text-sm p-1 rounded-md hover:bg-neutral-800 transition-colors"
+                className="text-slate-400 hover:text-white text-sm p-2 rounded-xl hover:bg-slate-800/80 transition-colors"
               >
                 ✕
               </button>

@@ -387,6 +387,18 @@ export default function FilesManagerPage() {
     setMarkdownRawView(false)
     setMarkdownCopied(false)
 
+    // 1. Prova Public URL immediato
+    const { data: publicData } = supabase.storage
+      .from('team-files')
+      .getPublicUrl(file.storage_path)
+
+    if (publicData?.publicUrl) {
+      setPreviewUrl(publicData.publicUrl)
+      setPreviewLoading(false)
+      return
+    }
+
+    // 2. Fallback Signed URL
     const { data, error } = await supabase.storage
       .from('team-files')
       .createSignedUrl(file.storage_path, 3600)
@@ -541,23 +553,50 @@ export default function FilesManagerPage() {
   }
 
   const handleDownloadFile = async (file: FileWithUploader) => {
-    const { data, error } = await supabase.storage
-      .from('team-files')
-      .download(file.storage_path)
+    try {
+      // 1. Prova download standard da Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('team-files')
+        .download(file.storage_path)
 
-    if (error || !data) {
-      alert('Impossibile scaricare il file.')
-      return
+      if (data && !error) {
+        const url = URL.createObjectURL(data)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = file.name
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+        return
+      }
+
+      // 2. Fallback su Public URL
+      const { data: publicData } = supabase.storage
+        .from('team-files')
+        .getPublicUrl(file.storage_path)
+
+      if (publicData?.publicUrl) {
+        const res = await fetch(publicData.publicUrl)
+        if (res.ok) {
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = file.name
+          document.body.appendChild(a)
+          a.click()
+          a.remove()
+          URL.revokeObjectURL(url)
+          return
+        }
+      }
+
+      alert('Impossibile scaricare il file. Riprova tra qualche secondo.')
+    } catch (err: any) {
+      console.error('Errore download:', err)
+      alert(`Errore download: ${err?.message || 'Sconosciuto'}`)
     }
-
-    const url = URL.createObjectURL(data)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = file.name
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
   }
 
   const handleStartAiAnalysis = async (file: FileWithUploader) => {

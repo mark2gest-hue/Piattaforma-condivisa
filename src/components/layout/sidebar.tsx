@@ -20,6 +20,8 @@ import {
   ExternalLink,
   Cpu,
   FileCode2,
+  LogOut,
+  Bot,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -145,6 +147,13 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           badge: null,
         },
         {
+          title: 'Rubrica Clienti',
+          subtitle: 'Anagrafica & Ricerca',
+          href: '/clienti',
+          icon: Users,
+          badge: 'CRM',
+        },
+        {
           title: 'Calendario',
           subtitle: 'Scadenze & Eventi',
           href: '/calendario',
@@ -198,14 +207,21 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           icon: Sparkles,
           badge: 'Soluzioni',
         },
+        {
+          title: 'Squadra Agenti AI',
+          subtitle: 'Orchestratore Studio 3D',
+          href: '/workshop-agenti',
+          icon: Bot,
+          badge: 'Studio AI',
+        },
         ...(isAdmin
           ? [
               {
                 title: 'Mira Lab',
-                subtitle: 'Laboratorio Agenti AI',
+                subtitle: 'Laboratorio Docente Agenti',
                 href: '/workshop-agenti',
                 icon: Cpu,
-                badge: 'Docente',
+                badge: 'Admin',
               },
             ]
           : []),
@@ -215,11 +231,11 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
       label: 'Progetti & Marketing',
       items: [
         {
-          title: 'Marketing & Campagne',
-          subtitle: 'APEX • Funnel & Social',
-          href: '/marketing',
+          title: 'Marketing & Social Dispatch',
+          subtitle: 'Lorenzo & Stefano • Autopilot',
+          href: '/growth-studio',
           icon: Megaphone,
-          badge: 'Growth',
+          badge: '1-Click',
         },
       ],
     },
@@ -344,16 +360,28 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
         </div>
       </div>
 
-      {/* Team Footer */}
-      <div className="mt-4 pt-4 border-t border-slate-800/80 px-1">
-        <div className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-800/60 border border-slate-700/50">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700 text-slate-200">
-            <Users className="h-4 w-4" />
+      {/* Team & User Footer con Logout */}
+      <div className="mt-4 pt-4 border-t border-slate-800/80 px-1 space-y-2">
+        <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/60 border border-slate-700/50">
+          <div className="flex items-center gap-2.5 truncate">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-700 text-slate-200">
+              <Users className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col truncate">
+              <span className="text-xs font-semibold text-slate-200">Team ({teamCount} Membri)</span>
+              <span className="text-[10px] text-slate-400">{teamSubtitle}</span>
+            </div>
           </div>
-          <div className="flex flex-col truncate">
-            <span className="text-xs font-semibold text-slate-200">Team ({teamCount} Membri)</span>
-            <span className="text-[10px] text-slate-400">{teamSubtitle}</span>
-          </div>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut()
+              window.location.href = '/login'
+            }}
+            title="Disconnetti / Esci"
+            className="p-1.5 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0 flex items-center justify-center"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>

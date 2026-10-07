@@ -15,7 +15,11 @@ export interface SendEventInvitationsParams {
   description?: string
   recipientType?: 'single' | 'ai-start' | 'ai-pro' | 'all' | 'pending'
   recipientCategories?: ('single' | 'ai-start' | 'ai-pro' | 'pending' | 'waitlist')[]
+  studentCohort?: 'new' | 'all' // 'new' = solo iscritti nuova edizione (Settembre-Ottobre 2026), 'all' = tutti
   customEmails?: string // separate da virgola
+  scheduledAt?: string // ISO string o formato data/ora per l'invio programmato
+  senderProfile?: 'campus' | 'impresa' // 'campus' (info@aiutiamoci.cloud) o 'impresa' (impresa@aiutiamoci.cloud / reply-to: info@mark2.cloud)
+  customSenderName?: string
 }
 
 export async function sendEventInvitationsAction(params: SendEventInvitationsParams) {
@@ -59,11 +63,20 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
     if (categories.has('ai-pro')) tiersToFetch.push('ai-pro', 'both', 'all')
 
     if (tiersToFetch.length > 0) {
-      const { data: students, error: stdError } = await adminClient
+      let query = adminClient
         .from('student_codes')
-        .select('student_email, student_name, access_tier')
+        .select('student_email, student_name, access_tier, code, created_at')
         .eq('is_active', true)
         .in('access_tier', tiersToFetch)
+
+      // Se selezionato solo nuova edizione (default), esclude i corsisti storici di Maggio e gli account interni
+      if (params.studentCohort !== 'all') {
+        query = query
+          .gte('created_at', '2026-08-01T00:00:00Z')
+          .not('code', 'in', '("SUPERADMIN","DEMO2026","LMS")')
+      }
+
+      const { data: students, error: stdError } = await query
 
       if (stdError) {
         console.error('[sendEventInvitationsAction] Errore fetch studenti:', stdError)
@@ -112,24 +125,37 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
 
     console.log(`[sendEventInvitationsAction] Invio a ${targetEmails.length} destinatari per evento "${params.eventTitle}"`)
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'aiutiamoci <info@aiutiamoci.cloud>'
-    const finalMeetUrl = (params.meetUrl && params.meetUrl.trim().length > 0)
-      ? params.meetUrl.trim()
-      : 'https://meet.google.com/wsv-bqxm-bvr'
+    const isImpresa = params.senderProfile === 'impresa'
+    const defaultSenderName = isImpresa ? 'aiutiamoci Impresa' : 'aiutiamoci'
+    const senderDisplayName = params.customSenderName?.trim() || defaultSenderName
+    
+    // Mittente Resend (il dominio @aiutiamoci.cloud è verificato su Resend)
+    const fromAddress = isImpresa ? 'impresa@aiutiamoci.cloud' : 'info@aiutiamoci.cloud'
+    const fromEmail = `${senderDisplayName} <${fromAddress}>`
+    
+    // Indirizzo di risposta
+    const replyToEmail = isImpresa ? 'info@mark2.cloud' : 'info@aiutiamoci.cloud'
+    
+    const brandHeader = isImpresa ? 'aiutiamoci Impresa • Soluzioni AI per PMI' : 'aiutiamoci • Campus Didattico'
+    const brandFooter = isImpresa ? 'aiutiamoci Impresa • Divisione Consulenza & Sviluppo AI' : 'aiutiamoci • Campus Formativo & Operativo AI'
+    const brandAccentColor = isImpresa ? '#0ea5e9' : '#0284c7'
 
-    const meetButtonHtml = `
+    const hasMeetLink = Boolean(params.meetUrl && params.meetUrl.trim().length > 0)
+    const finalMeetUrl = hasMeetLink ? params.meetUrl!.trim() : ''
+
+    const meetButtonHtml = hasMeetLink ? `
       <div style="margin: 26px 0; text-align: center; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 20px;">
         <p style="margin: 0 0 12px 0; font-size: 13px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.05em;">
           🟢 Stanza Videochiamata Pronta
         </p>
-        <a href="${finalMeetUrl}" target="_blank" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 14px rgba(2,132,199,0.35);">
+        <a href="${finalMeetUrl}" target="_blank" style="background: linear-gradient(135deg, ${brandAccentColor} 0%, #0369a1 100%); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 14px rgba(2,132,199,0.35);">
           📹 Accedi alla Videocall (Google Meet)
         </a>
         <p style="margin: 12px 0 0 0; font-size: 12px; color: #475569;">
-          Link diretto: <a href="${finalMeetUrl}" target="_blank" style="color: #0284c7; font-family: monospace; font-weight: 600; text-decoration: underline;">${finalMeetUrl}</a>
+          Link diretto: <a href="${finalMeetUrl}" target="_blank" style="color: ${brandAccentColor}; font-family: monospace; font-weight: 600; text-decoration: underline;">${finalMeetUrl}</a>
         </p>
       </div>
-    `
+    ` : ''
 
     let sentCount = 0
     let failedCount = 0
@@ -137,56 +163,73 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
     // Invio email (con limite concorrenza per non saturare Resend)
     for (const recipient of targetEmails) {
       const recipientName = recipient.name || 'Partecipante'
+      const emailBadge = hasMeetLink ? 'Invito Ufficiale Riunione & Sessione' : 'Comunicazione Ufficiale & Avviso'
+      const emailIntro = hasMeetLink 
+        ? "Ti confermiamo la data e l'orario per la nostra prossima sessione live in videoconferenza:" 
+        : "Ti inviamo una comunicazione importante in merito al seguente appuntamento / avviso:"
+      const emailSubject = hasMeetLink
+        ? `Invito: ${params.eventTitle} (${params.eventDate} ore ${params.eventTime})`
+        : `Comunicazione: ${params.eventTitle} (${params.eventDate})`
+
       const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
           <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #0f172a; }
-            .container { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-            .header { background: #0f172a; padding: 28px; text-align: center; border-bottom: 4px solid #0284c7; }
-            .header h1 { margin: 0; font-size: 20px; color: #ffffff; font-weight: 800; letter-spacing: -0.02em; }
-            .header p { margin: 6px 0 0 0; color: #38bdf8; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-            .content { padding: 32px 28px; }
-            .event-card { background: #f1f5f9; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 5px solid #0284c7; }
-            .event-title { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; }
-            .event-detail { font-size: 14px; color: #334155; margin: 4px 0; display: flex; align-items: center; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 12px; color: #0f172a; -webkit-text-size-adjust: 100%; }
+            .container { max-width: 600px; width: 100%; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+            .header { background: #0f172a; padding: 24px 20px; text-align: center; border-bottom: 4px solid ${brandAccentColor}; }
+            .header h1 { margin: 0; font-size: 18px; color: #ffffff; font-weight: 800; letter-spacing: -0.02em; }
+            .header p { margin: 4px 0 0 0; color: #38bdf8; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+            .content { padding: 24px 20px; }
+            .event-card { background: #f8fafc; border-radius: 12px; padding: 16px; margin: 18px 0; border: 1px solid #e2e8f0; border-left: 5px solid ${brandAccentColor}; }
+            .event-title { font-size: 17px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; line-height: 1.3; }
+            .event-row { font-size: 14px; color: #334155; margin: 6px 0; line-height: 1.4; display: block; }
+            .message-box { margin-top: 14px; font-size: 14px; line-height: 1.6; color: #1e293b; background: #ffffff; padding: 14px 16px; border-radius: 10px; border: 1px solid #cbd5e1; white-space: pre-wrap; word-break: break-word; }
             .footer { background: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <p>aiutiamoci • Campus Didattico</p>
-              <h1>Invito Ufficiale Riunione & Masterclass</h1>
+              <p>${brandHeader}</p>
+              <h1>${emailBadge}</h1>
             </div>
             <div class="content">
-              <p style="font-size: 15px; line-height: 1.6; margin-top: 0;">Ciao <strong>${recipientName}</strong>,</p>
-              <p style="font-size: 14px; color: #475569; line-height: 1.6;">
-                Ti confermiamo la data e l'orario per la nostra prossima sessione live in videoconferenza:
+              <p style="font-size: 16px; line-height: 1.5; margin-top: 0; margin-bottom: 12px; color: #0f172a;">Gentile <strong>${recipientName}</strong>,</p>
+              <p style="font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 14px;">
+                ${emailIntro}
               </p>
 
               <div class="event-card">
                 <div class="event-title">📌 ${params.eventTitle}</div>
-                <div class="event-detail">🗓️ <strong>Data:</strong>&nbsp;${params.eventDate}</div>
-                <div class="event-detail">⏰ <strong>Orario:</strong>&nbsp;${params.eventTime}</div>
-                ${params.description ? `<div class="event-detail" style="margin-top: 10px; font-style: italic; color: #64748b;">${params.description}</div>` : ''}
+                ${hasMeetLink ? `
+                  <div class="event-row">🗓️ <strong>Data:</strong>&nbsp;${params.eventDate}</div>
+                  ${params.eventTime ? `<div class="event-row">⏰ <strong>Orario:</strong>&nbsp;${params.eventTime}</div>` : ''}
+                ` : ''}
+                ${params.description ? `<div class="message-box">${params.description.replace(/\n/g, '<br/>')}</div>` : ''}
               </div>
 
               ${meetButtonHtml}
 
-              <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 0;">
-                💡 <em>Ti consigliamo di collegarti qualche minuto prima per verificare microfono e webcam. Non è necessaria alcuna installazione: la stanza funziona direttamente nel tuo browser.</em>
-              </p>
+              ${hasMeetLink ? `
+                <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 0;">
+                  💡 <em>Ti consigliamo di collegarti qualche minuto prima per verificare microfono e webcam. Non è necessaria alcuna installazione: la stanza funziona direttamente nel tuo browser.</em>
+                </p>
+              ` : `
+                <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 0;">
+                  💡 <em>Per qualsiasi domanda o chiarimento puoi rispondere direttamente a questa email.</em>
+                </p>
+              `}
             </div>
             <div class="footer">
-              <p style="margin: 0 0 6px 0; font-weight: 600; color: #475569;">aiutiamoci • Campus Formativo & Operativo AI</p>
+              <p style="margin: 0 0 6px 0; font-weight: 600; color: #475569;">${brandFooter}</p>
               <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 11px;">
-                Ricevi questa comunicazione perché sei registrato o iscritto alle masterclass di <a href="https://aiutiamoci.cloud" style="color: #0284c7; text-decoration: none;">aiutiamoci.cloud</a>.
+                Ricevi questa comunicazione da <strong>${senderDisplayName}</strong> tramite la piattaforma <a href="https://aiutiamoci.cloud" style="color: #0284c7; text-decoration: none;">aiutiamoci.cloud</a>.
               </p>
               <p style="margin: 0; font-size: 11px; color: #cbd5e1;">
-                Per assistenza o per non ricevere ulteriori promemoria rispondi a questa email o scrivi a <a href="mailto:info@aiutiamoci.cloud" style="color: #64748b;">info@aiutiamoci.cloud</a>.
+                Per assistenza o informazioni rispondi a questa email o contatta <a href="mailto:${replyToEmail}" style="color: #64748b;">${replyToEmail}</a>.
               </p>
             </div>
           </div>
@@ -195,34 +238,33 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
       `
 
       const plainTextContent = `
-Ciao ${recipientName},
+Gentile ${recipientName},
 
-Ti confermiamo la data e l'orario per la prossima sessione live:
+${emailIntro}
 
 📌 ${params.eventTitle}
 🗓️ Data: ${params.eventDate}
-⏰ Orario: ${params.eventTime}
-${params.description ? `\nDettagli: ${params.description}\n` : ''}
-🔗 Link per accedere alla videochiamata Google Meet:
-${finalMeetUrl}
-
-Ti consigliamo di collegarti qualche minuto prima per verificare microfono e webcam.
-Non è necessaria alcuna installazione: la stanza funziona direttamente nel tuo browser.
-
+${params.eventTime ? `⏰ Orario: ${params.eventTime}\n` : ''}${params.description ? `\nMessaggio:\n${params.description}\n` : ''}${hasMeetLink ? `\n🔗 Link per accedere alla videochiamata Google Meet:\n${finalMeetUrl}\n\nTi consigliamo di collegarti qualche minuto prima per verificare microfono e webcam.\nNon è necessaria alcuna installazione: la stanza funziona direttamente nel tuo browser.\n` : ''}
 ---
-aiutiamoci.cloud • Campus Formativo AI
-Per assistenza rispondi a questa email o scrivi a info@aiutiamoci.cloud
+${brandFooter}
+Per informazioni o assistenza rispondi a questa email o scrivi a ${replyToEmail}
 `.trim()
 
       try {
-        const res = await resend.emails.send({
+        const emailPayload: any = {
           from: fromEmail,
           to: recipient.email,
-          replyTo: 'info@aiutiamoci.cloud',
-          subject: `Invito: ${params.eventTitle} (${params.eventDate} ore ${params.eventTime})`,
+          replyTo: replyToEmail,
+          subject: emailSubject,
           html: htmlContent,
           text: plainTextContent,
-        })
+        }
+
+        if (params.scheduledAt && params.scheduledAt.trim().length > 0) {
+          emailPayload.scheduledAt = params.scheduledAt.trim()
+        }
+
+        const res = await resend.emails.send(emailPayload)
         if (res.error) {
           console.error(`[Resend error to ${recipient.email}]:`, res.error)
           failedCount++

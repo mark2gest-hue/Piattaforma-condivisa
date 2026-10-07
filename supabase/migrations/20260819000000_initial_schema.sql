@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- 3. TABELLA PROJECTS
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.projects (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     description TEXT,
     category project_category NOT NULL DEFAULT 'internal',
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
 -- 4. TABELLA TASKS (Kanban Board)
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.tasks (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     description TEXT,
@@ -89,7 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON public.tasks(assigned_to);
 -- 5. TABELLA MESSAGES (Chat Realtime di Team)
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.messages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     channel TEXT NOT NULL DEFAULT 'generale',
     sender_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
@@ -105,7 +105,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_channel ON public.messages(channel, crea
 -- 6. TABELLA EMAILS (Posta Condivisa)
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.emails (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     direction email_direction NOT NULL,
     from_address TEXT NOT NULL,
     to_address TEXT[] NOT NULL,
@@ -130,7 +130,7 @@ CREATE INDEX IF NOT EXISTS idx_emails_created_at ON public.emails(created_at DES
 -- 7. TABELLA FILES
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.files (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     storage_path TEXT NOT NULL UNIQUE,
     size_bytes BIGINT NOT NULL,

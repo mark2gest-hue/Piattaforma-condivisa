@@ -28,8 +28,10 @@ yarn-error.log*
 # TypeScript cache
 *.tsbuildinfo
 
-# Supabase temp
+# Supabase temp & local backups
 supabase/.temp/
+supabase/backups/
+supabase/backup_*.sql
 
 # IDE extensions / Sidekick
 .sidekick/
