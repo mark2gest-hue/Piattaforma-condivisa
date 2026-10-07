@@ -58,3 +58,15 @@ Le skill sono gestite a livello globale in:
 - **Web Server**: Nginx con certificati SSL Let's Encrypt per `aiutiamoci.cloud`
 - **NO VERCEL**: Questo progetto NON è gestito da Vercel in produzione. Ogni deploy va eseguito esclusivamente sulla VPS Oracle.
 - **Comando Deploy Rapido**: `npm run deploy`
+
+## PROTOCOLLO DI FATTIBILITÀ E ZERO-SPECULAZIONE
+1. **Verifica preventiva di fattibilità tecnica**:
+   - Prima di scrivere codice, modificare file o creare componenti, verifica se l'obiettivo richiede API, dati o endpoint esterni non disponibili o non accessibili.
+2. **Stop bloccante immediato**:
+   - Se una funzione richiesta non è nativamente o programmaticamente fattibile (es. assenza di API ufficiali), È SEVERAMENTE VIETATO procedere con implementazioni parziali, UI mockate, valori hardcodati o procedure di calibrazione manuale.
+3. **Obbligo di escalation**:
+   - Fermati all'istante ed esponi in 2 righe:
+     * Il motivo tecnico per cui l'integrazione diretta non esiste.
+     * Le opzioni alternative (se ve ne sono), attendendo esplicita conferma prima di eseguire qualsiasi azione o scrivere file.
+4. **Nessun workaround non autorizzato**:
+   - Considera qualsiasi codice scritto senza dati reali sottostanti come una violazione grave del protocollo.
