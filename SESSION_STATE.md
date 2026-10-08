@@ -1,8 +1,12 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-07 16:48
+Ultimo aggiornamento: 2026-10-08 14:46
 Stato corrente: 
-- **Pulizia Automatica Duplicati Non Approvati (`/corsi`) COMPLETATO**:
+- **Ripristino Video Studio Factory (`video.aiutiamoci.cloud`) & Sidebar COMPLETATO**:
+  - Il servizio Node.js su porta 3008 sulla VPS (129.152.10.82) non era in esecuzione nel demone PM2, causando errore HTTP 502 (Bad Gateway) da Nginx.
+  - Avviato `video-studio` sotto PM2 daemon (`ecosystem.config.cjs`) e salvato lo stato persistente (`pm2 save`). Verificato codice HTTP 200 su `https://video.aiutiamoci.cloud`.
+  - Aggiunto link diretto a **Video Studio Factory** anche nel menu laterale della piattaforma ([src/components/layout/sidebar.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/src/components/layout/sidebar.tsx)) sotto la sezione *Progetti & Marketing* con auto-login PIN 2026.
+
   - Implementata server action `cleanDuplicateRegistrationsAction` in `src/app/actions/student.ts` con protezione ferrea: non tocca in alcun modo gli iscritti approvati o attivi.
   - Elimina automaticamente solo le registrazioni in attesa (`approved: false`) che risultano doppioni di utenti già attivi/approvati o invii multipli accidentali del questionario.
   - Consolida record duplicati nella rubrica `clients` preservando il record principale.

@@ -42,6 +42,7 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
   const [teamCount, setTeamCount] = useState<number>(3)
   const [teamSubtitle, setTeamSubtitle] = useState<string>('2 Dev • 1 Business')
   const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const [userNameSlug, setUserNameSlug] = useState<string>('marco')
   const supabase = createClient()
 
   // Chiudi drawer al cambio pagina su mobile
@@ -61,8 +62,17 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const isMarco = user.email?.toLowerCase().includes('gerelmo') || user.email?.toLowerCase().includes('marco')
-        const { data: profile } = await (supabase as any).from('profiles').select('role').eq('id', user.id).maybeSingle()
+        const { data: profile } = await (supabase as any).from('profiles').select('role, full_name').eq('id', user.id).maybeSingle()
         setIsAdmin(isMarco || profile?.role === 'admin' || profile?.role === 'dev')
+        
+        const fullName = (profile?.full_name || user.email || '').toLowerCase()
+        if (fullName.includes('lorenzo')) {
+          setUserNameSlug('lorenzo')
+        } else if (fullName.includes('stefano')) {
+          setUserNameSlug('stefano')
+        } else {
+          setUserNameSlug('marco')
+        }
       }
     }
     checkUserRole()
@@ -236,6 +246,13 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
           href: '/growth-studio',
           icon: Megaphone,
           badge: '1-Click',
+        },
+        {
+          title: 'Video Studio Factory',
+          subtitle: 'Neural Video & HyperFrames',
+          href: `https://video.aiutiamoci.cloud/?auth_pin=2026&user=${userNameSlug}`,
+          icon: Video,
+          badge: 'Factory',
         },
       ],
     },

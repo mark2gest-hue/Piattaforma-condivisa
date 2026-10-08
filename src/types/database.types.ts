@@ -763,6 +763,7 @@ export interface Database {
           event_date: string
           event_time: string
           category: string
+          reminder_sent: boolean
           created_by: string | null
           created_at: string
           updated_at: string
@@ -774,6 +775,7 @@ export interface Database {
           event_date: string
           event_time?: string
           category?: string
+          reminder_sent?: boolean
           created_by?: string | null
           created_at?: string
           updated_at?: string
@@ -785,6 +787,7 @@ export interface Database {
           event_date?: string
           event_time?: string
           category?: string
+          reminder_sent?: boolean
           created_by?: string | null
           created_at?: string
           updated_at?: string
