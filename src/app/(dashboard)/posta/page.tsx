@@ -1409,34 +1409,35 @@ export default function PostaCondivisaPage() {
                   <span>← Torna alla lista email</span>
                 </button>
 
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug break-words">
-                      {selectedEmail.subject || '(Nessun oggetto)'}
-                    </h2>
+                {/* Subject Title (Full Width to prevent flex squeeze) */}
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug break-words mb-3">
+                  {selectedEmail.subject || '(Nessun oggetto)'}
+                </h2>
 
-                    <div className="flex items-center gap-2.5 mt-2.5">
-                      <Avatar
-                        fallback={
-                          selectedEmail.direction === 'inbound'
-                            ? (selectedEmail.from_address ? selectedEmail.from_address.charAt(0).toUpperCase() : 'M')
-                            : 'T'
-                        }
-                        className="h-8 w-8 sm:h-9 sm:w-9 bg-blue-600/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800 shrink-0"
-                      />
-                      <div className="flex flex-col min-w-0 text-xs">
-                        <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                          {selectedEmail.direction === 'inbound'
-                            ? selectedEmail.from_address
-                            : 'Team (@aiutiamoci.cloud)'}
-                        </span>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                          A: {getToArray(selectedEmail.to_address).join(', ')}
-                        </span>
-                      </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  {/* Sender Details */}
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Avatar
+                      fallback={
+                        selectedEmail.direction === 'inbound'
+                          ? (selectedEmail.from_address ? selectedEmail.from_address.charAt(0).toUpperCase() : 'M')
+                          : 'T'
+                      }
+                      className="h-8 w-8 sm:h-9 sm:w-9 bg-blue-600/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800 shrink-0"
+                    />
+                    <div className="flex flex-col min-w-0 text-xs">
+                      <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                        {selectedEmail.direction === 'inbound'
+                          ? selectedEmail.from_address
+                          : 'Team (@aiutiamoci.cloud)'}
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        A: {getToArray(selectedEmail.to_address).join(', ')}
+                      </span>
                     </div>
                   </div>
 
+                  {/* Actions Bar */}
                   <div className="flex flex-wrap items-center gap-2 shrink-0 pt-1 sm:pt-0">
                     <span className="text-[11px] text-slate-400 font-medium mr-1">
                       {selectedEmail.created_at ? formatDate(selectedEmail.created_at) : ''}
