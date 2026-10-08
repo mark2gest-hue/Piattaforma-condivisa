@@ -110,6 +110,8 @@ export default function PostaCondivisaPage() {
   const [composeTo, setComposeTo] = useState('')
   const [composeSubject, setComposeSubject] = useState('')
   const [composeBody, setComposeBody] = useState('')
+  const [composeAttachments, setComposeAttachments] = useState<{ filename: string; content: string; contentType?: string; size: number }[]>([])
+  const [replyAttachments, setReplyAttachments] = useState<{ filename: string; content: string; contentType?: string; size: number }[]>([])
   const [isComposing, setIsComposing] = useState(false)
 
   // Modal Guida Configurazione Dominio Aruba
@@ -394,15 +396,65 @@ export default function PostaCondivisaPage() {
       subject: subject,
       body: replyText,
       threadId: selectedEmail.thread_id || selectedEmail.id,
+      attachments: replyAttachments.length > 0 ? replyAttachments.map(a => ({ filename: a.filename, content: a.content, contentType: a.contentType })) : undefined,
     })
 
     if (result.success) {
       setReplyText('')
+      setReplyAttachments([])
       await fetchEmails()
     } else {
       alert(`Errore durante l'invio: ${result.error}`)
     }
     setIsSending(false)
+  }
+
+  // Helper per convertire File in Base64
+  const handleFileAttach = async (e: React.ChangeEvent<HTMLInputElement>, isReply: boolean = false) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    const maxFileSize = 15 * 1024 * 1024 // 15MB limite singolo file
+    const newItems: { filename: string; content: string; contentType?: string; size: number }[] = []
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      if (file.size > maxFileSize) {
+        alert(`Il file "${file.name}" supera la dimensione massima di 15MB.`)
+        continue
+      }
+
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => {
+            const res = reader.result as string
+            const base64Part = res.includes('base64,') ? res.split('base64,')[1] : res
+            resolve(base64Part)
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+
+        newItems.push({
+          filename: file.name,
+          content: base64,
+          contentType: file.type || 'application/octet-stream',
+          size: file.size,
+        })
+      } catch (err) {
+        console.error('Errore conversione allegato:', err)
+      }
+    }
+
+    if (isReply) {
+      setReplyAttachments(prev => [...prev, ...newItems])
+    } else {
+      setComposeAttachments(prev => [...prev, ...newItems])
+    }
+
+    // Reset input
+    e.target.value = ''
   }
 
   // Invio nuova email da zero
@@ -416,6 +468,7 @@ export default function PostaCondivisaPage() {
       from: composeFrom,
       subject: composeSubject.trim(),
       body: composeBody.trim(),
+      attachments: composeAttachments.length > 0 ? composeAttachments.map(a => ({ filename: a.filename, content: a.content, contentType: a.contentType })) : undefined,
     })
 
     if (result.success) {
@@ -423,6 +476,7 @@ export default function PostaCondivisaPage() {
       setComposeTo('')
       setComposeSubject('')
       setComposeBody('')
+      setComposeAttachments([])
       await fetchEmails()
     } else {
       alert(`Errore durante l'invio dell'email: ${result.error}`)
@@ -1668,25 +1722,63 @@ export default function PostaCondivisaPage() {
                     className="w-full text-xs p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-colors"
                   />
 
+                  {/* Sezione Allegati Risposta */}
+                  {replyAttachments.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                      {replyAttachments.map((att, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[10px] text-slate-800 dark:text-slate-200"
+                        >
+                          <Paperclip className="h-2.5 w-2.5 text-slate-400" />
+                          <span className="truncate max-w-[120px] font-mono">{att.filename}</span>
+                          <span className="text-[9px] text-slate-400">
+                            ({(att.size / 1024).toFixed(0)} KB)
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setReplyAttachments(prev => prev.filter((_, i) => i !== idx))}
+                            className="text-slate-400 hover:text-red-500 ml-0.5 cursor-pointer"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between pt-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        setReplyText(
-                          `\n\n--- Messaggio Originale ---\nDa: ${selectedEmail.from_address}\nOggetto: ${selectedEmail.subject}\n\n${selectedEmail.body_text || ''}`
-                        )
-                      }
-                      className="text-[11px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 h-7 px-2"
-                    >
-                      Cita testo originale
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setReplyText(
+                            `\n\n--- Messaggio Originale ---\nDa: ${selectedEmail.from_address}\nOggetto: ${selectedEmail.subject}\n\n${selectedEmail.body_text || ''}`
+                          )
+                        }
+                        className="text-[11px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 h-7 px-2"
+                      >
+                        Cita testo originale
+                      </Button>
+
+                      <label className="cursor-pointer inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 h-7 px-2 transition-colors">
+                        <Paperclip className="h-3 w-3" />
+                        <span>Allega File</span>
+                        <input
+                          type="file"
+                          multiple
+                          onChange={(e) => handleFileAttach(e, true)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
 
                     <Button
                       size="sm"
                       onClick={handleSendReply}
-                      disabled={isSending || !replyText.trim()}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold h-8 px-4 gap-1.5 shadow-xs"
+                      disabled={isSending || (!replyText.trim() && replyAttachments.length === 0)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold h-8 px-4 gap-1.5 shadow-xs cursor-pointer"
                     >
                       <Send className="h-3 w-3" />
                       {isSending ? 'Invio...' : 'Invia Risposta'}
@@ -1778,6 +1870,50 @@ export default function PostaCondivisaPage() {
                 />
               </div>
 
+              {/* Sezione Allegati Nuova Email */}
+              <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-xs">
+                    <Paperclip className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>Allegati ({composeAttachments.length})</span>
+                  </label>
+                  <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[11px] font-medium border border-blue-200 dark:border-blue-900/50 transition-colors">
+                    <Paperclip className="h-3 w-3" />
+                    <span>Carica File</span>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={(e) => handleFileAttach(e, false)}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {composeAttachments.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1.5 rounded-lg bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700">
+                    {composeAttachments.map((att, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-800 dark:text-slate-200 shadow-2xs"
+                      >
+                        <Paperclip className="h-2.5 w-2.5 text-slate-400" />
+                        <span className="truncate max-w-[140px] font-mono">{att.filename}</span>
+                        <span className="text-[9px] text-slate-400 font-sans">
+                          ({(att.size / 1024).toFixed(0)} KB)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setComposeAttachments(prev => prev.filter((_, i) => i !== idx))}
+                          className="text-slate-400 hover:text-red-500 ml-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
                 <span className="text-[11px] text-slate-400">Mittente: info@aiutiamoci.cloud</span>
                 <div className="flex items-center gap-2">
@@ -1788,7 +1924,7 @@ export default function PostaCondivisaPage() {
                     type="submit"
                     size="sm"
                     disabled={isComposing}
-                    className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+                    className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5 cursor-pointer"
                   >
                     {isComposing ? (
                       <>

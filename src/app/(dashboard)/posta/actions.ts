@@ -12,6 +12,11 @@ export async function sendSharedEmail(formData: {
   body: string
   from?: string
   threadId?: string
+  attachments?: {
+    filename: string
+    content: string // Base64 encoded string
+    contentType?: string
+  }[]
 }) {
   try {
     const supabase = await createClient()
@@ -27,7 +32,7 @@ export async function sendSharedEmail(formData: {
       : 'Ricevi questa email dalla piattaforma aiutiamoci.cloud.<br>Per assistenza rispondi direttamente a questa email o contatta info@aiutiamoci.cloud.'
     const accentColor = isImpresa ? '#0ea5e9' : '#0284c7'
 
-    console.log(`[Resend] Invio email da: ${chosenFrom} (Reply-To: ${replyToAddress}) a: ${formData.to} | Oggetto: ${formData.subject}`)
+    console.log(`[Resend] Invio email da: ${chosenFrom} (Reply-To: ${replyToAddress}) a: ${formData.to} | Oggetto: ${formData.subject} | Allegati: ${formData.attachments?.length || 0}`)
 
     // Generazione HTML formattato pulito per supporto multi-part (HTML + Plain Text)
     const formattedHtml = `
@@ -55,7 +60,14 @@ export async function sendSharedEmail(formData: {
       </html>
     `
 
-    // Invio effettivo tramite Resend SDK con headers completi antispam
+    // Prepara allegati per Resend SDK
+    const resendAttachments = formData.attachments?.map((att) => ({
+      filename: att.filename,
+      content: Buffer.from(att.content, 'base64'),
+      contentType: att.contentType,
+    }))
+
+    // Invio effettivo tramite Resend SDK con headers completi antispam e allegati
     const resendResponse = await resend.emails.send({
       from: chosenFrom,
       to: formData.to,
@@ -63,6 +75,7 @@ export async function sendSharedEmail(formData: {
       subject: formData.subject,
       text: formData.body,
       html: formattedHtml,
+      attachments: resendAttachments && resendAttachments.length > 0 ? resendAttachments : undefined,
       headers: {
         'X-Entity-Ref-ID': `aiutiamoci-${Date.now()}`,
       },
