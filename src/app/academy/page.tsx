@@ -41,7 +41,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import HorizontalScrollLayout from '@/components/layout/HorizontalScrollLayout'
 import { createClient } from '@/lib/supabase/client'
 import {
   enrollStudentAction,
@@ -51,29 +50,6 @@ import {
 } from '@/app/actions/student'
 import { LegalModal, CookieBanner } from '@/components/legal/LegalModal'
 import { decodeReferralCode } from '@/lib/referral-mask'
-
-const MODULES_LIST = [
-  { num: '01', title: '1. Benvenuti nel Futuro', category: 'Modulo 1 – Fondamenta', desc: 'Introduzione ai concetti chiave ed alla rivoluzione dell’Intelligenza Artificiale.' },
-  { num: '02', title: '2. Breve Storia dell\'Evoluzione', category: 'Modulo 1 – Fondamenta', desc: 'Come l\'IA è evoluta e quali opportunità concrete offre oggi nel lavoro.' },
-  { num: '03', title: '3. Sconfiggere il Foglio Bianco', category: 'Modulo 1 – Fondamenta', desc: 'Superare il blocco iniziale ed iniziare ad interagire subito con gli strumenti IA.' },
-  { num: '04', title: '4. Il Linguaggio della Chiarezza', category: 'Modulo 2 – Prompting', desc: 'La struttura per comunicare in modo chiaro e preciso con i modelli IA.' },
-  { num: '05', title: '5. La Formula Segreta RCCF', category: 'Modulo 2 – Prompting', desc: 'Ruolo, Contesto, Contenuto e Formato: la formula per prompt perfetti.' },
-  { num: '06', title: '6. Iterazione', category: 'Modulo 2 – Prompting', desc: 'Affinare le risposte ed istruire l’IA attraverso dialoghi ed iterazioni successive.' },
-  { num: '07', title: '7. ChatGPT, Claude, Gemini, Perplexity', category: 'Modulo 3 – Strumenti', desc: 'Panoramica comparativa dei migliori modelli di IA generativa e quando usarli.' },
-  { num: '08', title: '8. Scrivere senza Sforzo', category: 'Modulo 3 – Strumenti', desc: 'Redazione rapida di email, post, testi formali e comunicazioni commerciali.' },
-  { num: '09', title: '9. Dipingere con le Parole', category: 'Modulo 3 – Strumenti', desc: 'Tecniche di prompting per la generazione di immagini e contenuti visivi.' },
-  { num: '10', title: '10. Anatomia di un Prompt Visivo', category: 'Modulo 3 – Strumenti', desc: 'Strutturare prompt grafici d\'impatto per slide, presentazioni e marketing.' },
-  { num: '11', title: '11. Presentazioni in 5 Minuti', category: 'Modulo 3 – Strumenti', desc: 'Creare slide e materiale per riunioni e clienti in tempo record con l\'IA.' },
-  { num: '12', title: '12. Analisi Dati per Excel', category: 'Modulo 4 – Pratica', desc: 'Elaborazione dati, tabelle e grafici senza dover conoscere formule complesse.' },
-  { num: '13', title: '13. L\'Agenda Intelligente', category: 'Modulo 4 – Pratica', desc: 'Pianificazione automatica delle priorità, del calendario e delle scadenze.' },
-  { num: '14', title: '14. Studiare e Imparare ELI5', category: 'Modulo 4 – Pratica', desc: 'Apprendimento rapido e semplificazione di argomenti complessi con l\'IA.' },
-  { num: '15', title: '15. Allucinazioni: Quando l\'IA mente', category: 'Modulo 4 – Pratica', desc: 'Come riconoscere gli errori dell\'IA e verificare le fonti in totale sicurezza.' },
-  { num: '16', title: '16. Privacy e Sicurezza', category: 'Modulo 5 – Futuro', desc: 'Protezione dei dati aziendali e personali secondo le norme di sicurezza.' },
-  { num: '17', title: '17. Il Lavoro che Cambia', category: 'Modulo 5 – Futuro', desc: 'L\'impatto dell\'IA sulle professioni e come posizionarsi per il futuro.' },
-  { num: '18', title: '18. Creare il proprio Workflow', category: 'Modulo 5 – Futuro', desc: 'Strutturare un flusso di lavoro personalizzato ed automatizzato al 100%.' },
-  { num: '19', title: '19. La Tua Nuova Superpotenza', category: 'Modulo 5 – Futuro', desc: 'Integrare l\'IA come alleato quotidiano per moltiplicare la produttività.' },
-  { num: '20', title: '20. Riepilogo Corso AI', category: 'Modulo 5 – Futuro', desc: 'Sintesi del percorso formativo, attestato finale e prossimi passi.' },
-]
 
 // Link Pagamento Esterno ATOMA (configurabile da .env)
 const ATOMA_PAYMENT_URL = process.env.NEXT_PUBLIC_ATOMA_PAYMENT_URL || 'https://www.atoma.com/product/ai-operativa-per-il-lavoro-percorso-pratico-di-16-ore/'
@@ -247,158 +223,250 @@ export default function LandingPage() {
     }, 900)
   }
 
+  // Parallasse dinamica su scroll
+  const [scrollY, setScrollY] = useState(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Scroll Reveal 3D con IntersectionObserver nativo
+  useEffect(() => {
+    const elements = document.querySelectorAll('[data-reveal]')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-active')
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    )
+
+    elements.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col justify-between selection:bg-indigo-500 selection:text-white overflow-x-hidden">
-      {/* Background Dynamic Light Gradients */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-blue-600/30 via-indigo-600/20 to-transparent rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-gradient-to-bl from-purple-600/30 via-pink-600/10 to-transparent rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 left-1/3 w-[600px] h-[600px] bg-gradient-to-tr from-indigo-600/20 via-blue-600/10 to-transparent rounded-full blur-3xl" />
+    <div className="min-h-screen bg-[#03060f] text-slate-100 font-sans flex flex-col justify-between selection:bg-blue-600 selection:text-white overflow-x-hidden relative">
+      {/* Sfondo Fisico & Griglia Parallasse Strutturata (Movimento dinamico differenziato) */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Livello 1: Texture cartesiana (0.15x scroll speed) */}
+        <div
+          className="absolute inset-0 opacity-[0.035] will-change-transform"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+            transform: `translate3d(0, ${scrollY * 0.12}px, 0)`,
+          }}
+        />
+        {/* Livello 2: Glow zenitale radente (0.25x scroll speed) */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[480px] bg-gradient-to-b from-blue-600/20 via-indigo-600/5 to-transparent rounded-full blur-3xl will-change-transform"
+          style={{
+            transform: `translate3d(-50%, ${scrollY * 0.22}px, 0)`,
+          }}
+        />
+        {/* Livello 3: Globi laterali di rifrazione (0.35x scroll speed) */}
+        <div
+          className="absolute top-1/3 -right-60 w-[600px] h-[600px] bg-blue-700/10 rounded-full blur-[140px] will-change-transform"
+          style={{
+            transform: `translate3d(0, ${scrollY * 0.3}px, 0)`,
+          }}
+        />
+        <div
+          className="absolute bottom-1/4 -left-60 w-[600px] h-[600px] bg-indigo-700/10 rounded-full blur-[140px] will-change-transform"
+          style={{
+            transform: `translate3d(0, ${-scrollY * 0.18}px, 0)`,
+          }}
+        />
       </div>
 
       {/* Header Navigation Bar */}
-      <header className="relative z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2">
+      <header className="relative z-30 border-b border-white/[0.08] bg-[#03060f]/80 backdrop-blur-xl sticky top-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
             <Link href="/" className="flex items-center gap-2.5 group">
               <img
-                src="/images/logo_full_dark.png"
+                src="/images/logo_icon_dark.png"
                 alt="AI Sviluppo - aiutiamoci.cloud"
-                className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+                className="h-9 w-9 object-contain rounded-xl p-1 bg-slate-900/90 border border-white/10 transition-transform group-hover:scale-105"
               />
-              <div className="hidden sm:flex flex-col min-w-0">
-                <span className="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5 truncate">
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-sm tracking-tight text-white flex items-center gap-1.5 truncate">
                   aiutiamoci.cloud
                 </span>
-                <span className="text-[11px] text-slate-400 font-medium truncate">Formazione ed Agenti IA</span>
+                <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase truncate">Aiutiamoci Academy</span>
               </div>
             </Link>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={() => setIsStudentModalOpen(true)}
+              className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Key className="h-3.5 w-3.5 text-blue-400" />
+              <span>Ho un codice</span>
+            </button>
             <Link
               href="/login"
-              className="text-slate-400 hover:text-slate-200 px-3 py-1.5 transition-colors flex items-center gap-1.5 border border-slate-800/80 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-xs font-semibold"
+              className="text-slate-400 hover:text-slate-200 px-3 py-1.5 transition-colors flex items-center gap-1.5 border border-white/10 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-xs font-semibold"
               title="Accesso riservato al team di gestione"
             >
               <Lock className="h-3.5 w-3.5 text-slate-400" />
-              <span>Team</span>
+              <span className="hidden sm:inline">Team</span>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* MAIN CINEMATIC SLIDE DECK (HORIZONTAL ON PC / VERTICAL ON MOBILE) */}
-      <main className="relative z-10 w-full flex-1">
-        <HorizontalScrollLayout>
-          {/* PANNELLO 1: HERO & REGISTRAZIONE */}
-          <div className="w-full max-w-5xl mx-auto py-6 sm:py-10 space-y-8 flex flex-col justify-center min-h-[75vh]">
-            <div className="text-center space-y-6 max-w-4xl mx-auto">
-              <Badge className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 px-3.5 py-1 text-xs font-semibold rounded-full uppercase tracking-wider">
-                Aiutiamoci Academy • Corsi Pratici AI
-              </Badge>
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1]">
-                Domina l'Intelligenza Artificiale <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">da Zero all'Agentistica</span>
-              </h1>
-
-              <p className="text-sm sm:text-lg text-slate-300 leading-relaxed font-normal max-w-2xl mx-auto">
-                L'Intelligenza Artificiale non è magia, è uno strumento. Impara a delegare la noia, potenziare la produttività e governare gli agenti autonomi con video lezioni guidate ed un assistente virtuale <strong className="text-white">@AI</strong> sempre al tuo fianco.
-              </p>
-
-              {/* CTA MAIN BUTTONS - 3 PERCORSI CHIARI */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-2xl mx-auto">
-                <Button
-                  onClick={() => setIsEnrollModalOpen(true)}
-                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold h-12 px-7 rounded-2xl gap-2 shadow-2xl shadow-indigo-600/40 text-sm sm:text-base transition-all hover:scale-[1.02]"
-                >
-                  <Sparkles className="h-5 w-5" />
-                  <span>Registrati qui</span>
-                </Button>
-
-                <Button
-                  onClick={() => setIsDirectPaymentModalOpen(true)}
-                  variant="outline"
-                  className="w-full sm:w-auto border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 font-bold h-12 px-6 rounded-2xl gap-2 text-sm shadow-lg shadow-emerald-950/40"
-                >
-                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                  <span>Paga ora</span>
-                </Button>
-
-                <Button
-                  onClick={() => setIsStudentModalOpen(true)}
-                  variant="outline"
-                  className="w-full sm:w-auto border-slate-800 bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold h-12 px-6 rounded-2xl gap-2 text-sm"
-                >
-                  <Key className="h-4 w-4 text-blue-400" />
-                  <span>Entra qui se hai il codice</span>
-                </Button>
-              </div>
-            </div>
+      {/* MAIN CONTAINER VERTICALE CON SCROLL NATURALE & CARD STACKING */}
+      <main className="relative z-10 w-full flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-20 space-y-24 sm:space-y-32">
+        {/* SEZIONE 1: HERO & REGISTRAZIONE */}
+        <section data-reveal className="text-center space-y-8 max-w-4xl mx-auto pt-4 sm:pt-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-slate-300 text-[11px] font-mono uppercase tracking-widest">
+            <Sparkles className="h-3.5 w-3.5 text-blue-400" />
+            <span>Formazione Pratica AI & Agenti Autonomi</span>
           </div>
 
-          {/* PANNELLO 2: I NOSTRI CORSI (AI START vs AI PRO AGENTISTICA B2B) */}
-          <div className="w-full max-w-6xl mx-auto py-6 sm:py-10 flex flex-col justify-center min-h-[75vh]">
-            <div id="corsi" className="space-y-8 scroll-mt-24">
-              <div className="text-center space-y-2">
-                <Badge variant="purple" className="text-[10px] uppercase font-bold tracking-widest">I Nostri Percorsi Formativi</Badge>
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Scegli il livello più adatto a te</h2>
-                <p className="text-xs sm:text-sm text-slate-400">Dai primi passi fino allo sviluppo di Agenti IA avanzati per le aziende.</p>
-              </div>
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
+            Domina l'Intelligenza Artificiale <br className="hidden sm:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-300">
+              da Zero all'Agentistica
+            </span>
+          </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* CORSO 1: AI START (DISPONIBILE ORA) */}
-            <div className="bg-gradient-to-b from-slate-900/90 to-slate-950 border-2 border-indigo-500/50 rounded-3xl p-6 sm:p-8 space-y-6 relative shadow-2xl shadow-indigo-500/10 flex flex-col justify-between overflow-hidden">
-              {/* Badge di Stato Superiore Ben Visibile */}
-              <div className="flex items-center justify-between">
-                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-extrabold uppercase px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5">
-                  <Flame className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                  <span>Più Popolare • Disponibile Ora</span>
-                </span>
-                <span className="text-xs text-amber-400 font-bold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
-                  Offerta Masterclass
-                </span>
-              </div>
+          <p className="text-sm sm:text-lg text-slate-300 leading-relaxed font-normal max-w-2xl mx-auto">
+            L'Intelligenza Artificiale non è magia, è uno strumento di lavoro. Impara a delegare i compiti ripetitivi, moltiplicare la produttività e governare gli agenti con videolezioni guidate e un tutor virtuale <strong className="text-white">@AI</strong> operativo 24/7.
+          </p>
 
-              {/* Banner Immagine Corso 1 */}
-              <div className="rounded-2xl overflow-hidden border border-slate-800 relative">
-                <img
-                  src="/images/ai_start_course_banner.jpg"
-                  alt="AI Start Banner"
-                  className="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
-                />
-              </div>
+          {/* CTA MAIN BUTTONS */}
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-2xl mx-auto">
+            <Button
+              onClick={() => setIsEnrollModalOpen(true)}
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-semibold h-12.5 px-8 rounded-xl gap-2 shadow-lg shadow-blue-950/60 text-sm transition-all cursor-pointer"
+            >
+              <span>Registrati alla Masterclass</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
 
-              <div className="space-y-4">
-                <Badge variant="purple" className="text-[10px] uppercase">Livello Principiante / Intermedio</Badge>
+            <Button
+              onClick={() => setIsDirectPaymentModalOpen(true)}
+              variant="outline"
+              className="w-full sm:w-auto border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 font-semibold h-12.5 px-6 rounded-xl gap-2 text-sm shadow-md transition-all cursor-pointer"
+            >
+              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              <span>Iscrizione Diretta (€)</span>
+            </Button>
 
-                <h3 className="text-2xl font-extrabold text-white leading-tight">
-                  AI Start — Domina l'Intelligenza Artificiale da Zero
-                </h3>
+            <Button
+              onClick={() => setIsStudentModalOpen(true)}
+              variant="outline"
+              className="w-full sm:w-auto border-white/10 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-semibold h-12.5 px-6 rounded-xl gap-2 text-sm transition-all cursor-pointer"
+            >
+              <Key className="h-4 w-4 text-blue-400" />
+              <span>Accedi con Codice</span>
+            </Button>
+          </div>
+        </section>
 
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  20 lezioni video pratiche per automatizzare il lavoro quotidiano, gestire email, sintetizzare documenti ed utilizzare l'assistente @AI.
-                </p>
+        {/* SEZIONE 2: I DUE LIVELLI FORMATIVI */}
+        <section id="corsi" className="space-y-12 scroll-mt-24">
+          <div className="text-center space-y-3">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-blue-400 bg-blue-950/40 border border-blue-500/20 px-3.5 py-1 rounded-full inline-block">
+              Percorsi Formativi
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+              Scegli il livello più adatto alle tue esigenze
+            </h2>
+            <p className="text-sm text-slate-400 max-w-xl mx-auto">
+              Dall'operatività quotidiana per professionisti fino all'architettura di agenti autonomi integrati nelle aziende.
+            </p>
+          </div>
 
-                <div className="space-y-2 text-xs text-slate-300 pt-2">
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                    <span>20 Video Lezioni in alta definizione</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto perspective-1000">
+            {/* CORSO 1: AI START (Reveal da sinistra con inclinazione 3D) */}
+            <div
+              data-reveal="left"
+              className="rounded-3xl p-8 sm:p-9 flex flex-col justify-between space-y-8 relative overflow-hidden transition-all duration-300 hover:-translate-y-2"
+              style={{
+                background: 'linear-gradient(180deg, #0e1526 0%, #060a14 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.35)',
+                boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 40px -10px rgba(59, 130, 246, 0.15)',
+              }}
+            >
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="bg-blue-600/90 text-white text-[10px] font-mono uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>Disponibile Ora • AI Start</span>
+                  </span>
+                  <span className="text-[11px] text-amber-400 font-mono font-bold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
+                    Masterclass Inclusa
+                  </span>
+                </div>
+
+                {/* Micro Terminal Metriche Tecniche invece del Banner Fake AI */}
+                <div className="rounded-2xl p-4 bg-black/60 border border-white/10 font-mono text-[11px] space-y-2">
+                  <div className="flex items-center justify-between text-slate-400 border-b border-white/5 pb-2">
+                    <span className="flex items-center gap-1.5 text-blue-400">
+                      <Terminal className="h-3.5 w-3.5" />
+                      <span>COURSE_ID: AI_START_2026</span>
+                    </span>
+                    <span className="text-emerald-400">STATUS: ACTIVE</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                    <span>Chat integrata con assistente IA @AI 24/7</span>
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+                    <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="block text-slate-400 text-[10px]">LEZIONI</span>
+                      <strong className="text-white text-xs">20 Video HD</strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="block text-slate-400 text-[10px]">DURATA</span>
+                      <strong className="text-white text-xs">16 Ore Tot.</strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="block text-slate-400 text-[10px]">TUTOR</span>
+                      <strong className="text-blue-400 text-xs">@AI 24/7</strong>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                    <span>Accesso a vita tramite Codice Univoco</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                    <span>Attestato di completamento finale</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-emerald-300 font-semibold">
-                    <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
-                    <span>Certificazione Europea con Ente ATOMA (Docente Autorizzato)</span>
+                </div>
+
+                <div className="space-y-3">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                    Livello Base & Operativo
+                  </span>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">
+                    AI Start — Domina l'IA nel Lavoro Quotidiano
+                  </h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    20 videolezioni pratiche per automatizzare documenti, email, presentazioni, fogli Excel e interagire con il Tutor @AI.
+                  </p>
+
+                  <div className="space-y-2.5 text-xs text-slate-300 pt-2 border-t border-white/5">
+                    <div className="flex items-center gap-2.5">
+                      <Check className="h-4 w-4 text-blue-400 shrink-0" />
+                      <span>20 Videolezioni pratiche in alta definizione</span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Check className="h-4 w-4 text-blue-400 shrink-0" />
+                      <span>Tutor virtuale @AI operativo 24/7 in chat</span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Check className="h-4 w-4 text-blue-400 shrink-0" />
+                      <span>Accesso personale illimitato tramite Codice Univoco</span>
+                    </div>
+                    <div className="flex items-center gap-2.5 text-emerald-300 font-medium">
+                      <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <span>Certificazione Europea con Ente ATOMA (Docente Autorizzato)</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -408,64 +476,86 @@ export default function LandingPage() {
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                   setTimeout(() => setIsEnrollModalOpen(true), 300)
                 }}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-12 rounded-xl gap-2 shadow-lg shadow-indigo-600/30"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold h-12 rounded-xl gap-2 shadow-lg shadow-blue-950/60 transition-all cursor-pointer text-sm"
               >
                 <span>Partecipa alla Masterclass Gratuita</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* CORSO 2: AI PRO B2B (PROSSIMAMENTE / LISTA D'ATTESA) */}
-            <div className="bg-gradient-to-b from-slate-900/60 to-slate-950 border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6 relative flex flex-col justify-between group hover:border-purple-500/40 transition-all overflow-hidden">
-              {/* Badge di Stato Superiore Ben Visibile */}
-              <div className="flex items-center justify-between">
-                <span className="bg-slate-800 text-purple-300 border border-purple-500/30 text-[10px] font-extrabold uppercase px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
-                  <Cpu className="h-3.5 w-3.5 text-purple-400" />
-                  <span>Prossimamente • Corso Avanzato</span>
-                </span>
-                <Badge variant="warning" className="text-[9px] uppercase">Lista d'Attesa</Badge>
-              </div>
+            {/* CORSO 2: AI PRO B2B (Reveal da destra con inclinazione 3D) */}
+            <div
+              data-reveal="right"
+              className="rounded-3xl p-8 sm:p-9 flex flex-col justify-between space-y-8 relative overflow-hidden transition-all duration-300 hover:-translate-y-2"
+              style={{
+                background: 'linear-gradient(180deg, #0e1526 0%, #060a14 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.9)',
+              }}
+            >
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="bg-slate-800 text-slate-300 border border-white/10 text-[10px] font-mono uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <Cpu className="h-3 w-3 text-blue-400" />
+                    <span>In Preparazione • Livello B2B</span>
+                  </span>
+                  <Badge variant="warning" className="text-[9px] uppercase font-mono">Lista d'Attesa</Badge>
+                </div>
 
-              {/* Banner Immagine Corso 2 */}
-              <div className="rounded-2xl overflow-hidden border border-slate-800 relative">
-                <img
-                  src="/images/ai_pro_b2b_course_banner.jpg"
-                  alt="AI Pro B2B Banner"
-                  className="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-
-              <div className="space-y-4">
-                <Badge variant="secondary" className="text-[10px] uppercase bg-slate-800 text-slate-300">Livello Avanzato B2B</Badge>
-
-                <h3 className="text-2xl font-extrabold text-white leading-tight">
-                  AI Pro — Architetture & Agenti Autonomi B2B
-                </h3>
-
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Il percorso avanzato per trasformare l'Intelligenza Artificiale da semplice assistente di testo a un vero e proprio <strong>ecosistema di Agenti Autonomi</strong> capaci di eseguire task aziendali complessi, integrarsi con database, ERP e comunicare tra loro.
-                </p>
-
-                <div className="space-y-2 text-xs text-slate-300 pt-2">
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-purple-400 shrink-0" />
-                    <span><strong>Sistemi Multi-Agente</strong>: Orchestrazione gerarchica, ruoli operativi e delega autonoma</span>
+                {/* Micro Terminal Metriche Architettura B2B */}
+                <div className="rounded-2xl p-4 bg-black/60 border border-white/10 font-mono text-[11px] space-y-2">
+                  <div className="flex items-center justify-between text-slate-400 border-b border-white/5 pb-2">
+                    <span className="flex items-center gap-1.5 text-indigo-400">
+                      <Binary className="h-3.5 w-3.5" />
+                      <span>MODULE_CLASS: MULTI_AGENT_B2B</span>
+                    </span>
+                    <span className="text-amber-400">STATUS: WAITLIST</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-purple-400 shrink-0" />
-                    <span><strong>RAG & Knowledge Base</strong>: Connessione a documenti aziendali, CRM, ERP e vettori</span>
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+                    <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="block text-slate-400 text-[10px]">AGENTI</span>
+                      <strong className="text-white text-xs">Orchestrati</strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="block text-slate-400 text-[10px]">INTEGRAZIONI</span>
+                      <strong className="text-white text-xs">CRM & ERP</strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="block text-slate-400 text-[10px]">STACK</span>
+                      <strong className="text-indigo-400 text-xs">LiveKit & n8n</strong>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-purple-400 shrink-0" />
-                    <span><strong>Agenti Vocali & Centralini</strong>: Integrazione LiveKit, messaggistica e gestione telefonica PMI</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-purple-400 shrink-0" />
-                    <span><strong>Automazione con Webhook & n8n</strong>: Flussi end-to-end senza attrito operativo</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-amber-300 font-semibold">
-                    <Flame className="h-4 w-4 text-amber-400 shrink-0" />
-                    <span>Posti prioritari e coupon sconto esclusivo per gli iscritti in lista</span>
+                </div>
+
+                <div className="space-y-3">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                    Livello Avanzato & PMI
+                  </span>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">
+                    AI Pro — Sistemi Multi-Agente & Automazioni
+                  </h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Dalla generazione di prompt agli ecosistemi di Agenti Autonomi che eseguono task aziendali, si integrano con CRM/ERP e gestiscono flussi complessi.
+                  </p>
+
+                  <div className="space-y-2.5 text-xs text-slate-300 pt-2 border-t border-white/5">
+                    <div className="flex items-center gap-2.5">
+                      <Check className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span><strong>Sistemi Multi-Agente</strong>: Orchestrazione e delega autonoma</span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Check className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span><strong>RAG Aziendale</strong>: Integrazione sicura documenti e database</span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Check className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span><strong>Agenti Vocali PMI</strong>: Centralini e messaggistica intelligente</span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Check className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span><strong>Automazioni n8n</strong>: Flussi end-to-end senza attrito</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -473,59 +563,82 @@ export default function LandingPage() {
               <Button
                 onClick={() => setIsWaitlistModalOpen(true)}
                 variant="outline"
-                className="w-full border-purple-500/40 bg-purple-950/30 hover:bg-purple-900/50 text-purple-200 font-bold h-12 rounded-xl gap-2 shadow-lg shadow-purple-950/30 transition-all hover:scale-[1.01]"
+                className="w-full border-white/10 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-semibold h-12 rounded-xl gap-2 transition-all cursor-pointer text-sm"
               >
-                <BellRing className="h-4 w-4 text-purple-400" />
+                <BellRing className="h-4 w-4 text-blue-400" />
                 <span>Richiedi Accesso Prioritario (Lista d'Attesa)</span>
               </Button>
             </div>
           </div>
 
-          {/* BANNER CERTIFICAZIONE EUROPEA ATOMA SOTTO LE SCHEDE */}
-          <div className="max-w-4xl mx-auto p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900/80 to-emerald-950/40 border border-emerald-500/30 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-            <div className="flex items-center gap-3.5">
-              <div className="h-11 w-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+          {/* BANNER CERTIFICAZIONE ATOMA */}
+          <div
+            data-reveal
+            className="max-w-4xl mx-auto p-5 sm:p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-5 text-center sm:text-left transition-all duration-300 hover:scale-[1.01]"
+            style={{
+              background: 'linear-gradient(180deg, #0b1522 0%, #060c16 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+              borderTop: '1px solid rgba(16, 185, 129, 0.45)',
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="h-11 w-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
                 <ShieldCheck className="h-6 w-6" />
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                  <span className="text-xs sm:text-sm font-extrabold text-white">
+                  <span className="text-sm font-bold text-white">
                     Certificazione Europea delle Competenze
                   </span>
-                  <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase py-0.5 px-2">
+                  <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase font-mono py-0.5 px-2">
                     Ente ATOMA
                   </Badge>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-300 leading-relaxed">
                   Percorso formativo con rilascio di Attestato Ufficiale e Certificazione delle Competenze (Docente Autorizzato ATOMA).
                 </p>
               </div>
             </div>
 
-            <div className="shrink-0">
-              <span className="text-[11px] font-mono font-semibold text-emerald-400/90 bg-emerald-950/60 border border-emerald-800/80 px-3 py-1.5 rounded-lg inline-block">
-                Valido ai fini professionali
-              </span>
-            </div>
-            </div>
+            <span className="text-[11px] font-mono font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-3.5 py-1.5 rounded-lg shrink-0">
+              Valido ai fini professionali
+            </span>
           </div>
-        </div>
+        </section>
 
-          {/* PANNELLO 3: SIMULATORE PIATTAFORMA & PROMPT INTERATTIVO */}
-          <div className="w-full max-w-5xl mx-auto py-6 sm:py-10 flex flex-col justify-center min-h-[75vh] space-y-8">
-            {/* HERO SHOWCASE INTERACTIVE WIDGET - REAL STUDENT PLATFORM SIMULATION */}
-            <div className="relative max-w-5xl mx-auto space-y-4 w-full">
-          {/* Selettore Tab di Simulazione */}
-          <div className="flex flex-wrap items-center justify-between gap-3 px-2">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 text-[10px] uppercase font-bold tracking-wider flex items-center gap-1.5 py-1 px-3">
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-ping" />
-                <span>Simulatore Area Studenti</span>
-              </Badge>
-              <span className="text-xs text-slate-400 hidden sm:inline">Clicca per testare le funzionalità:</span>
-            </div>
+        {/* SEZIONE 3: SIMULATORE PIATTAFORMA & PROMPT INTERATTIVO */}
+        <section data-reveal className="space-y-12">
+          <div className="text-center space-y-3">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-blue-400 bg-blue-950/40 border border-blue-500/20 px-3.5 py-1 rounded-full inline-block">
+              Esperienza Studente
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+              Testa dal vivo la piattaforma e il Tutor @AI
+            </h2>
+            <p className="text-sm text-slate-400 max-w-xl mx-auto">
+              Interfaccia essenziale, player ad alta definizione e supporto neurale istantaneo sui contenuti di studio.
+            </p>
+          </div>
 
-            <div className="flex items-center gap-1.5 bg-slate-900/90 border border-slate-800 p-1 rounded-2xl">
+          <div
+            className="rounded-3xl p-6 sm:p-10 space-y-8 relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(180deg, #0a1120 0%, #050812 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.25)',
+              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.95)',
+            }}
+          >
+            {/* Selettore Tab di Simulazione */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-5">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-mono uppercase tracking-wider text-slate-300 font-semibold">
+                  Ambiente di Studio Interattivo
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 bg-black/40 border border-white/10 p-1 rounded-xl">
               <button
                 type="button"
                 onClick={() => setShowcaseTab('player')}
@@ -730,168 +843,147 @@ export default function LandingPage() {
             )}
           </form>
         </div>
+      </section>
 
-          </div>
 
-          {/* PANNELLO 4: I 20 MODULI VIDEO DEL CORSO */}
-          <div className="w-full max-w-5xl mx-auto py-6 sm:py-10 flex flex-col justify-center min-h-[75vh]">
-            {/* PROGRAMMA COMPLETO 20 MODULI AI START */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 lg:p-10 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-                <div>
-                  <Badge variant="purple" className="text-[10px] uppercase font-bold mb-2">Programma Formativo AI Start</Badge>
-                  <h2 className="text-2xl font-bold text-white">I 20 Moduli Video di AI Start</h2>
-                </div>
-                <span className="text-xs text-slate-400 font-mono font-semibold">20 Lezioni • Player HTML5 HD</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {MODULES_LIST.map((mod) => (
-                  <div key={mod.num} className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-1 hover:border-slate-700 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-bold text-indigo-400">{mod.num}.</span>
-                      <h4 className="text-xs font-bold text-white truncate">{mod.title}</h4>
-                    </div>
-                    <p className="text-[11px] text-slate-400 pl-6 leading-relaxed">
-                      {mod.desc}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* PANNELLO 5: DOCENTI, TEAM & MISSION */}
-          <div className="w-full max-w-5xl mx-auto py-6 sm:py-10 flex flex-col justify-center min-h-[75vh]">
-            {/* SEZIONE DOCENTI & SQUADRA (CHI SIAMO: MARCO, STEFANO, LORENZO) */}
-            <div className="bg-gradient-to-b from-slate-900/90 to-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-10 space-y-8 max-w-5xl mx-auto shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
-
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-            {/* Foto dei 3 Soci / Docenti (Orizzontale / Ambientata) */}
-            <div className="md:col-span-6 flex justify-center">
-              <div className="relative rounded-3xl overflow-hidden border-2 border-indigo-500/40 shadow-2xl shadow-indigo-500/20 w-full group">
-                <img
-                  src="/images/team_docenti.jpg"
-                  alt="I Docenti di Aiutiamoci: Marco, Stefano e Lorenzo"
-                  className="w-full h-auto aspect-video sm:aspect-auto object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none"></div>
-                <div className="absolute bottom-3 left-3 right-3 text-center pointer-events-none">
-                  <span className="text-[11px] font-bold text-white bg-slate-950/85 border border-slate-700/80 px-3.5 py-1 rounded-full backdrop-blur-md shadow-lg">
-                    Marco • Stefano • Lorenzo
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Testo di Presentazione Umana */}
-            <div className="md:col-span-6 space-y-5 text-left">
-              <div className="space-y-2">
-                <Badge variant="purple" className="text-[10px] uppercase font-bold tracking-widest">
-                  Docenti & Fondatori
-                </Badge>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
-                  Persone Reali, Esperienza Pratica e Zero Teoria Astratta
-                </h3>
-              </div>
-
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                Siamo <strong>Marco</strong>, <strong>Stefano</strong> e <strong>Lorenzo</strong>. Abbiamo creato <strong>aiutiamoci.cloud</strong> con un obiettivo chiaro: rendere l&apos;Intelligenza Artificiale uno strumento quotidiano accessibile a professionisti, imprenditori e a chiunque voglia migliorare la propria produttività senza dover imparare a programmare.
-              </p>
-
-              <div className="space-y-3 text-xs text-slate-300 pt-1">
-                <div className="flex items-start gap-3">
-                  <div className="h-6 w-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 border border-indigo-500/30">
-                    <Check className="h-3.5 w-3.5" />
-                  </div>
-                  <div>
-                    <strong className="text-white">Dirette settimanali e Masterclass Live:</strong>
-                    <span className="text-slate-400 block mt-0.5">Ti guidiamo passo passo ogni giovedì sera con sessioni di domande e risposte dal vivo.</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-500/30">
-                    <Check className="h-3.5 w-3.5" />
-                  </div>
-                  <div>
-                    <strong className="text-white">Supporto Continuo su Telegram & Piattaforma:</strong>
-                    <span className="text-slate-400 block mt-0.5">Non sei mai lasciato solo: rispondiamo direttamente noi e il nostro Tutor AI h24 nella community riservata.</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="h-6 w-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 mt-0.5 border border-purple-500/30">
-                    <Check className="h-3.5 w-3.5" />
-                  </div>
-                  <div>
-                    <strong className="text-white">Docenti Autorizzati con Certificazione Europea:</strong>
-                    <span className="text-slate-400 block mt-0.5">Formazione certificata in collaborazione con l&apos;Ente di Formazione ATOMA per un valore professionale reale.</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-          {/* PANNELLO 6: FAQ, SECONDO CERVELLO & FOOTER */}
-          <div className="w-full max-w-5xl mx-auto py-6 sm:py-10 flex flex-col justify-start min-h-[75vh] space-y-12">
-            {/* FAQ ACCORDION */}
-            <div className="space-y-6 max-w-3xl mx-auto w-full">
-              <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold text-white">Domande Frequenti (FAQ)</h2>
-                <p className="text-xs text-slate-400">Tutto quello che c'è da sapere su AI Start e sui nostri corsi.</p>
-              </div>
-
-              <div className="space-y-3">
-                {FAQS.map((faq, idx) => {
-                  const isOpen = openFaqIdx === idx
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => setOpenFaqIdx(isOpen ? null : idx)}
-                      className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 cursor-pointer transition-all hover:border-slate-700"
-                    >
-                      <div className="flex items-center justify-between font-bold text-sm text-white">
-                        <span>{faq.q}</span>
-                        {isOpen ? <ChevronUp className="h-4 w-4 text-indigo-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-                      </div>
-                      {isOpen && (
-                        <p className="text-xs text-slate-400 mt-3 leading-relaxed border-t border-slate-800 pt-3">
-                          {faq.a}
-                        </p>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* SEZIONE SECONDO CERVELLO */}
-            <SecondBrainSection />
-
-            {/* FOOTER INTERNO ALLO SLIDE FINALE */}
-            <footer className="border-t border-slate-800/80 bg-slate-950/60 rounded-3xl p-6 sm:p-8 mt-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-                <div className="flex items-center gap-3">
+        {/* SEZIONE 4: DOCENTI & SQUADRA */}
+        <section data-reveal className="space-y-12">
+          <div
+            className="rounded-3xl p-8 sm:p-12 space-y-8 max-w-5xl mx-auto relative overflow-hidden transition-all duration-300 hover:scale-[1.005]"
+            style={{
+              background: 'linear-gradient(180deg, #0e1526 0%, #060a14 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.95)',
+            }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+              {/* Foto dei 3 Soci / Docenti */}
+              <div className="md:col-span-6 flex justify-center">
+                <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl w-full group">
                   <img
-                    src="/images/logo_full_dark.png"
-                    alt="AI Sviluppo"
-                    className="h-8 w-auto object-contain opacity-80"
+                    src="/images/team_docenti.jpg"
+                    alt="I Docenti di Aiutiamoci: Marco, Stefano e Lorenzo"
+                    className="w-full h-auto aspect-video sm:aspect-auto object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <span>© 2026 <strong>aiutiamoci.cloud</strong>. Tutti i diritti riservati.</span>
-                </div>
-                <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 font-medium">
-                  <button onClick={() => setIsStudentModalOpen(true)} className="hover:text-slate-300 transition-colors">Area Studenti</button>
-                  <button onClick={() => setIsWaitlistModalOpen(true)} className="hover:text-slate-300 transition-colors">Corso Avanzato AI Pro</button>
-                  <Link href="/login" className="hover:text-slate-300 transition-colors">Team Login</Link>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-3 left-3 right-3 text-center pointer-events-none">
+                    <span className="text-[11px] font-mono font-bold text-white bg-black/80 border border-white/20 px-3.5 py-1 rounded-full backdrop-blur-md">
+                      Marco • Stefano • Lorenzo
+                    </span>
+                  </div>
                 </div>
               </div>
-            </footer>
+
+              {/* Presentazione Umana */}
+              <div className="md:col-span-6 space-y-5 text-left">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-blue-400 bg-blue-950/40 border border-blue-500/20 px-3 py-1 rounded-full inline-block">
+                    Docenti & Fondatori
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-tight">
+                    Persone Reali, Esperienza Pratica e Zero Teoria Astratta
+                  </h3>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                  Siamo <strong>Marco</strong>, <strong>Stefano</strong> e <strong>Lorenzo</strong>. Abbiamo creato <strong>aiutiamoci.cloud</strong> con un obiettivo chiaro: rendere l'Intelligenza Artificiale uno strumento quotidiano accessibile a professionisti e PMI senza dover imparare a programmare.
+                </p>
+
+                <div className="space-y-3 text-xs text-slate-300 pt-1">
+                  <div className="flex items-start gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5 border border-blue-500/30">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                      <strong className="text-white">Dirette settimanali e Masterclass Live:</strong>
+                      <span className="text-slate-400 block mt-0.5">Sessioni periodiche di Q&A per analizzare casi d'uso concreti sul campo.</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-500/30">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                      <strong className="text-white">Supporto Continuo su Telegram & Piattaforma:</strong>
+                      <span className="text-slate-400 block mt-0.5">Canale dedicato con i docenti e il Tutor @AI attivo per qualsiasi domanda.</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="h-6 w-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5 border border-amber-500/30">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                      <strong className="text-white">Docenti Autorizzati ATOMA:</strong>
+                      <span className="text-slate-400 block mt-0.5">Formazione certificata a livello europeo per un valore reale e spendibile.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </HorizontalScrollLayout>
+        </section>
+
+        {/* SEZIONE 5: SECONDO CERVELLO */}
+        <section data-reveal className="space-y-12">
+          <SecondBrainSection />
+        </section>
+
+        {/* SEZIONE 6: FAQ ACCORDION */}
+        <section data-reveal className="space-y-8 max-w-3xl mx-auto w-full">
+          <div className="text-center space-y-2">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-slate-400">
+              Chiarezza & Trasparenza
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Domande Frequenti (FAQ)
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {FAQS.map((faq, idx) => {
+              const isOpen = openFaqIdx === idx
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setOpenFaqIdx(isOpen ? null : idx)}
+                  className="p-5 rounded-2xl bg-[#0a1120] border border-white/10 cursor-pointer transition-all hover:border-white/20"
+                >
+                  <div className="flex items-center justify-between font-bold text-sm text-white">
+                    <span>{faq.q}</span>
+                    {isOpen ? <ChevronUp className="h-4 w-4 text-blue-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                  </div>
+                  {isOpen && (
+                    <p className="text-xs text-slate-300 mt-3 leading-relaxed border-t border-white/5 pt-3">
+                      {faq.a}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* FOOTER SEMANTICO VERTICALE */}
+        <footer className="border-t border-white/10 pt-10 pb-6 text-xs text-slate-500">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <img
+                src="/images/logo_icon_dark.png"
+                alt="AI Sviluppo"
+                className="h-7 w-7 object-contain opacity-80"
+              />
+              <span>© 2026 <strong>aiutiamoci.cloud</strong>. Tutti i diritti riservati.</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 font-medium">
+              <button onClick={() => setIsStudentModalOpen(true)} className="hover:text-slate-300 transition-colors cursor-pointer">Area Studenti</button>
+              <button onClick={() => setIsWaitlistModalOpen(true)} className="hover:text-slate-300 transition-colors cursor-pointer">Corso Avanzato AI Pro</button>
+              <Link href="/login" className="hover:text-slate-300 transition-colors">Team Login</Link>
+            </div>
+          </div>
+        </footer>
       </main>
 
       {/* Cookie Consent Banner & Legal Modal */}

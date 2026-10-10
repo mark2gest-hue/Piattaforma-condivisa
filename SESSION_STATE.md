@@ -14,8 +14,9 @@ Stato corrente:
     - Loghi quadrati identici `h-10 w-10` (`/images/logo_icon_dark.png`) per entrambe le card, rimossi tag URL laterali.
   - Header minimale: Logo a sinistra, pulsanti essenziali `[Ho un codice]` (con modal di riscatto/accesso corsisti) e `[Accedi]` a destra.
   - Footer con link legali e conformità GDPR.
-  - Build Next.js 15 compilato con successo (route statica `/` a 5.75 kB).
+  - Build Next.js 15 compilato con successo (route statica `/` a 5.73 kB).
   - Deploy completato su VPS Oracle (`80.225.81.150`), PM2 `aiutiamoci` riavviato e online su [https://aiutiamoci.cloud](https://aiutiamoci.cloud).
+  - **Commit 60bf144**: Etichette pulsanti gateway aggiornate a "Vai a Aiutiamoci Accademy" e "Vai a Aiutiamoci Impresa", deployato e verificato online.
 - **Prossimo Task**: Riprogettazione ed eliminazione AI Slop della landing page Academy (`src/app/academy/page.tsx`), allineandola allo standard visivo pulito e minimale.
 
   - Il servizio Node.js su porta 3008 sulla VPS (129.152.10.82) non era in esecuzione nel demone PM2, causando errore HTTP 502 (Bad Gateway) da Nginx.
