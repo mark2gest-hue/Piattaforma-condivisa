@@ -1,8 +1,23 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-08 14:46
-Stato corrente: 
-- **Ripristino Video Studio Factory (`video.aiutiamoci.cloud`) & Sidebar COMPLETATO**:
+Ultimo aggiornamento: 2026-10-10 12:08
+Stato corrente:
+- **Ridisegno Gateway A Due Vie su `aiutiamoci.cloud` (Landing Page Radice `/`) COMPLETATO & DEPLOYATO**:
+  - Eliminato completamente il vecchio layout con AI Slop, menu dispersivi e ragnatele.
+  - Implementata architettura essenziale e minimale a due vie simmetriche:
+    1. **Aiutiamoci Academy** (`/corsi` / `/academy`): formazione pratica per privati e dipendenti, lezioni guidate, certificazione ATOMA.
+    2. **Aiutiamoci Impresa** (link esterno a `https://www.mark2.cloud`): soluzioni agenti autonomi, assistenti vocali, NetworkDiag Ops Pro e automazioni per PMI.
+  - Estetica ad altissima fedeltà e profondità fisica stile Apple / Bang & Olufsen / Linear:
+    - Sfondo organico a vignettatura scura (`#050811` -> `#030509`) con micro-reticolo tecnico a contrasto impercettibile.
+    - Luce radente zenitale sui bordi superiori delle card (`border-top: 1px solid rgba(255,255,255,0.35)`).
+    - Ombre fisiche multistrato ad alta presenza e alone backlight diffuso retrostante morbido.
+    - Loghi quadrati identici `h-10 w-10` (`/images/logo_icon_dark.png`) per entrambe le card, rimossi tag URL laterali.
+  - Header minimale: Logo a sinistra, pulsanti essenziali `[Ho un codice]` (con modal di riscatto/accesso corsisti) e `[Accedi]` a destra.
+  - Footer con link legali e conformità GDPR.
+  - Build Next.js 15 compilato con successo (route statica `/` a 5.75 kB).
+  - Deploy completato su VPS Oracle (`80.225.81.150`), PM2 `aiutiamoci` riavviato e online su [https://aiutiamoci.cloud](https://aiutiamoci.cloud).
+- **Prossimo Task**: Riprogettazione ed eliminazione AI Slop della landing page Academy (`src/app/academy/page.tsx`), allineandola allo standard visivo pulito e minimale.
+
   - Il servizio Node.js su porta 3008 sulla VPS (129.152.10.82) non era in esecuzione nel demone PM2, causando errore HTTP 502 (Bad Gateway) da Nginx.
   - Avviato `video-studio` sotto PM2 daemon (`ecosystem.config.cjs`) e salvato lo stato persistente (`pm2 save`). Verificato codice HTTP 200 su `https://video.aiutiamoci.cloud`.
   - Aggiunto link diretto a **Video Studio Factory** anche nel menu laterale della piattaforma ([src/components/layout/sidebar.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/src/components/layout/sidebar.tsx)) sotto la sezione *Progetti & Marketing* con auto-login PIN 2026.
