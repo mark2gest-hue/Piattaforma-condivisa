@@ -722,6 +722,7 @@ function CorsiInnerContent() {
   const [isAiThinking, setIsAiThinking] = useState(false)
 
   const [activeTab, setActiveTab] = useState<'player' | 'news-tutorial' | 'zoom' | 'bonus' | 'tasks' | 'students' | 'login'>('player')
+  const [isTabDropdownOpen, setIsTabDropdownOpen] = useState(false)
 
   // Caricamento persistente da localStorage all'avvio
   useEffect(() => {
@@ -2062,130 +2063,92 @@ function CorsiInnerContent() {
         </div>
       </div>
 
-      {/* Selector Tabs - Dropdown compatto & Navigazione pulita */}
-      <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
-        {/* Vista Mobile & Tablet: Menu a Tendina (Select Compatto) */}
-        <div className="md:hidden">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
-            Sezione Corso Attiva
-          </label>
-          <div className="relative">
-            <select
-              value={activeTab}
-              onChange={(e) => {
-                const val = e.target.value as any;
-                setActiveTab(val);
-                if (val === 'students') {
-                  loadCourseRegistrations();
-                  loadStudentCodes();
-                }
-              }}
-              className="w-full appearance-none bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-semibold rounded-xl px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs cursor-pointer"
+      {/* Selector Tabs - Menu a Discesa Compatto & Riga Singola */}
+      <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center justify-between gap-4 relative">
+        {/* Dropdown Menu Compatto */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIsTabDropdownOpen(prev => !prev)}
+            className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-md transition-all cursor-pointer"
+          >
+            {activeTab === 'player' && <PlayCircle className="h-4 w-4" />}
+            {activeTab === 'news-tutorial' && <Sparkles className="h-4 w-4 text-amber-300" />}
+            {activeTab === 'zoom' && <VideoIcon className="h-4 w-4" />}
+            {activeTab === 'bonus' && <Gift className="h-4 w-4" />}
+            {activeTab === 'tasks' && <GraduationCap className="h-4 w-4 text-amber-300" />}
+            {activeTab === 'students' && <Users className="h-4 w-4" />}
+            {activeTab === 'login' && <Key className="h-4 w-4" />}
+
+            <span>
+              {activeTab === 'player' && `Player ${selectedCourseId === 'ai-pro' ? 'AI Pro (20 Moduli)' : 'AI Start (20 Lezioni)'}`}
+              {activeTab === 'news-tutorial' && `News & Tutorial (${bonusVideos.length})`}
+              {activeTab === 'zoom' && `Registrazioni Zoom (${zoomRecordings.length})`}
+              {activeTab === 'bonus' && `Risorse & Manuali (${resources.length})`}
+              {activeTab === 'tasks' && 'I Miei Compiti & Attestato'}
+              {activeTab === 'students' && `Registro Studenti (${courseRegistrations.length || registrations.length})`}
+              {activeTab === 'login' && 'Accedi come Studente'}
+            </span>
+
+            <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${isTabDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Tendina Aperta */}
+          {isTabDropdownOpen && (
+            <div
+              className="absolute left-0 top-full mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150"
             >
-              <option value="player">🎬 Player {selectedCourseId === 'ai-pro' ? 'AI Pro (20 Moduli)' : 'AI Start (20 Lezioni)'}</option>
-              <option value="news-tutorial">✨ News & Tutorial ({bonusVideos.length}) [Bonus]</option>
-              {isTeamMember && <option value="zoom">📹 Registrazioni Zoom ({zoomRecordings.length}) [Admin]</option>}
-              <option value="bonus">🎁 Risorse & Manuali ({resources.length})</option>
-              <option value="tasks">🎓 I Miei Compiti & Attestato</option>
-              {isTeamMember && <option value="students">👥 Registro Codici & Studenti</option>}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* Vista Desktop: Bottoni uniformi a griglia/flusso compatto (Zero Scorrimento Scomodo) */}
-        <div className="hidden md:flex items-center flex-wrap gap-2">
-          <button
-            onClick={() => setActiveTab('player')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
-              activeTab === 'player'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <PlayCircle className="h-4 w-4" />
-            <span>Player {selectedCourseId === 'ai-pro' ? 'AI Pro (20 Moduli)' : 'AI Start (20 Lezioni)'}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('news-tutorial')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
-              activeTab === 'news-tutorial'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Sparkles className="h-4 w-4 text-amber-400" />
-            <span>News & Tutorial ({bonusVideos.length})</span>
-            <span className="px-1.5 py-0.5 text-[9px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-md">Bonus</span>
-          </button>
-
-          {isTeamMember && (
-            <button
-              onClick={() => setActiveTab('zoom')}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
-                activeTab === 'zoom'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              <VideoIcon className="h-4 w-4" />
-              <span>Registrazioni Zoom ({zoomRecordings.length})</span>
-              <span className="px-1.5 py-0.5 text-[9px] font-bold bg-purple-500/20 text-purple-400 rounded-md">Admin</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => setActiveTab('bonus')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
-              activeTab === 'bonus'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Gift className="h-4 w-4" />
-            <span>Risorse & Manuali ({resources.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('tasks')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-              activeTab === 'tasks'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <GraduationCap className="h-4 w-4 text-amber-400" />
-            <span>I Miei Compiti & Attestato</span>
-          </button>
-
-          <Link
-            href="/servizi-ai"
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-800/60 shadow-xs ml-auto"
-          >
-            <Sparkles className="h-4 w-4 text-amber-500" />
-            <span>Servizi AI</span>
-            <ExternalLink className="h-3 w-3 opacity-60" />
-          </Link>
-
-          {isTeamMember && (
-            <button
-              onClick={() => {
-                setActiveTab('students')
-                loadCourseRegistrations()
-                loadStudentCodes()
-              }}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
-                activeTab === 'students'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              <Users className="h-4 w-4" />
-              <span>Registro Studenti ({courseRegistrations.length || registrations.length})</span>
-            </button>
+              {[
+                { id: 'player', label: `Player ${selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start'}`, icon: PlayCircle, badge: 'Video' },
+                { id: 'news-tutorial', label: `News & Tutorial (${bonusVideos.length})`, icon: Sparkles, badge: 'Bonus' },
+                ...(isTeamMember ? [{ id: 'zoom', label: `Registrazioni Zoom (${zoomRecordings.length})`, icon: VideoIcon, badge: 'Admin' }] : []),
+                { id: 'bonus', label: `Risorse & Manuali (${resources.length})`, icon: Gift, badge: 'PDF' },
+                { id: 'tasks', label: 'I Miei Compiti & Attestato', icon: GraduationCap, badge: 'Quiz' },
+                ...(isTeamMember ? [{ id: 'students', label: `Registro Studenti (${courseRegistrations.length || registrations.length})`, icon: Users, badge: 'Team' }] : []),
+              ].map(item => {
+                const Icon = item.icon;
+                const isSelected = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab(item.id as any);
+                      setIsTabDropdownOpen(false);
+                      if (item.id === 'students') {
+                        loadCourseRegistrations();
+                        loadStudentCodes();
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Icon className={`h-4 w-4 ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                      <span>{item.label}</span>
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-500">
+                      {item.badge}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
+
+        {/* Link Servizi AI a Destra */}
+        <Link
+          href="/servizi-ai"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-800/60 shadow-xs transition-all"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+          <span>Servizi AI</span>
+          <ExternalLink className="h-3 w-3 opacity-60" />
+        </Link>
       </div>
 
       {/* TAB: LOGIN CON CODICE STUDENTE */}
