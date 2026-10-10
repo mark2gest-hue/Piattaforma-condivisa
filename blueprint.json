@@ -1,0 +1,185 @@
+{
+  "version": "1.0",
+  "project": "Piattaforma Condivisa",
+  "lastUpdated": "2026-10-10T15:32:00Z",
+  "nodes": [
+    {
+      "id": "area-academy",
+      "type": "areaNode",
+      "position": { "x": 40, "y": 180 },
+      "data": {
+        "label": "Academy & Course Hub",
+        "code": "ACD-01",
+        "category": "area",
+        "description": "Catalogo corsi aziendali, moduli didattici, gestione iscrizioni e tracking presenze.",
+        "status": "done",
+        "states": ["CourseCatalog", "ModuleSchedule", "Enrollment"],
+        "actions": ["EnrollStudent", "UnlockNextLesson", "TrackAttendance"],
+        "filePath": "/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/src/app/actions/student.ts",
+        "agentTaskPrompt": "Verifica le Server Actions in src/app/actions/student.ts per garantire l'accesso condizionale alle lezioni sbloccate."
+      }
+    },
+    {
+      "id": "agg-student",
+      "type": "aggregateNode",
+      "position": { "x": 380, "y": 50 },
+      "data": {
+        "label": "StudentProfile & Auth",
+        "code": "AGG-STU",
+        "category": "aggregate",
+        "description": "Profilo corsista, credenziali protette con Supabase Auth e isolamento multi-tenant RLS.",
+        "status": "done",
+        "rules": [
+          "INV-1: RLS obbligatoria per tenant aziendale",
+          "INV-2: Email verificata pre-accesso",
+          "INV-3: Ruolo studente vs docente separato"
+        ],
+        "states": ["Invited", "Active", "Suspended", "Graduated"],
+        "filePath": "/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/src/middleware.ts",
+        "agentTaskPrompt": "Assicura che il middleware.ts filtri rigorosamente le route protette /academy e /(dashboard)."
+      }
+    },
+    {
+      "id": "agg-workshop",
+      "type": "aggregateNode",
+      "position": { "x": 380, "y": 300 },
+      "data": {
+        "label": "Workshop & Agent Lab",
+        "code": "AGG-WKS",
+        "category": "aggregate",
+        "description": "Esercitazioni pratiche hands-on con agenti AI, prompt template e sandbox.",
+        "status": "done",
+        "rules": [
+          "INV-1: BYOK locale o quota protetta",
+          "INV-2: Limite rate 30 req/min",
+          "INV-3: Sanitizzazione prompt utente"
+        ],
+        "states": ["Draft", "RunningLab", "Submitted", "Evaluated"],
+        "filePath": "/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/src/app/actions/agent-workshop.ts",
+        "agentTaskPrompt": "Ottimizza la gestione delle quote API nel workshop agenti in src/app/actions/agent-workshop.ts."
+      }
+    },
+    {
+      "id": "agg-certificates",
+      "type": "aggregateNode",
+      "position": { "x": 730, "y": 80 },
+      "data": {
+        "label": "CertificateEngine",
+        "code": "AGG-CRT",
+        "category": "aggregate",
+        "description": "Generatore certificati ATOMA 16 Ore con QR verification e hashing crittografico.",
+        "status": "done",
+        "rules": [
+          "INV-1: Presenza minima 80% certificata",
+          "INV-2: Hash SHA-256 univoco",
+          "INV-3: Immutabilità certificato emesso"
+        ],
+        "states": ["Eligible", "Generated", "Revoked"],
+        "filePath": "/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/DOSSIER_CERTIFICAZIONE_ATOMA_16_ORE.md",
+        "agentTaskPrompt": "Verifica l'algoritmo di firma e generazione del PDF di attestato."
+      }
+    },
+    {
+      "id": "agg-video",
+      "type": "aggregateNode",
+      "position": { "x": 730, "y": 340 },
+      "data": {
+        "label": "Video & Dispense Master",
+        "code": "AGG-MED",
+        "category": "aggregate",
+        "description": "Streaming video lezioni ospitate su VPS Oracle (/var/www/videos/) e viewer dispense HTML.",
+        "status": "done",
+        "rules": [
+          "INV-1: Token di playback firmato a tempo",
+          "INV-2: No download diretto mp4 non autorizzato",
+          "INV-3: Bookmark progresso sincronizzato ogni 10s"
+        ],
+        "states": ["NotStarted", "Watching", "Completed"],
+        "filePath": "/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/src/app/academy/page.tsx",
+        "agentTaskPrompt": "Rafforza il controllo token temporaneo per lo stream Nginx su VPS Oracle."
+      }
+    },
+    {
+      "id": "evt-course-completed",
+      "type": "eventNode",
+      "position": { "x": 1080, "y": 140 },
+      "data": {
+        "label": "CourseGraduated",
+        "code": "EVT-GRD",
+        "category": "event",
+        "description": "Evento emesso al superamento del test finale: scatena invio attestato via email e notifica HR.",
+        "status": "done",
+        "filePath": "/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/src/app/actions/notifications.ts",
+        "agentTaskPrompt": "Aggiungi il webhook verso n8n per l'archiviazione del certificato emesso nel CRM aziendale."
+      }
+    },
+    {
+      "id": "evt-progress-sync",
+      "type": "eventNode",
+      "position": { "x": 1080, "y": 360 },
+      "data": {
+        "label": "ProgressTelemetrySync",
+        "code": "EVT-TEL",
+        "category": "event",
+        "description": "Sincronizzazione in tempo reale dello stato apprendimento verso Supabase e Cockpit HELM.",
+        "status": "done",
+        "filePath": "/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/src/app/actions/student-workshop.ts",
+        "agentTaskPrompt": "Aggiorna il payload di telemetria corsisti verso il database."
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-acad-stu",
+      "source": "area-academy",
+      "target": "agg-student",
+      "animated": true,
+      "label": "manages enrollment",
+      "style": { "stroke": "#38bdf8", "strokeWidth": 2 },
+      "markerEnd": { "type": "arrowclosed", "color": "#38bdf8" }
+    },
+    {
+      "id": "e-acad-wks",
+      "source": "area-academy",
+      "target": "agg-workshop",
+      "animated": true,
+      "label": "supplies materials",
+      "style": { "stroke": "#38bdf8", "strokeWidth": 2 },
+      "markerEnd": { "type": "arrowclosed", "color": "#38bdf8" }
+    },
+    {
+      "id": "e-stu-crt",
+      "source": "agg-student",
+      "target": "agg-certificates",
+      "label": "grants eligibility",
+      "style": { "stroke": "#fbbf24", "strokeWidth": 2 },
+      "markerEnd": { "type": "arrowclosed", "color": "#fbbf24" }
+    },
+    {
+      "id": "e-wks-med",
+      "source": "agg-workshop",
+      "target": "agg-video",
+      "label": "streams recording",
+      "style": { "stroke": "#fbbf24", "strokeWidth": 2 },
+      "markerEnd": { "type": "arrowclosed", "color": "#fbbf24" }
+    },
+    {
+      "id": "e-crt-ev1",
+      "source": "agg-certificates",
+      "target": "evt-course-completed",
+      "animated": true,
+      "label": "dispatches graduation",
+      "style": { "stroke": "#fb7185", "strokeWidth": 2 },
+      "markerEnd": { "type": "arrowclosed", "color": "#fb7185" }
+    },
+    {
+      "id": "e-med-ev2",
+      "source": "agg-video",
+      "target": "evt-progress-sync",
+      "animated": true,
+      "label": "streams analytics",
+      "style": { "stroke": "#fb7185", "strokeWidth": 2 },
+      "markerEnd": { "type": "arrowclosed", "color": "#fb7185" }
+    }
+  ]
+}
