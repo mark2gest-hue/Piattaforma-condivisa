@@ -17,7 +17,17 @@ Stato corrente:
   - Build Next.js 15 compilato con successo (route statica `/` a 5.73 kB).
   - Deploy completato su VPS Oracle (`80.225.81.150`), PM2 `aiutiamoci` riavviato e online su [https://aiutiamoci.cloud](https://aiutiamoci.cloud).
   - **Commit 60bf144**: Etichette pulsanti gateway aggiornate a "Vai a Aiutiamoci Accademy" e "Vai a Aiutiamoci Impresa", deployato e verificato online.
-- **Prossimo Task**: Riprogettazione ed eliminazione AI Slop della landing page Academy (`src/app/academy/page.tsx`), allineandola allo standard visivo pulito e minimale.
+- **Ridisegno Landing Page Academy (`src/app/academy/page.tsx`) COMPLETATO & DEPLOYATO**:
+  - Eliminato completamente il look "AI Slop" generico (immagini Midjourney sintetiche con robot/ologrammi, gradienti fluo disordinati).
+  - Eliminata la slide rigida con l'elenco statico dei 20 moduli (`MODULES_LIST`).
+  - Implementata struttura verticale a sezioni con animazioni 3D Reveal graduali (`perspective: 1000px`, scale ed elevazione progressiva allo scroll).
+  - Parallasse multi-livello fluida sui livelli di sfondo (`0.12x`, `0.22x`, `0.30x`).
+  - Micro-terminal con metriche reali (ore effettive, stack concreto LiveKit/n8n/Next.js, badge ufficiali ATOMA).
+  - Autenticità del team docenti (Marco, Stefano, Lorenzo) con credenziali concrete.
+  - Commit `2da4708`, push su `main` e deploy live con successo su VPS Oracle (`80.225.81.150`).
+  - Endpoint verificato live: **HTTP/2 200 OK** su [https://aiutiamoci.cloud/academy](https://aiutiamoci.cloud/academy).
+- **Prossimo Task**: Riprogettazione ed allineamento sito **Aiutiamoci Impresa** (`https://www.mark2.cloud` nel repository `mark2gest-hue/mark2-ai-site` / `/Users/marco/Sviluppo/Progetti/Progetto sito mark2gest`).
+
 
   - Il servizio Node.js su porta 3008 sulla VPS (129.152.10.82) non era in esecuzione nel demone PM2, causando errore HTTP 502 (Bad Gateway) da Nginx.
   - Avviato `video-studio` sotto PM2 daemon (`ecosystem.config.cjs`) e salvato lo stato persistente (`pm2 save`). Verificato codice HTTP 200 su `https://video.aiutiamoci.cloud`.
