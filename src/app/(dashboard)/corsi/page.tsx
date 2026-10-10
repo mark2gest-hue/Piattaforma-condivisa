@@ -723,6 +723,7 @@ function CorsiInnerContent() {
 
   const [activeTab, setActiveTab] = useState<'player' | 'news-tutorial' | 'zoom' | 'bonus' | 'tasks' | 'students' | 'login'>('player')
   const [isTabDropdownOpen, setIsTabDropdownOpen] = useState(false)
+  const [isStudentSubTabDropdownOpen, setIsStudentSubTabDropdownOpen] = useState(false)
 
   // Caricamento persistente da localStorage all'avvio
   useEffect(() => {
@@ -3903,78 +3904,120 @@ function CorsiInnerContent() {
             </div>
           </div>
 
-          {/* Sotto-Schede: In Attesa vs Studenti Corso 1 vs Iscritti Corso 2 vs Lista d'Attesa */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
-            <div className="flex flex-wrap items-center gap-2">
+          {/* Sotto-Schede: Dropdown Menu a Discesa Compatto */}
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 relative">
+            <div className="relative">
               <button
-                onClick={() => setStudentSubTab('registrations')}
-                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'registrations'
-                    ? 'bg-amber-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
+                type="button"
+                onClick={() => setIsStudentSubTabDropdownOpen(!isStudentSubTabDropdownOpen)}
+                className="flex items-center gap-2.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 shadow-xs hover:bg-amber-500/15 transition-all cursor-pointer"
               >
-                <ClipboardList className="h-4 w-4" />
-                <span>⏳ In Attesa ({courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length})</span>
-                {courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length > 0 && (
-                  <span className="px-1.5 py-0.2 bg-white text-amber-700 text-[10px] rounded-full font-black">
+                {studentSubTab === 'registrations' && <ClipboardList className="h-4 w-4 text-amber-500" />}
+                {studentSubTab === 'active' && <Users className="h-4 w-4 text-emerald-500" />}
+                {studentSubTab === 'pro_students' && <Sparkles className="h-4 w-4 text-indigo-500" />}
+                {studentSubTab === 'waitlist' && <Clock className="h-4 w-4 text-purple-500" />}
+                {studentSubTab === 'b2b_cohorts' && <span className="text-sm">🏢</span>}
+
+                <span>
+                  {studentSubTab === 'registrations' && `⏳ In Attesa (${courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length})`}
+                  {studentSubTab === 'active' && `🎓 Studenti Corso 1 - AI Start (${registrations.filter(r => r.accessTier === 'ai-start' || !r.accessTier).length})`}
+                  {studentSubTab === 'pro_students' && `🚀 Iscritti Corso 2 - AI Pro (${registrations.filter(r => r.accessTier === 'ai-pro' || r.accessTier === 'both').length})`}
+                  {studentSubTab === 'waitlist' && `📋 Lista d'Attesa Leads (${waitlistLeads.length})`}
+                  {studentSubTab === 'b2b_cohorts' && `Aziende & Corsi Custom (${corporateCohorts.length})`}
+                </span>
+
+                {studentSubTab === 'registrations' && courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length > 0 && (
+                  <span className="px-1.5 py-0.2 bg-amber-500 text-white text-[10px] rounded-full font-black">
                     NEW
                   </span>
                 )}
+
+                <ChevronDown className={`h-4 w-4 ml-1 text-slate-400 transition-transform ${isStudentSubTabDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              <button
-                onClick={() => setStudentSubTab('active')}
-                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'active'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-              >
-                <Users className="h-4 w-4" />
-                <span>🎓 Studenti Corso 1 - AI Start ({registrations.filter(r => r.accessTier === 'ai-start' || !r.accessTier).length})</span>
-              </button>
+              {/* Tendina Sotto-Schede */}
+              {isStudentSubTabDropdownOpen && (
+                <div
+                  className="absolute left-0 top-full mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150"
+                >
+                  {[
+                    {
+                      id: 'registrations',
+                      label: `In Attesa (${courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length})`,
+                      icon: ClipboardList,
+                      badge: 'NEW',
+                      hasBadge: courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length > 0,
+                      color: 'text-amber-500',
+                    },
+                    {
+                      id: 'active',
+                      label: `Studenti Corso 1 - AI Start (${registrations.filter(r => r.accessTier === 'ai-start' || !r.accessTier).length})`,
+                      icon: Users,
+                      color: 'text-emerald-500',
+                    },
+                    {
+                      id: 'pro_students',
+                      label: `Iscritti Corso 2 - AI Pro (${registrations.filter(r => r.accessTier === 'ai-pro' || r.accessTier === 'both').length})`,
+                      icon: Sparkles,
+                      color: 'text-indigo-500',
+                    },
+                    {
+                      id: 'waitlist',
+                      label: `Lista d'Attesa Leads (${waitlistLeads.length})`,
+                      icon: Clock,
+                      color: 'text-purple-500',
+                    },
+                    {
+                      id: 'b2b_cohorts',
+                      label: `Aziende & Corsi Custom (${corporateCohorts.length})`,
+                      isEmoji: true,
+                      emoji: '🏢',
+                    },
+                  ].map((item) => {
+                    const isSelected = studentSubTab === item.id;
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setStudentSubTab(item.id as any);
+                          setIsStudentSubTabDropdownOpen(false);
+                          if (item.id === 'waitlist') {
+                            loadWaitlistLeads();
+                          } else if (item.id === 'b2b_cohorts') {
+                            setLoadingCohorts(true);
+                            getCorporateCohortsAction().then((res) => {
+                              if (res.success && res.data) setCorporateCohorts(res.data);
+                              setLoadingCohorts(false);
+                            });
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          {item.isEmoji ? (
+                            <span className="text-sm">{item.emoji}</span>
+                          ) : (
+                            Icon && <Icon className={`h-4 w-4 ${item.color || ''}`} />
+                          )}
+                          <span>{item.label}</span>
+                        </span>
 
-              <button
-                onClick={() => setStudentSubTab('pro_students')}
-                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'pro_students'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>🚀 Iscritti Corso 2 - AI Pro ({registrations.filter(r => r.accessTier === 'ai-pro' || r.accessTier === 'both').length})</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setStudentSubTab('waitlist')
-                  loadWaitlistLeads()
-                }}
-                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'waitlist'
-                    ? 'bg-purple-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-              >
-                <Clock className="h-4 w-4" />
-                <span>📋 Lista d'Attesa Leads ({waitlistLeads.length})</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setStudentSubTab('b2b_cohorts')
-                  setLoadingCohorts(true)
-                  getCorporateCohortsAction().then((res) => {
-                    if (res.success && res.data) setCorporateCohorts(res.data)
-                    setLoadingCohorts(false)
-                  })
-                }}
-                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'b2b_cohorts'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-              >
-                <span>🏢</span>
-                <span>Aziende & Corsi Custom ({corporateCohorts.length})</span>
-              </button>
+                        {item.hasBadge && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white">
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
