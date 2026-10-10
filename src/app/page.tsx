@@ -178,7 +178,7 @@ export default function GatewayPage() {
             <div className="pt-2">
               <Link href="/academy" className="block w-full">
                 <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold h-12.5 rounded-xl gap-2 text-sm shadow-lg shadow-blue-950/60 transition-all cursor-pointer">
-                  <span>Vai all'Academy</span>
+                  <span>Vai a Aiutiamoci Accademy</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -244,7 +244,7 @@ export default function GatewayPage() {
                 className="block w-full"
               >
                 <Button className="w-full bg-slate-800/90 hover:bg-slate-700/90 text-white border border-white/10 font-semibold h-12.5 rounded-xl gap-2 text-sm shadow-lg shadow-black/60 transition-all cursor-pointer">
-                  <span>Scopri le Soluzioni Mark2</span>
+                  <span>Vai a Aiutiamoci Impresa</span>
                   <ExternalLink className="h-4 w-4 text-slate-400" />
                 </Button>
               </a>
