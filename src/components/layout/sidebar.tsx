@@ -338,14 +338,14 @@ export function Sidebar({ isOpenMobile = false, onCloseMobile }: SidebarProps) {
                   {item.badge && (
                     <span
                       className={cn(
-                        'text-[10px] font-bold px-2 py-0.5 rounded-full uppercase',
+                        'text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap shrink-0 text-center transition-all',
                         item.badge === 'Live'
                           ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse'
                           : item.badge === 'AI'
                           ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold'
                           : isActive
-                          ? 'bg-white text-blue-600'
-                          : 'bg-blue-600 text-white'
+                          ? 'bg-white text-blue-600 shadow-xs'
+                          : 'bg-blue-600/25 text-blue-300 border border-blue-500/30'
                       )}
                     >
                       {item.badge}

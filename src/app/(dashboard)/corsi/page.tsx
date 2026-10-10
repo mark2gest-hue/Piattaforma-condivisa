@@ -42,6 +42,7 @@ import {
   Search,
   Sun,
   Moon,
+  ChevronDown,
 } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { Button } from '@/components/ui/button'
@@ -2061,94 +2062,130 @@ function CorsiInnerContent() {
         </div>
       </div>
 
-      {/* Selector Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-1 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('player')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${activeTab === 'player'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-        >
-          <PlayCircle className="h-4 w-4" />
-          <span>Player {selectedCourseId === 'ai-pro' ? 'AI Pro (20 Moduli)' : 'AI Start (20 Lezioni)'}</span>
-        </button>
+      {/* Selector Tabs - Dropdown compatto & Navigazione pulita */}
+      <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
+        {/* Vista Mobile & Tablet: Menu a Tendina (Select Compatto) */}
+        <div className="md:hidden">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+            Sezione Corso Attiva
+          </label>
+          <div className="relative">
+            <select
+              value={activeTab}
+              onChange={(e) => {
+                const val = e.target.value as any;
+                setActiveTab(val);
+                if (val === 'students') {
+                  loadCourseRegistrations();
+                  loadStudentCodes();
+                }
+              }}
+              className="w-full appearance-none bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-semibold rounded-xl px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs cursor-pointer"
+            >
+              <option value="player">🎬 Player {selectedCourseId === 'ai-pro' ? 'AI Pro (20 Moduli)' : 'AI Start (20 Lezioni)'}</option>
+              <option value="news-tutorial">✨ News & Tutorial ({bonusVideos.length}) [Bonus]</option>
+              {isTeamMember && <option value="zoom">📹 Registrazioni Zoom ({zoomRecordings.length}) [Admin]</option>}
+              <option value="bonus">🎁 Risorse & Manuali ({resources.length})</option>
+              <option value="tasks">🎓 I Miei Compiti & Attestato</option>
+              {isTeamMember && <option value="students">👥 Registro Codici & Studenti</option>}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+          </div>
+        </div>
 
-        <button
-          onClick={() => setActiveTab('news-tutorial')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${activeTab === 'news-tutorial'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-        >
-          <Sparkles className="h-4 w-4 text-amber-400" />
-          <span>News & Tutorial ({bonusVideos.length})</span>
-          <span className="px-1.5 py-0.5 text-[9px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full">Bonus</span>
-        </button>
-
-        {isTeamMember && (
+        {/* Vista Desktop: Bottoni uniformi a griglia/flusso compatto (Zero Scorrimento Scomodo) */}
+        <div className="hidden md:flex items-center flex-wrap gap-2">
           <button
-            onClick={() => setActiveTab('zoom')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${activeTab === 'zoom'
+            onClick={() => setActiveTab('player')}
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
+              activeTab === 'player'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+            }`}
           >
-            <VideoIcon className="h-4 w-4" />
-            <span>Registrazioni Zoom ({zoomRecordings.length})</span>
-            <span className="px-1.5 py-0.5 text-[9px] font-bold bg-purple-500/20 text-purple-400 rounded-full">Admin</span>
+            <PlayCircle className="h-4 w-4" />
+            <span>Player {selectedCourseId === 'ai-pro' ? 'AI Pro (20 Moduli)' : 'AI Start (20 Lezioni)'}</span>
           </button>
-        )}
 
-        <button
-          onClick={() => setActiveTab('bonus')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${activeTab === 'bonus'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-        >
-          <Gift className="h-4 w-4" />
-          <span>Risorse & Manuali ({resources.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('tasks')}
-          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer ${activeTab === 'tasks'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-        >
-          <GraduationCap className="h-4 w-4 text-amber-400" />
-          <span>I Miei Compiti & Attestato</span>
-        </button>
-
-
-
-        <Link
-          href="/servizi-ai"
-          className="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-800/60 shadow-xs"
-        >
-          <Sparkles className="h-4 w-4 text-amber-500" />
-          <span>Servizi AI & Soluzioni PMI</span>
-          <ExternalLink className="h-3 w-3 opacity-60" />
-        </Link>
-
-        {isTeamMember && (
           <button
-            onClick={() => {
-              setActiveTab('students')
-              loadCourseRegistrations()
-              loadStudentCodes()
-            }}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl transition-all shrink-0 ${activeTab === 'students'
+            onClick={() => setActiveTab('news-tutorial')}
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
+              activeTab === 'news-tutorial'
                 ? 'bg-indigo-600 text-white shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+            }`}
           >
-            <Users className="h-4 w-4" />
-            <span>Registro Codici & Studenti ({courseRegistrations.length || registrations.length})</span>
+            <Sparkles className="h-4 w-4 text-amber-400" />
+            <span>News & Tutorial ({bonusVideos.length})</span>
+            <span className="px-1.5 py-0.5 text-[9px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-md">Bonus</span>
           </button>
-        )}
+
+          {isTeamMember && (
+            <button
+              onClick={() => setActiveTab('zoom')}
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
+                activeTab === 'zoom'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <VideoIcon className="h-4 w-4" />
+              <span>Registrazioni Zoom ({zoomRecordings.length})</span>
+              <span className="px-1.5 py-0.5 text-[9px] font-bold bg-purple-500/20 text-purple-400 rounded-md">Admin</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => setActiveTab('bonus')}
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
+              activeTab === 'bonus'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Gift className="h-4 w-4" />
+            <span>Risorse & Manuali ({resources.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('tasks')}
+            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+              activeTab === 'tasks'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <GraduationCap className="h-4 w-4 text-amber-400" />
+            <span>I Miei Compiti & Attestato</span>
+          </button>
+
+          <Link
+            href="/servizi-ai"
+            className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-800/60 shadow-xs ml-auto"
+          >
+            <Sparkles className="h-4 w-4 text-amber-500" />
+            <span>Servizi AI</span>
+            <ExternalLink className="h-3 w-3 opacity-60" />
+          </Link>
+
+          {isTeamMember && (
+            <button
+              onClick={() => {
+                setActiveTab('students')
+                loadCourseRegistrations()
+                loadStudentCodes()
+              }}
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
+                activeTab === 'students'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              <span>Registro Studenti ({courseRegistrations.length || registrations.length})</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* TAB: LOGIN CON CODICE STUDENTE */}

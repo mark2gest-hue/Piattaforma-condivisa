@@ -16,6 +16,13 @@ import {
   LogOut,
   Bot,
   Video,
+  GraduationCap,
+  Users,
+  Calendar,
+  KanbanSquare,
+  Megaphone,
+  Folder,
+  Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -88,8 +95,23 @@ export function Navbar({
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [projects, setProjects] = useState<Project[]>([])
   const [isCreatingTask, setIsCreatingTask] = useState(false)
+  const [isCommandOpen, setIsCommandOpen] = useState(false)
+  const [cmdSearchQuery, setCmdSearchQuery] = useState('')
 
   const supabase = createClient()
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsCommandOpen(prev => !prev)
+      } else if (e.key === 'Escape') {
+        setIsCommandOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   useEffect(() => {
     setCurrentUser({
@@ -227,16 +249,21 @@ export function Navbar({
           </div>
         </div>
 
-        {/* Center Quick Search */}
+        {/* Center Quick Search / Command Palette Trigger */}
         <div className="hidden lg:flex items-center max-w-md w-full mx-6">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cerca task, file, clienti o messaggi..."
-              className="w-full h-9 pl-9 pr-4 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsCommandOpen(true)}
+            className="w-full h-9 pl-3 pr-2 flex items-center justify-between text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all cursor-pointer shadow-xs"
+          >
+            <span className="flex items-center gap-2 truncate">
+              <Search className="h-4 w-4 text-slate-400 shrink-0" />
+              <span className="truncate">Cerca pagine, studenti, task o strumenti...</span>
+            </span>
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded border border-slate-300 dark:border-slate-600">
+              ⌘K
+            </kbd>
+          </button>
         </div>
 
         {/* Right User & Actions */}
@@ -509,6 +536,90 @@ export function Navbar({
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* COMMAND PALETTE MODAL (CMD + K) */}
+      {isCommandOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-start justify-center pt-20 p-4 animate-in fade-in duration-150"
+          onClick={() => setIsCommandOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Input Cerca */}
+            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-200 dark:border-slate-800">
+              <Search className="h-5 w-5 text-indigo-500 shrink-0" />
+              <input
+                type="text"
+                autoFocus
+                value={cmdSearchQuery}
+                onChange={(e) => setCmdSearchQuery(e.target.value)}
+                placeholder="Digita dove vuoi andare o un'azione (es. studenti, video, lavori, agenti)..."
+                className="w-full text-sm bg-transparent outline-none text-slate-900 dark:text-white placeholder:text-slate-400"
+              />
+              <kbd className="px-2 py-0.5 text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 rounded border border-slate-200 dark:border-slate-700">
+                ESC
+              </kbd>
+            </div>
+
+            {/* Lista Scorciatoie & Risultati */}
+            <div className="max-h-80 overflow-y-auto p-2 space-y-1 text-xs">
+              {[
+                { title: 'Corsi Formativi & Masterclass', subtitle: 'Area didattica, video e checkpoint', href: '/corsi', icon: GraduationCap, badge: 'Studenti' },
+                { title: 'Zona Compiti & Missioni', subtitle: 'Consegna esercitazioni e test esame', href: '/zona-compiti', icon: ShieldCheck, badge: 'Certificati' },
+                { title: 'Squadra Agenti AI (Studio 3D)', subtitle: 'Cockpit interattivo scrivanie e bot', href: '/agenti/', icon: Bot, badge: 'Studio AI' },
+                { title: 'Servizi AI & Soluzioni PMI', subtitle: 'Catalogo consulenza e offerte B2B', href: '/servizi-ai', icon: Sparkles, badge: 'Soluzioni' },
+                { title: 'Lavori & Kanban Task', subtitle: 'Board operativa e flussi di lavoro', href: '/lavori', icon: KanbanSquare, badge: 'Team' },
+                { title: 'Rubrica Clienti & CRM', subtitle: 'Anagrafiche contatti e aziende', href: '/clienti', icon: Users, badge: 'CRM' },
+                { title: 'Calendario & Eventi', subtitle: 'Scadenze, meeting e pianificazione', href: '/calendario', icon: Calendar, badge: 'Agenda' },
+                { title: 'Posta Condivisa', subtitle: 'Webmail Aruba e comunicazioni', href: '/posta', icon: Mail, badge: 'Email' },
+                { title: 'Marketing & Social Dispatch', subtitle: 'Campagne 1-Click e automazioni', href: '/growth-studio', icon: Megaphone, badge: 'Marketing' },
+                { title: 'Archivio Documenti & Storage', subtitle: 'File aziendali e deliverable', href: '/file', icon: Folder, badge: 'File' },
+              ]
+                .filter(item => {
+                  if (!cmdSearchQuery.trim()) return true;
+                  const q = cmdSearchQuery.toLowerCase();
+                  return item.title.toLowerCase().includes(q) || item.subtitle.toLowerCase().includes(q) || item.badge.toLowerCase().includes(q);
+                })
+                .map((item, idx) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={idx}
+                      href={item.href}
+                      onClick={() => setIsCommandOpen(false)}
+                      className="flex items-center justify-between p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-950/60 text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center justify-center shrink-0 transition-colors">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate">
+                            {item.title}
+                          </p>
+                          <p className="text-[11px] text-slate-400 truncate">
+                            {item.subtitle}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                        {item.badge}
+                      </span>
+                    </Link>
+                  );
+                })}
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+              <span>Naviga con un clic</span>
+              <span>Aiutiamoci Hub</span>
+            </div>
           </div>
         </div>
       )}
