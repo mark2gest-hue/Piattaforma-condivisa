@@ -25,13 +25,13 @@ export async function getSelectableRecipientsAction(): Promise<{
     const map = new Map<string, SelectableRecipient>()
 
     // 1. Studenti (student_codes)
-    const { data: students } = await adminClient
-      .from('student_codes')
+    const { data: students } = await (adminClient
+      .from('student_codes') as any)
       .select('id, student_email, student_name, access_tier, code')
       .eq('is_active', true)
 
     if (students) {
-      students.forEach((s) => {
+      students.forEach((s: any) => {
         const email = s.student_email?.trim()
         if (email && email.includes('@')) {
           const key = email.toLowerCase()
@@ -49,12 +49,12 @@ export async function getSelectableRecipientsAction(): Promise<{
     }
 
     // 2. Clienti Rubrica (clients)
-    const { data: clients } = await adminClient
-      .from('clients')
+    const { data: clients } = await (adminClient
+      .from('clients') as any)
       .select('id, first_name, last_name, email, company, category')
 
     if (clients) {
-      clients.forEach((c) => {
+      clients.forEach((c: any) => {
         const email = c.email?.trim()
         if (email && email.includes('@')) {
           const key = email.toLowerCase()
@@ -73,13 +73,13 @@ export async function getSelectableRecipientsAction(): Promise<{
     }
 
     // 3. Soci & Membri Team (profiles)
-    const { data: profiles } = await adminClient
-      .from('profiles')
+    const { data: profiles } = await (adminClient
+      .from('profiles') as any)
       .select('id, full_name, role, is_agent')
       .eq('is_agent', false)
 
     if (profiles) {
-      profiles.forEach((p) => {
+      profiles.forEach((p: any) => {
         // I profili hanno tipicamente un'email ricavabile o nome
         const name = p.full_name?.trim()
         // Se non hanno colonna email in profiles, possiamo escludere o inserire se mappata
@@ -87,12 +87,12 @@ export async function getSelectableRecipientsAction(): Promise<{
     }
 
     // 4. Lead lista d'attesa (waitlist_leads)
-    const { data: leads } = await adminClient
-      .from('waitlist_leads')
+    const { data: leads } = await (adminClient
+      .from('waitlist_leads') as any)
       .select('id, email, name')
 
     if (leads) {
-      leads.forEach((l) => {
+      leads.forEach((l: any) => {
         const email = l.email?.trim()
         if (email && email.includes('@')) {
           const key = email.toLowerCase()
@@ -176,8 +176,8 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
     if (categories.has('ai-pro')) tiersToFetch.push('ai-pro', 'both', 'all')
 
     if (tiersToFetch.length > 0) {
-      let query = adminClient
-        .from('student_codes')
+      let query = (adminClient
+        .from('student_codes') as any)
         .select('student_email, student_name, access_tier, code, created_at')
         .eq('is_active', true)
         .in('access_tier', tiersToFetch)
@@ -194,7 +194,7 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
       if (stdError) {
         console.error('[sendEventInvitationsAction] Errore fetch studenti:', stdError)
       } else if (students) {
-        students.forEach((s) => {
+        students.forEach((s: any) => {
           if (s.student_email && !targetEmails.some((t) => t.email.toLowerCase() === s.student_email.toLowerCase())) {
             targetEmails.push({ email: s.student_email, name: s.student_name || 'Studente' })
           }
@@ -204,15 +204,15 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
 
     // 3. Utenti registrati in attesa di pagamento / approvazione (course_registrations)
     if (categories.has('pending')) {
-      const { data: pendingRegs, error: pendingErr } = await adminClient
-        .from('course_registrations')
+      const { data: pendingRegs, error: pendingErr } = await (adminClient
+        .from('course_registrations') as any)
         .select('email, name, status, approved')
         .or('status.eq.pending,approved.eq.false')
 
       if (pendingErr) {
         console.error('[sendEventInvitationsAction] Errore fetch registrati in attesa:', pendingErr)
       } else if (pendingRegs) {
-        pendingRegs.forEach((p) => {
+        pendingRegs.forEach((p: any) => {
           if (p.email && !targetEmails.some((t) => t.email.toLowerCase() === p.email.toLowerCase())) {
             targetEmails.push({ email: p.email, name: p.name || 'Partecipante' })
           }
@@ -222,9 +222,9 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
 
     // 4. Lead lista d'attesa (waitlist_leads)
     if (categories.has('waitlist')) {
-      const { data: waitlist } = await adminClient.from('waitlist_leads').select('email, name')
+      const { data: waitlist } = await (adminClient.from('waitlist_leads') as any).select('email, name')
       if (waitlist) {
-        waitlist.forEach((w) => {
+        waitlist.forEach((w: any) => {
           if (w.email && !targetEmails.some((t) => t.email.toLowerCase() === w.email.toLowerCase())) {
             targetEmails.push({ email: w.email, name: w.name || 'Professionista' })
           }

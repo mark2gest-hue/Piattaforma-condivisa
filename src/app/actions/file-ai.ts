@@ -28,8 +28,8 @@ export async function analyzeFileWithAIAction(fileId: string): Promise<{
     const supabaseAdmin = createAdminClient()
 
     // 1. Recupera metadati file
-    const { data: fileRecord, error: fileError } = await supabaseAdmin
-      .from('files')
+    const { data: fileRecord, error: fileError } = await (supabaseAdmin
+      .from('files') as any)
       .select('*, uploader:profiles(full_name)')
       .eq('id', fileId)
       .single()
@@ -158,7 +158,7 @@ ${finalAnalysis.suggestedTaskDesc}
 *Origine: File ${fileRecord.name} (Caricato da ${fileRecord.uploader?.full_name || 'Team'})*`
 
       const ext = fileName.split('.').pop() || 'doc'
-      await supabaseAdmin.from('knowledge_items').insert({
+      await (supabaseAdmin.from('knowledge_items') as any).insert({
         title: `[File] ${fileRecord.name}`,
         category: 'course_notes',
         description: `Sintesi documentale AI estratta da ${fileRecord.name}`,

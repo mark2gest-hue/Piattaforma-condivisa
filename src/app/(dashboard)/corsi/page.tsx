@@ -68,6 +68,16 @@ import {
   cleanDuplicateRegistrationsAction,
 } from '@/app/actions/student'
 import {
+  CorporateCohort,
+  CorporateCustomLesson,
+  getCorporateCohortsAction,
+  createCorporateCohortAction,
+  generateCorporateStudentCodesAction,
+  saveCorporateCustomLessonAction,
+  deleteCorporateCustomLessonAction,
+  getCorporateDetailsForStudentAction,
+} from '@/app/actions/corporate-cohorts'
+import {
   LESSON_SUMMARIES,
   CHECKPOINT_TESTS,
   LESSON_SUMMARIES_PRO,
@@ -628,13 +638,46 @@ function CorsiInnerContent() {
   // Stato Studente Loggato tramite Codice
   const { theme, setTheme } = useTheme()
   const [studentCodeInput, setStudentCodeInput] = useState('')
-  const [activeStudent, setActiveStudent] = useState<{ name: string; code: string; accessTier?: 'ai-start' | 'ai-pro' | 'both'; sessionToken?: string } | null>(null)
+  const [activeStudent, setActiveStudent] = useState<{
+    name: string
+    code: string
+    accessTier?: 'ai-start' | 'ai-pro' | 'both'
+    sessionToken?: string
+    cohortId?: string | null
+  } | null>(null)
+  const [activeCorporateCohort, setActiveCorporateCohort] = useState<CorporateCohort | null>(null)
+  const [corporateCustomLessons, setCorporateCustomLessons] = useState<CorporateCustomLesson[]>([])
+
+  // Stato Admin B2B Cohorts
+  const [corporateCohorts, setCorporateCohorts] = useState<CorporateCohort[]>([])
+  const [loadingCohorts, setLoadingCohorts] = useState<boolean>(false)
+  const [selectedCohortForManage, setSelectedCohortForManage] = useState<CorporateCohort | null>(null)
+  const [isCreateCohortModalOpen, setIsCreateCohortModalOpen] = useState(false)
+  const [isGenerateCodesModalOpen, setIsGenerateCodesModalOpen] = useState(false)
+  const [isAddCustomLessonModalOpen, setIsAddCustomLessonModalOpen] = useState(false)
+  const [cohortNameInput, setCohortNameInput] = useState('')
+  const [cohortPrefixInput, setCohortPrefixInput] = useState('')
+  const [cohortTrackInput, setCohortTrackInput] = useState<'ai-start' | 'ai-pro' | 'both' | 'custom_only'>('ai-start')
+  const [cohortWelcomeInput, setCohortWelcomeInput] = useState('')
+  const [cohortContactNameInput, setCohortContactNameInput] = useState('')
+  const [cohortContactEmailInput, setCohortContactEmailInput] = useState('')
+  const [genCodesCohort, setGenCodesCohort] = useState<CorporateCohort | null>(null)
+  const [genCodesQtyInput, setGenCodesQtyInput] = useState<number>(10)
+  const [genCodesTierInput, setGenCodesTierInput] = useState<'ai-start' | 'ai-pro' | 'both'>('ai-start')
+  const [isGeneratingB2bCodes, setIsGeneratingB2bCodes] = useState(false)
+  const [customLessonTitleInput, setCustomLessonTitleInput] = useState('')
+  const [customLessonInstructorInput, setCustomLessonInstructorInput] = useState('')
+  const [customLessonVideoUrlInput, setCustomLessonVideoUrlInput] = useState('')
+  const [customLessonDurationInput, setCustomLessonDurationInput] = useState('15:00')
+  const [customLessonDescInput, setCustomLessonDescInput] = useState('')
+  const [customLessonPdfInput, setCustomLessonPdfInput] = useState('')
+  const [isSavingCustomLesson, setIsSavingCustomLesson] = useState(false)
   const [isTeamMember, setIsTeamMember] = useState<boolean>(false)
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false)
   const [authChecked, setAuthChecked] = useState<boolean>(false)
 
-  // Subtab Registro: 'registrations' | 'active' | 'pro_students' | 'waitlist'
-  const [studentSubTab, setStudentSubTab] = useState<'registrations' | 'active' | 'pro_students' | 'waitlist'>('registrations')
+  // Subtab Registro: 'registrations' | 'active' | 'pro_students' | 'waitlist' | 'b2b_cohorts'
+  const [studentSubTab, setStudentSubTab] = useState<'registrations' | 'active' | 'pro_students' | 'waitlist' | 'b2b_cohorts'>('registrations')
   const [courseRegistrations, setCourseRegistrations] = useState<CourseRegistration[]>([])
   const [loadingRegistrations, setLoadingRegistrations] = useState<boolean>(false)
   const [copiedEmailKey, setCopiedEmailKey] = useState<string | null>(null)
@@ -815,6 +858,14 @@ function CorsiInnerContent() {
           setActiveStudent(parsedStudent)
           if (parsedStudent.accessTier === 'ai-pro') {
             setSelectedCourseId('ai-pro')
+          }
+          if (parsedStudent.cohortId) {
+            getCorporateDetailsForStudentAction(parsedStudent.cohortId).then((cRes) => {
+              if (cRes.success && cRes.cohort) {
+                setActiveCorporateCohort(cRes.cohort)
+                setCorporateCustomLessons(cRes.customLessons || [])
+              }
+            }).catch(() => {})
           }
           // Allineamento stato studente all'avvio
           if (parsedStudent.sessionToken) {
@@ -1044,7 +1095,16 @@ function CorsiInnerContent() {
   const loadWaitlistLeads = async () => {
     const res = await getWaitlistLeadsAction()
     if (res.success && res.leads) {
-      setWaitlistLeads((res.leads ?? []).map((l) => ({ ...l, name: l.name ?? undefined })))
+      setWaitlistLeads(
+        (res.leads as any[] ?? []).map((l: any) => ({
+          id: l.id,
+          email: l.email,
+          name: l.name ?? undefined,
+          course_interest: l.course_interest ?? 'AI Pro',
+          converted_to_student: Boolean(l.converted_to_student),
+          created_at: l.created_at,
+        }))
+      )
     }
   }
 
@@ -1371,8 +1431,28 @@ function CorsiInnerContent() {
         code: dbStudent.code,
         accessTier: tier,
         sessionToken: res.sessionToken,
+        cohortId: (dbStudent as any).cohort_id || null,
       }
       setActiveStudent(studentObj)
+
+      // Se lo studente appartiene a una Stanza Aziendale B2B, carichiamo la cohort e i video dedicati
+      if ((dbStudent as any).cohort_id) {
+        getCorporateDetailsForStudentAction((dbStudent as any).cohort_id).then((cRes) => {
+          if (cRes.success && cRes.cohort) {
+            setActiveCorporateCohort(cRes.cohort)
+            setCorporateCustomLessons(cRes.customLessons || [])
+            if (cRes.cohort.base_track === 'ai-pro') {
+              setSelectedCourseId('ai-pro')
+            } else if (cRes.cohort.base_track === 'ai-start') {
+              setSelectedCourseId('ai-start')
+            }
+          }
+        }).catch(() => {})
+      } else {
+        setActiveCorporateCohort(null)
+        setCorporateCustomLessons([])
+      }
+
       try {
         localStorage.setItem('ti_aiuto_active_student', JSON.stringify(studentObj))
       } catch (err) {
@@ -1792,12 +1872,20 @@ function CorsiInnerContent() {
               </div>
             ) : activeStudent ? (
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="success" className="py-1 px-3 flex items-center gap-1 text-xs">
-                  <Unlock className="h-3.5 w-3.5" />
-                  <span>
-                    Studente: <strong>{activeStudent.name}</strong> ({activeStudent.code})
-                  </span>
-                </Badge>
+                {activeCorporateCohort ? (
+                  <Badge className="py-1 px-3 flex items-center gap-1.5 text-xs bg-emerald-600 text-white font-bold border-0 shadow-sm">
+                    <span>🏢</span>
+                    <span>Stanza Privata: <strong>{activeCorporateCohort.company_name}</strong></span>
+                    <span className="opacity-75 font-mono text-[10px]">({activeStudent.name})</span>
+                  </Badge>
+                ) : (
+                  <Badge variant="success" className="py-1 px-3 flex items-center gap-1 text-xs">
+                    <Unlock className="h-3.5 w-3.5" />
+                    <span>
+                      Studente: <strong>{activeStudent.name}</strong> ({activeStudent.code})
+                    </span>
+                  </Badge>
+                )}
                 <a
                   href="https://t.me/+QSql9PpGLlMzYmI0"
                   target="_blank"
@@ -2141,6 +2229,125 @@ function CorsiInnerContent() {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Banner Stanza Aziendale Riservata B2B */}
+            {activeCorporateCohort && (
+              <div className="bg-gradient-to-r from-emerald-950/80 via-slate-900 to-teal-950/80 border border-emerald-500/40 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+                      Stanza Aziendale Riservata
+                    </span>
+                    <span className="text-xs font-mono text-emerald-400 font-bold">• {activeCorporateCohort.company_name}</span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-white">
+                    {activeCorporateCohort.custom_welcome_message || `Benvenuto nel Percorso Formativo AI per ${activeCorporateCohort.company_name}`}
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Ambiente di apprendimento riservato ai dipendenti e collaboratori di {activeCorporateCohort.company_name}.
+                  </p>
+                </div>
+                {corporateCustomLessons.length > 0 && (
+                  <Badge className="bg-emerald-600 text-white font-bold text-xs px-3 py-1 gap-1 shrink-0">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>{corporateCustomLessons.length} Video/Moduli Personalizzati</span>
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {/* Sezione Video & Lezioni Personalizzate Aziendali */}
+            {corporateCustomLessons.length > 0 && (
+              <div className="bg-white dark:bg-slate-900 border border-emerald-500/30 rounded-2xl p-5 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                      ⭐
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                        Masterclass & Video Esclusivi per {activeCorporateCohort?.company_name || 'la Tua Azienda'}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Contenuti ad-hoc, lezioni di docenti esterni o registrazioni dedicate al vostro team.
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-emerald-600 border-emerald-500/40 text-[10px] font-mono">
+                    ESCLUSIVO B2B
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {corporateCustomLessons.map((cLesson, cIdx) => (
+                    <div
+                      key={cLesson.id}
+                      className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-50/20 dark:bg-emerald-950/20 hover:border-emerald-500/40 transition-all flex flex-col justify-between gap-3"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                            {cLesson.instructor_name}
+                          </span>
+                          <span className="font-mono text-slate-400">{cLesson.duration}</span>
+                        </div>
+                        <h5 className="font-bold text-xs text-slate-900 dark:text-white leading-snug">
+                          {cLesson.title}
+                        </h5>
+                        {cLesson.description && (
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                            {cLesson.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1 border-t border-emerald-500/10">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            if (selectedCourseId === 'ai-start') {
+                              setActiveLesson({
+                                id: 990 + cIdx,
+                                title: cLesson.title,
+                                duration: cLesson.duration,
+                                completed: false,
+                                videoUrl: cLesson.video_url,
+                                resourcesPdfUrl: cLesson.resources_pdf_url || undefined,
+                              })
+                            } else {
+                              setActiveLessonPro({
+                                id: 990 + cIdx,
+                                title: cLesson.title,
+                                duration: cLesson.duration,
+                                completed: false,
+                                videoUrl: cLesson.video_url,
+                                resourcesPdfUrl: cLesson.resources_pdf_url || undefined,
+                              })
+                            }
+                            window.scrollTo({ top: 380, behavior: 'smooth' })
+                          }}
+                          className="w-full h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1 rounded-lg"
+                        >
+                          <PlayCircle className="h-3.5 w-3.5" />
+                          <span>Guarda Video Esclusivo</span>
+                        </Button>
+                        {cLesson.resources_pdf_url && (
+                          <a
+                            href={cLesson.resources_pdf_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                            title="Scarica Dispensa o Materiale"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left / Center: Video Player & Lezione Attiva */}
             {(() => {
@@ -3750,6 +3957,24 @@ function CorsiInnerContent() {
                 <Clock className="h-4 w-4" />
                 <span>📋 Lista d'Attesa Leads ({waitlistLeads.length})</span>
               </button>
+
+              <button
+                onClick={() => {
+                  setStudentSubTab('b2b_cohorts')
+                  setLoadingCohorts(true)
+                  getCorporateCohortsAction().then((res) => {
+                    if (res.success && res.data) setCorporateCohorts(res.data)
+                    setLoadingCohorts(false)
+                  })
+                }}
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${studentSubTab === 'b2b_cohorts'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+              >
+                <span>🏢</span>
+                <span>Aziende & Corsi Custom ({corporateCohorts.length})</span>
+              </button>
             </div>
 
             <div className="flex items-center gap-2">
@@ -4507,6 +4732,460 @@ function CorsiInnerContent() {
               )}
             </div>
           )}
+
+          {/* SUBTAB 5: AZIENDE & STANZE PRIVATE B2B */}
+          {studentSubTab === 'b2b_cohorts' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+                <div>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>🏢</span>
+                    <span>Stanze Aziendali B2B & Corsi Personalizzati</span>
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Crea ambienti privati isolati per aziende clienti, genera codici di accesso riservati e carica video/lezioni su misura.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    setCohortNameInput('')
+                    setCohortPrefixInput('')
+                    setCohortTrackInput('ai-start')
+                    setCohortWelcomeInput('')
+                    setCohortContactNameInput('')
+                    setCohortContactEmailInput('')
+                    setIsCreateCohortModalOpen(true)
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 rounded-xl gap-2 shadow-xs shrink-0"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Nuova Stanza Aziendale</span>
+                </Button>
+              </div>
+
+              {loadingCohorts ? (
+                <div className="p-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                  <span>Caricamento aziende e stanze private...</span>
+                </div>
+              ) : corporateCohorts.length === 0 ? (
+                <div className="p-12 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
+                  <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto text-xl">
+                    🏢
+                  </div>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">Nessuna Azienda Configurata</h4>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto">
+                    Clicca su "Nuova Stanza Aziendale" per creare la prima edizione privata riservata a una PMI cliente.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {corporateCohorts.map((cohort) => (
+                    <div
+                      key={cohort.id}
+                      className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between gap-4"
+                    >
+                      <div className="space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <Badge className="bg-emerald-600 text-white text-[9px] font-mono px-1.5 py-0">
+                                {cohort.company_code_prefix}
+                              </Badge>
+                              <Badge variant="outline" className="text-[9px] font-mono">
+                                {cohort.base_track === 'ai-start'
+                                  ? 'Corso Base'
+                                  : cohort.base_track === 'ai-pro'
+                                  ? 'Corso Pro'
+                                  : cohort.base_track === 'both'
+                                  ? 'Full (Base+Pro)'
+                                  : 'Solo Custom'}
+                              </Badge>
+                            </div>
+                            <h4 className="font-bold text-sm text-slate-900 dark:text-white mt-1">
+                              {cohort.company_name}
+                            </h4>
+                          </div>
+                          <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                            {cohort.student_count || 0} dipendenti
+                          </span>
+                        </div>
+
+                        {cohort.custom_welcome_message && (
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 italic line-clamp-2">
+                            "{cohort.custom_welcome_message}"
+                          </p>
+                        )}
+
+                        <div className="text-[11px] text-slate-500 space-y-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+                          {cohort.contact_person_name && (
+                            <div>Referente: <strong className="text-slate-700 dark:text-slate-300">{cohort.contact_person_name}</strong></div>
+                          )}
+                          <div>Video/Lezioni Esclusive: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{cohort.custom_lesson_count || 0}</strong></div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setGenCodesCohort(cohort)
+                            setGenCodesQtyInput(10)
+                            setGenCodesTierInput(cohort.base_track === 'ai-pro' ? 'ai-pro' : cohort.base_track === 'both' ? 'both' : 'ai-start')
+                            setIsGenerateCodesModalOpen(true)
+                          }}
+                          className="text-[11px] h-8 gap-1 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold"
+                        >
+                          <Key className="h-3 w-3 text-emerald-600" />
+                          <span>+ Codici B2B</span>
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCohortForManage(cohort)
+                            setCustomLessonTitleInput('')
+                            setCustomLessonInstructorInput('Team Aiutiamoci')
+                            setCustomLessonVideoUrlInput('')
+                            setCustomLessonDurationInput('15:00')
+                            setCustomLessonDescInput('')
+                            setCustomLessonPdfInput('')
+                            setIsAddCustomLessonModalOpen(true)
+                          }}
+                          className="text-[11px] h-8 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                        >
+                          <VideoIcon className="h-3 w-3" />
+                          <span>+ Video Custom</span>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MODAL 1: NUOVA STANZA AZIENDALE B2B */}
+      {isCreateCohortModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <span>🏢</span>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Crea Nuova Stanza Aziendale B2B</h3>
+              </div>
+              <button onClick={() => setIsCreateCohortModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const res = await createCorporateCohortAction({
+                  companyName: cohortNameInput,
+                  codePrefix: cohortPrefixInput,
+                  baseTrack: cohortTrackInput,
+                  customWelcomeMessage: cohortWelcomeInput,
+                  contactPersonName: cohortContactNameInput,
+                  contactPersonEmail: cohortContactEmailInput,
+                })
+                if (res.success) {
+                  alert(`✅ Stanza Aziendale creata per "${cohortNameInput}"!`)
+                  setIsCreateCohortModalOpen(false)
+                  const list = await getCorporateCohortsAction()
+                  if (list.success && list.data) setCorporateCohorts(list.data)
+                } else {
+                  alert(`⚠️ Errore: ${res.error}`)
+                }
+              }}
+              className="p-6 space-y-4 text-xs"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Nome Azienda Cliente *</label>
+                  <Input
+                    required
+                    value={cohortNameInput}
+                    onChange={(e) => setCohortNameInput(e.target.value)}
+                    placeholder="Es. Studio Rossi & Partner"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Prefisso Codici (univoco) *</label>
+                  <Input
+                    required
+                    value={cohortPrefixInput}
+                    onChange={(e) => setCohortPrefixInput(e.target.value.toUpperCase())}
+                    placeholder="Es. ROSSI"
+                    className="font-mono uppercase dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Percorso Formativo Abilitato *</label>
+                <select
+                  value={cohortTrackInput}
+                  onChange={(e) => setCohortTrackInput(e.target.value as any)}
+                  className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                >
+                  <option value="ai-start">Corso Base AI Start (20 Moduli Base nella loro Stanza Privata)</option>
+                  <option value="ai-pro">Corso Avanzato AI Pro (Agenti & Automazioni)</option>
+                  <option value="both">Bundle Completo (Tutti i Moduli Base + Pro)</option>
+                  <option value="custom_only">Solo Moduli Personalizzati B2B (No programma standard)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Messaggio di Benvenuto Personalizzato</label>
+                <Input
+                  value={cohortWelcomeInput}
+                  onChange={(e) => setCohortWelcomeInput(e.target.value)}
+                  placeholder="Es. Benvenuti al programma AI Transformation 2026 di Studio Rossi!"
+                  className="dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Nome Referente HR / Direttore</label>
+                  <Input
+                    value={cohortContactNameInput}
+                    onChange={(e) => setCohortContactNameInput(e.target.value)}
+                    placeholder="Es. Dott. Mario Rossi"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Email Referente</label>
+                  <Input
+                    type="email"
+                    value={cohortContactEmailInput}
+                    onChange={(e) => setCohortContactEmailInput(e.target.value)}
+                    placeholder="mario.rossi@studiorossi.it"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsCreateCohortModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                  Crea Stanza Privata
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: GENERA CODICI DI ACCESSO B2B PER L'AZIENDA */}
+      {isGenerateCodesModalOpen && genCodesCohort && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <Key className="h-4 w-4 text-emerald-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Genera Codici B2B: {genCodesCohort.company_name}
+                </h3>
+              </div>
+              <button onClick={() => setIsGenerateCodesModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                setIsGeneratingB2bCodes(true)
+                const res = await generateCorporateStudentCodesAction({
+                  cohortId: genCodesCohort.id,
+                  companyPrefix: genCodesCohort.company_code_prefix,
+                  companyName: genCodesCohort.company_name,
+                  quantity: genCodesQtyInput,
+                  tier: genCodesTierInput,
+                })
+                setIsGeneratingB2bCodes(false)
+                if (res.success && res.generatedCodes) {
+                  alert(`🎉 Generati ${res.generatedCodes.length} codici di accesso per ${genCodesCohort.company_name}!\n\nEsempi:\n${res.generatedCodes.slice(0, 3).join('\n')}...`)
+                  setIsGenerateCodesModalOpen(false)
+                  loadStudentCodes()
+                  const list = await getCorporateCohortsAction()
+                  if (list.success && list.data) setCorporateCohorts(list.data)
+                } else {
+                  alert(`⚠️ Errore: ${res.error}`)
+                }
+              }}
+              className="p-6 space-y-4 text-xs"
+            >
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Numero di Posti / Codici da Generare *</label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  required
+                  value={genCodesQtyInput}
+                  onChange={(e) => setGenCodesQtyInput(parseInt(e.target.value) || 1)}
+                  className="font-bold dark:bg-slate-800 dark:border-slate-700"
+                />
+                <p className="text-[11px] text-slate-400">
+                  I codici avranno il formato: <code className="font-bold text-emerald-600">AI-{genCodesCohort.company_code_prefix}-XXXX</code>
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Tier di Accesso *</label>
+                <select
+                  value={genCodesTierInput}
+                  onChange={(e) => setGenCodesTierInput(e.target.value as any)}
+                  className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 px-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                >
+                  <option value="ai-start">Corso Base (AI Start)</option>
+                  <option value="ai-pro">Corso Pro (AI Pro)</option>
+                  <option value="both">Tutti i Corsi (Base + Pro)</option>
+                </select>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsGenerateCodesModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" disabled={isGeneratingB2bCodes} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1.5">
+                  {isGeneratingB2bCodes ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Key className="h-3.5 w-3.5" />}
+                  <span>Genera {genCodesQtyInput} Codici</span>
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: AGGIUNGI VIDEO / LEZIONE PERSONALIZZATA PER L'AZIENDA */}
+      {isAddCustomLessonModalOpen && selectedCohortForManage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <VideoIcon className="h-4 w-4 text-emerald-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Aggiungi Video Custom: {selectedCohortForManage.company_name}
+                </h3>
+              </div>
+              <button onClick={() => setIsAddCustomLessonModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                setIsSavingCustomLesson(true)
+                const res = await saveCorporateCustomLessonAction({
+                  cohortId: selectedCohortForManage.id,
+                  title: customLessonTitleInput,
+                  instructorName: customLessonInstructorInput,
+                  videoUrl: customLessonVideoUrlInput,
+                  duration: customLessonDurationInput,
+                  description: customLessonDescInput,
+                  resourcesPdfUrl: customLessonPdfInput,
+                })
+                setIsSavingCustomLesson(false)
+                if (res.success) {
+                  alert(`✅ Video personalizzato "${customLessonTitleInput}" aggiunto con successo per ${selectedCohortForManage.company_name}!`)
+                  setIsAddCustomLessonModalOpen(false)
+                  const list = await getCorporateCohortsAction()
+                  if (list.success && list.data) setCorporateCohorts(list.data)
+                } else {
+                  alert(`⚠️ Errore: ${res.error}`)
+                }
+              }}
+              className="p-6 space-y-4 text-xs"
+            >
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo Lezione / Video Personalizzato *</label>
+                <Input
+                  required
+                  value={customLessonTitleInput}
+                  onChange={(e) => setCustomLessonTitleInput(e.target.value)}
+                  placeholder="Es. Automazione Pratica su CRM Interno Rossi SpA"
+                  className="dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Docente / Relatore *</label>
+                  <Input
+                    required
+                    value={customLessonInstructorInput}
+                    onChange={(e) => setCustomLessonInstructorInput(e.target.value)}
+                    placeholder="Es. Marco & Lorenzo oppure Docente Esterno: Ing. Neri"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Durata Stimata</label>
+                  <Input
+                    value={customLessonDurationInput}
+                    onChange={(e) => setCustomLessonDurationInput(e.target.value)}
+                    placeholder="18:30"
+                    className="font-mono dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Link Video (MP4 / YouTube Unlisted / Vimeo / Loom) *</label>
+                <Input
+                  required
+                  type="url"
+                  value={customLessonVideoUrlInput}
+                  onChange={(e) => setCustomLessonVideoUrlInput(e.target.value)}
+                  placeholder="https://..."
+                  className="font-mono text-emerald-600 dark:text-emerald-400 dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione o Obiettivi</label>
+                <Input
+                  value={customLessonDescInput}
+                  onChange={(e) => setCustomLessonDescInput(e.target.value)}
+                  placeholder="Sintesi della lezione e indicazioni operative..."
+                  className="dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Link Dispensa / Slide PDF (opzionale)</label>
+                <Input
+                  type="url"
+                  value={customLessonPdfInput}
+                  onChange={(e) => setCustomLessonPdfInput(e.target.value)}
+                  placeholder="https://... oppure /dispense/..."
+                  className="font-mono dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsAddCustomLessonModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" disabled={isSavingCustomLesson} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                  {isSavingCustomLesson ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Salva Lezione B2B'}
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

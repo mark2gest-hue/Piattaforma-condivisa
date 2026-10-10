@@ -10,13 +10,13 @@ export async function getCurrentUserProfileName(): Promise<string> {
     if (!user) return 'Membro del team'
 
     const adminClient = createAdminClient()
-    const { data: profile } = await adminClient
-      .from('profiles')
+    const { data: profile } = await (adminClient
+      .from('profiles') as any)
       .select('full_name')
       .eq('id', user.id)
       .single()
 
-    return profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Membro del team'
+    return (profile as any)?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Membro del team'
   } catch {
     return 'Membro del team'
   }

@@ -394,6 +394,7 @@ export interface Database {
           expires_at: string | null
           active_session_id?: string | null
           last_accessed_at?: string | null
+          cohort_id?: string | null
           created_at: string
           updated_at: string
         }
@@ -408,6 +409,7 @@ export interface Database {
           expires_at?: string | null
           active_session_id?: string | null
           last_accessed_at?: string | null
+          cohort_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -422,6 +424,7 @@ export interface Database {
           expires_at?: string | null
           active_session_id?: string | null
           last_accessed_at?: string | null
+          cohort_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -902,6 +905,99 @@ export interface Database {
           average_score?: number
           issued_at?: string
           metadata?: Json
+        }
+      }
+      corporate_cohorts: {
+        Relationships: []
+        Row: {
+          id: string
+          company_name: string
+          company_code_prefix: string
+          logo_url: string | null
+          base_track: 'ai-start' | 'ai-pro' | 'both' | 'custom_only'
+          allowed_standard_modules: Json
+          custom_welcome_message: string | null
+          contact_person_name: string | null
+          contact_person_email: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_name: string
+          company_code_prefix: string
+          logo_url?: string | null
+          base_track?: 'ai-start' | 'ai-pro' | 'both' | 'custom_only'
+          allowed_standard_modules?: Json
+          custom_welcome_message?: string | null
+          contact_person_name?: string | null
+          contact_person_email?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_name?: string
+          company_code_prefix?: string
+          logo_url?: string | null
+          base_track?: 'ai-start' | 'ai-pro' | 'both' | 'custom_only'
+          allowed_standard_modules?: Json
+          custom_welcome_message?: string | null
+          contact_person_name?: string | null
+          contact_person_email?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      corporate_custom_lessons: {
+        Relationships: []
+        Row: {
+          id: string
+          cohort_id: string
+          title: string
+          instructor_name: string
+          video_url: string
+          duration: string
+          description: string | null
+          resources_pdf_url: string | null
+          dedicated_prompts: Json
+          order_index: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          cohort_id: string
+          title: string
+          instructor_name?: string
+          video_url: string
+          duration?: string
+          description?: string | null
+          resources_pdf_url?: string | null
+          dedicated_prompts?: Json
+          order_index?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          cohort_id?: string
+          title?: string
+          instructor_name?: string
+          video_url?: string
+          duration?: string
+          description?: string | null
+          resources_pdf_url?: string | null
+          dedicated_prompts?: Json
+          order_index?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
         }
       }
     }

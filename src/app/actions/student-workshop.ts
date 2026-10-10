@@ -138,8 +138,8 @@ export async function initStudentWorkspaceAction(forcedTier?: CourseTier) {
     // Determina il tier: parametro esplicito > verifica su student_codes > default ai-start
     let determinedTier: CourseTier = forcedTier || 'ai-start'
     if (!forcedTier) {
-      const { data: codeData } = await supabaseAdmin
-        .from('student_codes')
+      const { data: codeData } = await (supabaseAdmin
+        .from('student_codes') as any)
         .select('access_tier')
         .ilike('student_email', userEmail)
         .eq('is_active', true)
@@ -147,7 +147,7 @@ export async function initStudentWorkspaceAction(forcedTier?: CourseTier) {
         .limit(1)
         .maybeSingle()
 
-      if (codeData?.access_tier === 'ai-pro' || codeData?.access_tier === 'both') {
+      if ((codeData as any)?.access_tier === 'ai-pro' || (codeData as any)?.access_tier === 'both') {
         determinedTier = 'ai-pro'
       }
     }

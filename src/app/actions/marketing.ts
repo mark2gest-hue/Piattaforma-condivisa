@@ -486,8 +486,8 @@ export async function saveMarketingCampaignAction(
 
     if (targetCampaignId) {
       // Aggiornamento campagna esistente (solo se proprietario o legacy orfana)
-      const { error: updateError } = await supabase
-        .from('marketing_campaigns')
+      const { error: updateError } = await (supabase
+        .from('marketing_campaigns') as any)
         .update({
           title: brief.title || brief.productName,
           product_name: brief.productName,
@@ -515,8 +515,8 @@ export async function saveMarketingCampaignAction(
       }
     } else {
       // Creazione nuova campagna con user_id
-      const { data: newCampaign, error: insertError } = await supabase
-        .from('marketing_campaigns')
+      const { data: newCampaign, error: insertError } = await (supabase
+        .from('marketing_campaigns') as any)
         .insert({
           user_id: user.id,
           title: brief.title || `Campagna: ${brief.productName}`,
@@ -564,7 +564,7 @@ export async function saveMarketingCampaignAction(
         status: post.status || 'draft',
       }))
 
-      const { error: postsError } = await supabase.from('marketing_posts').insert(postsToInsert)
+      const { error: postsError } = await (supabase.from('marketing_posts') as any).insert(postsToInsert)
       if (postsError) {
         console.warn('Errore salvataggio post marketing:', postsError)
       }
@@ -742,8 +742,8 @@ export async function publishPostViaN8nAction(formData: {
     }
 
     if (formData.postId) {
-      await supabase
-        .from('marketing_posts')
+      await (supabase
+        .from('marketing_posts') as any)
         .update({
           status: formData.scheduledAt ? 'queued' : 'published',
           n8n_response: responseData,
@@ -1043,8 +1043,8 @@ export async function publishToBufferAction(formData: {
     // Se associato a un post del database, aggiorna lo stato su marketing_posts
     if (formData.postId) {
       const supabase = await createClient()
-      await supabase
-        .from('marketing_posts')
+      await (supabase
+        .from('marketing_posts') as any)
         .update({
           status: formData.scheduledAt ? 'queued' : 'published',
           n8n_response: { buffer: successResponse },

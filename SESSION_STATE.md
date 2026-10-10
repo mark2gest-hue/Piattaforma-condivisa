@@ -1,7 +1,14 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-10 12:08
+Ultimo aggiornamento: 2026-10-10 18:45
 Stato corrente:
+- **Stanze Aziendali B2B & Video Custom per Corsi Corporate (`/corsi`) COMPLETATO (Opzione 1 Allineata)**:
+  - Creata architettura DB multi-tenant isolata con tabelle `corporate_cohorts` e `corporate_custom_lessons` + colonna `cohort_id` su `student_codes` ([supabase/migrations/20261011000000_corporate_cohorts_and_custom_lessons.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261011000000_corporate_cohorts_and_custom_lessons.sql)).
+  - Server Actions B2B dedicate in [src/app/actions/corporate-cohorts.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/corporate-cohorts.ts) per gestione coorti, generazione batch di codici con prefisso aziendale personalizzato (es. `AI-AZIENDA-XXXX`), caricamento lezioni/video custom e dispense.
+  - UI integrata in [src/app/(dashboard)/corsi/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/corsi/page.tsx):
+    - **Lato Studente Aziendale**: Riconoscimento automatico della coorte con badge "Stanza Privata: [Azienda]", sblocco playlist masterclass/video esclusivi integrati nel player didattico.
+    - **Lato Admin/Team**: Nuova sub-tab `b2b_cohorts` nel registro corsi con modale per creare la stanza aziendale, generare codici e caricare video su misura (docente esterno/interno, dispense PDF, prompt riservati).
+  - Validazione statica Next.js 15: compilazione 100% verde (`npm run build`, 38/38 route statiche/dinamiche ottimizzate).
 - **Ridisegno Gateway A Due Vie su `aiutiamoci.cloud` (Landing Page Radice `/`) COMPLETATO & DEPLOYATO**:
   - Eliminato completamente il vecchio layout con AI Slop, menu dispersivi e ragnatele.
   - Implementata architettura essenziale e minimale a due vie simmetriche:

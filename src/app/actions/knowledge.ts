@@ -55,7 +55,6 @@ export async function getKnowledgeItemsAction(category?: string, search?: string
   }
 }
 
-// 2. Inserimento Automatico / Universale nel Secondo Cervello
 export async function autoIndexToSecondBrain(payload: {
   title: string
   category?: KnowledgeItem['category'] | string
@@ -63,11 +62,11 @@ export async function autoIndexToSecondBrain(payload: {
   description?: string
   tags?: string[]
   lesson_id?: number | null
-}) {
+}): Promise<{ success: boolean; item?: any; error?: string }> {
   try {
     const supabase = createAdminClient()
-    const { data, error } = await supabase
-      .from('knowledge_items')
+    const { data, error } = await (supabase
+      .from('knowledge_items') as any)
       .insert({
         title: payload.title.trim(),
         category: payload.category || 'course_notes',

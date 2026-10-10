@@ -158,8 +158,8 @@ export default function ClientiRubricaPage() {
 
       if (editingClient) {
         // Aggiorna
-        const { error } = await supabase
-          .from('clients')
+        const { error } = await (supabase
+          .from('clients') as any)
           .update(clientPayload)
           .eq('id', editingClient.id)
 
@@ -169,8 +169,8 @@ export default function ClientiRubricaPage() {
         playNotificationSound('chat')
       } else {
         // Inserisci nuovo
-        const { data, error } = await supabase
-          .from('clients')
+        const { data, error } = await (supabase
+          .from('clients') as any)
           .insert([clientPayload])
           .select()
           .single()

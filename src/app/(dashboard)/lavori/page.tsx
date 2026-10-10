@@ -411,13 +411,13 @@ export default function KanbanBoardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: profile } = await (supabase
+        .from('profiles') as any)
         .select('*')
         .eq('id', user.id)
         .single()
 
-      if (profile?.full_name?.trim()) {
+      if ((profile as any)?.full_name?.trim()) {
         setCurrentUserName(profile.full_name.trim().split(' ')[0])
       } else if (user.user_metadata?.full_name?.trim()) {
         setCurrentUserName(user.user_metadata.full_name.trim().split(' ')[0])

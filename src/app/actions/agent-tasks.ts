@@ -15,8 +15,8 @@ export async function executeAgentTaskAction(taskId: string) {
     const supabase = createAdminClient()
 
     // 1. Recupera il task con assignee e progetto
-    const { data: task, error: taskError } = await supabase
-      .from('tasks')
+    const { data: task, error: taskError } = await (supabase
+      .from('tasks') as any)
       .select('*, project:projects(*), assignee:profiles!tasks_assigned_to_fkey(*)')
       .eq('id', taskId)
       .single()
@@ -51,8 +51,8 @@ export async function executeAgentTaskAction(taskId: string) {
     const userPrompt = `Devi svolgere il seguente task operativo:${projectInfo}\nTitolo Task: ${task.title}${taskDetails}\nPriorità: ${task.priority}\n\nFornisci il risultato completo (bozza, analisi, piano operativo o codice) pronto per essere revisionato e approvato dal team.`
 
     // 3. Crea il record di run nello stato 'running'
-    const { data: run, error: runError } = await supabase
-      .from('task_agent_runs')
+    const { data: run, error: runError } = await (supabase
+      .from('task_agent_runs') as any)
       .insert({
         task_id: taskId,
         agent_id: agent.id,
@@ -78,8 +78,8 @@ export async function executeAgentTaskAction(taskId: string) {
 
     if (!aiResult.success) {
       if (runId) {
-        await supabase
-          .from('task_agent_runs')
+        await (supabase
+          .from('task_agent_runs') as any)
           .update({
             status: 'failed',
             output_response: aiResult.error || 'Errore sconosciuto durante la generazione',
@@ -92,8 +92,8 @@ export async function executeAgentTaskAction(taskId: string) {
 
     // 5. Aggiorna la run con l'output e lo stato di successo
     if (runId) {
-      await supabase
-        .from('task_agent_runs')
+      await (supabase
+        .from('task_agent_runs') as any)
         .update({
           status: 'success',
           output_response: aiResult.content,
@@ -104,8 +104,8 @@ export async function executeAgentTaskAction(taskId: string) {
     }
 
     // 6. Sposta automaticamente il task in 'review' (Human-in-the-Loop)
-    await supabase
-      .from('tasks')
+    await (supabase
+      .from('tasks') as any)
       .update({ status: 'review' })
       .eq('id', taskId)
 
@@ -139,15 +139,15 @@ export async function approveAgentTaskRunAction(taskId: string, runId?: string) 
 
     // 1. Se fornito runId, marca la run come approvata
     if (runId) {
-      await supabase
-        .from('task_agent_runs')
+      await (supabase
+        .from('task_agent_runs') as any)
         .update({ status: 'approved' })
         .eq('id', runId)
     }
 
     // 2. Imposta il task come completato ('done')
-    const { data: updatedTask, error } = await supabase
-      .from('tasks')
+    const { data: updatedTask, error } = await (supabase
+      .from('tasks') as any)
       .update({ status: 'done' })
       .eq('id', taskId)
       .select('*, project:projects(*)')
@@ -160,15 +160,15 @@ export async function approveAgentTaskRunAction(taskId: string, runId?: string) 
     // 3. Salva l'output approvato nel Secondo Cervello (knowledge_items) per future ricerche
     if (runId) {
       try {
-        const { data: runData } = await supabase
-          .from('task_agent_runs')
+        const { data: runData } = await (supabase
+          .from('task_agent_runs') as any)
           .select('output_response')
           .eq('id', runId)
           .single()
 
         if (runData?.output_response) {
           // 3a. Supabase Secondo Cervello
-          await supabase.from('knowledge_items').insert({
+          await (supabase.from('knowledge_items') as any).insert({
             title: `[Task AI] ${updatedTask.title}`,
             category: 'agents_workflows',
             description: `Output approvato di Nemotron per: ${updatedTask.title}`,
@@ -210,8 +210,8 @@ export async function rejectAgentTaskRunAction(taskId: string, runId: string | u
     const supabase = createAdminClient()
 
     if (runId) {
-      await supabase
-        .from('task_agent_runs')
+      await (supabase
+        .from('task_agent_runs') as any)
         .update({
           status: 'rejected',
           user_feedback: feedback || null,
@@ -220,8 +220,8 @@ export async function rejectAgentTaskRunAction(taskId: string, runId: string | u
     }
 
     // Rimanda il task in lavorazione ('in_progress')
-    const { data: updatedTask, error } = await supabase
-      .from('tasks')
+    const { data: updatedTask, error } = await (supabase
+      .from('tasks') as any)
       .update({ status: 'in_progress' })
       .eq('id', taskId)
       .select('*, project:projects(*)')
@@ -244,7 +244,7 @@ export async function rejectAgentTaskRunAction(taskId: string, runId: string | u
         })
 
         // 2. Supabase knowledge_items
-        await supabase.from('knowledge_items').insert({
+        await (supabase.from('knowledge_items') as any).insert({
           title: `[Regola Appresa] ${updatedTask.title}`,
           category: 'agents_workflows',
           description: `Correzione e direttiva del team per: ${updatedTask.title}`,

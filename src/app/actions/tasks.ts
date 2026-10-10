@@ -55,7 +55,9 @@ export async function getTasksAction() {
   }
 }
 
-export async function createTaskAction(input: CreateTaskInput) {
+export async function createTaskAction(
+  input: CreateTaskInput
+): Promise<{ success: boolean; task?: any; error?: string }> {
   try {
     const supabase = createAdminClient()
     const cleanTitle = input.title.trim()
@@ -145,7 +147,9 @@ export async function updateTaskStatusAction(taskId: string, status: TaskStatus,
       }
       const newStatusLabel = statusLabels[status] || status
       const oldStatusLabel = statusLabels[currentTask.status] || currentTask.status
-      const projectInfo = currentTask.project?.title ? ` [${escapeHtml(currentTask.project.title)}]` : ''
+      const rawProject: any = currentTask?.project
+      const projectTitle = Array.isArray(rawProject) ? rawProject[0]?.title : rawProject?.title
+      const projectInfo = projectTitle ? ` [${escapeHtml(projectTitle)}]` : ''
 
       sendTelegramMessage(
         `🔄 <b>Stato Task Aggiornato</b>${projectInfo}\n\n` +
@@ -158,10 +162,10 @@ export async function updateTaskStatusAction(taskId: string, status: TaskStatus,
         autoIndexToSecondBrain({
           title: `[Lavoro Completato] ${currentTask.title}`,
           category: 'course_notes',
-          description: `Task completato da ${userName} nel progetto ${currentTask.project?.title || 'Generale'}`,
+          description: `Task completato da ${userName} nel progetto ${projectTitle || 'Generale'}`,
           content: `### ✅ Lavoro Portato a Termine
 **Task:** ${currentTask.title}
-**Progetto:** ${currentTask.project?.title || 'Generale'}
+**Progetto:** ${projectTitle || 'Generale'}
 **Completato da:** ${userName}
 **Data:** ${new Date().toLocaleDateString('it-IT')}`,
           tags: ['lavori', 'completato', 'team'],
@@ -186,7 +190,7 @@ export async function updateTaskDetailsAction(
     dueDate?: string | null
     assignedTo?: string | null
   }
-) {
+): Promise<{ success: boolean; task?: any; error?: string }> {
   try {
     const supabase = createAdminClient()
     const updateData: any = {}
@@ -233,7 +237,10 @@ export async function deleteTaskAction(taskId: string) {
   }
 }
 
-export async function createProjectAction(title: string, description?: string) {
+export async function createProjectAction(
+  title: string,
+  description?: string
+): Promise<{ success: boolean; project?: any; error?: string }> {
   try {
     const supabase = createAdminClient()
     const cleanTitle = title.trim()
@@ -273,7 +280,7 @@ export async function createProjectAction(title: string, description?: string) {
 export async function updateProjectAction(
   projectId: string,
   payload: { title?: string; description?: string; status?: string; category?: string }
-) {
+): Promise<{ success: boolean; project?: any; error?: string }> {
   try {
     const supabase = createAdminClient()
     const updateData: any = {}
