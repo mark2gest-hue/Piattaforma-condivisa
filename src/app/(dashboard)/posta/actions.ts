@@ -375,19 +375,20 @@ export async function getImapAccountsConfig(): Promise<{ success: boolean; accou
       return { success: false, error: 'Non autenticato' }
     }
 
-    // Cerchiamo la configurazione globale o dell'organizzazione nel DB
-    const { data, error } = await (supabase as any)
-      .from('imap_settings')
-      .select('accounts')
+    // Cerchiamo la configurazione nel DB (usando knowledge_items come storage di sistema garantito)
+    const { data } = await supabase
+      .from('knowledge_items')
+      .select('content')
       .eq('id', 'default_imap_config')
       .maybeSingle()
 
-    if (error && error.code !== 'PGRST116' && error.code !== '42P01') {
-      console.warn('Errore lettura imap_settings da DB:', error.message)
-    }
-
-    if (data && data.accounts && Array.isArray(data.accounts)) {
-      return { success: true, accounts: data.accounts }
+    if (data && data.content) {
+      try {
+        const parsed = JSON.parse(data.content)
+        if (Array.isArray(parsed)) {
+          return { success: true, accounts: parsed }
+        }
+      } catch {}
     }
 
     return { success: true, accounts: [] }
@@ -405,18 +406,22 @@ export async function saveImapAccountsConfig(accounts: any[]): Promise<{ success
       return { success: false, error: 'Non autenticato' }
     }
 
-    // Salva o aggiorna la configurazione su imap_settings
-    const { error } = await (supabase as any)
-      .from('imap_settings')
-      .upsert({
-        id: 'default_imap_config',
-        accounts: accounts,
-        updated_by: user.id,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'id' })
+    // Salva la configurazione IMAP su knowledge_items (tabella consolidata nel database)
+    const payload = {
+      id: 'default_imap_config',
+      title: 'Configurazione Caselle IMAP Aruba (Sistema)',
+      category: 'system_internal',
+      tags: ['system', 'imap', 'aruba'],
+      description: 'Credenziali caselle di posta sincronizzate per n8n e cron background',
+      content: JSON.stringify(accounts),
+    }
+
+    const { error } = await supabase
+      .from('knowledge_items')
+      .upsert(payload as any, { onConflict: 'id' })
 
     if (error) {
-      console.warn('Avviso salvataggio imap_settings su DB (se tabella non creata):', error.message)
+      console.warn('Avviso salvataggio imap config su DB:', error.message)
       return { success: false, error: error.message }
     }
 
