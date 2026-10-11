@@ -940,9 +940,9 @@ export default function PostaCondivisaPage() {
 
       {/* Main Container */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden min-h-0">
-        {/* Left Column: Folders + Email List (5 cols) */}
-        <div className={`lg:col-span-5 xl:col-span-5 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden bg-slate-50/50 dark:bg-slate-900/50 ${selectedEmail ? 'hidden lg:flex' : 'flex'}`}>
-          {/* Folders / Filter Bar */}
+        {/* Left Column: Folders + Email List (4 cols su 12) */}
+        <div className={`lg:col-span-4 xl:col-span-4 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden bg-slate-50/50 dark:bg-slate-900/50 ${selectedEmail ? 'hidden lg:flex' : 'flex'}`}>
+          {/* Folders / Filter Bar Compatta */}
           <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-2.5 bg-white dark:bg-slate-900">
             {/* Search Input */}
             <div className="relative">
@@ -950,8 +950,8 @@ export default function PostaCondivisaPage() {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cerca per mittente, oggetto o testo..."
-                className="pl-9 text-xs h-9 bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-xl"
+                placeholder="Cerca mittente, oggetto o testo..."
+                className="pl-9 text-xs h-8.5 bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-xl"
               />
               {searchQuery && (
                 <button
@@ -963,11 +963,11 @@ export default function PostaCondivisaPage() {
               )}
             </div>
 
-            {/* Folder Tabs (In arrivo, Non lette, Inviate, Archivio, Tutte) */}
-            <div className="grid grid-cols-5 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-[11px] font-medium text-slate-600 dark:text-slate-300">
+            {/* Folder Tabs a pill compatti (In arrivo, Non lette, Inviate, Archivio) */}
+            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-[11px] font-medium text-slate-600 dark:text-slate-300 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setCurrentFilter('inbox')}
-                className={`py-1.5 px-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${currentFilter === 'inbox'
+                className={`py-1 px-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${currentFilter === 'inbox'
                     ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
                   }`}
@@ -975,7 +975,7 @@ export default function PostaCondivisaPage() {
                 <ArrowDownLeft className="h-3 w-3" />
                 <span>In arrivo</span>
                 {counts.unread > 0 && (
-                  <span className="ml-0.5 px-1 py-0.2 bg-blue-600 text-white text-[9px] rounded-full font-bold">
+                  <span className="px-1.5 py-0.2 bg-blue-600 text-white text-[9px] rounded-full font-bold">
                     {counts.unread}
                   </span>
                 )}
@@ -983,7 +983,7 @@ export default function PostaCondivisaPage() {
 
               <button
                 onClick={() => setCurrentFilter('unread')}
-                className={`py-1.5 px-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${currentFilter === 'unread'
+                className={`py-1 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${currentFilter === 'unread'
                     ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
                   }`}
@@ -994,48 +994,53 @@ export default function PostaCondivisaPage() {
 
               <button
                 onClick={() => setCurrentFilter('sent')}
-                className={`py-1.5 px-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${currentFilter === 'sent'
+                className={`py-1 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${currentFilter === 'sent'
                     ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
                   }`}
               >
-                <ArrowUpRight className="h-3 w-3" />
                 <span>Inviate</span>
                 <span className="text-[9px] opacity-75">({counts.sent})</span>
               </button>
 
               <button
                 onClick={() => setCurrentFilter('archived')}
-                className={`py-1.5 px-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${currentFilter === 'archived'
+                className={`py-1 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${currentFilter === 'archived'
                     ? 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs font-semibold'
                     : 'hover:text-slate-900 dark:hover:text-white'
                   }`}
               >
                 <Archive className="h-3 w-3" />
                 <span>Archivio</span>
-                <span className="text-[9px] opacity-75">({counts.archived})</span>
-              </button>
-
-              <button
-                onClick={() => setCurrentFilter('all')}
-                className={`py-1.5 px-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${currentFilter === 'all'
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-semibold'
-                    : 'hover:text-slate-900 dark:hover:text-white'
-                  }`}
-              >
-                <span>Tutte</span>
-                <span className="text-[9px] opacity-75">({counts.all})</span>
               </button>
             </div>
 
-            {/* Dropdown Filters: Cartelle & Account */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+            {/* Selettori compatti su riga singola: Casella Aruba & Cartelle */}
+            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+              {/* Menu a tendina: Account / Casella Aruba */}
+              <div className="relative">
+                <select
+                  value={accountFilter}
+                  onChange={(e) => setAccountFilter(e.target.value as AccountFilter)}
+                  className="w-full pl-2.5 pr-6 py-1.5 text-[11px] bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-medium truncate"
+                >
+                  <option value="all">✉️ Tutte le caselle ({emails.length})</option>
+                  <option value="impresa@aiutiamoci.cloud">impresa@aiutiamoci.cloud</option>
+                  <option value="info@aiutiamoci.cloud">info@aiutiamoci.cloud</option>
+                  <option value="team@aiutiamoci.cloud">team@aiutiamoci.cloud</option>
+                  <option value="pagamenti@aiutiamoci.cloud">pagamenti@aiutiamoci.cloud</option>
+                  <option value="assistenza@aiutiamoci.cloud">assistenza@aiutiamoci.cloud</option>
+                  <option value="info@mark2.cloud">info@mark2.cloud</option>
+                  <option value="support@mark2.cloud">support@mark2.cloud</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                  <ChevronDown className="h-3 w-3" />
+                </div>
+              </div>
+
               {/* Menu a tendina: Cartelle */}
-              <div className="flex items-center gap-1.5">
+              <div className="relative flex items-center gap-1">
                 <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-slate-400">
-                    <Folder className="h-3.5 w-3.5 text-blue-500" />
-                  </div>
                   <select
                     value={['inbox', 'unread', 'sent', 'archived', 'all'].includes(currentFilter) ? '' : currentFilter}
                     onChange={(e) => {
@@ -1043,7 +1048,7 @@ export default function PostaCondivisaPage() {
                         setCurrentFilter(e.target.value as any)
                       }
                     }}
-                    className="w-full pl-7 pr-7 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-medium"
+                    className="w-full pl-2.5 pr-6 py-1.5 text-[11px] bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-medium truncate"
                   >
                     <option value="">📁 Cartelle ({customFolders.length})...</option>
                     {customFolders.map((f) => {
@@ -1060,40 +1065,14 @@ export default function PostaCondivisaPage() {
                   </div>
                 </div>
 
-                {/* Pulsante Nuova Cartella */}
                 <button
                   type="button"
                   onClick={() => setIsNewFolderModalOpen(true)}
-                  className="px-2 py-1.5 text-xs bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-100 border border-blue-200 dark:border-blue-900 rounded-lg font-semibold flex items-center gap-1 shrink-0 transition-colors"
-                  title="Crea una nuova cartella"
+                  className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0"
+                  title="Crea cartella"
                 >
-                  <PlusCircle className="h-3 w-3" />
-                  <span>Nuova</span>
+                  <PlusCircle className="h-3.5 w-3.5" />
                 </button>
-              </div>
-
-              {/* Menu a tendina: Account / Casella Aruba */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-slate-400">
-                  <Mail className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
-                </div>
-                <select
-                  value={accountFilter}
-                  onChange={(e) => setAccountFilter(e.target.value as AccountFilter)}
-                  className="w-full pl-7 pr-7 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/60 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-mono font-medium"
-                >
-                  <option value="all">✉️ Tutte le caselle ({emails.length})</option>
-                  <option value="impresa@aiutiamoci.cloud">impresa@aiutiamoci.cloud</option>
-                  <option value="info@aiutiamoci.cloud">info@aiutiamoci.cloud</option>
-                  <option value="team@aiutiamoci.cloud">team@aiutiamoci.cloud</option>
-                  <option value="pagamenti@aiutiamoci.cloud">pagamenti@aiutiamoci.cloud</option>
-                  <option value="assistenza@aiutiamoci.cloud">assistenza@aiutiamoci.cloud</option>
-                  <option value="info@mark2.cloud">info@mark2.cloud</option>
-                  <option value="support@mark2.cloud">support@mark2.cloud</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
-                  <ChevronDown className="h-3 w-3" />
-                </div>
               </div>
             </div>
           </div>
@@ -1406,8 +1385,8 @@ export default function PostaCondivisaPage() {
           </div>
         </div>
 
-        {/* Right Column: Selected Email Viewer & Quick Reply (7 cols) */}
-        <div className={`lg:col-span-7 xl:col-span-7 flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden ${selectedEmail ? 'flex' : 'hidden lg:flex'}`}>
+        {/* Right Column: Selected Email Viewer & Quick Reply (8 cols) */}
+        <div className={`lg:col-span-8 xl:col-span-8 flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden ${selectedEmail ? 'flex' : 'hidden lg:flex'}`}>
           {selectedEmail ? (
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               {/* Message Header */}

@@ -1,7 +1,13 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-10 18:45
+Ultimo aggiornamento: 2026-10-11 12:35
 Stato corrente:
+- **Riorganizzazione UI/UX Posta Condivisa (`/posta`) & Auto-Sync n8n IMAP COMPLETATO**:
+  - Risolto auto-sync periodico n8n via Supabase (`knowledge_items` con categoria `system_imap_config` e timeout 10s per caselle Aruba `aiutiamoci.cloud` e `mark2.cloud`). Workflow esportato in `workflows/n8n_imap_auto_sync.json`.
+  - Riorganizzato il layout a 2 colonne: da proporzione compressa `5 / 7` a `4 / 8` (rapporto 1:2), assegnando oltre il 67% della larghezza dello schermo alla lettura delle email e alla composizione.
+  - Semplificata la toolbar di sinistra: sostituiti i pulsanti impilati verticalmente con pill compatte e riga unificata a 2 selettori (Casella attiva + Cartelle).
+  - Allineata la colonna destra di visualizzazione messaggio ed invio risposta.
+  - Verifica statica TypeScript superata con successo (`npx tsc --noEmit`).
 - **Stanze Aziendali B2B & Video Custom per Corsi Corporate (`/corsi`) COMPLETATO (Opzione 1 Allineata)**:
   - Creata architettura DB multi-tenant isolata con tabelle `corporate_cohorts` e `corporate_custom_lessons` + colonna `cohort_id` su `student_codes` ([supabase/migrations/20261011000000_corporate_cohorts_and_custom_lessons.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261011000000_corporate_cohorts_and_custom_lessons.sql)).
   - Server Actions B2B dedicate in [src/app/actions/corporate-cohorts.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/corporate-cohorts.ts) per gestione coorti, generazione batch di codici con prefisso aziendale personalizzato (es. `AI-AZIENDA-XXXX`), caricamento lezioni/video custom e dispense.
