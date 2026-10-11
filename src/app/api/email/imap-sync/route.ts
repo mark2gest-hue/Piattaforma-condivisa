@@ -1,14 +1,72 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json()
-    const accounts = body?.accounts
+export const dynamic = 'force-dynamic'
 
-    if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
+export async function GET(request: NextRequest) {
+  return handleImapSync(request)
+}
+
+export async function POST(request: NextRequest) {
+  return handleImapSync(request)
+}
+
+async function handleImapSync(request: NextRequest) {
+  try {
+    const authHeader = request.headers.get('authorization')
+    const cronSecret = process.env.CRON_SECRET
+    const url = new URL(request.url)
+    const tokenQuery = url.searchParams.get('token')
+
+    // Se è specificato un CRON_SECRET, valida se invocato come cron/n8n esterno senza cookie
+    if (cronSecret && (tokenQuery || authHeader)) {
+      const isBearerValid = authHeader === `Bearer ${cronSecret}`
+      const isTokenValid = tokenQuery === cronSecret
+      if (!isBearerValid && !isTokenValid) {
+        return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
+      }
+    }
+
+    let accounts: any[] = []
+
+    // Prova a leggere accounts dal body se presente (POST manuale dal frontend)
+    if (request.method === 'POST') {
+      try {
+        const body = await request.json()
+        if (body?.accounts && Array.isArray(body.accounts) && body.accounts.length > 0) {
+          accounts = body.accounts
+        }
+      } catch {
+        // Nessun body JSON fornito, userà le impostazioni salvate su DB
+      }
+    }
+
+    const supabase = createAdminClient()
+
+    // Se non ci sono accounts nel body, recuperali dal database (tabella imap_settings)
+    if (!accounts || accounts.length === 0) {
+      const { data: dbSettings } = await (supabase as any)
+        .from('imap_settings')
+        .select('accounts')
+        .eq('id', 'default_imap_config')
+        .maybeSingle()
+
+      if (dbSettings && Array.isArray(dbSettings.accounts)) {
+        accounts = dbSettings.accounts
+      }
+    }
+
+    const configuredAccounts = accounts.filter(
+      (a: any) => a && a.email && typeof a.password === 'string' && a.password.trim().length > 0
+    )
+
+    if (configuredAccounts.length === 0) {
       return NextResponse.json(
-        { error: 'Nessun account IMAP specificato per la sincronizzazione.' },
+        {
+          success: false,
+          error: 'Nessun account IMAP con password configurata trovato su DB o nel body.',
+          syncedCount: 0,
+        },
         { status: 400 }
       )
     }
@@ -17,11 +75,10 @@ export async function POST(request: Request) {
     const { ImapFlow } = await import('imapflow')
     const { simpleParser } = await import('mailparser')
 
-    const supabase = createAdminClient()
     let totalNewEmails = 0
     const syncResults: { email: string; count: number; error?: string }[] = []
 
-    for (const acc of accounts) {
+    for (const acc of configuredAccounts) {
       if (!acc.email || !acc.password) {
         continue
       }

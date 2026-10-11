@@ -249,8 +249,20 @@ export default function PostaCondivisaPage() {
       )
       .subscribe()
 
+    // Polling periodico automatico di sincronizzazione (ogni 3 minuti in background)
+    const syncInterval = setInterval(() => {
+      fetch('/api/email/imap-sync', { method: 'POST' }).catch(() => {})
+    }, 180000)
+
+    // Trigger sincrono iniziale dopo 2 secondi dal caricamento della schermata
+    const initialSyncTimer = setTimeout(() => {
+      fetch('/api/email/imap-sync', { method: 'POST' }).catch(() => {})
+    }, 2000)
+
     return () => {
       supabase.removeChannel(channel)
+      clearInterval(syncInterval)
+      clearTimeout(initialSyncTimer)
     }
   }, [])
 

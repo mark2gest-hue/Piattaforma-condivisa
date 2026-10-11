@@ -1,0 +1,135 @@
+{
+  "name": "Aruba IMAP 24/7 Email Auto-Sync & Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 2
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Ogni 2 Minuti",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://aiutiamoci.cloud/api/email/imap-sync",
+        "sendQuery": false,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "http-imap-sync",
+      "name": "Chiama IMAP Sync Aruba",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-new-emails",
+              "leftValue": "={{ $json.syncedCount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "filter-new-emails",
+      "name": "Ci sono nuove email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Sincronizzazione Completata\n- Nuove email scaricate: {{ $json.syncedCount }}\n- Dettagli caselle sincronizzate disponibili su Supabase Realtime.",
+        "height": 120,
+        "width": 260
+      },
+      "id": "sticky-note-info",
+      "name": "Log Esecuzione",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        900,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Ogni 2 Minuti": {
+      "main": [
+        [
+          {
+            "node": "Chiama IMAP Sync Aruba",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chiama IMAP Sync Aruba": {
+      "main": [
+        [
+          {
+            "node": "Ci sono nuove email?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "mark2-n8n"
+  }
+}
