@@ -1,7 +1,14 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-11 12:35
+Ultimo aggiornamento: 2026-10-11 12:55
 Stato corrente:
+- **Gestione Cestino & Eliminazione Definitiva Aruba IMAP (`/posta`) COMPLETATO**:
+  - Risolto il problema del ripescaggio delle email cancellate ad ogni sincronizzazione:
+    - **Fase 1 (Cestino / Soft Delete)**: Click su "Elimina" da Posta in arrivo/Inviate/Archivio sposta la mail nello stato `trash`. La mail resta recuperabile a 1-click con "Ripristina" e non viene più mostrata nelle cartelle attive né riscaricata.
+    - **Fase 2 (Svuota Cestino / Hard Delete)**: Quando si elimina dal Cestino, `permanentlyDeleteEmails` registra i `message_id` nella tabella blacklist `deleted_email_identifiers` (garantendo che nessun sync futuro li re-importi), si connette via `ImapFlow` alle caselle Aruba ed elimina fisicamente i messaggi dal server remoto (`messageDelete` con `EXPUNGE`), rimuovendo infine il record da Supabase.
+  - Aggiunta pill **Cestino** con contatore `counts.trash` accanto ad Archivio.
+  - Creata migrazione SQL: [supabase/migrations/20261011010000_email_trash_and_deleted_identifiers.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261011010000_email_trash_and_deleted_identifiers.sql).
+  - Typecheck verificato (`npx tsc --noEmit` 0 errori).
 - **Riorganizzazione UI/UX Posta Condivisa (`/posta`) & Auto-Sync n8n IMAP COMPLETATO**:
   - Risolto auto-sync periodico n8n via Supabase (`knowledge_items` con categoria `system_imap_config` e timeout 10s per caselle Aruba `aiutiamoci.cloud` e `mark2.cloud`). Workflow esportato in `workflows/n8n_imap_auto_sync.json`.
   - Riorganizzato il layout a 2 colonne: da proporzione compressa `5 / 7` a `4 / 8` (rapporto 1:2), assegnando oltre il 67% della larghezza dello schermo alla lettura delle email e alla composizione.

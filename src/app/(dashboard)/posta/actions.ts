@@ -124,37 +124,174 @@ export async function updateEmailStatus(emailId: string, status: 'received' | 'r
   }
 }
 
-export async function deleteSharedEmail(emailId: string) {
+export async function moveToTrash(emailId: string) {
   try {
     const supabase = await createClient()
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('emails')
-      .delete()
+      .update({ status: 'trash', updated_at: new Date().toISOString() })
       .eq('id', emailId)
 
     if (error) throw error
     return { success: true }
   } catch (err: any) {
-    console.error('Errore deleteSharedEmail:', err)
+    console.error('Errore moveToTrash:', err)
     return { success: false, error: err.message }
   }
 }
 
-export async function deleteSharedEmailsBulk(emailIds: string[]) {
+export async function moveToTrashBulk(emailIds: string[]) {
   try {
     if (!emailIds || emailIds.length === 0) return { success: true, count: 0 }
     const supabase = await createClient()
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('emails')
-      .delete()
+      .update({ status: 'trash', updated_at: new Date().toISOString() })
       .in('id', emailIds)
 
     if (error) throw error
     return { success: true, count: emailIds.length }
   } catch (err: any) {
-    console.error('Errore deleteSharedEmailsBulk:', err)
+    console.error('Errore moveToTrashBulk:', err)
     return { success: false, error: err.message }
   }
+}
+
+export async function restoreFromTrash(emailId: string) {
+  return updateEmailStatus(emailId, 'read')
+}
+
+export async function restoreFromTrashBulk(emailIds: string[]) {
+  try {
+    if (!emailIds || emailIds.length === 0) return { success: true, count: 0 }
+    const supabase = await createClient()
+    const { error } = await (supabase as any)
+      .from('emails')
+      .update({ status: 'read', updated_at: new Date().toISOString() })
+      .in('id', emailIds)
+
+    if (error) throw error
+    return { success: true, count: emailIds.length }
+  } catch (err: any) {
+    console.error('Errore restoreFromTrashBulk:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+/**
+ * Eliminazione Definitiva (Hard-Delete):
+ * 1. Salva i message_id in deleted_email_identifiers (blacklist anti-reimport)
+ * 2. Si connette alle caselle Aruba IMAP per rimuovere fisicamente i messaggi
+ * 3. Cancella le righe dalla tabella emails
+ */
+export async function permanentlyDeleteEmails(emailIds: string[]): Promise<{ success: boolean; count?: number; error?: string }> {
+  try {
+    if (!emailIds || emailIds.length === 0) return { success: true, count: 0 }
+    const supabase = await createClient()
+
+    // 1. Recupera le email da eliminare per avere i message_id e gli account associati
+    const { data: emailsToDelete, error: fetchErr } = await supabase
+      .from('emails')
+      .select('id, message_id, to_address, from_address')
+      .in('id', emailIds)
+
+    if (fetchErr) throw fetchErr
+
+    const validEmails = emailsToDelete || []
+    const messageIds = validEmails.map((e) => e.message_id).filter(Boolean) as string[]
+
+    // 2. Inserisci i message_id nella tabella blacklist anti-reimport
+    if (messageIds.length > 0) {
+      const recordsToBlacklist = messageIds.map((msgId) => ({
+        message_id: msgId,
+        deleted_at: new Date().toISOString(),
+      }))
+      await (supabase as any)
+        .from('deleted_email_identifiers')
+        .upsert(recordsToBlacklist, { onConflict: 'message_id' })
+    }
+
+    // 3. Prova a cancellare fisicamente i messaggi dai server IMAP di Aruba
+    try {
+      const imapConfigRes = await getImapAccountsConfig()
+      const accounts = imapConfigRes.accounts || []
+
+      if (accounts.length > 0 && messageIds.length > 0) {
+        const { ImapFlow } = await import('imapflow')
+
+        for (const acc of accounts) {
+          if (!acc.email || !acc.password) continue
+
+          const client = new ImapFlow({
+            host: 'imaps.aruba.it',
+            port: 993,
+            secure: true,
+            auth: {
+              user: acc.email.trim(),
+              pass: acc.password.trim(),
+            },
+            connectionTimeout: 8000,
+            greetingTimeout: 8000,
+            socketTimeout: 10000,
+            logger: false,
+          })
+
+          try {
+            await client.connect()
+            const lock = await client.getMailboxLock('INBOX')
+
+            try {
+              for (const emailItem of validEmails) {
+                if (!emailItem.message_id) continue
+
+                // Cerca per message-id header su IMAP
+                const searchCriteria: any = {
+                  header: { 'message-id': emailItem.message_id }
+                }
+
+                // Cerca messaggi corrispondenti
+                const uids = await client.search(searchCriteria)
+                if (uids && uids.length > 0) {
+                  // Contrassegna come Deleted ed esegui expunge
+                  await client.messageDelete(uids)
+                }
+              }
+            } finally {
+              lock.release()
+            }
+
+            await client.logout()
+          } catch (imapErr: any) {
+            console.warn(`[Hard-Delete IMAP] Errore rimozione da server Aruba per ${acc.email}:`, imapErr.message)
+          }
+        }
+      }
+    } catch (e: any) {
+      console.warn('[Hard-Delete IMAP] Modulo ImapFlow non eseguito o errore generico:', e.message)
+    }
+
+    // 4. Cancella definitivamente le righe dalla tabella emails di Supabase
+    const { error: delErr } = await supabase
+      .from('emails')
+      .delete()
+      .in('id', emailIds)
+
+    if (delErr) throw delErr
+
+    return { success: true, count: validEmails.length }
+  } catch (err: any) {
+    console.error('Errore permanentlyDeleteEmails:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+// Retrocompatibilità per codice esistente
+export async function deleteSharedEmail(emailId: string) {
+  return moveToTrash(emailId)
+}
+
+export async function deleteSharedEmailsBulk(emailIds: string[]) {
+  return moveToTrashBulk(emailIds)
 }
 
 export async function markEmailsAsReadBulk(emailIds: string[]) {

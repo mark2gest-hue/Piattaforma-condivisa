@@ -126,13 +126,21 @@ async function handleImapSync(request: NextRequest) {
                 const parsed = await simpleParser(message.source)
                 const msgId = parsed.messageId || `aruba_${acc.email}_${message.uid}`
 
+                // 1. Controlla se è già presente in emails (anche se in stato 'trash')
                 const { data: existing } = await supabase
                   .from('emails')
                   .select('id')
                   .eq('message_id', msgId)
                   .maybeSingle()
 
-                if (!existing) {
+                // 2. Controlla se è stata eliminata definitivamente in passato (blacklist anti-reimport)
+                const { data: isDeletedForever } = await supabase
+                  .from('deleted_email_identifiers')
+                  .select('message_id')
+                  .eq('message_id', msgId)
+                  .maybeSingle()
+
+                if (!existing && !isDeletedForever) {
                   const fromStr = parsed.from?.text || parsed.from?.value?.[0]?.address || 'Sconosciuto'
                   const toList: string[] = [acc.email]
                   if (parsed.to) {

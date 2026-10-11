@@ -12,7 +12,7 @@ export type ProjectStatus = 'active' | 'paused' | 'completed' | 'archived'
 export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'review' | 'done'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 export type EmailDirection = 'inbound' | 'outbound'
-export type EmailStatus = 'received' | 'read' | 'draft' | 'sent' | 'archived'
+export type EmailStatus = 'received' | 'read' | 'draft' | 'sent' | 'archived' | 'trash'
 
 export interface Database {
   public: {

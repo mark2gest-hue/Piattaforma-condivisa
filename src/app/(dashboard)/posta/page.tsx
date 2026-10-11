@@ -52,6 +52,11 @@ import {
   updateEmailStatus,
   deleteSharedEmail,
   deleteSharedEmailsBulk,
+  moveToTrash,
+  moveToTrashBulk,
+  restoreFromTrash,
+  restoreFromTrashBulk,
+  permanentlyDeleteEmails,
   markEmailsAsReadBulk,
   archiveSharedEmail,
   unarchiveSharedEmail,
@@ -66,7 +71,7 @@ import { AVAILABLE_FROM_EMAILS, ArubaMailboxConfig, DEFAULT_IMAP_ACCOUNTS, DEFAU
 import { useRouter } from 'next/navigation'
 
 type EmailWithSender = Email & { senderProfile?: Profile }
-type FolderFilter = 'inbox' | 'sent' | 'unread' | 'archived' | 'all' | string
+type FolderFilter = 'inbox' | 'sent' | 'unread' | 'archived' | 'trash' | 'all' | string
 type AccountFilter = 'all' | 'impresa@aiutiamoci.cloud' | 'info@aiutiamoci.cloud' | 'team@aiutiamoci.cloud' | 'pagamenti@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mark2.cloud' | 'support@mark2.cloud'
 
 function getToArray(to_address: any): string[] {
@@ -291,16 +296,17 @@ export default function PostaCondivisaPage() {
   // Conteggi per badge
   const counts = useMemo(() => {
     const list = Array.isArray(emails) ? emails : []
-    const notArchived = list.filter((e) => e && e.status !== 'archived')
-    const inbound = notArchived.filter((e) => e.direction === 'inbound')
+    const activeList = list.filter((e) => e && e.status !== 'archived' && e.status !== 'trash')
+    const inbound = activeList.filter((e) => e.direction === 'inbound')
     const unread = inbound.filter((e) => e.status === 'received')
-    const sent = notArchived.filter((e) => e.direction === 'outbound')
+    const sent = activeList.filter((e) => e.direction === 'outbound')
     const archived = list.filter((e) => e && e.status === 'archived')
+    const trash = list.filter((e) => e && e.status === 'trash')
 
     // Conteggi per cartella personalizzata
     const folderCounts: Record<string, number> = {}
     customFolders.forEach((f) => {
-      folderCounts[f.id] = list.filter((e) => e && emailFolderMap[e.id] === f.id).length
+      folderCounts[f.id] = activeList.filter((e) => e && emailFolderMap[e.id] === f.id).length
     })
 
     return {
@@ -308,7 +314,8 @@ export default function PostaCondivisaPage() {
       unread: unread.length,
       sent: sent.length,
       archived: archived.length,
-      all: list.length,
+      trash: trash.length,
+      all: activeList.length,
       folders: folderCounts,
     }
   }, [emails, customFolders, emailFolderMap])
@@ -321,18 +328,20 @@ export default function PostaCondivisaPage() {
 
       // 1. Filtro cartella principale
       if (currentFilter === 'inbox') {
-        if (em.direction !== 'inbound' || em.status === 'archived') return false
+        if (em.direction !== 'inbound' || em.status === 'archived' || em.status === 'trash') return false
       } else if (currentFilter === 'sent') {
-        if (em.direction !== 'outbound' || em.status === 'archived') return false
+        if (em.direction !== 'outbound' || em.status === 'archived' || em.status === 'trash') return false
       } else if (currentFilter === 'unread') {
         if (em.direction !== 'inbound' || em.status !== 'received') return false
       } else if (currentFilter === 'archived') {
         if (em.status !== 'archived') return false
+      } else if (currentFilter === 'trash') {
+        if (em.status !== 'trash') return false
       } else if (currentFilter === 'all') {
-        // Mostra tutto
+        if (em.status === 'trash') return false
       } else {
         // Filtro per Cartella Personalizzata (es: 'clienti', 'corsi', etc.)
-        if (emailFolderMap[em.id] !== currentFilter) return false
+        if (em.status === 'trash' || emailFolderMap[em.id] !== currentFilter) return false
       }
 
       const toList = getToArray(em.to_address)
@@ -496,25 +505,62 @@ export default function PostaCondivisaPage() {
     setIsComposing(false)
   }
 
-  // Eliminazione email singola
+  // Eliminazione email singola (Cestino o Eliminazione Definitiva da Aruba)
   const handleDeleteEmail = async (emailId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
-    if (!confirm('Sei sicuro di voler eliminare questa email dal sistema condiviso?')) return
+    const targetEmail = emails.find((em) => em.id === emailId)
+    const isAlreadyInTrash = targetEmail?.status === 'trash' || currentFilter === 'trash'
 
-    const result = await deleteSharedEmail(emailId)
-    if (result.success) {
-      const updated = emails.filter((em) => em.id !== emailId)
-      setEmails(updated)
-      if (selectedEmail?.id === emailId) {
-        setSelectedEmail(updated.length > 0 ? updated[0] : null)
+    if (isAlreadyInTrash) {
+      if (!confirm('Eliminare definitivamente questa email anche dalla casella Aruba? L\'azione è irreversibile.')) return
+      const result = await permanentlyDeleteEmails([emailId])
+      if (result.success) {
+        const updated = emails.filter((em) => em.id !== emailId)
+        setEmails(updated)
+        if (selectedEmail?.id === emailId) {
+          setSelectedEmail(updated.length > 0 ? updated[0] : null)
+        }
+        setSelectedEmailIds((prev) => {
+          const next = new Set(prev)
+          next.delete(emailId)
+          return next
+        })
+      } else {
+        alert(`Impossibile eliminare definitivamente: ${result.error}`)
       }
-      setSelectedEmailIds((prev) => {
-        const next = new Set(prev)
-        next.delete(emailId)
-        return next
-      })
     } else {
-      alert(`Impossibile eliminare l'email: ${result.error}`)
+      const result = await moveToTrash(emailId)
+      if (result.success) {
+        setEmails((prev) =>
+          prev.map((em) => (em.id === emailId ? { ...em, status: 'trash' as const } : em))
+        )
+        if (selectedEmail?.id === emailId) {
+          setSelectedEmail(null)
+        }
+        setSelectedEmailIds((prev) => {
+          const next = new Set(prev)
+          next.delete(emailId)
+          return next
+        })
+      } else {
+        alert(`Impossibile spostare nel cestino: ${result.error}`)
+      }
+    }
+  }
+
+  // Ripristino email da cestino
+  const handleRestoreFromTrash = async (emailId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    const result = await restoreFromTrash(emailId)
+    if (result.success) {
+      setEmails((prev) =>
+        prev.map((em) => (em.id === emailId ? { ...em, status: 'read' as const } : em))
+      )
+      if (selectedEmail?.id === emailId) {
+        setSelectedEmail((prev) => (prev ? { ...prev, status: 'read' as const } : null))
+      }
+    } else {
+      alert(`Errore ripristino dal cestino: ${result.error}`)
     }
   }
 
@@ -697,27 +743,68 @@ export default function PostaCondivisaPage() {
     setSelectedEmailIds(new Set())
   }
 
-  // Eliminazione Multipla in blocco
+  // Eliminazione Multipla in blocco (Cestino vs Eliminazione Definitiva da Aruba)
   const handleDeleteBulk = async () => {
     const ids = Array.from(selectedEmailIds)
     if (ids.length === 0) return
 
-    if (!confirm(`Sei sicuro di voler eliminare definitivamente le ${ids.length} email selezionate?`)) {
-      return
+    if (currentFilter === 'trash') {
+      if (!confirm(`Sei sicuro di voler eliminare DEFINITIVAMENTE le ${ids.length} email selezionate anche dai server Aruba? L'azione è irreversibile.`)) {
+        return
+      }
+
+      setIsBulkOperating(true)
+      try {
+        const result = await permanentlyDeleteEmails(ids)
+        if (result.success) {
+          const updated = emails.filter((em) => !selectedEmailIds.has(em.id))
+          setEmails(updated)
+          if (selectedEmail && selectedEmailIds.has(selectedEmail.id)) {
+            setSelectedEmail(updated.length > 0 ? updated[0] : null)
+          }
+          setSelectedEmailIds(new Set())
+        } else {
+          alert(`Errore eliminazione definitiva da Aruba: ${result.error}`)
+        }
+      } finally {
+        setIsBulkOperating(false)
+      }
+    } else {
+      setIsBulkOperating(true)
+      try {
+        const result = await moveToTrashBulk(ids)
+        if (result.success) {
+          setEmails((prev) =>
+            prev.map((em) => (selectedEmailIds.has(em.id) ? { ...em, status: 'trash' as const } : em))
+          )
+          if (selectedEmail && selectedEmailIds.has(selectedEmail.id)) {
+            setSelectedEmail(null)
+          }
+          setSelectedEmailIds(new Set())
+        } else {
+          alert(`Errore durante lo spostamento nel cestino: ${result.error}`)
+        }
+      } finally {
+        setIsBulkOperating(false)
+      }
     }
+  }
+
+  // Ripristino Multiplo dal Cestino
+  const handleRestoreBulk = async () => {
+    const ids = Array.from(selectedEmailIds)
+    if (ids.length === 0) return
 
     setIsBulkOperating(true)
     try {
-      const result = await deleteSharedEmailsBulk(ids)
+      const result = await restoreFromTrashBulk(ids)
       if (result.success) {
-        const updated = emails.filter((em) => !selectedEmailIds.has(em.id))
-        setEmails(updated)
-        if (selectedEmail && selectedEmailIds.has(selectedEmail.id)) {
-          setSelectedEmail(updated.length > 0 ? updated[0] : null)
-        }
+        setEmails((prev) =>
+          prev.map((em) => (selectedEmailIds.has(em.id) ? { ...em, status: 'read' as const } : em))
+        )
         setSelectedEmailIds(new Set())
       } else {
-        alert(`Errore durante l'eliminazione multipla: ${result.error}`)
+        alert(`Errore ripristino multiplo dal cestino: ${result.error}`)
       }
     } finally {
       setIsBulkOperating(false)
@@ -1013,6 +1100,20 @@ export default function PostaCondivisaPage() {
                 <Archive className="h-3 w-3" />
                 <span>Archivio</span>
               </button>
+
+              <button
+                onClick={() => setCurrentFilter('trash')}
+                className={`py-1 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${currentFilter === 'trash'
+                    ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs font-semibold'
+                    : 'hover:text-slate-900 dark:hover:text-white'
+                  }`}
+              >
+                <Trash2 className="h-3 w-3" />
+                <span>Cestino</span>
+                {counts.trash > 0 && (
+                  <span className="text-[9px] opacity-75">({counts.trash})</span>
+                )}
+              </button>
             </div>
 
             {/* Selettori compatti su riga singola: Casella Aruba & Cartelle */}
@@ -1124,7 +1225,19 @@ export default function PostaCondivisaPage() {
                   Lette
                 </Button>
 
-                {currentFilter === 'archived' ? (
+                {currentFilter === 'trash' ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRestoreBulk}
+                    disabled={isBulkOperating}
+                    className="h-7 text-xs px-2 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    title="Ripristina le email selezionate"
+                  >
+                    <CornerUpLeft className="h-3.5 w-3.5 mr-1" />
+                    Ripristina
+                  </Button>
+                ) : currentFilter === 'archived' ? (
                   <Button
                     size="sm"
                     variant="outline"
@@ -1175,15 +1288,19 @@ export default function PostaCondivisaPage() {
                   variant="destructive"
                   onClick={handleDeleteBulk}
                   disabled={isBulkOperating}
-                  className="h-7 text-xs px-2.5 bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-1"
-                  title="Elimina selezionate"
+                  className="h-7 text-xs px-2.5 bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-1 font-semibold"
+                  title={currentFilter === 'trash' ? 'Elimina definitivamente da Aruba' : 'Sposta nel Cestino'}
                 >
                   {isBulkOperating ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <Trash2 className="h-3.5 w-3.5" />
                   )}
-                  <span>Elimina ({selectedEmailIds.size})</span>
+                  <span>
+                    {currentFilter === 'trash'
+                      ? `Elimina Definitivamente (${selectedEmailIds.size})`
+                      : `Cestino (${selectedEmailIds.size})`}
+                  </span>
                 </Button>
                 <button
                   type="button"
@@ -1469,92 +1586,121 @@ export default function PostaCondivisaPage() {
                       </Button>
                     )}
 
-                    {/* Archivia / Ripristina */}
-                    {selectedEmail.status === 'archived' ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleUnarchiveEmail(selectedEmail.id)}
-                        className="h-8 px-2.5 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 gap-1.5"
-                        title="Ripristina nella posta in arrivo"
-                      >
-                        <CornerUpLeft className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">Ripristina</span>
-                      </Button>
+                    {/* Cestino: Ripristina o Elimina Definitivamente */}
+                    {selectedEmail.status === 'trash' ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRestoreFromTrash(selectedEmail.id)}
+                          className="h-8 px-2.5 text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 gap-1.5"
+                          title="Ripristina nella posta in arrivo"
+                        >
+                          <CornerUpLeft className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Ripristina</span>
+                        </Button>
+
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteEmail(selectedEmail.id)}
+                          className="h-8 px-2.5 text-xs bg-rose-600 hover:bg-rose-700 text-white gap-1.5 font-semibold"
+                          title="Elimina definitivamente da Aruba"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Elimina da Aruba</span>
+                        </Button>
+                      </>
                     ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleArchiveEmail(selectedEmail.id)}
-                        className="h-8 px-2.5 text-xs text-slate-700 hover:text-slate-900 border-slate-200 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 gap-1.5"
-                        title="Archivia questa email"
-                      >
-                        <Archive className="h-3.5 w-3.5 text-slate-500" />
-                        <span className="hidden sm:inline">Archivia</span>
-                      </Button>
-                    )}
+                      <>
+                        {/* Archivia / Ripristina */}
+                        {selectedEmail.status === 'archived' ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUnarchiveEmail(selectedEmail.id)}
+                            className="h-8 px-2.5 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 gap-1.5"
+                            title="Ripristina nella posta in arrivo"
+                          >
+                            <CornerUpLeft className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Ripristina</span>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleArchiveEmail(selectedEmail.id)}
+                            className="h-8 px-2.5 text-xs text-slate-700 hover:text-slate-900 border-slate-200 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 gap-1.5"
+                            title="Archivia questa email"
+                          >
+                            <Archive className="h-3.5 w-3.5 text-slate-500" />
+                            <span className="hidden sm:inline">Archivia</span>
+                          </Button>
+                        )}
 
-                    {/* Assegna Cartella Dropdown */}
-                    <div className="relative">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsMoveMenuOpen(!isMoveMenuOpen)}
-                        className="h-8 px-2.5 text-xs text-slate-700 border-slate-200 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 gap-1"
-                        title="Sposta o assegna a cartella"
-                      >
-                        <Folder className="h-3.5 w-3.5 text-blue-500" />
-                        <span className="hidden sm:inline">Cartella</span>
-                        <ChevronDown className="h-3 w-3 opacity-60" />
-                      </Button>
+                        {/* Assegna Cartella Dropdown */}
+                        <div className="relative">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsMoveMenuOpen(!isMoveMenuOpen)}
+                            className="h-8 px-2.5 text-xs text-slate-700 border-slate-200 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 gap-1"
+                            title="Sposta o assegna a cartella"
+                          >
+                            <Folder className="h-3.5 w-3.5 text-blue-500" />
+                            <span className="hidden sm:inline">Cartella</span>
+                            <ChevronDown className="h-3 w-3 opacity-60" />
+                          </Button>
 
-                      {isMoveMenuOpen && (
-                        <div className="absolute right-0 top-9 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-1.5 z-50 text-xs">
-                          <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                            Assegna a:
-                          </div>
-                          {customFolders.map((f) => (
-                            <button
-                              key={f.id}
-                              type="button"
-                              onClick={() => handleAssignFolder([selectedEmail.id], f.id)}
-                              className={`w-full text-left px-3 py-1.5 flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
-                                emailFolderMap[selectedEmail.id] === f.id
-                                  ? 'font-bold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/40'
-                                  : 'text-slate-700 dark:text-slate-300'
-                              }`}
-                            >
-                              <span className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-blue-500" />
-                                {f.name}
-                              </span>
-                              {emailFolderMap[selectedEmail.id] === f.id && (
-                                <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                          {isMoveMenuOpen && (
+                            <div className="absolute right-0 top-9 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-1.5 z-50 text-xs">
+                              <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                Assegna a:
+                              </div>
+                              {customFolders.map((f) => (
+                                <button
+                                  key={f.id}
+                                  type="button"
+                                  onClick={() => handleAssignFolder([selectedEmail.id], f.id)}
+                                  className={`w-full text-left px-3 py-1.5 flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+                                    emailFolderMap[selectedEmail.id] === f.id
+                                      ? 'font-bold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/40'
+                                      : 'text-slate-700 dark:text-slate-300'
+                                  }`}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                    {f.name}
+                                  </span>
+                                  {emailFolderMap[selectedEmail.id] === f.id && (
+                                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                                  )}
+                                </button>
+                              ))}
+                              {emailFolderMap[selectedEmail.id] && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAssignFolder([selectedEmail.id], null)}
+                                  className="w-full text-left px-3 py-1.5 text-rose-600 dark:text-rose-400 border-t border-slate-100 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors mt-1"
+                                >
+                                  Rimuovi da cartelle
+                                </button>
                               )}
-                            </button>
-                          ))}
-                          {emailFolderMap[selectedEmail.id] && (
-                            <button
-                              type="button"
-                              onClick={() => handleAssignFolder([selectedEmail.id], null)}
-                              className="w-full text-left px-3 py-1.5 text-rose-600 dark:text-rose-400 border-t border-slate-100 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors mt-1"
-                            >
-                              Rimuovi da cartelle
-                            </button>
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteEmail(selectedEmail.id)}
-                      className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                      title="Elimina questa email"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteEmail(selectedEmail.id)}
+                          className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                          title="Sposta nel Cestino"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
