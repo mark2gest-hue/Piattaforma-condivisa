@@ -375,11 +375,13 @@ export async function getImapAccountsConfig(): Promise<{ success: boolean; accou
       return { success: false, error: 'Non autenticato' }
     }
 
-    // Cerchiamo la configurazione nel DB (usando knowledge_items come storage di sistema garantito)
+    // Cerchiamo la configurazione nel DB per categoria univoca di sistema
     const { data } = await supabase
       .from('knowledge_items')
       .select('content')
-      .eq('id', 'default_imap_config')
+      .eq('category', 'system_imap_config')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle()
 
     if (data && data.content) {
@@ -406,19 +408,30 @@ export async function saveImapAccountsConfig(accounts: any[]): Promise<{ success
       return { success: false, error: 'Non autenticato' }
     }
 
-    // Salva la configurazione IMAP su knowledge_items (tabella consolidata nel database)
+    // Cerchiamo se esiste già un record
+    const { data: existing } = await supabase
+      .from('knowledge_items')
+      .select('id')
+      .eq('category', 'system_imap_config')
+      .limit(1)
+      .maybeSingle()
+
     const payload = {
-      id: 'default_imap_config',
       title: 'Configurazione Caselle IMAP Aruba (Sistema)',
-      category: 'system_internal',
+      category: 'system_imap_config',
       tags: ['system', 'imap', 'aruba'],
       description: 'Credenziali caselle di posta sincronizzate per n8n e cron background',
       content: JSON.stringify(accounts),
     }
 
-    const { error } = await supabase
-      .from('knowledge_items')
-      .upsert(payload as any, { onConflict: 'id' })
+    let error: any = null
+    if (existing?.id) {
+      const res = await supabase.from('knowledge_items').update(payload).eq('id', existing.id)
+      error = res.error
+    } else {
+      const res = await supabase.from('knowledge_items').insert(payload)
+      error = res.error
+    }
 
     if (error) {
       console.warn('Avviso salvataggio imap config su DB:', error.message)

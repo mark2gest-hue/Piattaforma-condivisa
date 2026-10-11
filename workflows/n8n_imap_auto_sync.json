@@ -36,7 +36,7 @@
           ]
         },
         "options": {
-          "timeout": 30000
+          "timeout": 60000
         }
       },
       "id": "http-imap-sync",

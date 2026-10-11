@@ -43,12 +43,14 @@ async function handleImapSync(request: NextRequest) {
 
     const supabase = createAdminClient()
 
-    // Se non ci sono accounts nel body, recuperali dal database (knowledge_items con id='default_imap_config')
+    // Se non ci sono accounts nel body, recuperali dal database (knowledge_items con category='system_imap_config')
     if (!accounts || accounts.length === 0) {
       const { data: dbItem } = await supabase
         .from('knowledge_items')
         .select('content')
-        .eq('id', 'default_imap_config')
+        .eq('category', 'system_imap_config')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle()
 
       if (dbItem && dbItem.content) {
@@ -96,6 +98,9 @@ async function handleImapSync(request: NextRequest) {
           user: acc.email.trim(),
           pass: acc.password.trim(),
         },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
         logger: false,
       })
 
