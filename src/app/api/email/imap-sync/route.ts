@@ -103,6 +103,7 @@ async function handleImapSync(request: NextRequest) {
         socketTimeout: 15000,
         logger: false,
       })
+      client.on('error', (e: Error) => console.error(`[IMAP] ${acc.email}:`, e.message))
 
       let accountCount = 0
 
