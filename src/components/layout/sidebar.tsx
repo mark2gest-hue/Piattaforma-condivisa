@@ -343,14 +343,17 @@ export function Sidebar({
                           isActive ? 'text-white' : 'text-slate-400 group-hover:text-cyan-300'
                         )}
                       />
-                      {/* Compact Dot Badge when collapsed */}
-                      {!expanded && item.badge && (
+                      {/* Notification Dot when collapsed (SOLO per vere notifiche: email nuove o live) */}
+                      {!expanded && (
+                        (item.href === '/posta' && unreadEmailCount > 0) ||
+                        (item.badge === 'Live')
+                      ) && (
                         <span
                           className={cn(
                             'absolute -top-1 -right-1 w-2 h-2 rounded-full ring-2 ring-slate-900',
                             item.badge === 'Live'
                               ? 'bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse'
-                              : 'bg-cyan-400 shadow-[0_0_6px_#22d3ee]'
+                              : 'bg-rose-500 shadow-[0_0_6px_#f43f5e]'
                           )}
                         />
                       )}
