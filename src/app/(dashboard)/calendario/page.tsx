@@ -1158,7 +1158,7 @@ export default function CalendarioPage() {
                                 Da: impresa@aiutiamoci.cloud
                               </span>
                               <span className="text-[9px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                                Risposte a: <strong className="text-slate-700 dark:text-slate-200">info@mark2.cloud</strong>
+                                Risposte a: <strong className="text-slate-700 dark:text-slate-200">impresa@aiutiamoci.cloud</strong>
                               </span>
                             </button>
                           </div>

@@ -25,10 +25,10 @@ export async function sendSharedEmail(formData: {
     const chosenFrom = formData.from || process.env.RESEND_FROM_EMAIL || 'aiutiamoci Impresa <impresa@aiutiamoci.cloud>'
     const isImpresa = chosenFrom.includes('impresa@') || chosenFrom.includes('mark2.cloud') || chosenFrom.includes('mar2.cloud')
     
-    const replyToAddress = isImpresa ? 'info@mark2.cloud' : 'info@aiutiamoci.cloud'
+    const replyToAddress = chosenFrom.includes('impresa@') ? 'impresa@aiutiamoci.cloud' : isImpresa ? 'info@mark2.cloud' : 'info@aiutiamoci.cloud'
     const headerTitle = isImpresa ? 'aiutiamoci Impresa • Soluzioni AI per PMI' : 'aiutiamoci • Campus Formativo AI'
     const footerText = isImpresa 
-      ? 'aiutiamoci Impresa • Divisione Consulenza & Sviluppo AI<br>Per assistenza o informazioni contatta <a href="mailto:info@mark2.cloud" style="color: #0284c7;">info@mark2.cloud</a>.' 
+      ? `aiutiamoci Impresa • Divisione Consulenza & Sviluppo AI<br>Per assistenza o informazioni contatta <a href="mailto:${replyToAddress}" style="color: #0284c7;">${replyToAddress}</a>.` 
       : 'Ricevi questa email dalla piattaforma aiutiamoci.cloud.<br>Per assistenza rispondi direttamente a questa email o contatta info@aiutiamoci.cloud.'
     const accentColor = isImpresa ? '#0ea5e9' : '#0284c7'
 

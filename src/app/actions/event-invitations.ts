@@ -131,7 +131,7 @@ export interface SendEventInvitationsParams {
   studentCohort?: 'new' | 'all' // 'new' = solo iscritti nuova edizione (Settembre-Ottobre 2026), 'all' = tutti
   customEmails?: string // separate da virgola
   scheduledAt?: string // ISO string o formato data/ora per l'invio programmato
-  senderProfile?: 'campus' | 'impresa' // 'campus' (info@aiutiamoci.cloud) o 'impresa' (impresa@aiutiamoci.cloud / reply-to: info@mark2.cloud)
+  senderProfile?: 'campus' | 'impresa' // 'campus' (info@aiutiamoci.cloud) o 'impresa' (impresa@aiutiamoci.cloud / reply-to: impresa@aiutiamoci.cloud)
   customSenderName?: string
 }
 
@@ -247,7 +247,7 @@ export async function sendEventInvitationsAction(params: SendEventInvitationsPar
     const fromEmail = `${senderDisplayName} <${fromAddress}>`
     
     // Indirizzo di risposta
-    const replyToEmail = isImpresa ? 'info@mark2.cloud' : 'info@aiutiamoci.cloud'
+    const replyToEmail = isImpresa ? 'impresa@aiutiamoci.cloud' : 'info@aiutiamoci.cloud'
     
     const brandHeader = isImpresa ? 'aiutiamoci Impresa • Soluzioni AI per PMI' : 'aiutiamoci • Campus Didattico'
     const brandFooter = isImpresa ? 'aiutiamoci Impresa • Divisione Consulenza & Sviluppo AI' : 'aiutiamoci • Campus Formativo & Operativo AI'
