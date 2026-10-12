@@ -1,7 +1,12 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-11 12:55
+Ultimo aggiornamento: 2026-10-12 13:40
 Stato corrente:
+- **Sidebar Fluida Neon Dock & Ottimizzazione Spazio Schermo COMPLETATO & DEPLOYATO IN PRODUZIONE**:
+  - Implementata sidebar fluttuante a capsula compatta (68px a riposo con icone centrate e micro-dot glowing) che si espande fluidamente a 260px in hover con glowing neon blu/cyan e tasto Pin/Unpin (preferenza persistita in `localStorage`).
+  - L'area di lavoro centrale guadagna oltre 170px di larghezza utile su tutte le sezioni (`/posta`, `/lavori`, `/corsi`).
+  - Risolti i vincoli Edge/Webpack su `middleware.ts` (`runtime = 'nodejs'`) e corretto il plugin Tailwind in ESM (`tailwind.config.ts`).
+  - Push su GitHub `main` (commit `59524c1`) e deploy su VPS Oracle (`80.225.81.150`), PM2 `aiutiamoci` riavviato e online su `https://aiutiamoci.cloud`.
 - **Gestione Cestino & Eliminazione Definitiva Aruba IMAP (`/posta`) COMPLETATO**:
   - Risolto il problema del ripescaggio delle email cancellate ad ogni sincronizzazione:
     - **Fase 1 (Cestino / Soft Delete)**: Click su "Elimina" da Posta in arrivo/Inviate/Archivio sposta la mail nello stato `trash`. La mail resta recuperabile a 1-click con "Ripristina" e non viene più mostrata nelle cartelle attive né riscaricata.
