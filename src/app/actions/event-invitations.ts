@@ -7,11 +7,15 @@ import { createAdminClient } from '@/lib/supabase/server'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+export type RecipientSource = 'student' | 'client' | 'partner' | 'team' | 'lead'
+
 export interface SelectableRecipient {
   id: string
   name: string
   email: string
-  source: 'student' | 'client' | 'team' | 'lead'
+  source: RecipientSource
+  sources?: RecipientSource[]
+  company?: string
   detail?: string
 }
 
@@ -41,6 +45,7 @@ export async function getSelectableRecipientsAction(): Promise<{
               name: s.student_name?.trim() || email.split('@')[0],
               email,
               source: 'student',
+              sources: ['student'],
               detail: `Studente (${s.access_tier || 'Corso'}) • Cod: ${s.code}`,
             })
           }
@@ -58,14 +63,38 @@ export async function getSelectableRecipientsAction(): Promise<{
         const email = c.email?.trim()
         if (email && email.includes('@')) {
           const key = email.toLowerCase()
-          if (!map.has(key)) {
-            const fullName = `${c.first_name || ''} ${c.last_name || ''}`.trim()
+          const fullName = `${c.first_name || ''} ${c.last_name || ''}`.trim()
+          const isPartner = c.category === 'partner' || c.category === 'fornitore'
+          const roleSource: RecipientSource = isPartner ? 'partner' : 'client'
+          const compStr = c.company ? ` (${c.company})` : ''
+          const roleLabel = isPartner
+            ? `Fornitore / Partner${compStr}`
+            : (c.company ? `Cliente • ${c.company}` : `Cliente (${c.category || 'Rubrica'})`)
+
+          if (map.has(key)) {
+            const existing = map.get(key)!
+            if (!existing.sources) existing.sources = [existing.source]
+            if (!existing.sources.includes(roleSource)) {
+              existing.sources.push(roleSource)
+            }
+            if (fullName && (!existing.name || existing.name === email.split('@')[0])) {
+              existing.name = fullName
+            }
+            if (c.company) {
+              existing.company = c.company
+            }
+            existing.detail = existing.detail
+              ? `${existing.detail} • ${roleLabel}`
+              : roleLabel
+          } else {
             map.set(key, {
               id: `client-${c.id}`,
               name: fullName || c.company || email.split('@')[0],
               email,
-              source: 'client',
-              detail: c.company ? `Cliente • ${c.company}` : `Cliente (${c.category || 'Rubrica'})`,
+              company: c.company || undefined,
+              source: roleSource,
+              sources: [roleSource],
+              detail: roleLabel,
             })
           }
         }
@@ -96,12 +125,22 @@ export async function getSelectableRecipientsAction(): Promise<{
         const email = l.email?.trim()
         if (email && email.includes('@')) {
           const key = email.toLowerCase()
-          if (!map.has(key)) {
+          if (map.has(key)) {
+            const existing = map.get(key)!
+            if (!existing.sources) existing.sources = [existing.source]
+            if (!existing.sources.includes('lead')) {
+              existing.sources.push('lead')
+            }
+            if (!existing.detail?.includes('Lead')) {
+              existing.detail = existing.detail ? `${existing.detail} • Lead Lista Attesa` : 'Lead Lista Attesa'
+            }
+          } else {
             map.set(key, {
               id: `lead-${l.id}`,
               name: l.name?.trim() || email.split('@')[0],
               email,
               source: 'lead',
+              sources: ['lead'],
               detail: 'Lead Lista Attesa',
             })
           }

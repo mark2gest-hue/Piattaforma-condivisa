@@ -109,7 +109,7 @@ export default function CalendarioPage() {
   const [loadingContacts, setLoadingContacts] = useState(false)
   const [dbSearchQuery, setDbSearchQuery] = useState('')
   const [selectedDbEmails, setSelectedDbEmails] = useState<string[]>([])
-  const [dbSourceFilter, setDbSourceFilter] = useState<'all' | 'student' | 'client' | 'lead'>('all')
+  const [dbSourceFilter, setDbSourceFilter] = useState<'all' | 'student' | 'client' | 'partner' | 'lead'>('all')
 
   const loadDatabaseContacts = async () => {
     // Inizializza i contatti già selezionati se presenti in customEmails
@@ -1373,52 +1373,72 @@ export default function CalendarioPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between gap-1 text-[11px]">
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setDbSourceFilter('all')}
-                    className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
-                      dbSourceFilter === 'all'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    Tutti ({dbContacts.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDbSourceFilter('student')}
-                    className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
-                      dbSourceFilter === 'student'
-                        ? 'bg-emerald-600 text-white'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    🎓 Studenti ({dbContacts.filter((c) => c.source === 'student').length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDbSourceFilter('client')}
-                    className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
-                      dbSourceFilter === 'client'
-                        ? 'bg-sky-600 text-white'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    💼 Clienti ({dbContacts.filter((c) => c.source === 'client').length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDbSourceFilter('lead')}
-                    className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
-                      dbSourceFilter === 'lead'
-                        ? 'bg-purple-600 text-white'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    📋 Lead ({dbContacts.filter((c) => c.source === 'lead').length})
-                  </button>
+              <div className="flex items-center justify-between gap-1 text-[11px] flex-wrap">
+                <div className="flex items-center gap-1 flex-wrap">
+                  {(() => {
+                    const hasSrc = (c: SelectableRecipient, src: string) =>
+                      c.sources && c.sources.length > 0 ? c.sources.includes(src as any) : c.source === src
+
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setDbSourceFilter('all')}
+                          className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                            dbSourceFilter === 'all'
+                              ? 'bg-blue-600 text-white'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          Tutti ({dbContacts.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDbSourceFilter('student')}
+                          className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                            dbSourceFilter === 'student'
+                              ? 'bg-emerald-600 text-white'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          🎓 Studenti ({dbContacts.filter((c) => hasSrc(c, 'student')).length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDbSourceFilter('client')}
+                          className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                            dbSourceFilter === 'client'
+                              ? 'bg-sky-600 text-white'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          💼 Clienti ({dbContacts.filter((c) => hasSrc(c, 'client')).length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDbSourceFilter('partner')}
+                          className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                            dbSourceFilter === 'partner'
+                              ? 'bg-amber-600 text-white'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          🤝 Fornitori ({dbContacts.filter((c) => hasSrc(c, 'partner')).length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDbSourceFilter('lead')}
+                          className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                            dbSourceFilter === 'lead'
+                              ? 'bg-purple-600 text-white'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          📋 Lead ({dbContacts.filter((c) => hasSrc(c, 'lead')).length})
+                        </button>
+                      </>
+                    )
+                  })()}
                 </div>
 
                 {selectedDbEmails.length > 0 && (
@@ -1441,13 +1461,17 @@ export default function CalendarioPage() {
                   <span className="text-xs">Caricamento contatti dal database...</span>
                 </div>
               ) : (() => {
+                const hasSrc = (c: SelectableRecipient, src: string) =>
+                  c.sources && c.sources.length > 0 ? c.sources.includes(src as any) : c.source === src
+
                 const filtered = dbContacts.filter((c) => {
-                  const matchFilter = dbSourceFilter === 'all' || c.source === dbSourceFilter
+                  const matchFilter = dbSourceFilter === 'all' || hasSrc(c, dbSourceFilter)
                   const q = dbSearchQuery.trim().toLowerCase()
                   const matchQuery =
                     !q ||
                     c.name.toLowerCase().includes(q) ||
                     c.email.toLowerCase().includes(q) ||
+                    (c.company && c.company.toLowerCase().includes(q)) ||
                     (c.detail && c.detail.toLowerCase().includes(q))
                   return matchFilter && matchQuery
                 })
@@ -1462,6 +1486,8 @@ export default function CalendarioPage() {
 
                 return filtered.map((c) => {
                   const isChecked = selectedDbEmails.includes(c.email)
+                  const contactRoles = c.sources && c.sources.length > 0 ? c.sources : [c.source]
+
                   return (
                     <div
                       key={c.id}
@@ -1481,19 +1507,48 @@ export default function CalendarioPage() {
                           )}
                         </div>
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-bold text-xs truncate">{c.name}</span>
-                            <span
-                              className={`text-[9px] px-1.5 py-0.2 rounded font-semibold shrink-0 ${
-                                c.source === 'student'
-                                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                                  : c.source === 'client'
-                                  ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300'
-                                  : 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
-                              }`}
-                            >
-                              {c.source === 'student' ? 'Studente' : c.source === 'client' ? 'Cliente' : 'Lead'}
-                            </span>
+                            {contactRoles.map((role) => {
+                              if (role === 'student') {
+                                return (
+                                  <span
+                                    key={role}
+                                    className="text-[9px] px-1.5 py-0.2 rounded font-semibold shrink-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                                  >
+                                    Studente
+                                  </span>
+                                )
+                              }
+                              if (role === 'partner') {
+                                return (
+                                  <span
+                                    key={role}
+                                    className="text-[9px] px-1.5 py-0.2 rounded font-semibold shrink-0 bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                                  >
+                                    Fornitore
+                                  </span>
+                                )
+                              }
+                              if (role === 'client') {
+                                return (
+                                  <span
+                                    key={role}
+                                    className="text-[9px] px-1.5 py-0.2 rounded font-semibold shrink-0 bg-sky-500/15 text-sky-700 dark:text-sky-300"
+                                  >
+                                    Cliente
+                                  </span>
+                                )
+                              }
+                              return (
+                                <span
+                                  key={role}
+                                  className="text-[9px] px-1.5 py-0.2 rounded font-semibold shrink-0 bg-purple-500/15 text-purple-700 dark:text-purple-300"
+                                >
+                                  Lead
+                                </span>
+                              )
+                            })}
                           </div>
                           <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate font-mono">
                             {c.email}

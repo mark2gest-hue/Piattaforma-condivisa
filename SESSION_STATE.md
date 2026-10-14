@@ -62,10 +62,12 @@ Stato corrente:
   - Elimina automaticamente solo le registrazioni in attesa (`approved: false`) che risultano doppioni di utenti già attivi/approvati o invii multipli accidentali del questionario.
   - Consolida record duplicati nella rubrica `clients` preservando il record principale.
   - Aggiunto pulsante operativo `[🧹 Pulisci Duplicati]` nella barra del registro registrazioni (`/corsi`) con popup di conferma preventiva e alert con riepilogo puntuale delle rimozioni.
-- **Selettore Contatti dal Database nel Calendario (`/calendario`) COMPLETATO**:
+- **Selettore Contatti dal Database nel Calendario (`/calendario`) & Supporto Multi-Ruolo (Studenti / Fornitori) COMPLETATO**:
   - Aggiunto pulsante rapido `[👥 Scegli dal Database]` nella sezione destinatari del modale di creazione evento.
-  - Implementata server action `getSelectableRecipientsAction` in `src/app/actions/event-invitations.ts` per recuperare in modo unificato contatti da `student_codes` (studenti con codici), `clients` (rubrica clienti B2B) e `waitlist_leads` (lead lista d'attesa).
-  - Finestra di selezione modale con filtri per categoria (Tutti, Studenti, Clienti, Lead), barra di ricerca live e checkbox per selezionare puntualmente 2, 3 o 5 destinatari.
+  - Implementata server action `getSelectableRecipientsAction` in `src/app/actions/event-invitations.ts` per recuperare in modo unificato contatti da `student_codes`, `clients` e `waitlist_leads`.
+  - Risolta la gestione della **doppia posizione (es. Studente + Fornitore/Partner)**: unificata la mappa contatti preservando l'array dei ruoli `sources: [...]`, l'azienda e il dettaglio multi-qualifica.
+  - Aggiunto il filtro `🤝 Fornitori` nella modale del calendario, badge multipli contestuali (Studente, Fornitore, Cliente, Lead) e ricerca estesa anche per azienda.
+  - Finestra di selezione modale con filtri per categoria (Tutti, Studenti, Clienti, Fornitori, Lead), barra di ricerca live e checkbox per selezione puntuale.
   - Aggancio automatico degli indirizzi selezionati al campo di invio email e alla spedizione della comunicazione via Resend.
 - **Upload e Visualizzazione Allegati nella Chat (`/chat`) COMPLETATO**:
   - Implementato supporto completo per allegare e inviare foto (PNG, JPG, WebP, GIF) e documenti (PDF, DOCX, XLSX, TXT, CSV, ZIP).
