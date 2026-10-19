@@ -12,8 +12,10 @@ import {
   ExternalLink,
   ShieldCheck,
   CheckCircle2,
+  X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { LegalModal, CookieBanner } from '@/components/legal/LegalModal'
 
 export default function GatewayPage() {
@@ -77,15 +79,14 @@ export default function GatewayPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button
+            <button
+              type="button"
               onClick={() => setIsStudentModalOpen(true)}
-              variant="outline"
-              size="sm"
-              className="border-white/10 bg-slate-900/60 hover:bg-slate-800 text-slate-200 hover:text-white text-xs rounded-xl h-9 px-4 gap-2 font-medium transition-all shadow-xs"
+              className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Key className="h-3.5 w-3.5 text-blue-400" />
               <span>Ho un codice</span>
-            </Button>
+            </button>
 
             <Link
               href="/login"
@@ -285,45 +286,44 @@ export default function GatewayPage() {
 
       {/* Modal Login Studente Rapido con Codice */}
       {isStudentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-blue-400">
-                <Key className="h-5 w-5" />
-                <h3 className="font-bold text-white text-base">Area Studenti</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-150">
+          <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-800 overflow-hidden">
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+              <div className="flex items-center gap-2">
+                <Key className="h-5 w-5 text-blue-400" />
+                <h3 className="font-bold text-sm text-white">Area Studenti — Hai già il codice?</h3>
               </div>
               <button
+                type="button"
                 onClick={() => setIsStudentModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                ✕
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleStudentAccess} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">
-                  Inserisci il tuo Codice Univoco
-                </label>
-                <input
-                  type="text"
-                  placeholder="Es. AI-START-8F92"
+            <form onSubmit={handleStudentAccess} className="p-6 space-y-4 text-xs">
+              <p className="text-slate-400 text-xs leading-relaxed">
+                Inserisci il tuo codice di accesso personale (ricevuto via email o dal corso precedente) per sbloccare subito le 20 video lezioni e i contenuti.
+              </p>
+
+              <div className="space-y-2">
+                <label className="font-semibold text-slate-300">Codice Univoco di Accesso *</label>
+                <Input
+                  autoFocus
+                  required
                   value={studentCode}
                   onChange={(e) => setStudentCode(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono uppercase tracking-wider outline-none"
-                  autoFocus
+                  placeholder="Es. AI-START-8F92 oppure DEMO2026"
+                  className="text-center font-mono uppercase tracking-widest font-bold text-sm h-12 bg-slate-950 border-slate-800 text-white"
                 />
-                <p className="text-[11px] text-slate-400">
-                  Il codice univoco ricevuto via email al momento dell'iscrizione.
-                </p>
               </div>
 
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold h-10 rounded-xl gap-2 text-xs cursor-pointer"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-blue-600/20 cursor-pointer"
               >
-                <span>Accedi alle Lezioni</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                Accedi al Corso
               </Button>
             </form>
           </div>
