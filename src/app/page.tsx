@@ -79,14 +79,13 @@ export default function GatewayPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsStudentModalOpen(true)}
+            <Link
+              href="/corsi?tab=login"
               className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Key className="h-3.5 w-3.5 text-blue-400" />
               <span>Ho un codice</span>
-            </button>
+            </Link>
 
             <Link
               href="/login"

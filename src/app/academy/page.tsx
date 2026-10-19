@@ -308,13 +308,13 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
-            <button
-              onClick={() => setIsStudentModalOpen(true)}
+            <Link
+              href="/corsi?tab=login"
               className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Key className="h-3.5 w-3.5 text-blue-400" />
               <span>Ho un codice</span>
-            </button>
+            </Link>
             <Link
               href="/login"
               className="text-slate-400 hover:text-slate-200 px-3 py-1.5 transition-colors flex items-center gap-1.5 border border-white/10 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-xs font-semibold"
@@ -366,14 +366,15 @@ export default function LandingPage() {
               <span>Iscrizione Diretta (€)</span>
             </Button>
 
-            <Button
-              onClick={() => setIsStudentModalOpen(true)}
-              variant="outline"
-              className="w-full sm:w-auto border-white/10 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-semibold h-12.5 px-6 rounded-xl gap-2 text-sm transition-all cursor-pointer"
-            >
-              <Key className="h-4 w-4 text-blue-400" />
-              <span>Accedi con Codice</span>
-            </Button>
+            <Link href="/corsi?tab=login" className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto border-white/10 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-semibold h-12.5 px-6 rounded-xl gap-2 text-sm transition-all cursor-pointer"
+              >
+                <Key className="h-4 w-4 text-blue-400" />
+                <span>Accedi con Codice</span>
+              </Button>
+            </Link>
           </div>
         </section>
 
