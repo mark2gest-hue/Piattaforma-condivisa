@@ -70,3 +70,22 @@ Le skill sono gestite a livello globale in:
      * Le opzioni alternative (se ve ne sono), attendendo esplicita conferma prima di eseguire qualsiasi azione o scrivere file.
 4. **Nessun workaround non autorizzato**:
    - Considera qualsiasi codice scritto senza dati reali sottostanti come una violazione grave del protocollo.
+
+## REGOLA AUREA DI ZERO-PRESUPPOSIZIONE (Log First, Verify Never Assume)
+> *"L'utente può fare ipotesi; l'agente NON PUÒ PRESUMERE. L'agente deve verificare con i dati, i log e i fatti reali prima di toccare qualsiasi riga di codice."*
+
+1. **Divieto Assoluto di Diagnosi a Indizio o a Tentativi**:
+   - Se un pulsante non risponde, una schermata è bloccata, un form fallisce o una risorsa non carica, È TASSATIVAMENTE VIETATO indovinare la causa o modificare il codice "a tentativi" (es. cambiare onClick in Link, riscrivere componenti, aggirare validazioni).
+   - L'agente NON tocca il codice applicativo finché non ha accertato la sorgente oggettiva del guasto.
+
+2. **Obbligo di Ispezione dei Dati e dei Log Reali (Evidence-Based Debugging)**:
+   - Prima di formulare qualsiasi diagnosi o proporre modifiche, l'agente DEVE obbligatoriamente verificare:
+     * **Console Browser & Network tab**: codici HTTP 4xx/5xx, risorse bloccate, eccezioni JS non gestite.
+     * **Log Web Server (Nginx / Nginx Access & Error)**: `/var/log/nginx/error.log` per verificare rate limiting (429), permessi (403), o gateway (502).
+     * **Log di Processo (PM2 / Node / Docker)**: `pm2 logs <app>` per catturare crash o timeout applicativi.
+     * **Dati e Tabelle DB**: verificare lo stato reale dei record sul database prima di presumere anomalie di sessione o auth.
+
+3. **Divieto di Mascheramento del Sintomo (Anti-Workaround Distruttivi)**:
+   - È vietato applicare modifiche tampone che aggirano il problema reale degradando la sicurezza, l'architettura o la logica di business (es. bypassare modali di sicurezza, esporre URL protetti, disabilitare guardrail).
+   - Se il guasto risiede a livello sistemistico o infrastrutturale (rete, porte, Nginx, permessi su disco), si ripara la causa a livello infrastrutturale senza degradare il frontend o compromettere i dati a pagamento.
+
