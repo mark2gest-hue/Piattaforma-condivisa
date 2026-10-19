@@ -13,28 +13,64 @@ import {
   ShieldCheck,
   CheckCircle2,
   X,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LegalModal, CookieBanner } from '@/components/legal/LegalModal'
+import { verifyStudentCodeAction } from '@/app/actions/student'
 
 export default function GatewayPage() {
   const router = useRouter()
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false)
   const [studentCode, setStudentCode] = useState('')
+  const [codeError, setCodeError] = useState('')
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false)
   const [legalModalType, setLegalModalType] = useState<'privacy' | 'cookies' | 'terms' | 'disclaimer' | null>(null)
 
-  const handleStudentAccess = (e: React.FormEvent) => {
+  const handleStudentAccess = async (e: React.FormEvent) => {
     e.preventDefault()
+    setCodeError('')
     if (!studentCode.trim()) return
 
     const cleanCode = studentCode.trim().toUpperCase()
     if (cleanCode.startsWith('REF-')) {
-      alert('Questo è un link di invito/referral, non un codice di accesso valido per entrare al corso. Per accedere usa il codice univoco personale ricevuto via email.')
+      setCodeError('Questo è un link di invito/referral, non un codice di accesso. Usa il codice univoco personale ricevuto via email.')
       return
     }
 
-    router.push(`/corsi?tab=login&code=${encodeURIComponent(cleanCode)}`)
+    setIsVerifyingCode(true)
+    try {
+      const res = await verifyStudentCodeAction(cleanCode)
+      if (res.success && res.student) {
+        const dbStudent = res.student
+        const rawTier = dbStudent.access_tier
+        const tier = rawTier === 'ai-start' || rawTier === 'ai-pro' || rawTier === 'both'
+          ? rawTier
+          : dbStudent.code.startsWith('AI-PRO-')
+            ? 'ai-pro'
+            : dbStudent.code.startsWith('AI-ALL-')
+              ? 'both'
+              : 'ai-start'
+        const studentObj = {
+          name: dbStudent.student_name,
+          code: dbStudent.code,
+          accessTier: tier,
+          sessionToken: res.sessionToken,
+          cohortId: (dbStudent as any).cohort_id || null,
+        }
+        try {
+          localStorage.setItem('ti_aiuto_active_student', JSON.stringify(studentObj))
+        } catch (e) {}
+        router.push(`/corsi?code=${encodeURIComponent(cleanCode)}`)
+      } else {
+        setCodeError(res.error || 'Codice non valido o non trovato. Controlla il codice ricevuto via email.')
+      }
+    } catch (err: any) {
+      setCodeError(err.message || 'Errore durante la verifica del codice.')
+    } finally {
+      setIsVerifyingCode(false)
+    }
   }
 
   return (
@@ -79,13 +115,17 @@ export default function GatewayPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/corsi?tab=login"
+            <button
+              type="button"
+              onClick={() => {
+                setCodeError('')
+                setIsStudentModalOpen(true)
+              }}
               className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Key className="h-3.5 w-3.5 text-blue-400" />
               <span>Ho un codice</span>
-            </Link>
+            </button>
 
             <Link
               href="/login"
@@ -312,17 +352,34 @@ export default function GatewayPage() {
                   autoFocus
                   required
                   value={studentCode}
-                  onChange={(e) => setStudentCode(e.target.value)}
+                  onChange={(e) => {
+                    setStudentCode(e.target.value)
+                    if (codeError) setCodeError('')
+                  }}
                   placeholder="Es. AI-START-8F92 oppure DEMO2026"
                   className="text-center font-mono uppercase tracking-widest font-bold text-sm h-12 bg-slate-950 border-slate-800 text-white"
                 />
               </div>
 
+              {codeError && (
+                <p className="text-red-400 text-xs font-semibold text-center bg-red-950/40 p-2.5 rounded-xl border border-red-900/40">
+                  {codeError}
+                </p>
+              )}
+
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-blue-600/20 cursor-pointer"
+                disabled={isVerifyingCode}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-2"
               >
-                Accedi al Corso
+                {isVerifyingCode ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Verifica codice in corso...</span>
+                  </>
+                ) : (
+                  <span>Verifica ed Entra al Corso</span>
+                )}
               </Button>
             </form>
           </div>

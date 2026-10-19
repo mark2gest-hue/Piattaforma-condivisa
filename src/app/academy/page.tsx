@@ -47,6 +47,7 @@ import {
   joinWaitlistAction,
   submitCourseRegistrationAction,
   checkStudentRegistrationByEmailAction,
+  verifyStudentCodeAction,
 } from '@/app/actions/student'
 import { LegalModal, CookieBanner } from '@/components/legal/LegalModal'
 import { decodeReferralCode } from '@/lib/referral-mask'
@@ -86,6 +87,8 @@ export default function LandingPage() {
   // Login Studente Rapido con Codice
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false)
   const [studentCode, setStudentCode] = useState('')
+  const [codeError, setCodeError] = useState('')
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false)
 
   // Lista d'attesa Corso Avanzato AI Pro
   const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false)
@@ -126,18 +129,50 @@ export default function LandingPage() {
     }
   }, [])
 
-  const handleStudentAccess = (e: React.FormEvent) => {
+  const handleStudentAccess = async (e: React.FormEvent) => {
     e.preventDefault()
+    setCodeError('')
     if (!studentCode.trim()) return
 
     const cleanCode = studentCode.trim().toUpperCase()
     // Se qualcuno prova a incollare un token referral "REF-..." come codice studente, viene bloccato
     if (cleanCode.startsWith('REF-')) {
-      alert('Questo è un link di invito/referral, non un codice di accesso valido per entrare al corso. Per accedere usa il codice univoco personale ricevuto via email.')
+      setCodeError('Questo è un link di invito/referral, non un codice di accesso. Usa il codice univoco personale ricevuto via email.')
       return
     }
 
-    router.push(`/corsi?tab=login&code=${encodeURIComponent(cleanCode)}`)
+    setIsVerifyingCode(true)
+    try {
+      const res = await verifyStudentCodeAction(cleanCode)
+      if (res.success && res.student) {
+        const dbStudent = res.student
+        const rawTier = dbStudent.access_tier
+        const tier = rawTier === 'ai-start' || rawTier === 'ai-pro' || rawTier === 'both'
+          ? rawTier
+          : dbStudent.code.startsWith('AI-PRO-')
+            ? 'ai-pro'
+            : dbStudent.code.startsWith('AI-ALL-')
+              ? 'both'
+              : 'ai-start'
+        const studentObj = {
+          name: dbStudent.student_name,
+          code: dbStudent.code,
+          accessTier: tier,
+          sessionToken: res.sessionToken,
+          cohortId: (dbStudent as any).cohort_id || null,
+        }
+        try {
+          localStorage.setItem('ti_aiuto_active_student', JSON.stringify(studentObj))
+        } catch (e) {}
+        router.push(`/corsi?code=${encodeURIComponent(cleanCode)}`)
+      } else {
+        setCodeError(res.error || 'Codice non valido o non trovato. Controlla il codice ricevuto via email.')
+      }
+    } catch (err: any) {
+      setCodeError(err.message || 'Errore durante la verifica del codice.')
+    } finally {
+      setIsVerifyingCode(false)
+    }
   }
 
   // Verifica email prima del pagamento: se l'email esiste, mostra il tasto di pagamento
@@ -308,13 +343,17 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
-            <Link
-              href="/corsi?tab=login"
+            <button
+              type="button"
+              onClick={() => {
+                setCodeError('')
+                setIsStudentModalOpen(true)
+              }}
               className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Key className="h-3.5 w-3.5 text-blue-400" />
               <span>Ho un codice</span>
-            </Link>
+            </button>
             <Link
               href="/login"
               className="text-slate-400 hover:text-slate-200 px-3 py-1.5 transition-colors flex items-center gap-1.5 border border-white/10 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-xs font-semibold"
@@ -366,15 +405,18 @@ export default function LandingPage() {
               <span>Iscrizione Diretta (€)</span>
             </Button>
 
-            <Link href="/corsi?tab=login" className="w-full sm:w-auto">
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto border-white/10 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-semibold h-12.5 px-6 rounded-xl gap-2 text-sm transition-all cursor-pointer"
-              >
-                <Key className="h-4 w-4 text-blue-400" />
-                <span>Accedi con Codice</span>
-              </Button>
-            </Link>
+            <Button
+              type="button"
+              onClick={() => {
+                setCodeError('')
+                setIsStudentModalOpen(true)
+              }}
+              variant="outline"
+              className="w-full sm:w-auto border-white/10 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-semibold h-12.5 px-6 rounded-xl gap-2 text-sm transition-all cursor-pointer"
+            >
+              <Key className="h-4 w-4 text-blue-400" />
+              <span>Accedi con Codice</span>
+            </Button>
           </div>
         </section>
 
@@ -1020,14 +1062,34 @@ export default function LandingPage() {
                   autoFocus
                   required
                   value={studentCode}
-                  onChange={(e) => setStudentCode(e.target.value)}
-                  placeholder="Es. AI-8QASM3 oppure DEMO2026"
+                  onChange={(e) => {
+                    setStudentCode(e.target.value)
+                    if (codeError) setCodeError('')
+                  }}
+                  placeholder="Es. AI-START-XXXX oppure DEMO2026"
                   className="text-center font-mono uppercase tracking-widest font-bold text-sm h-12 bg-slate-950 border-slate-800 text-white"
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-blue-600/20">
-                Accedi al Corso
+              {codeError && (
+                <p className="text-red-400 text-xs font-semibold text-center bg-red-950/40 p-2.5 rounded-xl border border-red-900/40">
+                  {codeError}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isVerifyingCode}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isVerifyingCode ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Verifica codice in corso...</span>
+                  </>
+                ) : (
+                  <span>Verifica ed Entra al Corso</span>
+                )}
               </Button>
             </form>
           </div>

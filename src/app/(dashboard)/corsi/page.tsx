@@ -701,6 +701,7 @@ function CorsiInnerContent() {
   const hasAccessToCurrentCourse = () => hasCourseAccess(selectedCourseId)
 
   const [codeError, setCodeError] = useState('')
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false)
 
   // Registrazioni Studenti (Codici Attivi nel Database)
   const [registrations, setRegistrations] = useState<StudentRegistration[]>([])
@@ -1488,7 +1489,12 @@ function CorsiInnerContent() {
     const codeClean = studentCodeInput.trim().toUpperCase()
     if (!codeClean) return
 
-    await verifyAndSetCode(codeClean)
+    setIsVerifyingCode(true)
+    try {
+      await verifyAndSetCode(codeClean)
+    } finally {
+      setIsVerifyingCode(false)
+    }
   }
 
   const handleEnrollStudent = async (e: React.FormEvent) => {
@@ -1845,6 +1851,96 @@ function CorsiInnerContent() {
         }
       }
     }
+  }
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+        <p className="text-xs text-slate-400 font-medium">Verifica autorizzazioni in corso...</p>
+      </div>
+    )
+  }
+
+  // BLOCCO TOTALE ACCESSO: Se l'utente non è autenticato con codice né fa parte del team, mostra SOLO la schermata d'accesso riservata
+  if (!activeStudent && !isTeamMember) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6 text-center">
+          <div className="h-16 w-16 bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mx-auto border border-indigo-200 dark:border-indigo-800/80 shadow-inner">
+            <Lock className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              Accesso Riservato Corsisti
+            </span>
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+              Inserisci il tuo Codice
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              I corsi, le 20 video-lezioni, il tutor @AI e gli attestati sono riservati agli iscritti. Inserisci il tuo Codice Univoco di Accesso per sbloccare la piattaforma.
+            </p>
+          </div>
+
+          <form onSubmit={handleVerifyStudentCode} className="space-y-4 text-left">
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 text-center">
+                Codice Univoco Personale
+              </label>
+              <Input
+                autoFocus
+                required
+                value={studentCodeInput}
+                onChange={(e) => {
+                  setStudentCodeInput(e.target.value)
+                  if (codeError) setCodeError('')
+                }}
+                placeholder="Es. AI-START-XXXX"
+                className="text-center font-mono uppercase tracking-widest font-bold text-base h-12 dark:bg-slate-800/80 dark:border-slate-700"
+              />
+            </div>
+
+            {codeError && (
+              <p className="text-red-600 dark:text-red-400 text-xs font-semibold text-center bg-red-50 dark:bg-red-950/40 p-2.5 rounded-xl border border-red-200 dark:border-red-900/40">
+                {codeError}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={isVerifyingCode}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 rounded-xl shadow-md gap-2 text-sm cursor-pointer"
+            >
+              {isVerifyingCode ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Verifica in corso...</span>
+                </>
+              ) : (
+                <>
+                  <Unlock className="h-4 w-4" />
+                  <span>Verifica e Sblocca Corsi</span>
+                </>
+              )}
+            </Button>
+          </form>
+
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col items-center gap-2.5">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Non hai ancora acquistato il percorso formativo?
+            </p>
+            <Link
+              href="/academy"
+              className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5"
+            >
+              <span>Scopri i Corsi e Iscriviti alla Masterclass</span>
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
