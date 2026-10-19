@@ -54,7 +54,8 @@ export async function updateSession(request: NextRequest) {
   const isRootRoute = pathname === '/'
 
   // Rotte pubbliche accessibili a studenti e visitatori (senza richiedere login amministratore Supabase Auth)
-  const isPublicRoute = isRootRoute || isAcademyRoute || isCorsiRoute || isDispenseRoute || isCervelloRoute || isCorsoBaseRoute || isServiziAiRoute || isZonaCompitiRoute || isGraziaRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute
+  // NOTA BENE: /cervello è blindato e riservato ESCLUSIVAMENTE al team autenticato (contiene note interne e log)
+  const isPublicRoute = isRootRoute || isAcademyRoute || isCorsiRoute || isDispenseRoute || isCorsoBaseRoute || isServiziAiRoute || isZonaCompitiRoute || isGraziaRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute
 
   // Se l'utente non è autenticato come membro del team e cerca di accedere a rotte riservate (/lavori, /posta, /chat, /files...),
   // viene reindirizzato a /login (solo in produzione per evitare loop di cookie bloccati nelle webview IDE)

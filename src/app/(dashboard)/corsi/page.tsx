@@ -2916,13 +2916,6 @@ function CorsiInnerContent() {
                           {(selectedCourseId === 'ai-start' ? activeLesson : activeLessonPro).id}
                         </h4>
                       </div>
-                      <Link
-                        href="/cervello"
-                        className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
-                      >
-                        <span>Vedi nel Secondo Cervello</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </Link>
                     </div>
 
                     <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
