@@ -3,6 +3,7 @@
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { autoIndexToSecondBrain } from '@/app/actions/knowledge'
+import { sendEmailWithFallback } from '@/lib/email-sender'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -60,33 +61,26 @@ export async function sendSharedEmail(formData: {
       </html>
     `
 
-    // Prepara allegati per Resend SDK
-    const resendAttachments = formData.attachments?.map((att) => ({
-      filename: att.filename,
-      content: Buffer.from(att.content, 'base64'),
-      contentType: att.contentType,
-    }))
-
-    // Invio effettivo tramite Resend SDK con headers completi antispam e allegati
-    const resendResponse = await resend.emails.send({
+    // Invio con Dual-Engine Fallback (Resend primario -> Brevo automatico se quota superata o errore)
+    const sendResult = await sendEmailWithFallback({
       from: chosenFrom,
       to: formData.to,
       replyTo: replyToAddress,
       subject: formData.subject,
       text: formData.body,
       html: formattedHtml,
-      attachments: resendAttachments && resendAttachments.length > 0 ? resendAttachments : undefined,
+      attachments: formData.attachments,
       headers: {
         'X-Entity-Ref-ID': `aiutiamoci-${Date.now()}`,
       },
     })
 
-    if (resendResponse.error) {
-      console.error('[Resend Error]:', resendResponse.error)
-      return { success: false, error: resendResponse.error.message }
+    if (!sendResult.success) {
+      console.error('[Email Send Error (Entrambi i provider falliti)]:', sendResult.error)
+      return { success: false, error: sendResult.error || 'Errore invio email' }
     }
 
-    console.log(`[Resend Success] Email inviata ID: ${resendResponse.data?.id}`)
+    console.log(`[Email Success] Inviata tramite ${sendResult.provider} - ID: ${sendResult.messageId}`)
 
     // Salva l'email inviata nel database Supabase
     await (supabase as any).from('emails').insert({
@@ -97,11 +91,11 @@ export async function sendSharedEmail(formData: {
       body_text: formData.body,
       status: 'sent',
       thread_id: formData.threadId || null,
-      resend_id: resendResponse.data?.id,
+      resend_id: sendResult.messageId,
       created_by: user?.id || null,
     })
 
-    return { success: true, resendId: resendResponse.data?.id }
+    return { success: true, resendId: sendResult.messageId, provider: sendResult.provider }
   } catch (error: any) {
     console.error('Errore server in sendSharedEmail:', error)
     return { success: false, error: error.message || 'Errore interno del server' }

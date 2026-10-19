@@ -1398,8 +1398,12 @@ function CorsiInnerContent() {
     setIsBulkImporting(false)
   }
 
-  // Auto-verifica Codice da URL ?code=AI-START-XXXX
+  // Auto-verifica Codice da URL ?code=AI-START-XXXX e gestione tab=login
   useEffect(() => {
+    const tab = searchParams?.get('tab')
+    if (tab === 'login') {
+      setActiveTab('login')
+    }
     const urlCode = searchParams?.get('code')
     if (urlCode) {
       verifyAndSetCode(urlCode)
@@ -2202,30 +2206,55 @@ function CorsiInnerContent() {
                 {selectedCourseId === 'ai-pro' ? 'Percorso Avanzato AI Pro' : 'Percorso Base AI Start'}
               </Badge>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                Accesso Riservato al Corso {selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start'}
+                {activeStudent ? `Accesso Riservato al Corso ${selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start'}` : 'Accesso Riservato agli Studenti'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-                Il tuo codice attuale (<code>{activeStudent?.code}</code>) è abilitato per {activeStudent?.accessTier === 'ai-start' ? 'AI Start (Corso Base)' : 'AI Pro'}.
-                Per sbloccare anche questo percorso, richiedi il codice di upgrade al team.
+                {activeStudent ? (
+                  <>
+                    Il tuo codice attuale (<code>{activeStudent?.code}</code>) è abilitato per {activeStudent?.accessTier === 'ai-start' ? 'AI Start (Corso Base)' : 'AI Pro'}.
+                    Per sbloccare anche questo percorso, richiedi il codice di upgrade al team.
+                  </>
+                ) : (
+                  'Per visualizzare le lezioni video, completare i compiti pratici e interagire con il Tutor @AI, accedi con il tuo Codice Studente personale.'
+                )}
               </p>
             </div>
-            <div className="pt-2 flex items-center justify-center gap-3">
-              <Button
-                onClick={() => setSelectedCourseId(selectedCourseId === 'ai-pro' ? 'ai-start' : 'ai-pro')}
-                variant="outline"
-                className="text-xs"
-              >
-                Vai al corso abilitato ({selectedCourseId === 'ai-pro' ? 'AI Start' : 'AI Pro'})
-              </Button>
-              <Button
-                onClick={() => {
-                  window.open('mailto:info@aiutiamoci.cloud?subject=Richiesta Upgrade Corso AI Pro&body=Gentile Team, richiedo l\'upgrade del mio codice per il secondo corso.', '_blank')
-                }}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5"
-              >
-                <Mail className="h-3.5 w-3.5" />
-                Richiedi Upgrade Accesso
-              </Button>
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+              {activeStudent ? (
+                <>
+                  <Button
+                    onClick={() => setSelectedCourseId(selectedCourseId === 'ai-pro' ? 'ai-start' : 'ai-pro')}
+                    variant="outline"
+                    className="text-xs"
+                  >
+                    Vai al corso abilitato ({selectedCourseId === 'ai-pro' ? 'AI Start' : 'AI Pro'})
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      window.open('mailto:info@aiutiamoci.cloud?subject=Richiesta Upgrade Corso AI Pro&body=Gentile Team, richiedo l\'upgrade del mio codice per il secondo corso.', '_blank')
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5"
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    Richiedi Upgrade Accesso
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={() => setActiveTab('login')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-2 px-6 h-10 rounded-xl shadow-md cursor-pointer"
+                  >
+                    <Key className="h-4 w-4" />
+                    Inserisci il tuo Codice Studente
+                  </Button>
+                  <Link href="/academy">
+                    <Button variant="outline" className="text-xs h-10 rounded-xl cursor-pointer">
+                      Scopri i Corsi Academy
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         ) : (

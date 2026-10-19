@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { sendEmailWithFallback } from '@/lib/email-sender'
 
 export async function POST(request: Request) {
   try {
@@ -56,7 +54,7 @@ export async function POST(request: Request) {
 
     console.log(`[Outreach Send] Invio da: ${sender} a: ${to} | Oggetto: ${finalSubject} | Azienda: ${companyName || 'N/A'}`)
 
-    const resendResponse = await resend.emails.send({
+    const sendResult = await sendEmailWithFallback({
       from: sender,
       to: [to],
       replyTo,
@@ -65,14 +63,15 @@ export async function POST(request: Request) {
       text: emailBody
     })
 
-    if (resendResponse.error) {
-      console.error('[Outreach Send Error]', resendResponse.error)
-      return NextResponse.json({ error: resendResponse.error.message }, { status: 500 })
+    if (!sendResult.success) {
+      console.error('[Outreach Send Error]', sendResult.error)
+      return NextResponse.json({ error: sendResult.error }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
-      id: resendResponse.data?.id,
+      id: sendResult.messageId,
+      provider: sendResult.provider,
       to,
       isTest: !!isTest
     })
