@@ -229,37 +229,37 @@ export const CHECKPOINT_TESTS: Record<'entry' | 'midterm' | 'final', CheckpointT
     passThresholdPercent: 70,
     questions: [
       {
-        question: 'Qual è la differenza fondamentale tra un motore di ricerca tradizionale e un modello di IA generativa (LLM)?',
+        question: 'Qual è la differenza fondamentale tra l\'interrogazione di un motore di ricerca e l\'interazione con un modello linguistico (LLM)?',
         options: [
-          'Il motore di ricerca indicizza pagine web esistenti, mentre l\'LLM comprende il contesto e genera risposte inedite in linguaggio naturale.',
-          'L\'IA generativa cerca solo file PDF sul computer.',
-          'I motori di ricerca non utilizzano Internet, l\'IA sì.',
-          'Non c\'è alcuna differenza tecnica o funzionale.'
+          'I motori di ricerca cercano corrispondenze tra parole chiave e pagine web preesistenti, mentre l\'LLM calcola probabilisticamente la sequenza di token più coerente per elaborare una risposta originale contestualizzata.',
+          'L\'LLM effettua in tempo reale una ricerca Google in background e si limita a fare un riassunto automatico dei primi 3 risultati trovati.',
+          'Non vi è alcuna differenza sostanziale: entrambi accedono a un archivio statico di risposte preconfezionate e selezionano quella con il punteggio più alto.',
+          'I motori di ricerca funzionano solo su testi in inglese, mentre gli LLM operano traducendo ogni richiesta tramite dizionari statici.'
         ],
         correctIndex: 0,
-        explanation: 'I motori di ricerca tradizionali restituiscono link esistenti; i modelli generativi elaborano e creano contenuti contestualizzati su misura.'
+        explanation: 'Gli LLM non sono motori di ricerca: non recuperano documenti già scritti, ma elaborano il contesto e sintetizzano risposte originali prevedendo i token successivi in base al loro addestramento.'
       },
       {
-        question: 'Qual è l\'approccio mentale raccomandato per interagire efficacemente con l\'IA generativa?',
+        question: 'Perché un modello linguistico di ultima generazione può generare un\'informazione falsa o inventata ("allucinazione") esponendola con estrema sicurezza formale?',
         options: [
-          'Considerarla come un collaboratore/stagista instancabile a cui fornire contesto chiaro e feedback.',
-          'Considerarla un oracolo infallibile che non richiede mai verifiche o revisioni.',
-          'Usarla solo con comandi telegrafici di una singola parola.',
-          'Evitare di darle dettagli sulla propria azienda o sul compito.'
+          'Perché il server dell\'IA ha subito un errore di connessione temporaneo durante il caricamento del database.',
+          'Perché l\'architettura è progettata per massimizzare la coerenza logico-linguistica e la plausibilità del testo, non per verificare la verità oggettiva dei fatti senza un testo di riferimento (grounding).',
+          'Perché le allucinazioni si verificano solo quando si utilizzano modelli gratuiti o obsoleti precedenti al 2020.',
+          'Perché il modello cerca intenzionalmente di ingannare l\'utente quando la domanda contiene più di due verbi coniugati.'
         ],
-        correctIndex: 0,
-        explanation: 'Trattare l\'IA come un collaboratore a cui spiegare obiettivi e dare indicazioni è il segreto per risultati di eccellenza.'
+        correctIndex: 1,
+        explanation: 'I modelli generativi sono ottimizzati per produrre testo plausibile e grammaticalmente impeccabile. Se non hanno dati certi o se interrogati su fatti oscuri, generano affermazioni credibili ma prive di fondamento reale.'
       },
       {
-        question: 'Cosa significa che un modello di linguaggio è "probabilistico"?',
+        question: 'Nell\'utilizzo professionale dell\'IA generativa, qual è la conseguenza di inviare prompt telegrafici come "Scrivi una mail a un cliente per proporgli i nostri servizi"?',
         options: [
-          'Prevede e genera le parole successive più coerenti in base al contesto e all\'addestramento ricevuto.',
-          'Significa che funziona solo il 50% delle volte.',
-          'Significa che risponde solo se lanci un dado virtuale.',
-          'Significa che non può elaborare testi scritti in italiano.'
+          'Il sistema rifiuta la richiesta restituendo un messaggio di errore per mancanza di caratteri minimi.',
+          'Il modello applica automaticamente i parametri del settore aziendale più redditizio del momento.',
+          'Il modello, in assenza di contesto, pubblico target e vincoli di tono, ricorre alla media statistica generale, producendo una risposta generica, banale e difficilmente utilizzabile.',
+          'Il modello impiega il triplo del tempo per rispondere perché deve ipotizzare tutte le possibili varianti.'
         ],
-        correctIndex: 0,
-        explanation: 'Gli LLM funzionano calcolando la probabilità statistica dei token (parole/sotto-parole) più appropriati al contesto.'
+        correctIndex: 2,
+        explanation: 'Senza indicare chi è il mittente, qual è l\'offerta, chi è il cliente e quale tono adottare, l\'IA si appiattisce sulla media generica del web, generando testi stereotipati che richiedono poi ore di riscrittura.'
       }
     ]
   },
@@ -271,48 +271,48 @@ export const CHECKPOINT_TESTS: Record<'entry' | 'midterm' | 'final', CheckpointT
     passThresholdPercent: 75,
     questions: [
       {
-        question: 'Cosa rappresentano le 4 lettere della formula segreta RCCF?',
+        question: 'Quale tra i seguenti prompt applica in modo completo e inequivocabile tutti i 4 elementi del metodo RCCF (Ruolo, Contesto, Compito, Formato)?',
         options: [
-          'Ruolo, Contesto, Contenuto, Formato',
-          'Ricerca, Codice, Controllo, File',
-          'Risposta, Chiarezza, Firma, Font',
-          'Robot, Calcolo, Foto, Formattazione'
+          '"Sei un copywriter esperto. Scrivi 3 post LinkedIn convincenti sui vantaggi dell\'intelligenza artificiale per commercialisti, mantenendo un tono professionale."',
+          '"Agisci come Responsabile HR di una PMI metalmeccanica. Dobbiamo comunicare ai dipendenti l\'introduzione dei nuovi orari flessibili estivi riducendo al minimo le tensioni interne. Redigi la comunicazione interna ufficiale. Formato: testo pronto all\'invio con oggetto chiaro, introduzione empatica, elenco puntato delle 3 novità operative e firma, massimo 180 parole."',
+          '"Spiegami in modo dettagliato come funziona il metodo RCCF e fammi un esempio di tabella comparativa su Excel con formule CERCA.VERT."',
+          '"Scrivi un\'email commerciale persuasiva con oggetto accattivante, corpo del testo formattato in paragrafi brevi e una call to action finale orientata alla prenotazione di una demo telefonica."'
         ],
-        correctIndex: 0,
-        explanation: 'RCCF sta per: Ruolo (chi impersona), Contesto (la situazione), Contenuto (il compito), Formato (la struttura visiva di output).'
+        correctIndex: 1,
+        explanation: 'La seconda opzione definisce con rigore tutti e 4 i pilastri: Ruolo (Resp. HR PMI), Contesto (orari flessibili estivi, prevenire tensioni), Compito (redigere comunicazione ufficiale) e Formato (struttura a punti con limite di 180 parole). Le altre opzioni omettono il contesto o il formato vincolato.'
       },
       {
-        question: 'Cos\'è la tecnica del "Few-Shot Prompting"?',
+        question: 'Nel contesto lavorativo, in quale situazione la tecnica del "Few-Shot Prompting" (inserire 2-3 esempi concreti di input/output nel prompt) è la scelta più efficace?',
         options: [
-          'Fornire all\'IA 1 o 2 esempi pratici di input/output desiderati all\'interno del prompt.',
-          'Scrivere un prompt in meno di 5 secondi.',
-          'Fare una sola domanda e chiudere la chat.',
-          'Scattare una fotografia dello schermo.'
+          'Quando si deve categorizzare un elenco di richieste clienti o estrarre dati secondo una sintassi rigida e uno standard stilistico aziendale predefinito.',
+          'Quando si vuole che l\'IA inventi una favola creativa senza alcun vincolo logico.',
+          'Quando si dispone di pochissimo spazio nella finestra di contesto e si vuole risparmiare sul numero di token.',
+          'Quando si vuole impedire all\'IA di utilizzare punteggiatura o numeri nella risposta.'
         ],
         correctIndex: 0,
-        explanation: 'Il Few-Shot Prompting consiste nel dare esempi concreti all\'IA per impostare lo stile, il formato e il livello di dettaglio atteso.'
+        explanation: 'Il Few-Shot Prompting è indispensabile per compiti di classificazione, formattazione dati ed estrazione: fornendo esempi di "Input grezzo -> Output desiderato", il modello replica lo schema senza deviare.'
       },
       {
-        question: 'Nel prompting per immagini visive (es. Midjourney, DALL-E), quale elemento NON dovrebbe mancare?',
+        question: 'Se dopo aver inviato un prompt ben strutturato il testo generato è corretto nei contenuti ma risulta troppo formale e prolisso per il tuo pubblico, qual è l\'approccio corretto?',
         options: [
-          'Soggetto principale, ambientazione/luce e stile visivo o tipo di lente.',
-          'Aggettivi vaghi come "fallo bellissimo e stupendo".',
-          'Solo il nome di un colore casuale.',
-          'Comandi testuali privi di descrizioni compositive.'
+          'Cancellare la sessione di chat e riscrivere un prompt completamente diverso cambiando argomento.',
+          'Inviare un messaggio vago del tipo "non va bene, rifallo meglio e più bello".',
+          'Iterare nella stessa sessione fornendo feedback puntuali: indicare cosa preservare (i dati chiave) e impostare vincoli correttivi espliciti sul tono (più diretto e colloquiale) e sulla lunghezza (massimo 100 parole).',
+          'Inviare lo stesso identico prompt una seconda volta sperando che il fattore probabilistico cambi radicalmente lo stile.'
         ],
-        correctIndex: 0,
-        explanation: 'La chiarezza descrittiva (soggetto, luce, atmosfera, fotocamera) produce risultati fotorealistici infinitamente superiori ad aggettivi generici.'
+        correctIndex: 2,
+        explanation: 'L\'iterazione efficace si basa su feedback chirurgici mantenendo la memoria della conversazione: spiegare all\'IA cosa salvare e quali parametri specifici (lunghezza, tono, registro) modificare.'
       },
       {
-        question: 'Perché l\'iterazione continua è fondamentale nel lavoro con i modelli linguistici?',
+        question: 'Nel prompting per la generazione di immagini (Midjourney, DALL-E), quale strategia garantisce una resa professionale e coerente?',
         options: [
-          'Perché il primo output è una base di partenza che va raffinata e calibrata con feedback mirati.',
-          'Perché l\'IA rifiuta sempre la prima risposta.',
-          'Perché serve a consumare più tempo.',
-          'Perché i modelli non ricordano la domanda precedente.'
+          'Riempire il prompt di aggettivi enfatici soggettivi come "incredibile, capolavoro, ultra-bellissimo, virale".',
+          'Descrivere con precisione tecnica il soggetto, l\'inquadratura/lente (es. primo piano, 85mm), la sorgente di luce (es. luce naturale diffusa da finestra) e la palette cromatica/stile visivo, evitando aggettivi vaghi.',
+          'Specificare esclusivamente la risoluzione in pixel (es. "8K, 16K, HD") senza specificare il contesto visivo.',
+          'Inserire solo il nome di un colore e una data nel passato per forzare uno stile vintage.'
         ],
-        correctIndex: 0,
-        explanation: 'L\'interazione con l\'IA è un dialogo collaborativo: affinare il tiro con feedback successivi porta a risultati perfetti.'
+        correctIndex: 1,
+        explanation: 'I generatori visivi non comprendono giudizi di valore astratti come "bello" o "capolavoro". Reagiscono invece con altissima precisione a descrizioni oggettive di illuminazione, ottica, angolazione e dettagli materici.'
       }
     ]
   },
