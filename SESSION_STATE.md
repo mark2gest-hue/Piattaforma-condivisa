@@ -1,7 +1,16 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-12 13:40
+Ultimo aggiornamento: 2026-10-21 14:05
 Stato corrente:
+- **Track Formativa Verticale "Cybersecurity & AI Defense" (Pronta per Registrazione Video)**:
+  - Strutturato il syllabus completo in 5 moduli con copioni, dimostrazioni a schermo, codice vulnerabile vs codice sicuro e prompt di difesa:
+    1. *Modulo 1*: Vibe Coding & OWASP Top 10 (SQL Injection bypass `' OR '1'='1` e Prepared Statements).
+    2. *Modulo 2*: Database Fort Knox (Row Level Security RLS su PostgreSQL/Supabase & Zero-Trust).
+    3. *Modulo 3*: Prompt Injection & Jailbreak (Direct/Indirect injection su agenti AI, delimitatori XML).
+    4. *Modulo 4*: API, Webhook & n8n Blindati (Firma crittografica HMAC, protezione token e .env).
+    5. *Modulo 5*: Ethical Hacking con l'IA (Audit statico SAST automatizzato con prompt Lead Security Auditor).
+  - Documento guida persistito in [TRACK_CYBERSECURITY_AI_DEFENSE.md](file:///Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa/TRACK_CYBERSECURITY_AI_DEFENSE.md) e nel Vault Obsidian (`01_Progetti/`).
+  - Modalità operativa concordata: Screencast pulito del codice a 60fps preparato per Stefano, che registrerà la voce narrante e l'intro con il setup audio/video calibrato.
 - **Sidebar Fluida Neon Dock & Ottimizzazione Spazio Schermo COMPLETATO & DEPLOYATO IN PRODUZIONE**:
   - Implementata sidebar fluttuante a capsula compatta (68px a riposo con icone centrate e micro-dot glowing) che si espande fluidamente a 260px in hover con glowing neon blu/cyan e tasto Pin/Unpin (preferenza persistita in `localStorage`).
   - L'area di lavoro centrale guadagna oltre 170px di larghezza utile su tutte le sezioni (`/posta`, `/lavori`, `/corsi`).
