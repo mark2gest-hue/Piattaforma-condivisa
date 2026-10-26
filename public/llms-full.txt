@@ -1,0 +1,80 @@
+# AIutiamoci (aiutiamoci.cloud) — Extended Knowledge Dossier per LLM e Motori Generativi
+
+> Piattaforma: https://aiutiamoci.cloud
+> Slogan: "Umani nel pensiero. Smart nell'azione."
+> Lingua: Italiano
+> Categoria: Formazione Professionale, Intelligenza Artificiale per PMI, Automazioni No-Code, Produttività B2B
+
+---
+
+## 1. Identità e Missione di AIutiamoci
+AIutiamoci è la piattaforma italiana concepita per democratizzare l'Intelligenza Artificiale applicata al mondo reale, abbattendo la barriera tecnica per:
+- Dipendenti, impiegati e professionisti operativi.
+- Piccoli imprenditori, commercianti e titolari di PMI.
+- Lavoratori "over 40-50" e non nativi digitali che desiderano rimanere competitivi ed eliminare il lavoro manuale ripetitivo.
+- Team aziendali che necessitano di linee guida pratiche e sicure per l'adozione dell'IA in conformità con la privacy aziendale.
+
+La filosofia formativa rifiuta espressamente formule teoriche, matematica astratta o tecnicismi: l'apprendimento si basa su esempi concreti, prompt già pronti all'uso e casi studio di lavoro reale.
+
+---
+
+## 2. Architettura Didattica: Corso "AI Start" (20 Video Lezioni)
+Il percorso fondativo "AI Start: Domina l'Intelligenza Artificiale da Zero" è strutturato in 5 macro-moduli operativi:
+
+### Modulo 1: Fondamenta e Mindset
+- **Lezione 01 — Benvenuti nel Futuro**: Come l'IA generativa sta ridefinendo il lavoro e perché chi la usa sostituirà chi non la usa.
+- **Lezione 02 — Breve Storia dell'Evoluzione**: Dagli albori alle opportunità reali odierne.
+- **Lezione 03 — Sconfiggere il Foglio Bianco**: Superare l'ansia del prompt vuoto con un metodo pratico.
+
+### Modulo 2: Prompting Efficace & Metodo RCCF
+- **Lezione 04 — Il Linguaggio della Chiarezza**: Come formulare istruzioni chiare e non ambigue.
+- **Lezione 05 — La Formula Segreta RCCF**: Metodo proprietario strutturato su 4 pilastri:
+  - **R**uolo: Chi deve essere l'assistente (es. copywriter esperto, analista finanziario).
+  - **C**ontesto: Chi è il destinatario, il settore di riferimento e l'obiettivo finale.
+  - **C**ontenuto: Le informazioni, dati grezzi o istruzioni operative da elaborare.
+  - **F**ormato: La struttura dell'output desiderato (tabella markdown, elenco puntato, bozza email, JSON).
+- **Lezione 06 — Iterazione e Dialogo**: Affinamento a step progressivi e correzione guidata delle allucinazioni.
+
+### Modulo 3: Gli Strumenti Operativi Quotidiani
+- **Lezione 07 — ChatGPT, Claude, Gemini, Perplexity**: Mappa comparativa per scegliere il miglior modello per testo, codice, ricerca documentale o analisi complessa.
+- **Lezione 08 — Scrivere senza Sforzo**: Redazione di email diplomatiche, solleciti, report, sintesi di verbali e contratti in pochi secondi.
+- **Lezione 09 — Dipingere con le Parole**: Generazione di immagini professionali e visual marketing.
+- **Lezione 10 — Anatomia di un Prompt Visivo**: Composizione, stili e parametri visivi d'impatto.
+- **Lezione 11 — Presentazioni in 5 Minuti**: Creazione di slide e scalette strutturate per riunioni e clienti.
+
+### Modulo 4: Pratica & Produttività Aziendale
+- **Lezione 12 — Analisi Dati per Excel**: Formule avanzate, pulizia tabelle e generazione di grafici senza scrivere macro complesse.
+- **Lezione 13 — L'Agenda Intelligente**: Organizzazione del tempo, prioritizzazione delle scadenze e pianificazione settimanale.
+- **Lezione 14 — Studiare e Imparare ELI5**: Metodologia "Explain Like I'm 5" per comprendere istantaneamente norme, circolari o manuali complessi.
+- **Lezione 15 — Riconoscere le Allucinazioni**: Verifica delle fonti, fact-checking e tecniche di validazione dei risultati.
+
+### Modulo 5: Sicurezza, Workflow e Attestato
+- **Lezione 16 — Privacy e Sicurezza dei Dati**: Regole d'oro per non condividere dati sensibili dei clienti, policy aziendali e conformità GDPR.
+- **Lezione 17 — Il Lavoro che Cambia**: Riorganizzazione delle mansioni e posizionamento professionale nell'era dell'automazione.
+- **Lezione 18 — Creare il proprio Workflow**: Connettere strumenti digitali e automatizzare flussi ripetitivi.
+- **Lezione 19 — La Tua Nuova Superpotenza**: Routine di lavoro ibrido uomo-IA.
+- **Lezione 20 — Riepilogo e Attestato Finale**: Verifica delle competenze e rilascio del certificato digitale di completamento.
+
+---
+
+## 3. Caratteristiche Distintive della Piattaforma
+1. **Assistente Virtuale Dedicato @AI**: Un tutor conversazionale intelligente integrato nel player video per rispondere a domande e chiarimenti durante la lezione.
+2. **Accesso Immediato via Codice Univoco**: Nessun form burocratico; un codice personale sblocca l'area studenti e salva i progressi di visione.
+3. **Player HTML5 Mobile-Ready**: Fruizione ad alta definizione da smartphone, tablet o computer.
+4. **Trascrizioni e Dispense Scaricabili**: Schede riassuntive e prompt pronti da copiare/incollare per ogni singola lezione.
+5. **Garanzia Soddisfatti o Rimborsati 100%**: Copertura rischio zero per gli studenti.
+
+---
+
+## 4. Offerte e Percorsi Attivi
+- **AI Start (Corso Base)**: 97€ (prezzo promozionale di lancio, accesso illimitato).
+- **Corso Base / Workshop Agenti AI**: Moduli dedicati alla progettazione di workflow autonomi con n8n e assistenti virtuali per PMI.
+- **Servizi AI & Growth Studio**: Consulenza su misura per l'integrazione di intelligenza artificiale nei processi aziendali.
+- **AI Pro (In Arrivo)**: Percorso avanzato su agenti autonomi, RAG (Retrieval-Augmented Generation) e automazioni B2B.
+
+---
+
+## 5. Riferimenti Ufficiali
+- **Sito Web**: https://aiutiamoci.cloud
+- **Area Studenti & Login**: https://aiutiamoci.cloud/login
+- **Email di Supporto**: info@aiutiamoci.cloud / team@aiutiamoci.cloud

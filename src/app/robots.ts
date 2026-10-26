@@ -21,7 +21,7 @@ export default function robots(): MetadataRoute.Robots {
           'Google-Extended',
           'cohere-ai',
         ],
-        allow: ['/', '/llms.txt', '/images/'],
+        allow: ['/', '/llms.txt', '/llms-full.txt', '/images/'],
         disallow: ['/api/', '/admin/', '/posta/', '/studenti/'],
       },
     ],
