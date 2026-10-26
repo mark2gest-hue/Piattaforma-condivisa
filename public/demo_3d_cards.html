@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Anteprima Interattiva 3D Parallax Card — Aiutiamoci</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070B14;
+      --card-bg: linear-gradient(180deg, #131d33 0%, #0a0f1e 100%);
+      --accent-blue: #38bdf8;
+      --accent-emerald: #34d399;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 20%, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(52, 211, 153, 0.08) 0%, transparent 50%);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+      max-width: 650px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--accent-blue);
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* ── 3D CONTAINER STYLES ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 440px));
+      gap: 2.5rem;
+      width: 100%;
+      max-width: 1000px;
+      perspective: 800px; /* Prospettiva ravvicinata ad alto impatto drammatico */
+    }
+
+    .card-3d-wrapper {
+      position: relative;
+      cursor: pointer;
+      transform-style: preserve-3d;
+    }
+
+    .card-3d-inner {
+      position: relative;
+      border-radius: 28px;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 2.5rem;
+      transform-style: preserve-3d;
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.8),
+        0 0 40px -15px rgba(56, 189, 248, 0.25);
+      /* NESSUN overflow:hidden! Altrimenti il browser pialla lo spazio Z */
+    }
+
+    /* Riflesso di luce dinamico che segue il mouse */
+    .card-glare {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      border-radius: 28px;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      transform: translateZ(5px);
+    }
+
+    /* ── LIVELLI DI PROFONDITÀ PARALLASSE (Z-INDEX 3D POTENZIATI) ── */
+    .layer-base {
+      transform: translateZ(25px);
+      transition: transform 0.25s ease-out;
+    }
+
+    .layer-content {
+      transform: translateZ(45px);
+      transition: transform 0.25s ease-out;
+    }
+
+    /* 3D DENTRO IL 3D: La card interna si stacca di 115px e contiene elementi a loro volta sollevati */
+    .layer-popout {
+      transform: translateZ(115px); /* Eiezione tridimensionale marcata */
+      transition: transform 0.25s ease-out;
+      transform-style: preserve-3d;
+    }
+
+    /* Il pulsante fluttua in avanti di 85px con ombra d'aria */
+    .layer-btn {
+      transform: translateZ(85px);
+      transition: transform 0.25s ease-out;
+    }
+
+    /* ── HEADER 3D POP-OUT CARD (LOGO + TITOLO FUSI IN UNA CARD FLUTTUANTE) ── */
+    .header-3d-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-top: 1.5px solid rgba(255, 255, 255, 0.6);
+      border-radius: 22px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      transform-style: preserve-3d;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+      box-shadow: 
+        0 15px 35px -8px rgba(0, 0, 0, 0.7),
+        0 0 25px -5px rgba(56, 189, 248, 0.2);
+    }
+
+    .header-3d-card.green {
+      box-shadow: 
+        0 15px 35px -8px rgba(0, 0, 0, 0.7),
+        0 0 25px -5px rgba(52, 211, 153, 0.2);
+      border-color: rgba(52, 211, 153, 0.35);
+    }
+
+    /* QUANDO IL MOUSE ENTRA SULLA CARD: L'INTERA CARD HEADER SALTA FUORI ED ESPLODE DEL 20%! */
+    .card-3d-wrapper:hover .header-3d-card {
+      transform: translateZ(140px) scale(1.15) !important;
+      box-shadow: 
+        0 40px 80px -10px rgba(0, 0, 0, 0.95),
+        0 0 50px 8px rgba(56, 189, 248, 0.6) !important;
+      border-color: rgba(56, 189, 248, 0.8) !important;
+    }
+
+    .card-3d-wrapper:hover .header-3d-card.green {
+      box-shadow: 
+        0 40px 80px -10px rgba(0, 0, 0, 0.95),
+        0 0 50px 8px rgba(52, 211, 153, 0.6) !important;
+      border-color: rgba(52, 211, 153, 0.8) !important;
+    }
+
+    /* LOGO BADGE INTERNO: SI SOLLEVA ULTERIORMENTE DI 45px DALLA SUA STESSA CARD (3D NEL 3D) */
+    .logo-box-3d {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      transform-style: preserve-3d;
+      transform: translateZ(35px);
+      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.8);
+      flex-shrink: 0;
+    }
+
+    .logo-symbol {
+      display: block;
+      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.9));
+      transform: translateZ(20px);
+    }
+
+    .card-title-box {
+      transform-style: preserve-3d;
+      transform: translateZ(25px);
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .card-subtitle-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .card-subtitle-tag.green {
+      color: #34d399;
+    }
+
+    .card-desc {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      transform: translateZ(40px);
+    }
+
+    /* IL PULSANTE SALTA IN AVANTI */
+    .layer-btn {
+      transform: translateZ(75px);
+      transition: transform 0.25s ease-out;
+    }
+
+    .card-3d-wrapper:hover .layer-btn {
+      transform: translateZ(95px) scale(1.03) !important;
+    }
+
+    .card-btn {
+      width: 100%;
+      height: 52px;
+      border-radius: 14px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      color: white;
+      transform-style: preserve-3d;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Micro-livello 3D interno alla card piccola: il tag e il testo si sollevano ancora di più */
+    .popout-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      transform: translateZ(35px); /* 35px sopra la card interna */
+      box-shadow: 0 8px 16px -4px rgba(0,0,0,0.5);
+    }
+
+    .popout-text {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #ffffff;
+      transform: translateZ(25px); /* 25px sopra la card interna */
+    }
+
+    .features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+
+    .check-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .check-icon.green {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--accent-emerald);
+    }
+
+    .card-btn {
+      width: 100%;
+      height: 52px;
+      border-radius: 14px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      color: white;
+      transform-style: preserve-3d;
+      box-shadow: 0 25px 45px -10px rgba(0, 0, 0, 0.9);
+    }
+
+    .btn-blue {
+      background: #2563eb;
+      box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-blue:hover {
+      background: #1d4ed8;
+      box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.7);
+    }
+
+    .btn-dark {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+    }
+
+    .btn-dark:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="badge">✦ Prototipo Interattivo 60fps</div>
+    <h1>3D Parallax "Popout" Card</h1>
+    <p class="subtitle">Muovi il cursore sopra le card. Gli elementi interni (badge, mockup e pulsanti) si staccano dal fondo a quote Z differenti, creando un effetto di fuoriuscita reale dallo schermo.</p>
+  </div>
+
+  <div class="cards-grid">
+
+    <!-- CARD 1: AIUTIAMOCI ACADEMY -->
+    <div class="card-3d-wrapper" id="card1">
+      <div class="card-3d-inner">
+        <div class="card-glare" id="glare1"></div>
+
+        <!-- LA CARD 3D POP-OUT CHE ACCOSTA IL LOGO E IL TITOLO IN UN UNICO BLOCCO IN RILIEVO -->
+        <div class="header-3d-card">
+          <div class="logo-box-3d">
+            <span class="logo-symbol">🎓</span>
+          </div>
+          <div class="card-title-box">
+            <div class="card-subtitle-tag">Formazione Pratica</div>
+            <h2 class="card-title">Aiutiamoci Academy</h2>
+          </div>
+        </div>
+
+        <p class="card-desc">
+          Impara a usare l'IA nel lavoro quotidiano con 20 video lezioni pratiche, sintesi operative e tutor virtuale continuo.
+        </p>
+
+        <ul class="features-list layer-content">
+          <li class="feature-item">
+            <span class="check-icon">✓</span>
+            <span><strong>AI Start (Fondamenta)</strong>: 20 lezioni da zero</span>
+          </li>
+          <li class="feature-item">
+            <span class="check-icon">✓</span>
+            <span><strong>Formula RCCF</strong>: Prompt chiari ed efficaci</span>
+          </li>
+          <li class="feature-item">
+            <span class="check-icon">✓</span>
+            <span><strong>Tutor @AI 24/7</strong>: Assistente per esercizi e dubbi</span>
+          </li>
+        </ul>
+
+        <div class="layer-btn">
+          <button class="card-btn btn-blue">
+            <span>Vai a Aiutiamoci Academy</span>
+            <span>→</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CARD 2: AIUTIAMOCI IMPRESA (MARK2.CLOUD) -->
+    <div class="card-3d-wrapper" id="card2">
+      <div class="card-3d-inner">
+        <div class="card-glare" id="glare2"></div>
+
+        <!-- LA CARD 3D POP-OUT CHE ACCOSTA IL LOGO E IL TITOLO IN UN UNICO BLOCCO IN RILIEVO -->
+        <div class="header-3d-card green">
+          <div class="logo-box-3d green">
+            <span class="logo-symbol">⚡</span>
+          </div>
+          <div class="card-title-box">
+            <div class="card-subtitle-tag green">Ecosistemi B2B</div>
+            <h2 class="card-title">Aiutiamoci Impresa</h2>
+          </div>
+        </div>
+
+        <p class="card-desc">
+          Agenti autonomi, monitoraggio attivo e software gestionali neurali per hotel, artigiani e PMI senza burocrazia.
+        </p>
+
+        <ul class="features-list layer-content">
+          <li class="feature-item">
+            <span class="check-icon green">✓</span>
+            <span><strong>Orchestratore di Agenti</strong>: Vocali, CRM e preventivi</span>
+          </li>
+          <li class="feature-item">
+            <span class="check-icon green">✓</span>
+            <span><strong>NetworkDiag Ops Pro</strong>: Monitoraggio server e DNS h24</span>
+          </li>
+          <li class="feature-item">
+            <span class="check-icon green">✓</span>
+            <span><strong>Integrazione su Misura</strong>: Gestionali e WhatsApp</span>
+          </li>
+        </ul>
+
+        <div class="layer-btn">
+          <button class="card-btn btn-dark">
+            <span>Vai a Aiutiamoci Impresa</span>
+            <span>↗</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function setup3DCard(cardId, glareId) {
+      const card = document.getElementById(cardId);
+      const inner = card.querySelector('.card-3d-inner');
+      const glare = document.getElementById(glareId);
+      const headerCard = card.querySelector('.header-3d-card');
+      const btn = card.querySelector('.layer-btn');
+      const logoBox = card.querySelector('.logo-box-3d');
+
+      const maxTilt = 22; // Inclinazione armoniosa
+
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        const normX = (x - centerX) / centerX;
+        const normY = (y - centerY) / centerY;
+
+        const rotateX = normY * -maxTilt;
+        const rotateY = normX * maxTilt;
+
+        // Inclinazione card principale
+        inner.style.transform = `rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.04, 1.04, 1.04)`;
+
+        // 🌟 LA CARD HEADER (LOGO + TITOLO) SALTA FUORI DALLO SCHERMO (+130px Z) E SLITTA IN PARALLASSE!
+        if (headerCard) {
+          headerCard.style.transform = `translateZ(130px) translateX(${(-normX * 22).toFixed(1)}px) translateY(${(-normY * 22).toFixed(1)}px) scale(1.08)`;
+        }
+
+        // 🚀 IL LOGO INTERNO SI SOLLEVA ANCORA DI PIÙ DALLA SUA STESSA CARD (3D NEL 3D) E SI INGRANDISCE!
+        if (logoBox) {
+          logoBox.style.transform = `translateZ(45px) translateX(${(-normX * 8).toFixed(1)}px) translateY(${(-normY * 8).toFixed(1)}px) scale(1.22)`;
+        }
+
+        // Il pulsante si solleva di 85px
+        if (btn) {
+          btn.style.transform = `translateZ(85px) translateX(${(-normX * 12).toFixed(1)}px) translateY(${(-normY * 12).toFixed(1)}px)`;
+        }
+
+        // Glare dinamico speculare
+        const glareX = (x / rect.width) * 100;
+        const glareY = (y / rect.height) * 100;
+        glare.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.28) 0%, transparent 60%)`;
+        glare.style.opacity = '1';
+      });
+
+      card.addEventListener('mouseleave', () => {
+        const spring = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+        inner.style.transition = spring;
+        inner.style.transform = 'rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+        
+        if (headerCard) {
+          headerCard.style.transition = spring;
+          headerCard.style.transform = 'translateZ(0px) translateX(0px) translateY(0px) scale(1)';
+        }
+        if (logoBox) {
+          logoBox.style.transition = spring;
+          logoBox.style.transform = 'translateZ(35px) translateX(0px) translateY(0px) scale(1)';
+        }
+        if (btn) {
+          btn.style.transition = spring;
+          btn.style.transform = 'translateZ(0px) translateX(0px) translateY(0px)';
+        }
+        glare.style.opacity = '0';
+
+        setTimeout(() => {
+          inner.style.transition = 'transform 0.12s ease-out';
+          if (headerCard) headerCard.style.transition = 'transform 0.12s ease-out';
+          if (logoBox) logoBox.style.transition = 'transform 0.12s ease-out';
+          if (btn) btn.style.transition = 'transform 0.12s ease-out';
+        }, 600);
+      });
+
+      card.addEventListener('mouseenter', () => {
+        inner.style.transition = 'transform 0.1s ease-out';
+        if (headerCard) headerCard.style.transition = 'transform 0.1s ease-out';
+        if (logoBox) logoBox.style.transition = 'transform 0.1s ease-out';
+        if (btn) btn.style.transition = 'transform 0.1s ease-out';
+      });
+    }
+
+    setup3DCard('card1', 'glare1');
+    setup3DCard('card2', 'glare2');
+  </script>
+</body>
+</html>

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { TiltCard3D } from '@/components/ui/tilt-card-3d'
 import { LegalModal, CookieBanner } from '@/components/legal/LegalModal'
 import { verifyStudentCodeAction } from '@/app/actions/student'
 
@@ -165,131 +166,130 @@ export default function GatewayPage() {
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 w-full">
           
           {/* CARD 1: ACADEMY & FORMAZIONE */}
-          <div
-            className="group relative rounded-3xl p-8 sm:p-10 transition-all duration-300 flex flex-col justify-between space-y-8"
-            style={{
-              background: 'linear-gradient(180deg, #131c30 0%, #0a0f1d 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderTop: '1px solid rgba(255, 255, 255, 0.35)',
-              boxShadow: '0 0 40px -10px rgba(70, 120, 220, 0.25), 0 35px 80px -15px rgba(0, 0, 0, 0.95), 0 60px 120px -20px rgba(0, 0, 0, 0.98)',
-            }}
-          >
-            <div className="space-y-6">
-              
-              {/* Header Card */}
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-900 border border-white/10 flex items-center justify-center p-1.5 shadow-sm">
-                  <img
-                    src="/images/logo_icon_dark.png"
-                    alt="Aiutiamoci Logo"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-                <h2 className="text-2xl sm:text-[1.75rem] font-bold text-white tracking-tight">
-                  Aiutiamoci Academy
-                </h2>
-              </div>
+          <TiltCard3D href="/academy" accentColor="blue">
+            {({ headerRef, logoRef, buttonRef }) => (
+              <>
+                <div className="space-y-6 [transform:translateZ(30px)]">
+                  
+                  {/* Header Card 3D Fluttuante con Logo Pop-Out */}
+                  <div
+                    ref={headerRef}
+                    className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-900/80 border border-white/15 shadow-xl [transform-style:preserve-3d] transition-transform duration-200"
+                  >
+                    <div
+                      ref={logoRef}
+                      className="h-11 w-11 shrink-0 rounded-xl bg-slate-950 border border-white/20 flex items-center justify-center p-1.5 shadow-md [transform-style:preserve-3d] transition-transform duration-200"
+                    >
+                      <img
+                        src="/images/logo_icon_dark.png"
+                        alt="Aiutiamoci Logo"
+                        className="h-full w-full object-contain [filter:drop-shadow(0_4px_6px_rgba(0,0,0,0.8))]"
+                      />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl sm:text-[1.75rem] font-bold text-white tracking-tight leading-tight">
+                        Aiutiamoci Academy
+                      </h2>
+                    </div>
+                  </div>
 
-              {/* Sintesi */}
-              <div>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                  Impara a usare l'AI nel lavoro quotidiano, con corsi pratici e certificazione europea.
-                </p>
-              </div>
+                  {/* Sintesi */}
+                  <div>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                      Impara a usare l'AI nel lavoro quotidiano, con corsi pratici e certificazione europea.
+                    </p>
+                  </div>
 
-              {/* Punti Elenco */}
-              <div className="space-y-3 pt-5 border-t border-white/5 text-xs sm:text-sm text-slate-300">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4.5 w-4.5 text-blue-400 shrink-0 mt-0.5" />
-                  <span><strong>AI Start (Fondamenta)</strong>: 20 lezioni pratiche da zero</span>
+                  {/* Punti Elenco */}
+                  <div className="space-y-3 pt-5 border-t border-white/5 text-xs sm:text-sm text-slate-300">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4.5 w-4.5 text-blue-400 shrink-0 mt-0.5" />
+                      <span><strong>AI Start (Fondamenta)</strong>: 20 lezioni pratiche da zero</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4.5 w-4.5 text-blue-400 shrink-0 mt-0.5" />
+                      <span><strong>Formazione su Misura</strong>: Percorsi dedicati per team aziendali</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4.5 w-4.5 text-blue-400 shrink-0 mt-0.5" />
+                      <span><strong>Tutor @AI 24/7</strong>: Assistente continuo per esercizi e dubbi</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4.5 w-4.5 text-blue-400 shrink-0 mt-0.5" />
-                  <span><strong>Formazione su Misura</strong>: Percorsi dedicati per team aziendali</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4.5 w-4.5 text-blue-400 shrink-0 mt-0.5" />
-                  <span><strong>Tutor @AI 24/7</strong>: Assistente continuo per esercizi e dubbi</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Pulsante Navigazione */}
-            <div className="pt-2">
-              <Link href="/academy" className="block w-full">
-                <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold h-12.5 rounded-xl gap-2 text-sm shadow-lg shadow-blue-950/60 transition-all cursor-pointer">
-                  <span>Vai a Aiutiamoci Accademy</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
+                {/* Pulsante Navigazione 3D */}
+                <div ref={buttonRef} className="pt-2 [transform-style:preserve-3d] transition-transform duration-200">
+                  <div className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold h-12.5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-950/60 transition-all pointer-events-none">
+                    <span>Vai a Aiutiamoci Accademy</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                </div>
+              </>
+            )}
+          </TiltCard3D>
 
           {/* CARD 2: AIUTIAMOCI IMPRESA (mark2.cloud) */}
-          <div
-            className="group relative rounded-3xl p-8 sm:p-10 transition-all duration-300 flex flex-col justify-between space-y-8"
-            style={{
-              background: 'linear-gradient(180deg, #131c30 0%, #0a0f1d 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderTop: '1px solid rgba(255, 255, 255, 0.35)',
-              boxShadow: '0 0 40px -10px rgba(70, 120, 220, 0.25), 0 35px 80px -15px rgba(0, 0, 0, 0.95), 0 60px 120px -20px rgba(0, 0, 0, 0.98)',
-            }}
-          >
-            <div className="space-y-6">
-              
-              {/* Header Card */}
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-900 border border-white/10 flex items-center justify-center p-1.5 shadow-sm">
-                  <img
-                    src="/images/logo_icon_dark.png"
-                    alt="Aiutiamoci Logo"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-                <h2 className="text-2xl sm:text-[1.75rem] font-bold text-white tracking-tight">
-                  Aiutiamoci Impresa
-                </h2>
-              </div>
+          <TiltCard3D href="https://www.mark2.cloud" isExternal accentColor="emerald">
+            {({ headerRef, logoRef, buttonRef }) => (
+              <>
+                <div className="space-y-6 [transform:translateZ(30px)]">
+                  
+                  {/* Header Card 3D Fluttuante con Logo Pop-Out */}
+                  <div
+                    ref={headerRef}
+                    className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-900/80 border border-white/15 shadow-xl [transform-style:preserve-3d] transition-transform duration-200"
+                  >
+                    <div
+                      ref={logoRef}
+                      className="h-11 w-11 shrink-0 rounded-xl bg-slate-950 border border-white/20 flex items-center justify-center p-1.5 shadow-md [transform-style:preserve-3d] transition-transform duration-200"
+                    >
+                      <img
+                        src="/images/logo_icon_dark.png"
+                        alt="Aiutiamoci Logo"
+                        className="h-full w-full object-contain [filter:drop-shadow(0_4px_6px_rgba(0,0,0,0.8))]"
+                      />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl sm:text-[1.75rem] font-bold text-white tracking-tight leading-tight">
+                        Aiutiamoci Impresa
+                      </h2>
+                    </div>
+                  </div>
 
-              {/* Sintesi */}
-              <div>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                  Agenti autonomi, monitoraggio e automazioni su misura per far lavorare la tecnologia al posto tuo.
-                </p>
-              </div>
+                  {/* Sintesi */}
+                  <div>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                      Agenti autonomi, monitoraggio e automazioni su misura per far lavorare la tecnologia al posto tuo.
+                    </p>
+                  </div>
 
-              {/* Punti Elenco */}
-              <div className="space-y-3 pt-5 border-t border-white/5 text-xs sm:text-sm text-slate-300">
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Orchestratore di Agenti</strong>: Assistenti vocali, CRM e preventivi</span>
+                  {/* Punti Elenco */}
+                  <div className="space-y-3 pt-5 border-t border-white/5 text-xs sm:text-sm text-slate-300">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span><strong>Orchestratore di Agenti</strong>: Assistenti vocali, CRM e preventivi</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span><strong>NetworkDiag Ops Pro</strong>: Monitoraggio reti, server e DNS h24</span>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span><strong>Integrazione su Misura</strong>: Connessione con gestionali e WhatsApp</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>NetworkDiag Ops Pro</strong>: Monitoraggio reti, server e DNS h24</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Integrazione su Misura</strong>: Connessione con gestionali e WhatsApp</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Pulsante Navigazione */}
-            <div className="pt-2">
-              <a
-                href="https://www.mark2.cloud"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full"
-              >
-                <Button className="w-full bg-slate-800/90 hover:bg-slate-700/90 text-white border border-white/10 font-semibold h-12.5 rounded-xl gap-2 text-sm shadow-lg shadow-black/60 transition-all cursor-pointer">
-                  <span>Vai a Aiutiamoci Impresa</span>
-                  <ExternalLink className="h-4 w-4 text-slate-400" />
-                </Button>
-              </a>
-            </div>
-          </div>
+                {/* Pulsante Navigazione 3D */}
+                <div ref={buttonRef} className="pt-2 [transform-style:preserve-3d] transition-transform duration-200">
+                  <div className="w-full bg-slate-800/90 hover:bg-slate-700/90 text-white border border-white/10 font-semibold h-12.5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-lg shadow-black/60 transition-all pointer-events-none">
+                    <span>Vai a Aiutiamoci Impresa</span>
+                    <ExternalLink className="h-4 w-4 text-slate-400" />
+                  </div>
+                </div>
+              </>
+            )}
+          </TiltCard3D>
 
         </div>
         </div>
