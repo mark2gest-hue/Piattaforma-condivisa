@@ -159,4 +159,45 @@
   transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) scale(1) !important;
 }
 
+/* ── 3D PARALLAX CARDS HOME (STILE VISION PRO) ── */
+.home-3d-wrapper {
+  perspective: 750px;
+  transform-style: preserve-3d;
+}
+
+.home-3d-inner {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.home-3d-header {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.home-3d-logo {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+}
+
+.home-3d-btn {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-3d-wrapper:hover .home-3d-header {
+    box-shadow: 0 35px 70px -10px rgba(0, 0, 0, 0.95), 0 0 45px 5px rgba(56, 189, 248, 0.5) !important;
+    border-color: rgba(56, 189, 248, 0.7) !important;
+  }
+  .home-3d-wrapper:hover .home-3d-header.green {
+    box-shadow: 0 35px 70px -10px rgba(0, 0, 0, 0.95), 0 0 45px 5px rgba(52, 211, 153, 0.5) !important;
+    border-color: rgba(52, 211, 153, 0.7) !important;
+  }
+}
+
+
 

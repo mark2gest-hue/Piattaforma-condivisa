@@ -174,16 +174,16 @@ export default function GatewayPage() {
                   {/* Header Card 3D Fluttuante con Logo Pop-Out */}
                   <div
                     ref={headerRef}
-                    className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-900/80 border border-white/15 shadow-xl [transform-style:preserve-3d] transition-transform duration-200"
+                    className="home-3d-header flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-900/85 border border-white/20 shadow-2xl transition-all"
                   >
                     <div
                       ref={logoRef}
-                      className="h-11 w-11 shrink-0 rounded-xl bg-slate-950 border border-white/20 flex items-center justify-center p-1.5 shadow-md [transform-style:preserve-3d] transition-transform duration-200"
+                      className="home-3d-logo h-12 w-12 shrink-0 rounded-xl bg-slate-950 border border-white/25 flex items-center justify-center p-1.5 shadow-lg transition-all"
                     >
                       <img
                         src="/images/logo_icon_dark.png"
                         alt="Aiutiamoci Logo"
-                        className="h-full w-full object-contain [filter:drop-shadow(0_4px_6px_rgba(0,0,0,0.8))]"
+                        className="h-full w-full object-contain [filter:drop-shadow(0_6px_10px_rgba(0,0,0,0.9))]"
                       />
                     </div>
                     <div>
@@ -218,8 +218,8 @@ export default function GatewayPage() {
                 </div>
 
                 {/* Pulsante Navigazione 3D */}
-                <div ref={buttonRef} className="pt-2 [transform-style:preserve-3d] transition-transform duration-200">
-                  <div className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold h-12.5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-lg shadow-blue-950/60 transition-all pointer-events-none">
+                <div ref={buttonRef} className="home-3d-btn pt-2 transition-all">
+                  <div className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold h-12.5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-xl shadow-blue-950/70 transition-all pointer-events-none">
                     <span>Vai a Aiutiamoci Accademy</span>
                     <ArrowRight className="h-4 w-4" />
                   </div>
@@ -237,16 +237,16 @@ export default function GatewayPage() {
                   {/* Header Card 3D Fluttuante con Logo Pop-Out */}
                   <div
                     ref={headerRef}
-                    className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-900/80 border border-white/15 shadow-xl [transform-style:preserve-3d] transition-transform duration-200"
+                    className="home-3d-header green flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-900/85 border border-white/20 shadow-2xl transition-all"
                   >
                     <div
                       ref={logoRef}
-                      className="h-11 w-11 shrink-0 rounded-xl bg-slate-950 border border-white/20 flex items-center justify-center p-1.5 shadow-md [transform-style:preserve-3d] transition-transform duration-200"
+                      className="home-3d-logo h-12 w-12 shrink-0 rounded-xl bg-slate-950 border border-white/25 flex items-center justify-center p-1.5 shadow-lg transition-all"
                     >
                       <img
                         src="/images/logo_icon_dark.png"
                         alt="Aiutiamoci Logo"
-                        className="h-full w-full object-contain [filter:drop-shadow(0_4px_6px_rgba(0,0,0,0.8))]"
+                        className="h-full w-full object-contain [filter:drop-shadow(0_6px_10px_rgba(0,0,0,0.9))]"
                       />
                     </div>
                     <div>
@@ -281,8 +281,8 @@ export default function GatewayPage() {
                 </div>
 
                 {/* Pulsante Navigazione 3D */}
-                <div ref={buttonRef} className="pt-2 [transform-style:preserve-3d] transition-transform duration-200">
-                  <div className="w-full bg-slate-800/90 hover:bg-slate-700/90 text-white border border-white/10 font-semibold h-12.5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-lg shadow-black/60 transition-all pointer-events-none">
+                <div ref={buttonRef} className="home-3d-btn pt-2 transition-all">
+                  <div className="w-full bg-slate-800/90 hover:bg-slate-700/90 text-white border border-white/10 font-semibold h-12.5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-xl shadow-black/70 transition-all pointer-events-none">
                     <span>Vai a Aiutiamoci Impresa</span>
                     <ExternalLink className="h-4 w-4 text-slate-400" />
                   </div>
