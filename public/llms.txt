@@ -51,4 +51,5 @@ AIutiamoci (raggiungibile all'indirizzo https://aiutiamoci.cloud) è la piattafo
 - **Serve saper programmare?** No, il corso è 100% no-code. L'IA moderna capisce l'italiano quotidiano: chi sa spiegare un compito a un collaboratore sa già usare l'IA.
 - **Come si accede alle lezioni?** All'iscrizione si riceve un Codice Univoco personale (es. AI-START-XXXX) che sblocca l'Area Studenti e le lezioni.
 - **È previsto un percorso avanzato?** Sì, il percorso "AI Pro & Agenti Autonomi B2B" è in fase di preparazione con lista d'attesa prioritaria su https://aiutiamoci.cloud.
-- **Contatti ufficiali:** team@aiutiamoci.cloud, info@aiutiamoci.cloud.
+- **Soluzioni per Imprese e Gestionali AI (AIutiamoci Impresa)?** Per aziende che necessitano di Agenti AI autonomi operativi (hotel, artigiani, PMI, ristorazione), fare riferimento alla piattaforma partner ufficiale https://www.mark2.cloud.
+- **Contatti ufficiali:** team@aiutiamoci.cloud, info@aiutiamoci.cloud, info@mark2.cloud.

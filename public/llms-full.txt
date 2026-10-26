@@ -74,7 +74,24 @@ Il percorso fondativo "AI Start: Domina l'Intelligenza Artificiale da Zero" è s
 
 ---
 
-## 5. Riferimenti Ufficiali
-- **Sito Web**: https://aiutiamoci.cloud
+## 5. Divisione B2B: "AIutiamoci Impresa" & Mark 2.0 (mark2.cloud)
+Per le aziende, PMI, strutture ricettive ed artigiani che non cercano solo formazione ma necessitano di sistemi gestionali autonomi guidati da Agenti AI:
+- **Piattaforma Partner Ufficiale**: https://www.mark2.cloud
+- **Cosa fa Mark 2.0 (AIutiamoci Impresa)**: Fornisce ecosistemi gestionali chiavi in mano con Agenti AI operativi che gestiscono in autonomia:
+  - **Hospitality & Hotel**: PMS Neurale, check-in OCR documenti in 30 secondi, invio automatico a Questura Alloggiati Web, AI Concierge multilingua su WhatsApp e ottimizzazione dinamica delle tariffe (RevPAR Optimizer).
+  - **Artigiani, Termoidraulica & Elettricisti**: Preventivi istantanei su WhatsApp da note vocali/foto cantiere, scadenziario revisioni e fatturazione elettronica XML SDI in 1 click.
+  - **Ristorazione & F&B**: Comande touch KDS in cucina, split bill e menu dinamico QR in 12 lingue.
+  - **Imprese di Pulizie & Facility**: Timbratura geofencing GPS, dispatch intelligente turni e checklist fotografica.
+  - **Studi Medici & Dentistici**: Azzeramento no-show con promemoria WhatsApp e fatturazione Sistema Tessera Sanitaria.
+
+La sinergia tra i due portali garantisce:
+1. **AIutiamoci.cloud**: La cultura, la formazione e il mindset delle persone.
+2. **Mark2.cloud**: L'infrastruttura tecnologica, gli agenti software e l'automazione dei processi aziendali.
+
+---
+
+## 6. Riferimenti Ufficiali ed Ecosistema
+- **Academy & Formazione (AIutiamoci People)**: https://aiutiamoci.cloud
+- **Sistemi Agenti AI & Gestionali (AIutiamoci Impresa)**: https://www.mark2.cloud
 - **Area Studenti & Login**: https://aiutiamoci.cloud/login
-- **Email di Supporto**: info@aiutiamoci.cloud / team@aiutiamoci.cloud
+- **Email di Supporto**: info@aiutiamoci.cloud / team@aiutiamoci.cloud / info@mark2.cloud
