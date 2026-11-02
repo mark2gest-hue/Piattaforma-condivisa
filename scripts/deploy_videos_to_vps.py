@@ -107,9 +107,18 @@ def main():
                 print(f"❌ Discrepanza byte staging per Lezione {lid}: locale={local_size}, remoto={staging_size}", flush=True)
                 sys.exit(1)
 
-            # 4. Swap atomico POSIX
+            # 4. Remuxing lossless su VPS per garantire Progressive MP4 +faststart (unifica fMP4 ed elimina blocchi moof)
+            faststart_staging = f"{STAGING_DIR}/lesson_{num_str}_faststart.mp4"
+            print(f"🎬 [Lezione {num_str}] Remuxing lossless +faststart su VPS...", flush=True)
+            remux_cmd = f"/usr/bin/ffmpeg -y -v error -i {staging_target} -c copy -movflags +faststart {faststart_staging} && chmod 644 {faststart_staging} && rm -f {staging_target}"
+            remux_res = run_ssh(remux_cmd)
+            if remux_res.returncode != 0:
+                print(f"❌ Errore durante remux faststart per Lezione {lid}: {remux_res.stderr}", flush=True)
+                sys.exit(1)
+
+            # 5. Swap atomico POSIX
             print(f"⚡ [Lezione {num_str}] Eseguo swap atomico POSIX in produzione...", flush=True)
-            swap_res = run_ssh(f"mv -f {staging_target} {final_target} && chmod 644 {final_target}")
+            swap_res = run_ssh(f"mv -f {faststart_staging} {final_target} && chmod 644 {final_target}")
             if swap_res.returncode != 0:
                 print(f"❌ Errore durante lo swap atomico per Lezione {lid}: {swap_res.stderr}", flush=True)
                 sys.exit(1)
