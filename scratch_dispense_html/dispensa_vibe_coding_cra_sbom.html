@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Dossier di Regia & Guida Operativa CRA • Vibe Coding, Software Supply Chain & SBOM CycloneDX</title>
+<style>
+  @page {
+    size: A4;
+    margin: 13mm 14mm 13mm 14mm;
+    @top-left {
+      content: "aiutiamoci.cloud • Corso AI Pro • Track Cybersecurity & AI Defense • Regia Video & Dossier Tecnico";
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 7pt;
+      color: #64748b;
+      font-weight: 600;
+    }
+    @bottom-left {
+      content: "DOSSIER VIDEO CRA 2026/2027 • Vibe Coding, Software Supply Chain & SBOM CycloneDX 1.5";
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 7pt;
+      color: #64748b;
+    }
+    @bottom-right {
+      content: "Pagina " counter(page) " di " counter(pages);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 7.5pt;
+      color: #0284c7;
+      font-weight: bold;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.38;
+    font-size: 8.6pt;
+    margin: 0;
+    padding: 0;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+
+  /* HEADER & TOP BAR */
+  .header-table {
+    display: table;
+    width: 100%;
+    border-bottom: 2.5px solid #0284c7;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+  .header-left {
+    display: table-cell;
+    vertical-align: middle;
+    width: 55%;
+  }
+  .header-right {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+    width: 45%;
+    font-size: 7.8pt;
+    color: #334155;
+    line-height: 1.25;
+  }
+
+  .badge-row {
+    margin-bottom: 4px;
+  }
+  .badge {
+    display: inline-block;
+    background-color: #0284c7;
+    color: #ffffff;
+    font-size: 6.8pt;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .badge-purple {
+    display: inline-block;
+    background-color: #4f46e5;
+    color: #ffffff;
+    font-size: 6.8pt;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-left: 3px;
+  }
+  .badge-amber {
+    display: inline-block;
+    background-color: #d97706;
+    color: #ffffff;
+    font-size: 6.8pt;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    margin-left: 3px;
+  }
+  .badge-red {
+    display: inline-block;
+    background-color: #dc2626;
+    color: #ffffff;
+    font-size: 6.8pt;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    margin-left: 3px;
+  }
+  .badge-green {
+    display: inline-block;
+    background-color: #16a34a;
+    color: #ffffff;
+    font-size: 6.8pt;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    margin-left: 3px;
+  }
+  .badge-slate {
+    display: inline-block;
+    background-color: #f1f5f9;
+    color: #334155;
+    font-size: 6.8pt;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #cbd5e1;
+    margin-left: 3px;
+  }
+
+  h1 {
+    font-size: 13.5pt;
+    color: #0f172a;
+    margin: 2px 0 3px 0;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.22;
+  }
+  .subtitle {
+    font-size: 8.8pt;
+    color: #334155;
+    margin: 0 0 8px 0;
+    font-style: italic;
+    line-height: 1.3;
+  }
+
+  .section-title {
+    font-size: 9.2pt;
+    font-weight: 800;
+    color: #0369a1;
+    border-left: 3.5px solid #0284c7;
+    padding-left: 6px;
+    margin: 8px 0 5px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  /* SCRIPT TELEPROMPTER & REGIA BOX */
+  .script-box {
+    background-color: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 7px 9px;
+    margin: 6px 0;
+  }
+  .script-box-purple {
+    background-color: #f5f3ff;
+    border: 1.5px solid #a5b4fc;
+    border-radius: 5px;
+    padding: 7px 9px;
+    margin: 6px 0;
+  }
+  .script-header {
+    font-weight: 800;
+    font-size: 7.8pt;
+    color: #312e81;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #c7d2fe;
+    padding-bottom: 2px;
+  }
+  .script-speaker {
+    font-weight: 800;
+    color: #1e1b4b;
+    font-size: 8.2pt;
+  }
+  .script-body {
+    color: #1e1b4b;
+    font-size: 8.2pt;
+    line-height: 1.38;
+  }
+  .regia-note {
+    background-color: #e0e7ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 7px;
+    margin-top: 5px;
+    font-size: 7.3pt;
+    color: #312e81;
+    font-style: italic;
+    line-height: 1.3;
+  }
+  .screencast-note {
+    background-color: #ecfdf5;
+    border-left: 3px solid #10b981;
+    padding: 4px 7px;
+    margin-top: 5px;
+    font-size: 7.3pt;
+    color: #064e3b;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* CALLOUTS & BANNERS */
+  .alert-box {
+    background-color: #fef2f2;
+    border-left: 3.5px solid #dc2626;
+    padding: 6px 8px;
+    margin: 6px 0;
+    font-size: 7.8pt;
+    color: #991b1b;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.35;
+  }
+  .info-box {
+    background-color: #f0f9ff;
+    border-left: 3.5px solid #0284c7;
+    padding: 6px 8px;
+    margin: 6px 0;
+    font-size: 7.8pt;
+    color: #0c4a6e;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.35;
+  }
+  .warning-box {
+    background-color: #fffbeb;
+    border-left: 3.5px solid #d97706;
+    padding: 6px 8px;
+    margin: 6px 0;
+    font-size: 7.8pt;
+    color: #78350f;
+    border-radius: 0 4px 4px 0;
+    line-height: 1.35;
+  }
+
+  /* CODE BLOCK HIGH-CONTRAST */
+  .code-block {
+    background-color: #0f172a;
+    color: #f8fafc;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 7pt;
+    padding: 6px 8px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 4px 0 6px 0;
+    line-height: 1.3;
+    border: 1px solid #334155;
+  }
+  .c-cyan { color: #38bdf8; font-weight: bold; }
+  .c-green { color: #4ade80; font-weight: bold; }
+  .c-pink { color: #f43f5e; font-weight: bold; }
+  .c-yellow { color: #fbbf24; font-weight: bold; }
+  .c-slate { color: #94a3b8; }
+
+  /* SIDE-BY-SIDE COMPARISON */
+  .comparison-table {
+    display: table;
+    width: 100%;
+    margin: 5px 0 7px 0;
+  }
+  .comp-cell {
+    display: table-cell;
+    width: 50%;
+    vertical-align: top;
+    padding: 0 3px;
+  }
+  .comp-box-bad {
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 4px;
+    padding: 6px 7px;
+    min-height: 90px;
+  }
+  .comp-box-good {
+    background-color: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 4px;
+    padding: 6px 7px;
+    min-height: 90px;
+  }
+  .comp-header-bad {
+    font-weight: 800;
+    color: #991b1b;
+    font-size: 7.6pt;
+    margin-bottom: 3px;
+    border-bottom: 1px solid #fecaca;
+    padding-bottom: 2px;
+  }
+  .comp-header-good {
+    font-weight: 800;
+    color: #166534;
+    font-size: 7.6pt;
+    margin-bottom: 3px;
+    border-bottom: 1px solid #bbf7d0;
+    padding-bottom: 2px;
+  }
+  .comp-text {
+    font-size: 7.2pt;
+    color: #1e293b;
+    line-height: 1.32;
+  }
+
+  /* DATA TABLES */
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.2pt;
+    margin: 5px 0 7px 0;
+  }
+  table.data-table th {
+    background-color: #0f172a;
+    color: #ffffff;
+    padding: 4.5px 6px;
+    text-align: left;
+    font-weight: 700;
+    border: 1px solid #334155;
+  }
+  table.data-table td {
+    padding: 4px 6px;
+    border: 1px solid #cbd5e1;
+    color: #1e293b;
+    vertical-align: top;
+    line-height: 1.25;
+  }
+  table.data-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  /* TIMELINE CSS DIAGRAM */
+  .timeline-container {
+    background-color: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 5px;
+    padding: 7px 8px;
+    margin: 5px 0 7px 0;
+    color: #ffffff;
+  }
+  .timeline-title {
+    font-size: 7.4pt;
+    font-weight: 800;
+    color: #38bdf8;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 2px;
+  }
+  .timeline-table {
+    display: table;
+    width: 100%;
+  }
+  .timeline-step {
+    display: table-cell;
+    vertical-align: top;
+    padding: 0 4px;
+    width: 25%;
+  }
+  .timeline-card {
+    background-color: #1e293b;
+    border-radius: 4px;
+    padding: 5px 6px;
+    font-size: 6.8pt;
+    line-height: 1.25;
+  }
+  .timeline-time {
+    font-weight: 800;
+    font-size: 7.4pt;
+    margin-bottom: 2px;
+  }
+  .t-red { color: #f43f5e; border-top: 2.5px solid #f43f5e; }
+  .t-amber { color: #fbbf24; border-top: 2.5px solid #fbbf24; }
+  .t-blue { color: #38bdf8; border-top: 2.5px solid #38bdf8; }
+  .t-green { color: #4ade80; border-top: 2.5px solid #4ade80; }
+
+  /* OVERVIEW BOX */
+  .overview-grid {
+    display: table;
+    width: 100%;
+    margin: 5px 0;
+  }
+  .overview-col {
+    display: table-cell;
+    vertical-align: top;
+    width: 33.33%;
+    padding: 0 3px;
+  }
+  .overview-card {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 6px 7px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .overview-num {
+    font-size: 11pt;
+    font-weight: 800;
+    color: #0284c7;
+    margin-bottom: 2px;
+  }
+  .overview-label {
+    font-size: 7pt;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+  }
+  .overview-desc {
+    font-size: 6.8pt;
+    color: #334155;
+    margin-top: 2px;
+    line-height: 1.25;
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================================================================= -->
+<!-- PAGINA 1: COPERTINA & SCHEDA REGIA PER IL SOCIO                         -->
+<!-- ======================================================================= -->
+<div class="header-table">
+  <div class="header-left">
+    <div class="badge-row">
+      <span class="badge">[DOSSIER TECNICO &amp; REGIA]</span>
+      <span class="badge-purple">[EU CRA 2024/2847]</span>
+      <span class="badge-amber">[SUPPLY CHAIN DEFENSE]</span>
+    </div>
+    <div style="font-size: 7.5pt; color: #64748b; font-weight: 700;">aiutiamoci.cloud • Masterclass AI Pro 2026/2027</div>
+  </div>
+  <div class="header-right">
+    <strong>Destinatario:</strong> Stefano (Socio &amp; Relatore Tecnico)<br>
+    <strong>Track Formativa:</strong> Cybersecurity &amp; AI Defense (Modulo 6)<br>
+    <strong>Revisione:</strong> Edizione Ufficiale UE 2024/2847 (Novembre 2026)
+  </div>
+</div>
+
+<h1>VIBE CODING &amp; CYBER RESILIENCE ACT (UE 2024/2847)</h1>
+<div class="subtitle">
+  Dal Prototipo AI al Software Blindato &amp; Conforme: Copione Video Teleprompter, Guida Operativa Software Supply Chain (SBOM CycloneDX 1.5) e Scadenze Normative (11 Settembre 2026 / 11 Dicembre 2027).
+</div>
+
+<div class="section-title">1. SCHEDA REGIA &amp; LINEE GUIDA PER IL CONDUTTORE</div>
+
+<div class="overview-grid">
+  <div class="overview-col">
+    <div class="overview-card" style="border-top: 3px solid #0284c7;">
+      <div class="overview-num">10-12 MIN</div>
+      <div class="overview-label">DURATA TARGET VIDEO</div>
+      <div class="overview-desc">Ritmo serrato, orientato alla soluzione tecnica. Nessun allungamento teorico.</div>
+    </div>
+  </div>
+  <div class="overview-col">
+    <div class="overview-card" style="border-top: 3px solid #4f46e5;">
+      <div class="overview-num">PRAGMATICO</div>
+      <div class="overview-label">TONO DI VOCE</div>
+      <div class="overview-desc">Zero allarmismo e zero clickbait. Approccio da ingegnere senior verso colleghi e PMI.</div>
+    </div>
+  </div>
+  <div class="overview-col">
+    <div class="overview-card" style="border-top: 3px solid #16a34a;">
+      <div class="overview-num">5 ATTI</div>
+      <div class="overview-label">STRUTTURA NARRATIVA</div>
+      <div class="overview-desc">Mito smentito -&gt; Le 2 Scadenze -&gt; Il Vero Rischio -&gt; Live Screencast -&gt; Protocollo 24h.</div>
+    </div>
+  </div>
+</div>
+
+<div class="script-box-purple" style="margin-top: 8px;">
+  <div class="script-header">[INDICAZIONI DI REGIA PER STEFANO]</div>
+  <div class="regia-note">
+    <strong>OBIETTIVO DEL VIDEO:</strong> Posizionarci come l'unico polo formativo in Italia che non insegna solo il "vibe coding" per fare demo giocattolo, ma insegna a trasformare il codice generato dall'AI in software commerciale vendibile alle aziende, conforme alla nuova legge europea CRA.<br>
+    <strong>SETUP VISIVO:</strong> Alternanza tra Mezzo Busto frontale (apertura, concetti legali, chiusura) e Screencast ad alta definizione (ispezione file BUILD_INFO.json, SBOM CycloneDX e comando terminale del Radar).<br>
+    <strong>REGOLA CHIAVE:</strong> Non fare mai terrorismo psicologico. Chi programma con l'AI non deve avere paura della legge: deve solo adottare i corretti strumenti di ingegneria della supply chain.
+  </div>
+</div>
+
+<div class="section-title" style="margin-top: 10px;">2. MAPPA STRUTTURALE DEI 5 ATTI VIDEO</div>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th style="width: 14%;">Atto / Minuto</th>
+      <th style="width: 28%;">Tema Principale</th>
+      <th style="width: 32%;">Messaggio Chiave per lo Spettatore</th>
+      <th style="width: 26%;">Inquadratura &amp; Setup</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Atto 1</strong><br>(Min 00:00 - 02:15)</td>
+      <td><strong>Smontare il Falso Allarmismo:</strong><br>"Il Vibe Coding finisce nel 2026?"</td>
+      <td>L'UE non vieta l'AI e non colpisce esperimenti o SaaS puri. Colpisce chi immette sul mercato prodotti con elementi digitali senza conoscere la propria supply chain.</td>
+      <td>Mezzo Busto Frontale + Sovrimpressione testo dinamico [VERITÀ vs BUFALA].</td>
+    </tr>
+    <tr>
+      <td><strong>Atto 2</strong><br>(Min 02:15 - 04:30)</td>
+      <td><strong>Le 2 Vere Scadenze del CRA:</strong><br>11 Settembre 2026 vs 11 Dicembre 2027</td>
+      <td>Nel 2026 scatta l'obbligo di notifica entro 24h a ENISA e CSIRT/ACN per vulnerabilità sfruttate. Nel 2027 scatta la piena marcatura CE del software.</td>
+      <td>Mezzo Busto + Grafica a tutta pagina Timeline CRA (24h -&gt; 72h -&gt; 14gg).</td>
+    </tr>
+    <tr>
+      <td><strong>Atto 3</strong><br>(Min 04:30 - 07:00)</td>
+      <td><strong>Il Tallone d'Achille del Vibe Coder:</strong><br>La Software Supply Chain Open Source</td>
+      <td>Chiedere all'AI 40 pacchetti significa imbarcare 800 librerie transitive. La domanda da 1 milione: "Se esce una CVE critica domani, lo scopri in 24h?".</td>
+      <td>Mezzo Busto + Slide Comparativa [KO Vibe Coding Cieco] vs [OK Ingegneria AI].</td>
+    </tr>
+    <tr>
+      <td><strong>Atto 4</strong><br>(Min 07:00 - 09:45)</td>
+      <td><strong>Dimostrazione Live a Schermo:</strong><br>BUILD_INFO, SBOM CycloneDX &amp; Radar</td>
+      <td>Tre passi pratici in 3 minuti: il file di identità build, la distinta base standard CycloneDX 1.5 e il comando CLI che interroga tutti i 19 progetti in 50ms.</td>
+      <td>Screencast Schermo Intero con terminale e VS Code (font grande 16pt, tema scuro).</td>
+    </tr>
+    <tr>
+      <td><strong>Atto 5</strong><br>(Min 09:45 - 11:30)</td>
+      <td><strong>Il Protocollo Operativo 24h/72h:</strong><br>Risposta CSIRT &amp; Call to Action</td>
+      <td>Cosa fare nelle prime 24 ore: triage, bump SemVer, rigenerazione SBOM e notifica ad ACN. Invito alla Track Cybersecurity su aiutiamoci.cloud.</td>
+      <td>Mezzo Busto Frontale con box finale riassuntivo e QR Code / Link al corso.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="info-box">
+  <strong>NOTA PER IL MONTAGGIO:</strong> Inserire nei passaggi di transizione tra un atto e l'altro un cartello pulito con badge testuale e colore tematico (Blu per Atto 1, Rosso/Ambra per Atto 2, Viola per Atto 3, Smeraldo per Atto 4, Slate per Atto 5).
+</div>
+
+<!-- ======================================================================= -->
+<!-- PAGINA 2: ATTO 1 & ATTO 2 (COPIONE TELEPROMPTER PAROLA-PER-PAROLA)      -->
+<!-- ======================================================================= -->
+<div class="page-break"></div>
+
+<div class="header-table">
+  <div class="header-left">
+    <div class="badge-row">
+      <span class="badge-purple">[COPIONE TELEPROMPTER]</span>
+      <span class="badge">[ATTO 1 &amp; ATTO 2]</span>
+    </div>
+    <div style="font-size: 7.5pt; color: #64748b; font-weight: 700;">Dossier Video • Guida Teleprompter Parola per Parola</div>
+  </div>
+  <div class="header-right">
+    <strong>Durata stimata blocco:</strong> 4 min 30 sec<br>
+    <strong>Inquadratura principale:</strong> Camera 1 (Mezzo Busto) + Grafica Timeline
+  </div>
+</div>
+
+<div class="section-title">3. ATTO 1: SMONTARE IL CLICKBAIT ("IL VIBE CODING FINISCE L'11 SETTEMBRE 2026?")</div>
+
+<div class="script-box">
+  <div class="script-header">[TELEPROMPTER • STEFANO • PAROLA PER PAROLA]</div>
+  <div class="script-body">
+    <p>«Negli ultimi mesi si è diffusa sui social e su YouTube una narrazione terrorista: <em>"Attenzione! Con l'entrata in vigore del Cyber Resilience Act europeo, il Vibe Coding è ufficialmente morto. Se usi Cursor, Claude Code o ChatGPT per creare applicazioni, dal prossimo anno rischi sanzioni fino a 15 milioni di euro"</em>.</p>
+    <p>Facciamo subito chiarezza con i testi normativi alla mano: <strong>questa affermazione è una colossale bufala da clickbait</strong>.</p>
+    <p>Il Regolamento Europeo 2024/2847 — noto come <strong>Cyber Resilience Act (CRA)</strong> — non proibisce in nessun articolo l'utilizzo dell'intelligenza artificiale per scrivere codice. Non vieta i Large Language Model, non vieta l'autocompletamento neurale e non punisce chi programma in linguaggio naturale.</p>
+    <p>Non solo: il CRA <strong>non si applica affatto</strong> al software sviluppato per uso puramente personale, a progetti di ricerca amatoriale o a piattaforme SaaS cloud erogate come mero servizio senza componenti client installabili.</p>
+    <p>Ma allora perché tutti ne parlano con ansia? C'è un punto cruciale che la maggior parte di chi fa Vibe Coding sta ignorando completamente: <strong>il CRA regola chiunque immetta sul mercato europeo "prodotti con elementi digitali"</strong>.</p>
+    <p>Se costruisci un'applicazione desktop, un'app per smartphone Android o iOS, un agente software on-premise da installare sui server di un cliente o un plugin commerciale per un gestionale, <strong>tu sei legalmente un fabbricante di software</strong>. E alla legge europea non importa minimamente se il codice lo hai digitato tu a mano alle tre di notte o se lo ha scritto Claude in tre secondi. Alla legge interessa una sola cosa: <strong>che tu sia responsabile e pienamente consapevole della sicurezza di ogni singola riga e libreria che stai consegnando a quel cliente</strong>».</p>
+  </div>
+  <div class="regia-note">
+    <strong>NOTE REGIA:</strong> Tono energico, rassicurante ma fermo. Al secondo capoverso far comparire a schermo l'estratto dell'Articolo 2 del Regolamento UE 2024/2847 con evidenziatore giallo su "prodotti con elementi digitali messi a disposizione sul mercato".
+  </div>
+</div>
+
+<div class="section-title" style="margin-top: 10px;">4. ATTO 2: LE 2 VERE SCADENZE DEL CYBER RESILIENCE ACT (2026 vs 2027)</div>
+
+<div class="script-box">
+  <div class="script-header">[TELEPROMPTER • STEFANO • PAROLA PER PAROLA]</div>
+  <div class="script-body">
+    <p>«Molti sviluppatori fanno confusione tra le date di applicazione del regolamento. Nel calendario legislativo dell'Unione Europea ci sono <strong>due scadenze distinte</strong> che ogni professionista del software deve scolpirsi in testa:</p>
+    <p><strong>1) Prima scadenza: 11 SETTEMBRE 2026 — Obbligo di Segnalazione Vulnerabilità Attive.</strong><br>
+    Tra meno di un anno e mezzo scatta l'obbligo formale per chiunque distribuisca software di notificare a <strong>ENISA</strong> (l'Agenzia Europea per la Cybersicurezza) e al <strong>CSIRT Nazionale</strong> (in Italia incardinato presso l'Agenzia per la Cybersicurezza Nazionale - ACN) qualsiasi vulnerabilità attivamente sfruttata nei propri prodotti, secondo una timeline serratissima: un <em>Early Warning</em> entro <strong>24 ore</strong>, una notifica tecnica completa entro <strong>72 ore</strong> e una relazione finale entro <strong>14 giorni</strong> dalla disponibilità della patch.</p>
+    <p><strong>2) Seconda scadenza: 11 DICEMBRE 2027 — Piena Applicazione del CRA e Marcatura CE.</strong><br>
+    Dal dicembre 2027 il software commerciale immesso nell'Unione dovrà possedere i requisiti essenziali di sicurezza by-design, la marcatura CE, il fascicolo tecnico e la disponibilità obbligatoria della <strong>SBOM (Software Bill of Materials)</strong> in formato machine-readable per tutti i componenti integrati».</p>
+  </div>
+</div>
+
+<div class="timeline-container avoid-break">
+  <div class="timeline-title">[TIMELINE NORMATIVA CRA • REGOLAMENTO UE 2024/2847]</div>
+  <div class="timeline-table">
+    <div class="timeline-step">
+      <div class="timeline-card t-blue">
+        <div class="timeline-time">NOVEMBRE 2024</div>
+        <strong>Pubblicazione Gazzetta Ufficiale UE</strong><br>
+        Entrata in vigore formale del Regolamento (UE) 2024/2847. Avvio periodo transitorio di adeguamento.
+      </div>
+    </div>
+    <div class="timeline-step">
+      <div class="timeline-card t-red">
+        <div class="timeline-time">11 SETTEMBRE 2026</div>
+        <strong>Reporting Attivo Vulnerabilità (24h/72h)</strong><br>
+        Obbligo notifica a ENISA e CSIRT/ACN per ogni vulnerabilità zero-day sfruttata o incidente informatico grave.
+      </div>
+    </div>
+    <div class="timeline-step">
+      <div class="timeline-card t-amber">
+        <div class="timeline-time">GIUGNO 2027</div>
+        <strong>Standard Armonizzati SBOM</strong><br>
+        Definizione schemi formali CycloneDX 1.5/SPDX per le dogane digitali e i contratti con la Pubblica Amministrazione.
+      </div>
+    </div>
+    <div class="timeline-step">
+      <div class="timeline-card t-green">
+        <div class="timeline-time">11 DICEMBRE 2027</div>
+        <strong>Piena Applicazione CRA &amp; Marchio CE</strong><br>
+        Marcatura CE obbligatoria. Sanzioni fino a 15M euro o 2.5% del fatturato per chi distribuisce prodotti privi di tracciabilità.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- PAGINA 3: ATTO 3 (IL TALLONE D'ACHILLE DEL VIBE CODER: SUPPLY CHAIN)    -->
+<!-- ======================================================================= -->
+<div class="page-break"></div>
+
+<div class="header-table">
+  <div class="header-left">
+    <div class="badge-row">
+      <span class="badge-red">[CRITICAL RISK]</span>
+      <span class="badge-purple">[ATTO 3 • SUPPLY CHAIN]</span>
+    </div>
+    <div style="font-size: 7.5pt; color: #64748b; font-weight: 700;">Dossier Video • L'Anello Debole dell'Ecosistema AI</div>
+  </div>
+  <div class="header-right">
+    <strong>Durata stimata blocco:</strong> 2 min 30 sec<br>
+    <strong>Focus:</strong> Dipendenze Transitive, SemVer &amp; La Domanda da 1 Milione
+  </div>
+</div>
+
+<div class="section-title">5. ATTO 3: IL VERO TALLONE D'ACHILLE DEL VIBE CODER (LA SOFTWARE SUPPLY CHAIN)</div>
+
+<div class="script-box">
+  <div class="script-header">[TELEPROMPTER • STEFANO • PAROLA PER PAROLA]</div>
+  <div class="script-body">
+    <p>«Se il problema non è l'AI che scrive codice, qual è allora il vero tallone d'Achille di chi fa Vibe Coding? È la <strong>Software Supply Chain</strong>, la catena di fornitura del software open source.</p>
+    <p>Guardate come lavora normalmente chi usa gli agenti AI: apre Cursor o Claude Code e dice: <em>"Creami una dashboard Next.js con autenticazione Supabase, esportazione report in PDF, grafici interattivi e sincronizzazione cloud"</em>. L'agente AI esegue all'istante, ma per farlo aggiunge 40 librerie esterne nel file <code>package.json</code> o <code>requirements.txt</code>.</p>
+    <p>Quello che molti sviluppatori non calcolano è che ciascuna di quelle 40 librerie si porta dietro le proprie sotto-dipendenze transitive. Nel giro di cinque minuti, all'interno della cartella <code>node_modules</code> o del virtual environment finiscono <strong>800 pacchetti open source</strong> scritti da centinaia di autori sconosciuti in giro per il mondo.</p>
+    <p>E qui arriviamo alla <strong>domanda da un milione di euro</strong> che ogni auditor di sicurezza o responsabile acquisti di un'azienda strutturata vi farà:</p>
+    <p style="background: #e0f2fe; padding: 5px 8px; border-left: 3px solid #0284c7; font-weight: bold; color: #0369a1;">
+      "Se domattina la CISA americana o l'ACN italiana pubblica un bollettino di allerta su una vulnerabilità critica Zero-Day in una libreria open source, tu vieni a saperlo in 24 ore? E riesci a dire in 10 secondi esatti quali tuoi software e quali versioni installate dai tuoi clienti contengono quella specifica libreria vulnerabile?"
+    </p>
+    <p>Se la tua risposta è: <em>"Devo aprire 20 repository su GitHub, controllare riga per riga a mano e sperare che le versioni coincidano"</em>, sei completamente fuori legge rispetto al Cyber Resilience Act e fuori mercato per qualsiasi cliente enterprise».</p>
+  </div>
+  <div class="regia-note">
+    <strong>NOTE REGIA:</strong> Durante la lettura della "Domanda da 1 Milione di Euro", stringere su Camera 1 in primo piano con grafica in evidenza a tutto schermo. Tono calmo, professionale, senza gridare.
+  </div>
+</div>
+
+<div class="section-title" style="margin-top: 10px;">6. CONFRONTO: VIBE CODING CIECO vs INGEGNERIA AI CONFORME CRA</div>
+
+<div class="comparison-table avoid-break">
+  <div class="comp-cell">
+    <div class="comp-box-bad">
+      <div class="comp-header-bad">[KO] VIBE CODING CIECO (NON CONFORME CRA)</div>
+      <div class="comp-text">
+        <strong>Dipendenze Flottanti:</strong> Versioni indicate con il cappelletto <code>^</code> o tilde <code>~</code> nel package.json. Ogni installazione scarica versioni diverse non testate.<br>
+        <strong>Nessuna Carta d'Identità Build:</strong> Il software ha sempre la versione <code>0.1.0</code> hardcodata per mesi, senza numero di compilazione né associazione univoca.<br>
+        <strong>Git Caotico:</strong> Nessun tag crittografico, commit anonimi, impossibile ricostruire quale sorgente esatta ha generato l'eseguibile del cliente.<br>
+        <strong>Nessuna Distinta Base (SBOM):</strong> Zero visibilità sulle librerie transitive; le vulnerabilità zero-day rimangono invisibili fino all'attacco.<br>
+        <strong>Tempo di Risposta a Incidente:</strong> Giorni o settimane di ispezione manuale disperata (violazione termine 24h CSIRT/ACN).
+      </div>
+    </div>
+  </div>
+  <div class="comp-cell">
+    <div class="comp-box-good">
+      <div class="comp-header-good">[OK] INGEGNERIA AI CONFORME CRA (APPROCCIO PRO)</div>
+      <div class="comp-text">
+        <strong>Lockfile &amp; SemVer Rigido:</strong> Dipendenze bloccate bit-per-bit (<code>package-lock.json</code>) con versioni esatte e verificate crittograficamente.<br>
+        <strong>BUILD_INFO.json Integrato:</strong> Ogni singola release include metadati automatici: versione, numero di build, commit Git, branch e data UTC.<br>
+        <strong>Git Tag Annotati &amp; Firmati:</strong> Ogni build di produzione corrisponde a un tag Git immutabile (es. <code>v1.0.1+build.20261102.1042</code>).<br>
+        <strong>SBOM CycloneDX 1.5 Machine-Readable:</strong> Distinta base completa esportata in formato standard europeo con identificatori unici <code>purl</code>.<br>
+        <strong>Radar Istantaneo Sub-Secondo:</strong> Comando CLI aziendale che interroga tutti i progetti in 50 millisecondi ed evidenzia librerie vulnerabili.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="warning-box">
+  <strong>PRINCIPIO ARCHITETTURALE YAGNI APPLICATO ALLA SICUREZZA:</strong> Più librerie terze installi per pigrizia, più allarghi la superficie d'attacco e gli oneri legali del CRA. La prima linea di difesa dell'ingegnere AI è la <strong>Standard Library First</strong>: usare le API native della piattaforma anziché aggiungere micro-pacchetti per compiti banali.
+</div>
+
+<!-- ======================================================================= -->
+<!-- PAGINA 4: ATTO 4 (DIMOSTRAZIONE PRATICA A SCHERMO: SCREENCAST)          -->
+<!-- ======================================================================= -->
+<div class="page-break"></div>
+
+<div class="header-table">
+  <div class="header-left">
+    <div class="badge-row">
+      <span class="badge-green">[LIVE SCREENCAST]</span>
+      <span class="badge-purple">[ATTO 4 • GLI STRUMENTI]</span>
+    </div>
+    <div style="font-size: 7.5pt; color: #64748b; font-weight: 700;">Dossier Video • Dimostrazione Pratica a Schermo in 3 Step</div>
+  </div>
+  <div class="header-right">
+    <strong>Durata stimata blocco:</strong> 2 min 45 sec<br>
+    <strong>Inquadratura principale:</strong> Screencast 1080p/4K a tutto schermo
+  </div>
+</div>
+
+<div class="section-title">7. ATTO 4: DIMOSTRAZIONE PRATICA A SCHERMO (COSA MOSTRARE IN 3 MINUTI)</div>
+
+<div class="script-box">
+  <div class="script-header">[TELEPROMPTER • STEFANO • INTRODUZIONE SCREENCAST]</div>
+  <div class="script-body">
+    <p>«Basta teoria. Passiamo allo schermo e vediamo come noi risolviamo tutto questo nei nostri progetti reali in esattamente tre passaggi che potete replicare oggi stesso nei vostri software».</p>
+  </div>
+  <div class="screencast-note">
+    <strong>PASSAGGIO A SCREENCAST:</strong> Taglio netto su schermo. Stefano apre VS Code su un repository reale di produzione e illustra i tre artefatti chiave della pipeline CRA.
+  </div>
+</div>
+
+<div class="section-title" style="margin-top: 8px;">STEP A • IL FILE D'IDENTITÀ DELLA BUILD (BUILD_INFO.json)</div>
+<div style="font-size: 7.6pt; color: #334155; margin-bottom: 3px;">
+  Ogni prodotto software distribuito deve incorporare un descrittore univoco generato automaticamente durante il processo di build:
+</div>
+
+<div class="code-block"><span class="c-slate">// Percorso: /public/BUILD_INFO.json oppure embedded nell'eseguibile client</span>
+{
+  <span class="c-cyan">"appName"</span>: <span class="c-green">"Piattaforma-Lavoro-Condivisa"</span>,
+  <span class="c-cyan">"version"</span>: <span class="c-green">"1.0.1"</span>,
+  <span class="c-cyan">"buildNumber"</span>: <span class="c-yellow">1042</span>,
+  <span class="c-cyan">"fullBuildId"</span>: <span class="c-green">"1.0.1+build.20261102.1042"</span>,
+  <span class="c-cyan">"gitCommit"</span>: <span class="c-yellow">"9f8a2b3c4d5e"</span>,
+  <span class="c-cyan">"gitBranch"</span>: <span class="c-green">"main"</span>,
+  <span class="c-cyan">"builtAt"</span>: <span class="c-green">"2026-11-02T10:15:00Z"</span>,
+  <span class="c-cyan">"craCompliance"</span>: {
+    <span class="c-cyan">"regulation"</span>: <span class="c-green">"EU CRA 2024/2847"</span>,
+    <span class="c-cyan">"sbomFormat"</span>: <span class="c-green">"CycloneDX-1.5"</span>,
+    <span class="c-cyan">"securityContact"</span>: <span class="c-green">"security@mark2.cloud"</span>,
+    <span class="c-cyan">"csirtReportingReady"</span>: <span class="c-pink">true</span>
+  }
+}</div>
+
+<div class="section-title" style="margin-top: 8px;">STEP B • LA DISTINTA BASE DIGITALE (sbom.cdx.json CYCLONEDX 1.5)</div>
+<div style="font-size: 7.6pt; color: #334155; margin-bottom: 3px;">
+  La SBOM standard europea registra ogni pacchetto con il suo identificatore globale <code>purl</code> (Package URL), versione esatta e hash crittografico:
+</div>
+
+<div class="code-block"><span class="c-slate">// Estratto da: /sbom.cdx.json (Standard CycloneDX 1.5 approvato da ENISA)</span>
+{
+  <span class="c-cyan">"bomFormat"</span>: <span class="c-green">"CycloneDX"</span>,
+  <span class="c-cyan">"specVersion"</span>: <span class="c-green">"1.5"</span>,
+  <span class="c-cyan">"metadata"</span>: {
+    <span class="c-cyan">"timestamp"</span>: <span class="c-green">"2026-11-02T10:15:00Z"</span>,
+    <span class="c-cyan">"component"</span>: { <span class="c-cyan">"name"</span>: <span class="c-green">"piattaforma-condivisa"</span>, <span class="c-cyan">"version"</span>: <span class="c-green">"1.0.1"</span>, <span class="c-cyan">"type"</span>: <span class="c-green">"application"</span> }
+  },
+  <span class="c-cyan">"components"</span>: [
+    {
+      <span class="c-cyan">"name"</span>: <span class="c-green">"next"</span>,
+      <span class="c-cyan">"version"</span>: <span class="c-green">"15.5.23"</span>,
+      <span class="c-cyan">"purl"</span>: <span class="c-green">"pkg:npm/next@15.5.23"</span>,
+      <span class="c-cyan">"hashes"</span>: [{ <span class="c-cyan">"alg"</span>: <span class="c-green">"SHA-256"</span>, <span class="c-cyan">"content"</span>: <span class="c-yellow">"a7b8c9d0e1f2..."</span> }]
+    }
+  ]
+}</div>
+
+<div class="section-title" style="margin-top: 8px;">STEP C • IL RADAR AZIENDALE CVE ISTANTANEO (CLI SCANNER IN 50ms)</div>
+<div style="font-size: 7.6pt; color: #334155; margin-bottom: 3px;">
+  In caso di avviso di vulnerabilità CSIRT/ACN, lo script aziendale scansiona l'intero ecosistema di progetti in meno di un decimo di secondo:
+</div>
+
+<div class="code-block"><span class="c-pink">$</span> npm run sbom:lookup -- next
+
+<span class="c-cyan">[RADAR SUPPLY CHAIN CRA]</span> Ricerca del pacchetto <span class="c-yellow">"next"</span> su 19 repository aziendali...
+---------------------------------------------------------------------------------------
+<span class="c-slate">PROGETTO AZIENDALE            VERSIONE DICHIARATA    VERSIONE LOCKATA REALE    STATO</span>
+---------------------------------------------------------------------------------------
+Piattaforma Lavoro Condivisa  ^15.0.0                15.5.23                   <span class="c-green">[OK - ALLINEATO]</span>
+Gestionale Produzione         ^15.0.0                15.5.23                   <span class="c-green">[OK - ALLINEATO]</span>
+Sito Mark2gest                ^14.2.1                14.2.1                    <span class="c-yellow">[ATTENZIONE: CVE-2024-XXXX]</span>
+Bot Trading Dashboard         ^15.0.0                15.5.23                   <span class="c-green">[OK - ALLINEATO]</span>
+---------------------------------------------------------------------------------------
+<span class="c-green">[RISULTATO]</span> 19 progetti scansionati in 48ms. Individuato 1 repository da aggiornare.</div>
+
+<!-- ======================================================================= -->
+<!-- PAGINA 5: ATTO 5 (PROTOCOLLO OPERATIVO 24h/72h & CHIUSURA VIDEO)        -->
+<!-- ======================================================================= -->
+<div class="page-break"></div>
+
+<div class="header-table">
+  <div class="header-left">
+    <div class="badge-row">
+      <span class="badge-red">[24H / 72H PROTOCOL]</span>
+      <span class="badge-purple">[ATTO 5 • INCIDENT RESPONSE]</span>
+    </div>
+    <div style="font-size: 7.5pt; color: #64748b; font-weight: 700;">Dossier Video • Protocollo Operativo di Risposta alle Vulnerabilità</div>
+  </div>
+  <div class="header-right">
+    <strong>Durata stimata blocco:</strong> 2 min 00 sec<br>
+    <strong>Inquadratura principale:</strong> Tabella Operativa + Chiusura Mezzo Busto
+  </div>
+</div>
+
+<div class="section-title">8. ATTO 5: IL PROTOCOLLO DI RISPOSTA ALLE VULNERABILITÀ ATTIVE (TIMELINE CSIRT / ACN)</div>
+
+<div class="script-box">
+  <div class="script-header">[TELEPROMPTER • STEFANO • TIMELINE OPERATIVA]</div>
+  <div class="script-body">
+    <p>«Cosa succede se domani mattina esce una vulnerabilità Zero-Day su una libreria che utilizziamo? Grazie alla nostra architettura non entriamo nel panico. Seguiamo esattamente il protocollo operativo previsto dall'Articolo 14 del Cyber Resilience Act».</p>
+  </div>
+</div>
+
+<table class="data-table avoid-break" style="margin-top: 6px;">
+  <thead>
+    <tr>
+      <th style="width: 15%;">Finestra Temporale</th>
+      <th style="width: 25%;">Azione Tecnica del Team Dev</th>
+      <th style="width: 32%;">Adempimento CRA (ENISA / CSIRT ACN)</th>
+      <th style="width: 28%;">Output Prodotto &amp; Tool Utilizzato</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>ORA 00:00</strong><br><span class="badge-red">[RILEVAZIONE]</span></td>
+      <td>Pubblicazione bollettino CVE o allerta zero-day da NVD / CSIRT / GitHub Security Advisory.</td>
+      <td>Nessuna notifica immediata: avvio della finestra temporale delle 24 ore per la valutazione.</td>
+      <td>Esecuzione <code>npm run sbom:lookup</code>.<br>Lista progetti impattati identificata in &lt;1 minuto.</td>
+    </tr>
+    <tr>
+      <td><strong>ENTRO 24 ORE</strong><br><span class="badge-amber">[EARLY WARNING]</span></td>
+      <td>Isolamento del componente o disattivazione della feature vulnerabile se esposta al pubblico.</td>
+      <td><strong>Early Warning obbligatorio:</strong> invio notifica preliminare al portale unico ENISA / ACN con descrizione della vulnerabilità attiva.</td>
+      <td>Ticket di incidente interno registrato; conferma di ricezione con identificativo formale CSIRT.</td>
+    </tr>
+    <tr>
+      <td><strong>ORE 24 - 48</strong><br><span class="badge-green">[REMEDIATION]</span></td>
+      <td>Aggiornamento chirurgico della dipendenza con patch del vendor, oppure workaround di sicurezza interno.</td>
+      <td>Nessuna notifica: lavoro intensivo di testing e validazione per evitare regressioni operative.</td>
+      <td>Nuovo build con bump SemVer, nuovo <code>BUILD_INFO.json</code>, rigenerazione <code>sbom.cdx.json</code>, Git Tag.</td>
+    </tr>
+    <tr>
+      <td><strong>ENTRO 72 ORE</strong><br><span class="badge-purple">[NOTIFICA COMPLETA]</span></td>
+      <td>Deploy in produzione della nuova build corretta e notifica di rilascio inviata a tutti i clienti.</td>
+      <td><strong>Notifica Completa CRA:</strong> invio ad ACN e clienti della valutazione di impatto, IoC e versione patchata.</td>
+      <td>Security Advisory pubblicata con nuovo hash SBOM; rilascio confermato sul portale CSIRT.</td>
+    </tr>
+    <tr>
+      <td><strong>ENTRO 14 GIORNI</strong><br><span class="badge-slate">[REPORT FINALE]</span></td>
+      <td>Revisione post-mortem del processo: verifica assenza di compromissioni e chiusura audit.</td>
+      <td><strong>Relazione Finale Formale:</strong> archiviazione della segnalazione con prove di risoluzione definitiva.</td>
+      <td>Fascicolo tecnico aggiornato e archiviato nel Vault Obsidian aziendale per future verifiche.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="section-title" style="margin-top: 10px;">9. CHIUSURA VIDEO &amp; CALL TO ACTION (TELEPROMPTER STEFANO)</div>
+
+<div class="script-box-purple avoid-break">
+  <div class="script-header">[TELEPROMPTER • STEFANO • CHIUSURA VIDEO]</div>
+  <div class="script-body">
+    <p>«L'era del codice generato con l'intelligenza artificiale e poi buttato online senza sapere cosa contiene è finita. Chi programma con l'AI oggi deve essere <strong>più ingegnere di prima, non meno</strong>.</p>
+    <p>La differenza tra un dilettante che gioca con i prompt e un professionista che costruisce software per le imprese passa tutta da qui: dalla capacità di governare la supply chain, tracciare le build in modo deterministico e rispondere a qualsiasi audit normativo in pochi secondi.</p>
+    <p>Nella nostra <strong>Track Formativa Cybersecurity &amp; AI Defense</strong> su <code>aiutiamoci.cloud</code> insegniamo esattamente questo: non solo a far generare codice agli agenti, ma a blindarlo, certificarlo e renderlo conforme alle normative europee più esigenti.</p>
+    <p>Tutti gli script che avete visto oggi a schermo — dal generatore di <code>BUILD_INFO.json</code> al convertitore CycloneDX fino al Radar delle dipendenze — sono disponibili per i nostri studenti all'interno della piattaforma. Se volete fare il salto di qualità definitivo, vi aspettiamo nei prossimi moduli. A presto!».</p>
+  </div>
+  <div class="regia-note">
+    <strong>INQUADRATURA FINALE:</strong> Camera 1 frontale a figura intera o mezzo busto stretto. Far comparire in sovrimpressione finale il banner grafico con il dominio <code>aiutiamoci.cloud</code> e il titolo del corso: <em>"Corso AI Pro • Track Cybersecurity &amp; AI Defense"</em>.
+  </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- PAGINA 6: APPENDICE TECNICA (PROMPT RCCF PER STUDENTI & CHECKLIST)      -->
+<!-- ======================================================================= -->
+<div class="page-break"></div>
+
+<div class="header-table">
+  <div class="header-left">
+    <div class="badge-row">
+      <span class="badge">[APPENDICE DIDATTICA]</span>
+      <span class="badge-purple">[PROMPT RCCF]</span>
+      <span class="badge-green">[STUDENT PACK]</span>
+    </div>
+    <div style="font-size: 7.5pt; color: #64748b; font-weight: 700;">Track Cybersecurity &amp; AI Defense • Appendice Pratica per Studenti</div>
+  </div>
+  <div class="header-right">
+    <strong>Applicabile su:</strong> Cursor, Claude Code, Antigravity, VS Code Copilot<br>
+    <strong>Standard Tecnico:</strong> RCCF Framework + YAGNI Defense
+  </div>
+</div>
+
+<div class="section-title">10. SYSTEM PROMPT RCCF: "CRA &amp; SOFTWARE SUPPLY CHAIN DEFENSE"</div>
+<div style="font-size: 7.6pt; color: #334155; margin-bottom: 3px;">
+  Incolla questo prompt nelle istruzioni di sistema (es. <code>.cursorrules</code>, <code>CLAUDE.md</code> o configurazione dell'agente) per obbligare l'IA a rispettare i requisiti del Cyber Resilience Act e la disciplina della Supply Chain:
+</div>
+
+<div class="code-block"><span class="c-yellow"># ==============================================================================
+# SYSTEM PROMPT: EU CRA COMPLIANCE &amp; SOFTWARE SUPPLY CHAIN GUARDRAILS
+# ==============================================================================</span>
+
+<span class="c-cyan">[RUOLO]</span>
+Sei un Senior Software Security Architect specializzato in DevSecOps, conformità normativa
+europea (EU Cyber Resilience Act UE 2024/2847) e protezione della Software Supply Chain.
+
+<span class="c-cyan">[CONTESTO]</span>
+Stai scrivendo codice per applicazioni commerciali soggette agli obblighi di sicurezza
+by-design e rendicontazione delle vulnerabilità alle autorità europee (ENISA / CSIRT ACN).
+
+<span class="c-cyan">[DIRETTIVE TASSATIVE DI SVILUPPO (COMPITO)]</span>
+1. <span class="c-green">STANDARD LIBRARY FIRST (REGOLA YAGNI SUPPLY CHAIN):</span>
+   È severamente vietato installare nuovi pacchetti npm o librerie terze se la funzionalità
+   può essere realizzata con costrutti nativi del linguaggio o della piattaforma (es.
+   crypto nativo per hash/UUID, fetch standard per HTTP, structuredClone per deep copy).
+   Ogni nuova libreria aggiunge debito normativo e superficie d'attacco CRA.
+
+2. <span class="c-green">DIPENDENZE CRITTOGRAFICAMENTE BLOCCATE:</span>
+   Non generare mai comandi npm install con versioni flottanti o indefinite. Tutte le
+   dipendenze devono essere registrate con versione esatta e lockfile rigoroso.
+
+3. <span class="c-green">CARTA D'IDENTITÀ DELLA BUILD (BUILD_INFO.json):</span>
+   Qualsiasi processo di build o packaging deve generare o aggiornare il file descrittore
+   con versione SemVer reale, buildNumber progressivo e identificatore Git immutabile.
+
+4. <span class="c-green">GENERICITÀ ZERO-DAY &amp; ISOLAMENTO:</span>
+   Tutti gli input esterni devono essere validati all'ingresso tramite schemi tipizzati
+   (Zod / Typebox). È vietato l'uso di eval(), deserializzazioni insicure o query non preparate.
+
+<span class="c-cyan">[FORMATO DI OUTPUT RICHIESTO]</span>
+Ogni volta che proponi l'aggiunta di una libreria esterna:
+- Giustifica esplicitamente perché la Standard Library nativa non è sufficiente.
+- Fornisci il comando esatto con versione esatta da aggiungere a package.json.
+- Indica l'impatto sulla distinta base (SBOM) del progetto.</div>
+
+<div class="section-title" style="margin-top: 10px;">11. CHECKLIST PRE-RILASCIO IN 5 PUNTI (IL "BOLLINO BLU" DEL SOFTWARE AI)</div>
+
+<table class="data-table avoid-break">
+  <thead>
+    <tr>
+      <th style="width: 18%;">Punto di Controllo</th>
+      <th style="width: 42%;">Cosa Verificare Meccanicamente</th>
+      <th style="width: 25%;">Comando o Strumento di Test</th>
+      <th style="width: 15%;">Esito Atteso</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1. Pulizia Dipendenze</strong></td>
+      <td>Verificare che non vi siano librerie inutilizzate o pacchetti deprecated nel lockfile.</td>
+      <td><code>npm audit --production</code></td>
+      <td><span class="badge-green">[0 VULNERABILITÀ]</span></td>
+    </tr>
+    <tr>
+      <td><strong>2. Generazione BUILD_INFO</strong></td>
+      <td>Verificare la presenza di <code>BUILD_INFO.json</code> con commit Git e timestamp reale.</td>
+      <td><code>cat public/BUILD_INFO.json</code></td>
+      <td><span class="badge-green">[BUILD ID PRESENTE]</span></td>
+    </tr>
+    <tr>
+      <td><strong>3. Esportazione SBOM</strong></td>
+      <td>Generare la distinta base CycloneDX 1.5 in formato JSON con metadati completi.</td>
+      <td><code>npm run sbom:generate</code></td>
+      <td><span class="badge-green">[sbom.cdx.json VALIDO]</span></td>
+    </tr>
+    <tr>
+      <td><strong>4. Tag Git Crittografico</strong></td>
+      <td>Apporre il tag Git corrispondente alla versione rilasciata al cliente.</td>
+      <td><code>git tag -a v1.0.1 -m "Release"</code></td>
+      <td><span class="badge-green">[TAG ALLINEATO]</span></td>
+    </tr>
+    <tr>
+      <td><strong>5. Test Radar Ecosistema</strong></td>
+      <td>Interrogare il Radar SBOM per confermare la corretta indicizzazione del pacchetto.</td>
+      <td><code>npm run sbom:lookup -- &lt;pkg&gt;</code></td>
+      <td><span class="badge-green">[RISPOSTA &lt;100MS]</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="golden-rule" style="background-color: #fffbeb; border-left: 4px solid #d97706; padding: 6px 10px; margin-top: 8px; font-size: 8pt; color: #78350f; border-radius: 0 4px 4px 0;">
+  <strong>MASSIMA OPERATIVA PER I BUILDER AI:</strong> <em>"L'intelligenza artificiale moltiplica di 100 volte la velocità con cui puoi creare codice; una solida ingegneria della supply chain impedisce che quell'accelerazione ti schianti contro le responsabilità legali del mercato"</em>.
+</div>
+
+</body>
+</html>

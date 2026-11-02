@@ -11,6 +11,7 @@
 3. **Modulo 3: Prompt Injection & Jailbreak — La Nuova Frontiera degli Attacchi ai Modelli LLM**
 4. **Modulo 4: API, Webhook & n8n Blindati — Proteggere Flussi e Credenziali Esterne**
 5. **Modulo 5: Ethical Hacking con l'IA — Automatizzare i Security Audit prima del Deploy**
+6. **Modulo 6: Vibe Coding, Supply Chain & EU Cyber Resilience Act (CRA UE 2024/2847)**
 
 ---
 
@@ -299,6 +300,112 @@ Per ogni vulnerabilità individuata fornisci:
 - Linea di Codice e Spiegazione dell'Impatto
 - Payload dell'Attacco Dimostrativo (Proof of Concept)
 - Codice Corretto e Blindato pronto per il drop-in replacement.
+```
+
+---
+---
+
+# 🚀 MODULO 6: VIBE CODING, SUPPLY CHAIN & EU CYBER RESILIENCE ACT (CRA UE 2024/2847)
+
+### 🎥 Struttura Video & Screencast
+* **Durata**: 11-12 minuti.
+* **Cosa mostra Stefano a schermo**:
+  1. Il file d'identità della compilazione (`BUILD_INFO.json`) con numero di build progressivo e commit Git.
+  2. La distinta base del software (`sbom.cdx.json` in formato CycloneDX 1.5 approvato ENISA) con Package URL (`purl`).
+  3. L'esecuzione a riga di comando del Radar CVE aziendale (`npm run sbom:lookup -- next`) che interroga l'intero ecosistema di progetti in meno di 50 millisecondi.
+  4. La timeline operativa di reazione 24h/72h in conformità con CSIRT / ACN Italia (Art. 14 CRA).
+
+---
+
+### 1. Il Concetto Normativo: Smontare il Falso Allarmismo
+* **La Bufala da Clickbait**: *"Il CRA vieta il Vibe Coding e l'uso dell'IA per programmare"*. FALSO. Il Regolamento UE 2024/2847 non vieta i modelli di linguaggio né punisce lo sviluppo assistito da IA.
+* **La Verità Operativa**: Il CRA si applica a chiunque immetta sul mercato europeo **"prodotti con elementi digitali"** (software installabili, desktop/mobile app, agent on-premise, plugin per gestionali).
+* **Le 2 Scadenze Chiave**:
+  1. **11 Settembre 2026**: Obbligo di notifica entro **24 ore** (Early Warning) ed entro **72 ore** (Notifica Completa) ad ENISA e CSIRT/ACN per vulnerabilità attivamente sfruttate.
+  2. **11 Dicembre 2027**: Piena applicazione del CRA con marcatura CE obbligatoria e distinta base SBOM machine-readable.
+
+---
+
+### 2. Il Vero Rischio: La Software Supply Chain Open Source
+Quando uno sviluppatore chiede all'IA di aggiungere 40 funzionalità, l'agente installa decine di librerie nel file `package.json` o `requirements.txt`. Ciascuna dipendenza trascina con sé centinaia di librerie transitive (fino a 800 pacchetti opachi).
+
+#### La Domanda da 1 Milione di Euro:
+> *"Se domani esce un bollettino di allerta su una vulnerabilità critica Zero-Day in una libreria, tu vieni a saperlo entro 24 ore? E sai dire in 10 secondi esatti quali prodotti e versioni consegnate ai tuoi clienti contengono quella libreria?"*
+
+```text
+[KO] Vibe Coding Cieco               vs   [OK] Ingegneria AI Conforme CRA
+- Versioni flottanti (^ o ~)               - Dipendenze bloccate (package-lock.json)
+- Nessuna identità build (v0.1.0 fisso)    - BUILD_INFO.json con SemVer + Build ID
+- Commit Git sparsi senza tag              - Git Tag annotati e tracciabili
+- Nessuna distinta base (SBOM)             - SBOM CycloneDX 1.5 machine-readable
+- Ricerca manuale dispersiva               - Radar CLI istantaneo (<50ms su tutto l'ecosistema)
+```
+
+---
+
+### 3. La Dimostrazione Live a Schermo (3 Artefatti Tecnici)
+
+#### A. Il File d'Identità Build (`public/BUILD_INFO.json`)
+```json
+{
+  "appName": "Piattaforma-Lavoro-Condivisa",
+  "version": "1.0.1",
+  "buildNumber": 1042,
+  "fullBuildId": "1.0.1+build.20261102.1042",
+  "gitCommit": "9f8a2b3c4d5e",
+  "gitBranch": "main",
+  "builtAt": "2026-11-02T10:15:00Z",
+  "craCompliance": {
+    "regulation": "EU CRA 2024/2847",
+    "sbomFormat": "CycloneDX-1.5",
+    "securityContact": "security@mark2.cloud",
+    "csirtReportingReady": true
+  }
+}
+```
+
+#### B. La Distinta Base CycloneDX 1.5 (`sbom.cdx.json`)
+```json
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "metadata": {
+    "timestamp": "2026-11-02T10:15:00Z",
+    "component": { "name": "piattaforma-condivisa", "version": "1.0.1", "type": "application" }
+  },
+  "components": [
+    {
+      "name": "next",
+      "version": "15.5.23",
+      "purl": "pkg:npm/next@15.5.23",
+      "hashes": [{ "alg": "SHA-256", "content": "a7b8c9d0e1f2..." }]
+    }
+  ]
+}
+```
+
+#### C. Il Comando Radar CLI Ecosistema
+```bash
+$ npm run sbom:lookup -- next
+[RADAR SUPPLY CHAIN CRA] Scansione di 19 progetti attivi completata in 48ms.
+Piattaforma Lavoro Condivisa  ^15.0.0    15.5.23    [OK - ALLINEATO]
+Gestionale Produzione         ^15.0.0    15.5.23    [OK - ALLINEATO]
+Sito Mark2gest                ^14.2.1    14.2.1     [ATTENZIONE: CVE-2024-XXXX]
+```
+
+---
+
+### 4. Il System Prompt di Difesa della Supply Chain (Regola YAGNI)
+Ecco il prompt da inserire nelle istruzioni di sistema degli agenti di sviluppo (Cursor, Claude Code, Antigravity):
+
+```text
+Agisci come Senior Software Security Architect e Compliance Officer EU CRA (UE 2024/2847).
+
+DIRETTIVE TASSATIVE:
+1. STANDARD LIBRARY FIRST (Scala YAGNI): È severamente vietato installare pacchetti esterni se la logica è realizzabile con librerie native (crypto, fetch, structuredClone). Meno dipendenze = meno superficie d'attacco CRA.
+2. DIPENDENZE DETERMINISTICHE: Versioni esatte e bloccate bit-per-bit nel lockfile, mai versioni flottanti con ^ o ~.
+3. BUILD IDENTITY: Ogni release deve aggiornare BUILD_INFO.json con SemVer, buildNumber e commit Git.
+4. SBOM RIGOROSA: Ogni aggiunta deve aggiornare atomicamente la distinta base sbom.cdx.json in formato CycloneDX 1.5.
 ```
 
 ---
