@@ -1,7 +1,19 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-21 14:05
+Ultimo aggiornamento: 2026-10-26 12:25
 Stato corrente:
+- **Card 3D Parallax Tilt con Logo Pop-Out & Link Globale su Home Page (`/`) COMPLETATO & DEPLOYATO IN PRODUZIONE**:
+  - Creato componente isolato [src/components/ui/tilt-card-3d.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/components/ui/tilt-card-3d.tsx):
+    - Calcolo dell'inclinazione 3D dinamica tramite coordinate mouse e prospettiva 800px.
+    - Header (Logo + Titolo) con eiezione tridimensionale marcata (`translateZ 130px`) e slittamento in parallasse.
+    - Logo (`/images/logo_icon_dark.png`) con effetto "3D nel 3D": si solleva ulteriormente (`translateZ 45px`) e si ingrandisce in modo evidente (`scale 1.30x`).
+    - Glare speculare dinamico che segue la luce del cursore.
+    - **Link globale**: L'intera superficie della card è cliccabile (Card 1 porta ad `/academy`, Card 2 a `https://www.mark2.cloud`), senza obbligare l'utente a cliccare solo sul piccolo bottone in fondo.
+    - **Protezione Mobile / Smartphone**: Disabilitata l'inclinazione 3D per dispositivi touch (`hover: hover and pointer: fine`), mantenendo schede piatte, pulite, responsive e performanti.
+  - Aggiornato [src/app/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/page.tsx) con preservazione esatta di tutti i testi e punti elenco.
+  - Build Next.js completato con successo (37/37 route statiche/dinamiche ottimizzate).
+  - Deploy completato su VPS2 (`100.123.212.30`), PM2 `aiutiamoci` riavviato e online su `https://aiutiamoci.cloud`.
+  - Repository sincronizzato su GitHub `main` (commit `f94eef3`).
 - **Track Formativa Verticale "Cybersecurity & AI Defense" (Pronta per Registrazione Video)**:
   - Strutturato il syllabus completo in 5 moduli con copioni, dimostrazioni a schermo, codice vulnerabile vs codice sicuro e prompt di difesa:
     1. *Modulo 1*: Vibe Coding & OWASP Top 10 (SQL Injection bypass `' OR '1'='1` e Prepared Statements).
