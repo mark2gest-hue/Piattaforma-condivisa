@@ -1,7 +1,14 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-10-26 12:25
+Ultimo aggiornamento: 2026-11-03 19:48
 Stato corrente:
+- **CRM Commerciale Stile Torch / GoHighLevel (`/clienti`) & Pagina Pubblica Prenotazione (`/prenota`) COMPLETATI (`ba65bc7`)**:
+  - **Pipeline Vendite in `/clienti` (`src/app/(dashboard)/clienti/page.tsx`)**: 3 KPI Cards commerciali (`Pipeline in Trattativa €`, `Fatturato Acquisito Vinto €`, `Call & Proposte Calde`), switch vista `[ 💰 Pipeline Vendite | 📋 Lista Contatti ]`, Kanban a 4 fasi (`Nuovo Lead`, `Call Fissata`, `Proposta / Preventivo`, `Cliente Vinto`) con valore economico `€`, frecce di avanzamento rapido (`←`/`→`) persistite in `notes` (`[STAGE:...|VAL:...]`) e bottone WhatsApp 1-click (`wa.me`).
+  - **Booking Pubblico `/prenota` (`src/app/prenota/page.tsx` + `src/lib/supabase/middleware.ts`)**: Pagina pubblica `https://aiutiamoci.cloud/prenota` accessibile senza login (HTTP 200 OK) per aziende B2B e corsisti Academy, sincronizzata con le disponibilità reali del team.
+  - **Auto-Lead Sync (`src/app/api/calendar/availability/route.ts`) & Copia Link (`/calendario`)**: Ogni call prenotata da `/prenota` crea l'evento in `calendar_events` e inserisce/aggiorna automaticamente il contatto in `public.clients` nella colonna **`Call Fissata`** (`€ 1.500` B2B / `€ 199` Academy). Aggiunto pulsante `🔗 Copia Link Prenotazione` nell'header di `/calendario`.
+- **Restyle Navigazione UI/UX Stile Torch (`b973c33`) & Dossier CRA / Guide Corso Base (`0cf9901`)**:
+  - Sidebar organizzata in 4 macro-gruppi con espansione fluida in hover, rimozione topbar secondaria ridondante in `dashboard-shell.tsx` e fix saluto dinamico in `page.tsx`.
+  - Dossier Esecutivo di Conformità Cyber Resilience Act (`DOSSIER_CONFORMITA_CRA_PIATTAFORMA_CONDIVISA.pdf`) e guide live Corso Base allineate.
 - **Card 3D Parallax Tilt con Logo Pop-Out & Link Globale su Home Page (`/`) COMPLETATO & DEPLOYATO IN PRODUZIONE**:
   - Creato componente isolato [src/components/ui/tilt-card-3d.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/components/ui/tilt-card-3d.tsx):
     - Calcolo dell'inclinazione 3D dinamica tramite coordinate mouse e prospettiva 800px.
