@@ -48,7 +48,7 @@ export function CockpitOggi({
           </div>
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              Buongiorno, {userName}
+              Buongiorno, {userName && userName.toLowerCase().includes('gerelmo') ? 'Marco' : userName}
               <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
                 • Cockpit Operativo
               </span>
