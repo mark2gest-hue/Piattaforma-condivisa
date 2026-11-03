@@ -100,8 +100,8 @@ export async function GET(request: Request) {
 }
 
 /**
- * POST /api/calendar/book
- * Prenota un appuntamento inserendolo direttamente in calendar_events su Supabase.
+ * POST /api/calendar/availability
+ * Prenota un appuntamento inserendolo in calendar_events e sincronizzandolo come lead in Call Fissata nel CRM (/clienti).
  */
 export async function POST(request: Request) {
   try {
@@ -114,6 +114,7 @@ export async function POST(request: Request) {
       date,
       time,
       notes = '',
+      callType = 'business', // 'business' | 'academy'
     } = body
 
     if (!name || !email || !date || !time) {
@@ -143,20 +144,28 @@ export async function POST(request: Request) {
       )
     }
 
-    // 2. Genera Meet URL dedicato
-    const meetId = `mark2-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 6)}`
-    const meetUrl = `https://meet.google.com/${meetId}`
+    // 2. Meet URL dedicato in base al tipo di call
+    const meetUrl = callType === 'academy'
+      ? 'https://meet.google.com/wsv-bqxm-bvr'
+      : 'https://meet.google.com/yme-pyws-osa'
 
-    const description = `Live Chat / Demo richiesta da ${name.trim()} (${company ? company.trim() : 'PMI/Professionista'}).\n` +
-      `Email: ${email.trim()} | Tel: ${phone || 'N/D'}\n` +
-      `Note: ${notes || 'Richiesta dal sito mark2.cloud'}\n` +
+    const callTypeLabel = callType === 'academy' ? 'Orientamento Academy Corsi AI' : 'Consulenza B2B & Automazione AI'
+    const cleanEmail = email.trim().toLowerCase()
+    const cleanPhone = phone ? phone.trim() : ''
+    const cleanCompany = company ? company.trim() : ''
+    const cleanNotes = notes ? notes.trim() : ''
+
+    const description = `Call: ${callTypeLabel}\n` +
+      `Referente: ${name.trim()} (${cleanCompany || 'Privato / PMI'})\n` +
+      `Email: ${cleanEmail} | Tel: ${cleanPhone || 'N/D'}\n` +
+      `Note: ${cleanNotes || 'Prenotazione diretta da https://aiutiamoci.cloud/prenota'}\n` +
       `[MEET: ${meetUrl}]`
 
     // 3. Inserimento in calendar_events
     const { data: newEvent, error: insertError } = await supabaseAdmin
       .from('calendar_events')
       .insert({
-        title: `Live Chat: ${name.trim()} (${company || 'Lead Impresa'})`,
+        title: `📞 Call (${callType === 'academy' ? 'Academy' : 'B2B'}): ${name.trim()} ${cleanCompany ? `[${cleanCompany}]` : ''}`.trim(),
         description,
         event_date: date,
         event_time: time,
@@ -173,6 +182,52 @@ export async function POST(request: Request) {
       )
     }
 
+    // 4. Sincronizzazione automatica CRM (public.clients) -> Spostamento istantaneo in "Call Fissata"
+    try {
+      const parts = name.trim().split(/\s+/)
+      const firstName = parts[0] || 'Contatto'
+      const lastName = parts.slice(1).join(' ') || ''
+      const dealValue = callType === 'academy' ? 199 : 1500
+      const clientCategory: 'academy' | 'business' = callType === 'academy' ? 'academy' : 'business'
+
+      const crmNotes = `[STAGE:call_fissata|VAL:${dealValue}]\n📅 Call fissata per il ${date} alle ${time} (${callTypeLabel}). ${cleanNotes ? 'Argomento: ' + cleanNotes : ''}`.trim()
+
+      const { data: existingClient } = await (supabaseAdmin
+        .from('clients') as any)
+        .select('id, notes')
+        .eq('email', cleanEmail)
+        .maybeSingle()
+
+      if (existingClient) {
+        await (supabaseAdmin
+          .from('clients') as any)
+          .update({
+            first_name: firstName,
+            last_name: lastName || undefined,
+            phone: cleanPhone || undefined,
+            company: cleanCompany || undefined,
+            status: 'prospect',
+            notes: crmNotes,
+          })
+          .eq('id', existingClient.id)
+      } else {
+        await (supabaseAdmin
+          .from('clients') as any)
+          .insert({
+            first_name: firstName,
+            last_name: lastName,
+            email: cleanEmail,
+            phone: cleanPhone || null,
+            company: cleanCompany || null,
+            category: clientCategory,
+            status: 'prospect',
+            notes: crmNotes,
+          })
+      }
+    } catch (crmErr: any) {
+      console.error('Errore sync CRM lead (non bloccante per la prenotazione):', crmErr?.message)
+    }
+
     return NextResponse.json(
       {
         success: true,
@@ -180,6 +235,8 @@ export async function POST(request: Request) {
         meetUrl,
         date,
         time,
+        callType,
+        callTypeLabel,
         message: 'Appuntamento fissato con successo nel calendario del team.',
       },
       { headers: CORS_HEADERS }

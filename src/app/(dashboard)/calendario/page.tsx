@@ -22,6 +22,10 @@ import {
   CheckSquare,
   Square,
   Database,
+  Link2,
+  Copy,
+  Check,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -102,6 +106,13 @@ export default function CalendarioPage() {
   const [isSendingInvitations, setIsSendingInvitations] = useState(false)
   const [sendingEventId, setSendingEventId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [copiedPrenotaLink, setCopiedPrenotaLink] = useState(false)
+
+  const handleCopyPrenotaLink = () => {
+    navigator.clipboard.writeText('https://aiutiamoci.cloud/prenota')
+    setCopiedPrenotaLink(true)
+    setTimeout(() => setCopiedPrenotaLink(false), 2500)
+  }
 
   // Selezione puntuale contatti dal Database
   const [isDbPickerOpen, setIsDbPickerOpen] = useState(false)
@@ -444,13 +455,48 @@ export default function CalendarioPage() {
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsEventModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
-        >
-          <PlusCircle className="h-4 w-4" />
-          <span>Nuovo Evento</span>
-        </Button>
+        <div className="flex items-center gap-2.5">
+          {/* Tasto Copia Link Prenotazione Pubblica */}
+          <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-0.5 shadow-2xs">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyPrenotaLink}
+              className="h-9 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 cursor-pointer"
+              title="Copia link pubblico di prenotazione (https://aiutiamoci.cloud/prenota)"
+            >
+              {copiedPrenotaLink ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Link Copiato!</span>
+                </>
+              ) : (
+                <>
+                  <Link2 className="h-3.5 w-3.5 text-blue-500" />
+                  <span>Copia Link Prenotazione</span>
+                </>
+              )}
+            </Button>
+            <a
+              href="/prenota"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-8 w-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer mr-0.5"
+              title="Apri pagina /prenota in una nuova scheda"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+
+          <Button
+            onClick={() => setIsEventModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl cursor-pointer"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>Nuovo Evento</span>
+          </Button>
+        </div>
       </div>
 
       {/* Grid Calendario + Sidebar Eventi del Giorno */}

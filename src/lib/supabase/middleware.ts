@@ -51,11 +51,12 @@ export async function updateSession(request: NextRequest) {
   const isN8nScreencastRoute = pathname.startsWith('/n8n-screencast')
   const isServiziAiRoute = pathname.startsWith('/servizi-ai')
   const isAcademyRoute = pathname.startsWith('/academy') || pathname.startsWith('/accademy')
+  const isPrenotaRoute = pathname.startsWith('/prenota')
   const isRootRoute = pathname === '/'
 
   // Rotte pubbliche accessibili a studenti e visitatori (senza richiedere login amministratore Supabase Auth)
   // NOTA BENE: /cervello è blindato e riservato ESCLUSIVAMENTE al team autenticato (contiene note interne e log)
-  const isPublicRoute = isRootRoute || isAcademyRoute || isCorsiRoute || isDispenseRoute || isCorsoBaseRoute || isServiziAiRoute || isZonaCompitiRoute || isGraziaRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute
+  const isPublicRoute = isRootRoute || isAcademyRoute || isCorsiRoute || isDispenseRoute || isCorsoBaseRoute || isServiziAiRoute || isZonaCompitiRoute || isGraziaRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute || isPrenotaRoute
 
   // Se l'utente non è autenticato come membro del team e cerca di accedere a rotte riservate (/lavori, /posta, /chat, /files...),
   // viene reindirizzato a /login (solo in produzione per evitare loop di cookie bloccati nelle webview IDE)
