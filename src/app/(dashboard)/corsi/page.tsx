@@ -422,6 +422,25 @@ const REAL_ZOOM_RECORDINGS: ZoomRecording[] = [
   },
 ]
 
+const INITIAL_MEET_RECORDINGS: ZoomRecording[] = [
+  {
+    id: 'm-1',
+    title: 'Lezione 1 Live — Percorso Certificazione',
+    date: '06/11/2026',
+    videoUrl: 'https://aiutiamoci.cloud/videos/meet_live_01_certificazione.mp4?v=20261106',
+    description: 'Prima sessione live Google Meet valida per il percorso di certificazione.',
+    order: 1,
+  },
+  {
+    id: 'm-2',
+    title: 'Lezione 2 Live — Percorso Certificazione',
+    date: '06/11/2026',
+    videoUrl: 'https://aiutiamoci.cloud/videos/meet_live_02_certificazione.mp4?v=20261106',
+    description: 'Seconda sessione live Google Meet valida per il percorso di certificazione.',
+    order: 2,
+  },
+]
+
 // Mappatura precisa dei 20 Moduli Video del Corso AI Start con gli URL MP4 Full HD 60fps serviti da VPS e dispense PDF locali ufficiali
 const AI_START_LESSONS: Lesson[] = [
   { id: 1, title: '1 Benvenuti nel Futuro', duration: '14:53', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_01_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_01.pdf' },
@@ -599,6 +618,15 @@ function CorsiInnerContent() {
   const [activeZoomVideo, setActiveZoomVideo] = useState<ZoomRecording | null>(null)
   const [isAddZoomModalOpen, setIsAddZoomModalOpen] = useState(false)
 
+  // Registrazioni Meet Live (Certificazione)
+  const [meetRecordings, setMeetRecordings] = useState<ZoomRecording[]>(INITIAL_MEET_RECORDINGS)
+  const [activeMeetVideo, setActiveMeetVideo] = useState<ZoomRecording | null>(null)
+  const [isAddMeetModalOpen, setIsAddMeetModalOpen] = useState(false)
+  const [meetTitleInput, setMeetTitleInput] = useState('')
+  const [meetDateInput, setMeetDateInput] = useState('')
+  const [meetUrlInput, setMeetUrlInput] = useState('')
+  const [meetDescInput, setMeetDescInput] = useState('')
+
   // Video Bonus, News, Tutorial & Prompt Settimanali
   const [bonusVideos, setBonusVideos] = useState<BonusVideoItem[]>(INITIAL_BONUS_VIDEOS)
   const [activeBonusVideo, setActiveBonusVideo] = useState<BonusVideoItem | null>(null)
@@ -722,7 +750,7 @@ function CorsiInnerContent() {
   const [chatInput, setChatInput] = useState('')
   const [isAiThinking, setIsAiThinking] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<'player' | 'news-tutorial' | 'zoom' | 'bonus' | 'tasks' | 'students' | 'login'>('player')
+  const [activeTab, setActiveTab] = useState<'player' | 'news-tutorial' | 'meet' | 'zoom' | 'bonus' | 'tasks' | 'students' | 'login'>('player')
   const [isTabDropdownOpen, setIsTabDropdownOpen] = useState(false)
   const [isStudentSubTabDropdownOpen, setIsStudentSubTabDropdownOpen] = useState(false)
 
@@ -742,6 +770,16 @@ function CorsiInnerContent() {
         const parsed = JSON.parse(savedZoom)
         if (Array.isArray(parsed)) {
           setZoomRecordings(parsed)
+        }
+      }
+
+      const savedMeet = localStorage.getItem('ti_aiuto_meet_recordings')
+      if (savedMeet !== null) {
+        const parsedMeet = JSON.parse(savedMeet)
+        if (Array.isArray(parsedMeet)) {
+          const existingIds = new Set(parsedMeet.map((m: ZoomRecording) => m.id))
+          const missingInitial = INITIAL_MEET_RECORDINGS.filter((m) => !existingIds.has(m.id))
+          setMeetRecordings([...parsedMeet, ...missingInitial])
         }
       }
 
@@ -1590,6 +1628,43 @@ function CorsiInnerContent() {
     } catch (e) { }
   }
 
+  const handleSaveMeetRecording = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!meetTitleInput.trim() || !meetUrlInput.trim()) return
+
+    const newMeet: ZoomRecording = {
+      id: `m-${Date.now()}`,
+      title: meetTitleInput.trim(),
+      date: meetDateInput.trim() || new Date().toLocaleDateString('it-IT'),
+      videoUrl: meetUrlInput.trim(),
+      description: meetDescInput.trim(),
+      order: meetRecordings.length + 1,
+    }
+
+    const updatedMeet = [newMeet, ...meetRecordings]
+    setMeetRecordings(updatedMeet)
+    try {
+      localStorage.setItem('ti_aiuto_meet_recordings', JSON.stringify(updatedMeet))
+    } catch (e) { }
+
+    setIsAddMeetModalOpen(false)
+    setMeetTitleInput('')
+    setMeetDateInput('')
+    setMeetUrlInput('')
+    setMeetDescInput('')
+    alert(`Registrazione Meet "${newMeet.title}" aggiunta con successo!`)
+  }
+
+  const handleDeleteMeet = (id: string, title: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare la registrazione Meet "${title}"?`)) return
+    const updatedMeet = meetRecordings.filter((m) => m.id !== id)
+    setMeetRecordings(updatedMeet)
+    if (activeMeetVideo?.id === id) setActiveMeetVideo(null)
+    try {
+      localStorage.setItem('ti_aiuto_meet_recordings', JSON.stringify(updatedMeet))
+    } catch (e) { }
+  }
+
   const handleSaveBonusVideo = (e: React.FormEvent) => {
     e.preventDefault()
     if (!bonusTitleInput.trim() || !bonusUrlInput.trim()) return
@@ -2175,6 +2250,7 @@ function CorsiInnerContent() {
           >
             {activeTab === 'player' && <PlayCircle className="h-4 w-4" />}
             {activeTab === 'news-tutorial' && <Sparkles className="h-4 w-4 text-amber-300" />}
+            {activeTab === 'meet' && <VideoIcon className="h-4 w-4 text-emerald-400" />}
             {activeTab === 'zoom' && <VideoIcon className="h-4 w-4" />}
             {activeTab === 'bonus' && <Gift className="h-4 w-4" />}
             {activeTab === 'tasks' && <GraduationCap className="h-4 w-4 text-amber-300" />}
@@ -2184,6 +2260,7 @@ function CorsiInnerContent() {
             <span>
               {activeTab === 'player' && `Player ${selectedCourseId === 'ai-pro' ? 'AI Pro (20 Moduli)' : 'AI Start (20 Lezioni)'}`}
               {activeTab === 'news-tutorial' && `News & Tutorial (${bonusVideos.length})`}
+              {activeTab === 'meet' && `Registrazioni Meet (${meetRecordings.length})`}
               {activeTab === 'zoom' && `Registrazioni Zoom (${zoomRecordings.length})`}
               {activeTab === 'bonus' && `Risorse & Manuali (${resources.length})`}
               {activeTab === 'tasks' && 'I Miei Compiti & Attestato'}
@@ -2202,6 +2279,7 @@ function CorsiInnerContent() {
               {[
                 { id: 'player', label: `Player ${selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start'}`, icon: PlayCircle, badge: 'Video' },
                 { id: 'news-tutorial', label: `News & Tutorial (${bonusVideos.length})`, icon: Sparkles, badge: 'Bonus' },
+                { id: 'meet', label: `Registrazioni Meet (${meetRecordings.length})`, icon: VideoIcon, badge: 'Cert' },
                 ...(isTeamMember ? [{ id: 'zoom', label: `Registrazioni Zoom (${zoomRecordings.length})`, icon: VideoIcon, badge: 'Admin' }] : []),
                 { id: 'bonus', label: `Risorse & Manuali (${resources.length})`, icon: Gift, badge: 'PDF' },
                 { id: 'tasks', label: 'I Miei Compiti & Attestato', icon: GraduationCap, badge: 'Quiz' },
@@ -3653,6 +3731,137 @@ function CorsiInnerContent() {
               })}
           </div>
         </div>
+      )}
+
+      {/* TAB REGISTRAZIONI MEET LIVE (CERTIFICAZIONE) */}
+      {activeTab === 'meet' && (
+        !hasAccessToCurrentCourse() ? (
+          <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5 max-w-2xl mx-auto my-8">
+            <div className="h-16 w-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20">
+              <Lock className="h-8 w-8" />
+            </div>
+            <div className="space-y-2">
+              <Badge variant="purple" className="text-xs uppercase font-mono px-2.5 py-0.5">
+                {selectedCourseId === 'ai-pro' ? 'Registrazioni Meet AI Pro' : 'Registrazioni Meet AI Start'}
+              </Badge>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                Contenuto Riservato
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                Le registrazioni Meet delle live valide per la certificazione sono accessibili solo con il codice abilitato.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <VideoIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  Registrazioni Meet — Live Certificazione ({meetRecordings.length})
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Sessioni live registrate valide per il percorso di certificazione.
+                </p>
+              </div>
+
+              {isTeamMember && (
+                <Button
+                  onClick={() => setIsAddMeetModalOpen(true)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>+ Aggiungi Registrazione Meet</span>
+                </Button>
+              )}
+            </div>
+
+            {/* RIPRODUTTORE VIDEO MEET ATTIVO */}
+            {activeMeetVideo && (
+              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 shadow-2xl space-y-3">
+                <div className="flex items-center justify-between text-white border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <PlayCircle className="h-5 w-5 text-emerald-400" />
+                    <span className="font-bold text-sm">Riproduzione Live: {activeMeetVideo.title} ({activeMeetVideo.date})</span>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => setActiveMeetVideo(null)} className="text-xs text-slate-400 hover:text-white">
+                    Chiudi Player
+                  </Button>
+                </div>
+
+                <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
+                  <video
+                    key={activeMeetVideo.id}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    src={activeMeetVideo.videoUrl}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* LISTA SCHEDE REGISTRAZIONI MEET */}
+            {meetRecordings.length === 0 ? (
+              <div className="p-10 text-center rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+                <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto border border-emerald-500/20">
+                  <VideoIcon className="h-6 w-6" />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                  Le registrazioni delle sessioni Live Meet valide per la certificazione verranno pubblicate in questa sezione non appena concluse.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {meetRecordings.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-emerald-500/50 transition-all"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <PlayCircle className="h-6 w-6" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>{rec.title}</span>
+                          <span className="text-[10px] font-mono font-normal text-slate-400">({rec.date})</span>
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {rec.description || 'Registrazione ufficiale della sessione Live Meet per la certificazione'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        onClick={() => setActiveMeetVideo(rec)}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 rounded-xl gap-1.5 shadow-xs"
+                      >
+                        <PlayCircle className="h-4 w-4" />
+                        <span>Guarda Video</span>
+                      </Button>
+
+                      {isTeamMember && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteMeet(rec.id, rec.title)}
+                          className="h-9 w-9 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                          title="Elimina Registrazione Meet"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
       )}
 
       {/* TAB 2: REGISTRAZIONI ZOOM LIVE */}
@@ -5525,6 +5734,79 @@ function CorsiInnerContent() {
                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2">
                   <Save className="h-4 w-4" />
                   Salva Registrazione
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Aggiungi Registrazione Meet */}
+      {isAddMeetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <VideoIcon className="h-5 w-5 text-emerald-600" />
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Aggiungi Registrazione Meet (Certificazione)</h3>
+              </div>
+              <button onClick={() => setIsAddMeetModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveMeetRecording} className="p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo *</label>
+                  <Input
+                    required
+                    value={meetTitleInput}
+                    onChange={(e) => setMeetTitleInput(e.target.value)}
+                    placeholder="Es. Sessione Live Meet #1"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">Data registrazione</label>
+                  <Input
+                    value={meetDateInput}
+                    onChange={(e) => setMeetDateInput(e.target.value)}
+                    placeholder="Es. 10/11/2026"
+                    className="dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Link registrazione *</label>
+                <Input
+                  required
+                  value={meetUrlInput}
+                  onChange={(e) => setMeetUrlInput(e.target.value)}
+                  placeholder="https://aiutiamoci.cloud/videos/..."
+                  className="font-mono text-[11px] dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione</label>
+                <textarea
+                  value={meetDescInput}
+                  onChange={(e) => setMeetDescInput(e.target.value)}
+                  placeholder="Descrizione sintetica degli argomenti trattati nella sessione Meet..."
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsAddMeetModalOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2">
+                  <Save className="h-4 w-4" />
+                  Salva Registrazione Meet
                 </Button>
               </div>
             </form>
