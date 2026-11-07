@@ -8,6 +8,7 @@ export function BuildVersionBadge() {
     version: versionData.version || '1.0.0',
     build: versionData.build || 1,
   })
+  const [hasUpdate, setHasUpdate] = useState(false)
   const currentBuildRef = useRef<number>(Number(versionData.build) || 1)
 
   useEffect(() => {
@@ -27,35 +28,17 @@ export function BuildVersionBadge() {
         })
 
         if (currentBuildRef.current && remoteBuild > currentBuildRef.current) {
-          // Guardia ferrea anti-loop reload
-          try {
-            const lastReloadBuild = sessionStorage.getItem('aiutiamoci_last_reload_build')
-            const lastReloadTs = sessionStorage.getItem('aiutiamoci_last_reload_ts')
-            const now = Date.now()
-
-            if (lastReloadBuild === String(remoteBuild) || (lastReloadTs && now - Number(lastReloadTs) < 60000)) {
-              // Già ricaricato di recente per questa build o negli ultimi 60s: non ricaricare
-              return
-            }
-
-            sessionStorage.setItem('aiutiamoci_last_reload_build', String(remoteBuild))
-            sessionStorage.setItem('aiutiamoci_last_reload_ts', String(now))
-          } catch (e) {
-            // sessionStorage non accessibile
-          }
-
-          console.log(`[BuildVersionBadge] Nuova build remota (#${remoteBuild} > #${currentBuildRef.current}). Ricaricamento controllato...`)
-          currentBuildRef.current = remoteBuild
-          window.location.reload()
+          // Segnala visivamente che è disponibile una nuova build senza MAI forzare il reload automatico
+          setHasUpdate(true)
         }
       } catch (err) {
         // Ignora errori di rete temporanei
       }
     }
 
-    // Primo controllo dopo 15 secondi dal mount, poi polling ogni 3 minuti (180000ms)
-    const initialTimeout = setTimeout(checkVersion, 15000)
-    const interval = setInterval(checkVersion, 180000)
+    // Primo controllo dopo 30 secondi dal mount, poi polling dolce ogni 5 minuti (300000ms)
+    const initialTimeout = setTimeout(checkVersion, 30000)
+    const interval = setInterval(checkVersion, 300000)
 
     return () => {
       mounted = false
@@ -64,13 +47,35 @@ export function BuildVersionBadge() {
     }
   }, [])
 
+  const handleManualReload = () => {
+    if (typeof window !== 'undefined') {
+      window.location.reload()
+    }
+  }
+
   return (
     <div
-      className="fixed bottom-2 right-3 z-40 pointer-events-none select-none px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-slate-900/80 text-slate-300 border border-slate-700/70 backdrop-blur-xs shadow-sm flex items-center gap-1.5"
-      title={`Versione attiva: v${versionInfo.version} • Build #${versionInfo.build}`}
+      onClick={hasUpdate ? handleManualReload : undefined}
+      className={`fixed bottom-2 right-3 z-40 select-none px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold backdrop-blur-xs shadow-sm flex items-center gap-1.5 transition-all ${
+        hasUpdate
+          ? 'cursor-pointer pointer-events-auto bg-amber-950/90 text-amber-200 border border-amber-500/60 hover:bg-amber-900 animate-pulse'
+          : 'pointer-events-none bg-slate-900/80 text-slate-300 border border-slate-700/70'
+      }`}
+      title={
+        hasUpdate
+          ? `Nuova versione disponibile (v${versionInfo.version} • Build #${versionInfo.build}). Clicca per aggiornare la pagina!`
+          : `Versione attiva: v${versionInfo.version} • Build #${versionInfo.build}`
+      }
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-      <span>v{versionInfo.version} • Build #{versionInfo.build}</span>
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${
+          hasUpdate ? 'bg-amber-400' : 'bg-emerald-400'
+        }`}
+      />
+      <span>
+        v{versionInfo.version} • Build #{versionInfo.build}
+        {hasUpdate && ' (Aggiorna ↻)'}
+      </span>
     </div>
   )
 }
