@@ -1,6 +1,6 @@
 {
   "name": "piattaforma-team-condivisa",
-  "version": "0.1.0",
+  "version": "2.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "bump:build": "node scripts/bump-version.mjs --build",
+    "bump:mod": "node scripts/bump-version.mjs --mod",
+    "bump:structural": "node scripts/bump-version.mjs --structural",
     "bump:version": "node scripts/bump-version.mjs",
     "deploy": "node scripts/bump-version.mjs && rsync -avz --exclude 'node_modules' --exclude '.next' --exclude '.git' --exclude 'public/*.mp4' -e \"ssh -i /Users/marco/.ssh/keys/vps-stefano/ssh-key-2026-09-15.key -o StrictHostKeyChecking=no\" ./ ubuntu@100.123.212.30:/var/www/aiutiamoci/ && ssh -i /Users/marco/.ssh/keys/vps-stefano/ssh-key-2026-09-15.key -o StrictHostKeyChecking=no ubuntu@100.123.212.30 \"cd /var/www/aiutiamoci && npm run build && pm2 restart aiutiamoci\"",
     "sync:vault": "node scripts/sync-vault.mjs"
