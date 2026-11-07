@@ -67,6 +67,7 @@ import {
   upgradeStudentTierAction,
   toggleStudentExamUnlockAction,
   cleanDuplicateRegistrationsAction,
+  syncStudentProgressAction,
 } from '@/app/actions/student'
 import {
   CorporateCohort,
@@ -754,6 +755,84 @@ function CorsiInnerContent() {
   const [isTabDropdownOpen, setIsTabDropdownOpen] = useState(false)
   const [isStudentSubTabDropdownOpen, setIsStudentSubTabDropdownOpen] = useState(false)
 
+  // State 3 Test Checkpoint Obbligatori (AI Start) & 4 Test Checkpoint (AI Pro)
+  const [activeCheckpointTest, setActiveCheckpointTest] = useState<CheckpointTest | null>(null)
+  const [isCheckpointModalOpen, setIsCheckpointModalOpen] = useState(false)
+  const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, number>>({})
+  const [checkpointSubmitted, setCheckpointSubmitted] = useState(false)
+  const [passedTests, setPassedTests] = useState<Record<'entry' | 'midterm' | 'final', boolean>>({
+    entry: false,
+    midterm: false,
+    final: false,
+  })
+  const [passedTestsPro, setPassedTestsPro] = useState<Record<'pro_chk1' | 'pro_chk2' | 'pro_chk3' | 'pro_final', boolean>>({
+    pro_chk1: false,
+    pro_chk2: false,
+    pro_chk3: false,
+    pro_final: false,
+  })
+
+  // Sincronizzazione progressi studente e allineamento bidirezionale Supabase <-> localStorage
+  const alignStudentProgress = async (code: string, name?: string) => {
+    try {
+      let localCompletedLessons: number[] = []
+      let localCheckpoints: Record<string, boolean> = {}
+
+      try {
+        const savedLessonsRaw = localStorage.getItem('ti_aiuto_lessons_custom')
+        if (savedLessonsRaw) {
+          const parsed = JSON.parse(savedLessonsRaw)
+          if (Array.isArray(parsed)) {
+            localCompletedLessons = parsed.filter((l: any) => l.completed).map((l: any) => l.id)
+          }
+        }
+      } catch (e) {}
+
+      try {
+        const savedTestsRaw = localStorage.getItem('ti_aiuto_checkpoint_tests')
+        if (savedTestsRaw) {
+          localCheckpoints = JSON.parse(savedTestsRaw) || {}
+        }
+      } catch (e) {}
+
+      const res = await syncStudentProgressAction({
+        studentCode: code,
+        studentName: name,
+        localCompletedLessons,
+        localCheckpoints,
+      })
+
+      if (res.success && res.completedLessons) {
+        const completedSet = new Set(res.completedLessons)
+        const updated = AI_START_LESSONS.map((official) => ({
+          ...official,
+          completed: completedSet.has(official.id),
+        }))
+        setLessons(updated)
+        try {
+          localStorage.setItem('ti_aiuto_lessons_custom', JSON.stringify(updated))
+        } catch (e) {}
+
+        if (res.completedCheckpoints) {
+          setPassedTests((prev) => {
+            const nextTests = { ...prev, ...res.completedCheckpoints }
+            try {
+              localStorage.setItem('ti_aiuto_checkpoint_tests', JSON.stringify(nextTests))
+            } catch (e) {}
+            return nextTests
+          })
+        }
+
+        const nextActive = updated.find((l) => !l.completed) || updated[updated.length - 1]
+        if (nextActive) {
+          setActiveLesson(nextActive)
+        }
+      }
+    } catch (err) {
+      console.warn('Errore alignStudentProgress:', err)
+    }
+  }
+
   // Caricamento persistente da localStorage all'avvio
   useEffect(() => {
     try {
@@ -847,20 +926,29 @@ function CorsiInnerContent() {
         try {
           const parsed = JSON.parse(savedLessons)
           if (Array.isArray(parsed) && parsed.length > 0) {
+            // Se nel parsed c'è almeno una lezione con id >= 2 e completed === true, il test d'ingresso è superato
+            const hasPostEntryCompleted = parsed.some((s: any) => s.id >= 2 && s.completed)
+            if (hasPostEntryCompleted && !isEntryTestPassed) {
+              isEntryTestPassed = true
+              setPassedTests((prev) => {
+                const nextTests = { ...prev, entry: true }
+                try {
+                  localStorage.setItem('ti_aiuto_checkpoint_tests', JSON.stringify(nextTests))
+                } catch (e) {}
+                return nextTests
+              })
+            }
+
             const updated = AI_START_LESSONS.map((official) => {
               const saved = parsed.find((s: any) => s.id === official.id)
-              let isCompleted = saved ? !!saved.completed : official.completed
-              // Se il test d'ingresso non è superato, i moduli successivi al modulo 1 non possono essere completati
-              if (official.id >= 2 && !isEntryTestPassed) {
-                isCompleted = false
-              }
+              const isCompleted = saved ? !!saved.completed : official.completed
               return {
                 ...official,
                 completed: isCompleted
               }
             })
             setLessons(updated)
-            setActiveLesson((prev) => updated.find((l: any) => l.id === prev.id) || updated[0])
+            setActiveLesson(updated.find((l: any) => !l.completed) || updated[updated.length - 1])
             localStorage.setItem('ti_aiuto_lessons_custom', JSON.stringify(updated))
           } else {
             setLessons(AI_START_LESSONS)
@@ -909,6 +997,8 @@ function CorsiInnerContent() {
               }
             }).catch(() => {})
           }
+          // Sincronizza e allinea progressi con Supabase
+          alignStudentProgress(parsedStudent.code, parsedStudent.name)
           // Allineamento stato studente all'avvio
           if (parsedStudent.sessionToken) {
             validateStudentActiveSessionAction(parsedStudent.code, parsedStudent.sessionToken).then((check) => {
@@ -1228,23 +1318,6 @@ function CorsiInnerContent() {
   const [videoMaxTimeWatched, setVideoMaxTimeWatched] = useState<number>(0)
   const [videoCanComplete, setVideoCanComplete] = useState<boolean>(false)
 
-  // State 3 Test Checkpoint Obbligatori (AI Start) & 4 Test Checkpoint (AI Pro)
-  const [activeCheckpointTest, setActiveCheckpointTest] = useState<CheckpointTest | null>(null)
-  const [isCheckpointModalOpen, setIsCheckpointModalOpen] = useState(false)
-  const [checkpointAnswers, setCheckpointAnswers] = useState<Record<number, number>>({})
-  const [checkpointSubmitted, setCheckpointSubmitted] = useState(false)
-  const [passedTests, setPassedTests] = useState<Record<'entry' | 'midterm' | 'final', boolean>>({
-    entry: false,
-    midterm: false,
-    final: false,
-  })
-  const [passedTestsPro, setPassedTestsPro] = useState<Record<'pro_chk1' | 'pro_chk2' | 'pro_chk3' | 'pro_final', boolean>>({
-    pro_chk1: false,
-    pro_chk2: false,
-    pro_chk3: false,
-    pro_final: false,
-  })
-
   // Caricamento test superati da localStorage
   useEffect(() => {
     try {
@@ -1326,6 +1399,21 @@ function CorsiInnerContent() {
 
           const mod11 = updatedLessons.find((l) => l.id === 11)
           if (mod11) setActiveLesson(mod11)
+        }
+
+        if (activeStudent?.code) {
+          const currentLessonsList = activeCheckpointTest.id === 'entry'
+            ? lessons.map((l) => (l.id === 1 ? { ...l, completed: true } : l))
+            : activeCheckpointTest.id === 'midterm'
+              ? lessons.map((l) => (l.id === 10 ? { ...l, completed: true } : l))
+              : lessons
+          const completedIds = currentLessonsList.filter((l) => l.completed).map((l) => l.id)
+          syncStudentProgressAction({
+            studentCode: activeStudent.code,
+            studentName: activeStudent.name,
+            localCompletedLessons: completedIds,
+            localCheckpoints: updated,
+          }).catch((e) => console.warn('Errore sync checkpoint:', e))
         }
       }
       playNotificationSound('chat')
@@ -1480,6 +1568,9 @@ function CorsiInnerContent() {
         cohortId: (dbStudent as any).cohort_id || null,
       }
       setActiveStudent(studentObj)
+
+      // Allinea e sincronizza immediatamente i progressi con Supabase
+      await alignStudentProgress(dbStudent.code, dbStudent.student_name)
 
       // Se lo studente appartiene a una Stanza Aziendale B2B, carichiamo la cohort e i video dedicati
       if ((dbStudent as any).cohort_id) {
@@ -1876,6 +1967,16 @@ function CorsiInnerContent() {
       try {
         localStorage.setItem('ti_aiuto_lessons_custom', JSON.stringify(updatedLessons))
       } catch (e) {}
+
+      if (activeStudent?.code) {
+        const completedIds = updatedLessons.filter((l) => l.completed).map((l) => l.id)
+        syncStudentProgressAction({
+          studentCode: activeStudent.code,
+          studentName: activeStudent.name,
+          localCompletedLessons: completedIds,
+          localCheckpoints: passedTests,
+        }).catch((e) => console.warn('Errore sync progress toggleLessonCompleted:', e))
+      }
 
       // Se ha appena completato il Modulo 1 e NON ha ancora superato il Test d'Ingresso:
       if (lessonId === 1 && willBeCompleted && !passedTests.entry) {
