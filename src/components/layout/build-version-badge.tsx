@@ -27,7 +27,24 @@ export function BuildVersionBadge() {
         })
 
         if (currentBuildRef.current && remoteBuild > currentBuildRef.current) {
-          console.log(`[BuildVersionBadge] Rilevata nuova build remota (#${remoteBuild} > #${currentBuildRef.current}). Ricaricamento per auto-update...`)
+          // Guardia ferrea anti-loop reload
+          try {
+            const lastReloadBuild = sessionStorage.getItem('aiutiamoci_last_reload_build')
+            const lastReloadTs = sessionStorage.getItem('aiutiamoci_last_reload_ts')
+            const now = Date.now()
+
+            if (lastReloadBuild === String(remoteBuild) || (lastReloadTs && now - Number(lastReloadTs) < 60000)) {
+              // Già ricaricato di recente per questa build o negli ultimi 60s: non ricaricare
+              return
+            }
+
+            sessionStorage.setItem('aiutiamoci_last_reload_build', String(remoteBuild))
+            sessionStorage.setItem('aiutiamoci_last_reload_ts', String(now))
+          } catch (e) {
+            // sessionStorage non accessibile
+          }
+
+          console.log(`[BuildVersionBadge] Nuova build remota (#${remoteBuild} > #${currentBuildRef.current}). Ricaricamento controllato...`)
           currentBuildRef.current = remoteBuild
           window.location.reload()
         }
@@ -36,11 +53,13 @@ export function BuildVersionBadge() {
       }
     }
 
-    checkVersion()
-    const interval = setInterval(checkVersion, 60000)
+    // Primo controllo dopo 15 secondi dal mount, poi polling ogni 3 minuti (180000ms)
+    const initialTimeout = setTimeout(checkVersion, 15000)
+    const interval = setInterval(checkVersion, 180000)
 
     return () => {
       mounted = false
+      clearTimeout(initialTimeout)
       clearInterval(interval)
     }
   }, [])

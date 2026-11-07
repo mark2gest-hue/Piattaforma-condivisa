@@ -13,9 +13,10 @@ export const config = {
      * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
+     * - api/version (build version polling, unauthenticated)
      * - favicon.ico (favicon file)
      * - static documents and assets (.pdf, .svg, .png, .jpg, .jpeg, .gif, .webp, .mp4, .txt, .xml)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf|mp4|txt|xml)$).*)',
+    '/((?!_next/static|_next/image|api/version|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf|mp4|txt|xml)$).*)',
   ],
 }
