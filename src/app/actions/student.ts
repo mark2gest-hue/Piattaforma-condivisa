@@ -908,13 +908,19 @@ export async function getStudentCodesAction() {
   }
 }
 
-export async function setStudentProgressAdminAction(studentCode: string, completedUpTo: number) {
+export async function setStudentProgressAdminAction(
+  studentCode: string,
+  completedUpTo: number,
+  studentEmail?: string
+) {
   try {
     await requireAuthUser()
     const supabaseAdmin = createAdminClient()
     const cleanCode = (studentCode || '').trim().toUpperCase()
-    if (!cleanCode) {
-      return { success: false, error: 'Codice studente non valido' }
+    const cleanEmail = (studentEmail || '').trim().toLowerCase()
+
+    if (!cleanCode && !cleanEmail) {
+      return { success: false, error: 'Codice studente o email non valida' }
     }
 
     const validCount = Math.max(0, Math.min(20, Math.floor(completedUpTo || 0)))
@@ -927,49 +933,62 @@ export async function setStudentProgressAdminAction(studentCode: string, complet
     const totalHours = Number((validCount * 0.8).toFixed(1))
     const nowIso = new Date().toISOString()
 
-    const { data: codeRow } = await supabaseAdmin
-      .from('student_codes')
-      .select('code, student_name, student_email, access_tier')
-      .ilike('code', cleanCode)
-      .maybeSingle()
-
-    const targetCode = codeRow?.code || cleanCode
-
-    const { data: existing } = await supabaseAdmin
-      .from('student_progress')
-      .select('id')
-      .eq('student_code', targetCode)
-      .maybeSingle()
-
-    if (existing) {
-      const { error: updateError } = await supabaseAdmin
-        .from('student_progress')
-        .update({
-          completed_lessons: completedLessons,
-          completed_checkpoints: completedCheckpoints,
-          total_hours: totalHours,
-          last_activity_at: nowIso,
-          updated_at: nowIso,
-        })
-        .eq('id', existing.id)
-
-      if (updateError) throw updateError
+    let query = supabaseAdmin.from('student_codes').select('code, student_name, student_email, access_tier')
+    if (cleanCode && cleanEmail) {
+      query = query.or(`code.ilike.${cleanCode},student_email.ilike.${cleanEmail}`)
+    } else if (cleanCode) {
+      query = query.ilike('code', cleanCode)
     } else {
-      const { error: insertError } = await supabaseAdmin
-        .from('student_progress')
-        .insert({
-          student_code: targetCode,
-          student_email: codeRow?.student_email || null,
-          course_id: codeRow?.access_tier === 'ai-pro' ? 'ai-pro' : 'ai-start',
-          completed_lessons: completedLessons,
-          completed_checkpoints: completedCheckpoints,
-          total_hours: totalHours,
-          is_exam_unlocked: validCount >= 20,
-          last_activity_at: nowIso,
-          updated_at: nowIso,
-        })
+      query = query.ilike('student_email', cleanEmail)
+    }
 
-      if (insertError) throw insertError
+    const { data: matchedCodes } = await query
+    const targetRows = (matchedCodes && matchedCodes.length > 0)
+      ? matchedCodes
+      : (cleanCode ? [{ code: cleanCode, student_email: cleanEmail || null, access_tier: 'ai-start' }] : [])
+
+    const updatedCodes: string[] = []
+
+    for (const row of targetRows) {
+      const codeToUpdate = row.code
+      updatedCodes.push(codeToUpdate)
+
+      const { data: existing } = await supabaseAdmin
+        .from('student_progress')
+        .select('id')
+        .eq('student_code', codeToUpdate)
+        .maybeSingle()
+
+      if (existing) {
+        const { error: updateError } = await supabaseAdmin
+          .from('student_progress')
+          .update({
+            completed_lessons: completedLessons,
+            completed_checkpoints: completedCheckpoints,
+            total_hours: totalHours,
+            last_activity_at: nowIso,
+            updated_at: nowIso,
+          })
+          .eq('id', existing.id)
+
+        if (updateError) throw updateError
+      } else {
+        const { error: insertError } = await supabaseAdmin
+          .from('student_progress')
+          .insert({
+            student_code: codeToUpdate,
+            student_email: row.student_email || cleanEmail || null,
+            course_id: row.access_tier === 'ai-pro' ? 'ai-pro' : 'ai-start',
+            completed_lessons: completedLessons,
+            completed_checkpoints: completedCheckpoints,
+            total_hours: totalHours,
+            is_exam_unlocked: validCount >= 20,
+            last_activity_at: nowIso,
+            updated_at: nowIso,
+          })
+
+        if (insertError) throw insertError
+      }
     }
 
     return {
@@ -977,6 +996,7 @@ export async function setStudentProgressAdminAction(studentCode: string, complet
       completedLessons,
       totalHours,
       completedCheckpoints,
+      updatedCodes,
     }
   } catch (error: any) {
     console.error('Errore setStudentProgressAdminAction:', error)
