@@ -377,6 +377,7 @@ export async function syncStudentProgressAction(params: {
     const targetCode = codeRow?.code || cleanCode
     const fullName = (codeRow?.student_name || params.studentName || '').toLowerCase()
     const isNadiaCorvini = fullName.includes('nadia') && fullName.includes('corvini')
+    const isDanielePizzi = fullName.includes('pizzi') || targetCode === 'AI-START-D46E5' || targetCode === 'AI-LFB4E4'
 
     const { data: existing } = await supabaseAdmin
       .from('student_progress')
@@ -386,7 +387,11 @@ export async function syncStudentProgressAction(params: {
 
     const existingLessons = Array.isArray(existing?.completed_lessons) ? existing.completed_lessons : []
     const localLessons = Array.isArray(params.localCompletedLessons) ? params.localCompletedLessons : []
-    const extraLessons = isNadiaCorvini ? [1, 2, 3, 4, 5, 6] : []
+    const extraLessons = isNadiaCorvini
+      ? [1, 2, 3, 4, 5, 6]
+      : isDanielePizzi
+        ? [1, 2, 3, 4, 5, 6, 7, 8]
+        : []
 
     const mergedLessonsSet = new Set<number>([
       ...existingLessons.filter((n: any): n is number => typeof n === 'number'),
@@ -407,7 +412,7 @@ export async function syncStudentProgressAction(params: {
       ...localCheckpoints,
     }
 
-    if (mergedLessons.some((id) => id >= 2) || isNadiaCorvini) {
+    if (mergedLessons.some((id) => id >= 2) || isNadiaCorvini || isDanielePizzi) {
       mergedCheckpoints.entry = true
     }
     if (mergedLessons.some((id) => id >= 11)) {
@@ -823,28 +828,30 @@ export async function getStudentCodesAction() {
       const prog = progressMap.get(sc.code)
       const fullName = (sc.student_name || '').toLowerCase()
       const isNadiaCorvini = fullName.includes('nadia') && fullName.includes('corvini')
+      const isDanielePizzi = fullName.includes('pizzi') || sc.code === 'AI-START-D46E5' || sc.code === 'AI-LFB4E4'
 
-      if (isNadiaCorvini) {
+      if (isNadiaCorvini || isDanielePizzi) {
+        const requiredMinLessons = isDanielePizzi ? [1, 2, 3, 4, 5, 6, 7, 8] : [1, 2, 3, 4, 5, 6]
         const existingLessons = Array.isArray(prog?.completed_lessons) ? prog.completed_lessons : []
-        const nadiaLessons = Array.from(new Set([...existingLessons, 1, 2, 3, 4, 5, 6])).sort((a: number, b: number) => a - b)
-        const nadiaCheckpoints = { ...(prog?.completed_checkpoints || {}), entry: true }
-        const nadiaHours = Math.max(Number(prog?.total_hours || 0), Number((nadiaLessons.length * 0.8).toFixed(1)))
+        const mergedLessons = Array.from(new Set([...existingLessons, ...requiredMinLessons])).sort((a: number, b: number) => a - b)
+        const mergedCheckpoints = { ...(prog?.completed_checkpoints || {}), entry: true }
+        const mergedHours = Math.max(Number(prog?.total_hours || 0), Number((mergedLessons.length * 0.8).toFixed(1)))
 
-        if (existingLessons.length < 6 || !prog?.completed_checkpoints?.entry) {
+        if (existingLessons.length < requiredMinLessons.length || !prog?.completed_checkpoints?.entry) {
           const nowIso = new Date().toISOString()
           if (prog?.id) {
             Promise.resolve(
               supabaseAdmin
                 .from('student_progress')
                 .update({
-                  completed_lessons: nadiaLessons,
-                  completed_checkpoints: nadiaCheckpoints,
-                  total_hours: nadiaHours,
+                  completed_lessons: mergedLessons,
+                  completed_checkpoints: mergedCheckpoints,
+                  total_hours: mergedHours,
                   last_activity_at: nowIso,
                   updated_at: nowIso,
                 })
                 .eq('id', prog.id)
-            ).catch((e: any) => console.warn('Errore auto-upgrade progress Nadia:', e))
+            ).catch((e: any) => console.warn('Errore auto-upgrade progress:', e))
           } else {
             Promise.resolve(
               supabaseAdmin
@@ -853,23 +860,23 @@ export async function getStudentCodesAction() {
                   student_code: sc.code,
                   student_email: sc.student_email || null,
                   course_id: sc.access_tier === 'ai-pro' ? 'ai-pro' : 'ai-start',
-                  completed_lessons: nadiaLessons,
-                  completed_checkpoints: nadiaCheckpoints,
-                  total_hours: nadiaHours,
+                  completed_lessons: mergedLessons,
+                  completed_checkpoints: mergedCheckpoints,
+                  total_hours: mergedHours,
                   is_exam_unlocked: false,
                   last_activity_at: nowIso,
                   updated_at: nowIso,
                 })
-            ).catch((e: any) => console.warn('Errore auto-upgrade progress Nadia:', e))
+            ).catch((e: any) => console.warn('Errore auto-upgrade progress:', e))
           }
         }
 
         return {
           ...sc,
           progress: {
-            total_hours: nadiaHours,
-            completed_lessons: nadiaLessons,
-            completed_checkpoints: nadiaCheckpoints,
+            total_hours: mergedHours,
+            completed_lessons: mergedLessons,
+            completed_checkpoints: mergedCheckpoints,
             is_exam_unlocked: Boolean(prog?.is_exam_unlocked),
             last_activity_at: prog?.last_activity_at || new Date().toISOString(),
           },
@@ -898,6 +905,82 @@ export async function getStudentCodesAction() {
   } catch (error: any) {
     console.error('Errore getStudentCodesAction:', error)
     return { success: false, error: error.message, studentCodes: [] }
+  }
+}
+
+export async function setStudentProgressAdminAction(studentCode: string, completedUpTo: number) {
+  try {
+    await requireAuthUser()
+    const supabaseAdmin = createAdminClient()
+    const cleanCode = (studentCode || '').trim().toUpperCase()
+    if (!cleanCode) {
+      return { success: false, error: 'Codice studente non valido' }
+    }
+
+    const validCount = Math.max(0, Math.min(20, Math.floor(completedUpTo || 0)))
+    const completedLessons = Array.from({ length: validCount }, (_, i) => i + 1)
+    const completedCheckpoints: Record<string, boolean> = {
+      entry: validCount >= 1,
+      midterm: validCount >= 10,
+      final: validCount >= 20,
+    }
+    const totalHours = Number((validCount * 0.8).toFixed(1))
+    const nowIso = new Date().toISOString()
+
+    const { data: codeRow } = await supabaseAdmin
+      .from('student_codes')
+      .select('code, student_name, student_email, access_tier')
+      .ilike('code', cleanCode)
+      .maybeSingle()
+
+    const targetCode = codeRow?.code || cleanCode
+
+    const { data: existing } = await supabaseAdmin
+      .from('student_progress')
+      .select('id')
+      .eq('student_code', targetCode)
+      .maybeSingle()
+
+    if (existing) {
+      const { error: updateError } = await supabaseAdmin
+        .from('student_progress')
+        .update({
+          completed_lessons: completedLessons,
+          completed_checkpoints: completedCheckpoints,
+          total_hours: totalHours,
+          last_activity_at: nowIso,
+          updated_at: nowIso,
+        })
+        .eq('id', existing.id)
+
+      if (updateError) throw updateError
+    } else {
+      const { error: insertError } = await supabaseAdmin
+        .from('student_progress')
+        .insert({
+          student_code: targetCode,
+          student_email: codeRow?.student_email || null,
+          course_id: codeRow?.access_tier === 'ai-pro' ? 'ai-pro' : 'ai-start',
+          completed_lessons: completedLessons,
+          completed_checkpoints: completedCheckpoints,
+          total_hours: totalHours,
+          is_exam_unlocked: validCount >= 20,
+          last_activity_at: nowIso,
+          updated_at: nowIso,
+        })
+
+      if (insertError) throw insertError
+    }
+
+    return {
+      success: true,
+      completedLessons,
+      totalHours,
+      completedCheckpoints,
+    }
+  } catch (error: any) {
+    console.error('Errore setStudentProgressAdminAction:', error)
+    return { success: false, error: error.message || 'Errore aggiornamento progresso' }
   }
 }
 

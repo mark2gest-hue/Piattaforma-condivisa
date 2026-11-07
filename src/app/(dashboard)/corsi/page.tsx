@@ -68,6 +68,7 @@ import {
   toggleStudentExamUnlockAction,
   cleanDuplicateRegistrationsAction,
   syncStudentProgressAction,
+  setStudentProgressAdminAction,
 } from '@/app/actions/student'
 import {
   CorporateCohort,
@@ -1135,6 +1136,37 @@ function CorsiInnerContent() {
     }
   }
 
+  const handleSetStudentProgress = async (studentCode: string, completedCount: number) => {
+    try {
+      const res = await setStudentProgressAdminAction(studentCode, completedCount)
+      if (res.success && res.completedLessons) {
+        setRegistrations((prev) =>
+          prev.map((s) => {
+            if (s.code === studentCode) {
+              return {
+                ...s,
+                status: res.completedLessons!.length >= 20 ? 'completed' : res.completedLessons!.length > 0 ? 'in_progress' : 'enrolled',
+                progress: {
+                  ...(s.progress || { is_exam_unlocked: false }),
+                  completed_lessons: res.completedLessons!,
+                  completed_checkpoints: res.completedCheckpoints || {},
+                  total_hours: res.totalHours || 0,
+                  last_activity_at: new Date().toISOString(),
+                },
+              }
+            }
+            return s
+          })
+        )
+      } else {
+        alert(`Errore impostazione progresso: ${res.error}`)
+      }
+    } catch (err: any) {
+      console.error('Errore handleSetStudentProgress:', err)
+      alert(`Errore: ${err.message}`)
+    }
+  }
+
   const loadCourseRegistrations = async () => {
     setLoadingRegistrations(true)
     const res = await getCourseRegistrationsAction()
@@ -2005,6 +2037,16 @@ function CorsiInnerContent() {
       try {
         localStorage.setItem('ti_aiuto_lessons_custom_pro', JSON.stringify(updatedLessonsPro))
       } catch (e) {}
+
+      if (activeStudent?.code) {
+        const completedIds = updatedLessonsPro.filter((l) => l.completed).map((l) => l.id)
+        syncStudentProgressAction({
+          studentCode: activeStudent.code,
+          studentName: activeStudent.name,
+          localCompletedLessons: completedIds,
+          localCheckpoints: passedTestsPro as any,
+        }).catch((e) => console.warn('Errore sync progress toggleLessonCompleted (pro):', e))
+      }
 
       if (lessonId === 5 && willBeCompleted && !passedTestsPro.pro_chk1) {
         handleOpenCheckpointTest('pro_chk1')
@@ -4879,7 +4921,7 @@ function CorsiInnerContent() {
                               </div>
                             </td>
                             <td className="py-3.5 px-4">
-                              <div className="flex flex-col gap-1 min-w-[130px]">
+                              <div className="flex flex-col gap-1.5 min-w-[150px]">
                                 <div className="flex items-center justify-between text-[10px] font-semibold text-slate-700 dark:text-slate-300">
                                   <span>{reg.progress?.total_hours ? `${Number(reg.progress.total_hours).toFixed(1)}h / 16h` : '0h / 16h'}</span>
                                   <span className="text-indigo-600 dark:text-indigo-400 font-bold">{reg.progress?.completed_lessons?.length || 0}/20 lez</span>
@@ -4890,6 +4932,19 @@ function CorsiInnerContent() {
                                     style={{ width: `${Math.min(100, Math.round(((reg.progress?.completed_lessons?.length || 0) / 20) * 100))}%` }}
                                   />
                                 </div>
+                                <select
+                                  value={reg.progress?.completed_lessons?.length || 0}
+                                  onChange={(e) => handleSetStudentProgress(reg.code, Number(e.target.value))}
+                                  className="mt-0.5 text-[10px] py-0.5 px-1.5 font-medium rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                  title="Imposta rapidamente le lezioni completate dal corsista"
+                                >
+                                  <option value={0}>0/20 (Inizio)</option>
+                                  {Array.from({ length: 20 }, (_, idx) => idx + 1).map((n) => (
+                                    <option key={n} value={n}>
+                                      {n === 20 ? '20/20 (Corso Completato)' : `${n}/20 (Riparte da Lez. ${n + 1})`}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                             </td>
                             <td className="py-3.5 px-4">
