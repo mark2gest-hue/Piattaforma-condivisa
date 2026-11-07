@@ -92,6 +92,7 @@ import {
 import { askStudentAiAction, generateLessonQuizAction, QuizQuestion } from '@/app/actions/ai'
 import { CourseRegistration } from '@/types/index'
 import { StudentTasksZone } from '@/app/workshop-agenti/components/StudentTasksZone'
+import versionData from '../../../../version.json'
 
 interface StudentRegistration {
   id: string
@@ -2167,9 +2168,12 @@ function CorsiInnerContent() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex flex-wrap items-center gap-2.5">
               <GraduationCap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-              Accademia & Formazione AI
+              <span>Accademia & Formazione AI</span>
+              <span className="text-[11px] font-mono font-semibold py-0.5 px-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
+                v{versionData.version} • Build #{versionData.build}
+              </span>
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
               Percorsi formativi guidati: Corso Base AI Start & Corso Avanzato AI Pro (Automazioni & Agenti).

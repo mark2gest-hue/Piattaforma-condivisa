@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { StructuredData } from '@/components/seo/structured-data'
+import { BuildVersionBadge } from '@/components/layout/build-version-badge'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -56,6 +57,7 @@ export default function RootLayout({
         <StructuredData />
         <ThemeProvider defaultTheme="light">
           {children}
+          <BuildVersionBadge />
         </ThemeProvider>
       </body>
     </html>
