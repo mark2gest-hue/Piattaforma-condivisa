@@ -89,6 +89,8 @@ export default function CalendarioPage() {
   const [eventCategory, setEventCategory] = useState<'task' | 'consulting' | 'course' | 'call' | 'notice'>('call')
   const [eventMeetUrl, setEventMeetUrl] = useState('https://meet.google.com/wsv-bqxm-bvr')
   const [eventDesc, setEventDesc] = useState('')
+  const [recurrenceFreq, setRecurrenceFreq] = useState<'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly'>('none')
+  const [recurrenceCount, setRecurrenceCount] = useState<number>(4)
   const [recipientType, setRecipientType] = useState<'single' | 'ai-start' | 'ai-pro' | 'all' | 'pending'>('single')
   const [recipientCategories, setRecipientCategories] = useState<string[]>(['single'])
   const [studentCohort, setStudentCohort] = useState<'new' | 'all'>('new')
@@ -264,18 +266,45 @@ export default function CalendarioPage() {
         finalDesc = `${finalDesc} [MEET: ${eventMeetUrl.trim()}]`.trim()
       }
 
-      const { data: newRow, error } = await (supabase as any)
+      // Calcola le date degli eventi (singolo o ricorrenti)
+      let datesToInsert: string[] = [selectedDateStr]
+      if (eventCategory !== 'notice' && recurrenceFreq !== 'none') {
+        const count = Math.max(2, Math.min(24, recurrenceCount))
+        datesToInsert = []
+        const [baseY, baseM, baseD] = selectedDateStr.split('-').map(Number)
+        for (let i = 0; i < count; i++) {
+          if (recurrenceFreq === 'daily') {
+            const d = new Date(baseY, baseM - 1, baseD + i)
+            datesToInsert.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          } else if (recurrenceFreq === 'weekly') {
+            const d = new Date(baseY, baseM - 1, baseD + i * 7)
+            datesToInsert.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          } else if (recurrenceFreq === 'biweekly') {
+            const d = new Date(baseY, baseM - 1, baseD + i * 14)
+            datesToInsert.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          } else if (recurrenceFreq === 'monthly') {
+            const targetYear = baseY + Math.floor((baseM - 1 + i) / 12)
+            const targetMonth = (baseM - 1 + i) % 12
+            const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate()
+            const clampedDay = Math.min(baseD, daysInMonth)
+            datesToInsert.push(`${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`)
+          }
+        }
+      }
+
+      const rowsToInsert = datesToInsert.map((dStr) => ({
+        title: eventTitle.trim(),
+        description: finalDesc,
+        event_date: dStr,
+        event_time: eventTime,
+        category: eventCategory,
+        created_by: userData.user?.id || null,
+      }))
+
+      const { data: newRows, error } = await (supabase as any)
         .from('calendar_events')
-        .insert({
-          title: eventTitle.trim(),
-          description: finalDesc,
-          event_date: selectedDateStr,
-          event_time: eventTime,
-          category: eventCategory,
-          created_by: userData.user?.id || null,
-        })
+        .insert(rowsToInsert)
         .select()
-        .single()
 
       if (error) {
         console.error('Errore salvataggio evento su DB:', error.message)
@@ -283,22 +312,23 @@ export default function CalendarioPage() {
         return
       }
 
-      if (newRow) {
-        const createdEvent: CalendarEvent = {
-          id: newRow.id,
-          title: newRow.title,
-          date: newRow.event_date,
-          time: newRow.event_time,
-          category: newRow.category as any,
-          description: eventDesc.trim(),
-          meet_url: eventMeetUrl.trim(),
-        }
-        setEvents([createdEvent, ...events])
+      const createdEvents: CalendarEvent[] = (newRows || []).map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        date: row.event_date,
+        time: row.event_time,
+        category: row.category as any,
+        description: eventDesc.trim(),
+        meet_url: eventMeetUrl.trim(),
+      }))
+
+      if (createdEvents.length > 0) {
+        setEvents((prev) => [...createdEvents, ...prev])
       }
 
       playNotificationSound('chat')
       
-      // Invia notifica Telegram asincrona al gruppo
+      // Invia notifica Telegram asincrona al gruppo (singola notifica per evitare spam)
       notifyCalendarEventCreatedAction({
         title: eventTitle.trim(),
         date: selectedDateStr,
@@ -306,7 +336,7 @@ export default function CalendarioPage() {
         category: eventCategory,
       }).catch((e) => console.error('Errore notifica Telegram evento calendario:', e))
 
-      // Invia inviti o programma email tramite Resend se abilitato
+      // Invia inviti o programma email tramite Resend se abilitato (singolo invito per la prima data)
       let emailReportMsg = ''
       const hasSelectedCategories = recipientCategories.length > 0 && (recipientCategories.some(c => c !== 'single') || customEmails.trim().length > 0)
       if (sendEmailInvite && hasSelectedCategories) {
@@ -347,7 +377,11 @@ export default function CalendarioPage() {
         }
       }
 
-      alert(`Evento "${eventTitle}" aggiunto al Calendario!${emailReportMsg}`)
+      if (createdEvents.length > 1) {
+        alert(`Aggiunti ${createdEvents.length} appuntamenti ricorrenti "${eventTitle}" al Calendario!${emailReportMsg}`)
+      } else {
+        alert(`Evento "${eventTitle}" aggiunto al Calendario!${emailReportMsg}`)
+      }
 
       setIsEventModalOpen(false)
       setEventTitle('')
@@ -356,6 +390,8 @@ export default function CalendarioPage() {
       setCustomEmails('')
       setRecipientType('single')
       setEmailTiming('now')
+      setRecurrenceFreq('none')
+      setRecurrenceCount(4)
     } catch (err: any) {
       alert(`Errore: ${err.message}`)
     }
@@ -823,6 +859,39 @@ export default function CalendarioPage() {
                       className="text-xs dark:bg-slate-800 dark:border-slate-700"
                     />
                   </div>
+                </div>
+              )}
+
+              {eventCategory !== 'notice' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">Ricorrenza</label>
+                    <select
+                      value={recurrenceFreq}
+                      onChange={(e: any) => setRecurrenceFreq(e.target.value)}
+                      className="w-full h-9 rounded-md border border-slate-200 dark:border-slate-700 bg-background dark:bg-slate-800 px-3 text-xs"
+                    >
+                      <option value="none">Non si ripete (Solo questa data)</option>
+                      <option value="weekly">Ogni settimana</option>
+                      <option value="biweekly">Ogni 2 settimane</option>
+                      <option value="daily">Ogni giorno</option>
+                      <option value="monthly">Ogni mese</option>
+                    </select>
+                  </div>
+
+                  {recurrenceFreq !== 'none' && (
+                    <div className="space-y-1.5">
+                      <label className="font-semibold text-slate-700 dark:text-slate-300">Numero di incontri</label>
+                      <Input
+                        type="number"
+                        min={2}
+                        max={24}
+                        value={recurrenceCount}
+                        onChange={(e) => setRecurrenceCount(Math.max(2, Math.min(24, Number(e.target.value) || 2)))}
+                        className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
