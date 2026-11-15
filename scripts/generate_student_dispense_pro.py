@@ -9,16 +9,13 @@ Genera file PDF professionali in formato A4, distribuiti in:
 import os
 import base64
 import subprocess
-import shutil
 
 PROJECT_DIR = "/Users/marco/Sviluppo/Progetti/Prgetto piattaforma lavoro condivisa"
 LOGO_PATH = os.path.join(PROJECT_DIR, "public/images/logo_full_light.png")
 OUTPUT_DIR = os.path.join(PROJECT_DIR, "public/dispense")
-VAULT_DIR = "/Users/marco/Library/Mobile Documents/iCloud~md~obsidian/Documents/KnowledgeBase/09_File_Piattaforma_Aiutiamoci/Dispense_Studenti_Pro"
 SCRATCH_DIR = os.path.join(PROJECT_DIR, "scratch_dispense_html")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-os.makedirs(VAULT_DIR, exist_ok=True)
 os.makedirs(SCRATCH_DIR, exist_ok=True)
 
 with open(LOGO_PATH, "rb") as f:
@@ -799,9 +796,8 @@ def generate_pdf_for_module(mod_num: int, data: dict):
     with open(html_file, "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    pdf_filename = f"DISPENSA_STUDENTE_MODULO_{mod_num:02d}.pdf"
+    pdf_filename = f"DISPENSA_PRO_MODULO_{mod_num:02d}.pdf"
     pdf_out_public = os.path.join(OUTPUT_DIR, pdf_filename)
-    pdf_out_vault = os.path.join(VAULT_DIR, pdf_filename)
 
     weasy_bin = "/opt/homebrew/bin/weasyprint"
     res = subprocess.run([weasy_bin, html_file, pdf_out_public], capture_output=True, text=True)
@@ -809,12 +805,11 @@ def generate_pdf_for_module(mod_num: int, data: dict):
         print(f"[ERRORE Modulo {mod_num}] Weasyprint:", res.stderr)
         return False
     else:
-        shutil.copyfile(pdf_out_public, pdf_out_vault)
         print(f"✓ Generata dispensa Modulo {mod_num:02d}: {pdf_filename}")
         return True
 
 def main():
-    print(f"Avvio compilazione delle 20 dispense per studenti...")
+    print(f"Avvio compilazione delle 20 dispense per studenti AI Pro...")
     success_count = 0
     for mod_num in range(1, 21):
         data = MODULES_DATA.get(mod_num)
@@ -824,7 +819,7 @@ def main():
         else:
             print(f"Dati mancanti per modulo {mod_num}")
 
-    print(f"\nOperazione completata con successo: {success_count}/20 PDF generati e sincronizzati nel Vault.")
+    print(f"\nOperazione completata con successo: {success_count}/20 PDF generati in public/dispense.")
 
 if __name__ == "__main__":
     main()

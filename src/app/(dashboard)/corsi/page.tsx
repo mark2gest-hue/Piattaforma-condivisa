@@ -446,51 +446,51 @@ const INITIAL_MEET_RECORDINGS: ZoomRecording[] = [
 
 // Mappatura precisa dei 20 Moduli Video del Corso AI Start con gli URL MP4 Full HD 60fps serviti da VPS e dispense PDF locali ufficiali
 const AI_START_LESSONS: Lesson[] = [
-  { id: 1, title: '1 Benvenuti nel Futuro', duration: '14:53', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_01_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_01.pdf' },
-  { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '11:56', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_02_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_02.pdf' },
-  { id: 3, title: '3 Sconfiggere il Foglio Bianco', duration: '14:37', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_03_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_03.pdf' },
-  { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '15:22', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_04_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_04.pdf' },
-  { id: 5, title: '5 La Formula Segreta RCCF', duration: '11:00', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_05_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_05.pdf' },
-  { id: 6, title: '6 Iterazione', duration: '14:40', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_06_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_06.pdf' },
-  { id: 7, title: '7 ChatGPT, Claude, Gemini, Perplexity', duration: '11:36', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_07_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_07.pdf' },
-  { id: 8, title: '8 Scrivere senza Sforzo', duration: '10:01', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_08_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_08.pdf' },
-  { id: 9, title: '9 Dipingere con le Parole', duration: '16:29', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_09_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_09.pdf' },
-  { id: 10, title: '10 Anatomia di un Prompt Visivo', duration: '13:05', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_10_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_10.pdf' },
-  { id: 11, title: '11 Presentazioni in 5 Minuti', duration: '09:23', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_11_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_11.pdf' },
-  { id: 12, title: '12 Analisi Dati per Excel', duration: '09:54', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_12_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_12.pdf' },
-  { id: 13, title: '13 L\'Agenda Intelligente', duration: '08:42', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_13_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_13.pdf' },
-  { id: 14, title: '14 Studiare e Imparare ELI5', duration: '13:41', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_14_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_14.pdf' },
-  { id: 15, title: '15 Allucinazioni: Quando l\'IA mente', duration: '12:33', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_15_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_15.pdf' },
-  { id: 16, title: '16 Privacy e Sicurezza', duration: '12:39', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_16_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_16.pdf' },
-  { id: 17, title: '17 Il Lavoro che Cambia', duration: '11:21', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_17_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_17.pdf' },
-  { id: 18, title: '18 Creare il proprio Workflow', duration: '14:20', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_18_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_18.pdf' },
-  { id: 19, title: '19 La Tua Nuova Superpotenza', duration: '14:21', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_19_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_19.pdf' },
-  { id: 20, title: '20 Riepilogo Corso AI', duration: '12:56', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_20_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_20.pdf' },
+  { id: 1, title: '1 Benvenuti nel Futuro', duration: '14:53', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_01_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_01.pdf?v=20261115_base_v1' },
+  { id: 2, title: '2 Breve Storia dell\'Evoluzione', duration: '11:56', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_02_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_02.pdf?v=20261115_base_v1' },
+  { id: 3, title: '3 Sconfiggere il Foglio Bianco', duration: '14:37', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_03_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_03.pdf?v=20261115_base_v1' },
+  { id: 4, title: '4 Il Linguaggio della Chiarezza', duration: '15:22', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_04_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_04.pdf?v=20261115_base_v1' },
+  { id: 5, title: '5 La Formula Segreta RCCF', duration: '11:00', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_05_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_05.pdf?v=20261115_base_v1' },
+  { id: 6, title: '6 Iterazione', duration: '14:40', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_06_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_06.pdf?v=20261115_base_v1' },
+  { id: 7, title: '7 ChatGPT, Claude, Gemini, Perplexity', duration: '11:36', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_07_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_07.pdf?v=20261115_base_v1' },
+  { id: 8, title: '8 Scrivere senza Sforzo', duration: '10:01', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_08_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_08.pdf?v=20261115_base_v1' },
+  { id: 9, title: '9 Dipingere con le Parole', duration: '16:29', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_09_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_09.pdf?v=20261115_base_v1' },
+  { id: 10, title: '10 Anatomia di un Prompt Visivo', duration: '13:05', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_10_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_10.pdf?v=20261115_base_v1' },
+  { id: 11, title: '11 Presentazioni in 5 Minuti', duration: '09:23', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_11_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_11.pdf?v=20261115_base_v1' },
+  { id: 12, title: '12 Analisi Dati per Excel', duration: '09:54', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_12_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_12.pdf?v=20261115_base_v1' },
+  { id: 13, title: '13 L\'Agenda Intelligente', duration: '08:42', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_13_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_13.pdf?v=20261115_base_v1' },
+  { id: 14, title: '14 Studiare e Imparare ELI5', duration: '13:41', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_14_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_14.pdf?v=20261115_base_v1' },
+  { id: 15, title: '15 Allucinazioni: Quando l\'IA mente', duration: '12:33', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_15_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_15.pdf?v=20261115_base_v1' },
+  { id: 16, title: '16 Privacy e Sicurezza', duration: '12:39', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_16_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_16.pdf?v=20261115_base_v1' },
+  { id: 17, title: '17 Il Lavoro che Cambia', duration: '11:21', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_17_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_17.pdf?v=20261115_base_v1' },
+  { id: 18, title: '18 Creare il proprio Workflow', duration: '14:20', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_18_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_18.pdf?v=20261115_base_v1' },
+  { id: 19, title: '19 La Tua Nuova Superpotenza', duration: '14:21', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_19_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_19.pdf?v=20261115_base_v1' },
+  { id: 20, title: '20 Riepilogo Corso AI', duration: '12:56', completed: false, videoUrl: 'https://aiutiamoci.cloud/videos/lesson_20_full_production.mp4?v=20261102_hq_v6', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_20.pdf?v=20261115_base_v1' },
 ]
 
 
 // 20 Moduli Completi del Secondo Corso: AI Pro (Automazioni & Agenti Autonomi)
 const AI_PRO_LESSONS: Lesson[] = [
-  { id: 1, title: '1. Da Cartella Vuota al Primo Agente (Google Antigravity)', duration: '15:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_01.pdf' },
-  { id: 2, title: '2. La Costituzione dell\'Agente: Regole, Memoria e AGENTS.md', duration: '14:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_02.pdf' },
-  { id: 3, title: '3. Come Pensa un Agente: Thinking, File ed Error-Correction', duration: '16:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_03.pdf' },
-  { id: 4, title: '4. Compiti Autonomi & Tool Isolati: Esecuzione Sicura', duration: '12:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_04.pdf' },
-  { id: 5, title: '5. Cosa sono le API: Il Cameriere Digitale & Chat vs Backend', duration: '15:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_05.pdf' },
-  { id: 6, title: '6. Google AI Studio: Generare la Prima Chiave Gratuita (Gemini 2.5 Flash)', duration: '18:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_06.pdf' },
-  { id: 7, title: '7. OpenAI Platform: Limiti di Spesa (5€ Cap), Modelli & Playground', duration: '17:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_07.pdf' },
-  { id: 8, title: '8. JSON & Risposte Strutturate: Costringere l\'AI a non Divagare', duration: '16:15', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_08.pdf' },
-  { id: 9, title: '9. Benvenuti in n8n: L\'Interfaccia Visuale, Trigger & Nodi', duration: '20:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_09.pdf' },
-  { id: 10, title: '10. Il Primo Webhook: Ricevere Dati in Tempo Reale', duration: '15:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_10.pdf' },
-  { id: 11, title: '11. Collegare l\'AI al Webhook: Elaborazione Dati Automatica', duration: '22:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_11.pdf' },
-  { id: 12, title: '12. Fogli di Calcolo Automatici: Google Sheets & Excel senza Codice', duration: '19:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_12.pdf' },
-  { id: 13, title: '13. Smistatore Email Intelligente: Triage della Posta & Filtro Lead', duration: '24:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_13.pdf' },
-  { id: 14, title: '14. L\'Assistente Preventivi: Dal Listino Prezzi alla Proposta PDF', duration: '26:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_14.pdf' },
-  { id: 15, title: '15. RAG Aziendale (Parte 1): Caricare Cataloghi, Manuali e Procedure', duration: '21:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_15.pdf' },
-  { id: 16, title: '16. RAG Aziendale (Parte 2): Interrogazione PDF con Fonti e Citazioni', duration: '23:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_16.pdf' },
-  { id: 17, title: '17. Human-in-the-Loop su Telegram: Approvazione Preventivi con Tasti OK/NO', duration: '25:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_17.pdf' },
-  { id: 18, title: '18. Trascrizione Audio & Verbali di Riunione da Vocali WhatsApp', duration: '18:45', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_18.pdf' },
-  { id: 19, title: '19. Sicurezza, Privacy Dati Aziendali & Gestione Errori (Fallback)', duration: '17:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_19.pdf' },
-  { id: 20, title: '20. Deploy h24, Manutenzione Workflow & Certificazione AI Pro', duration: '30:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_STUDENTE_MODULO_20.pdf' },
+  { id: 1, title: '1. Da Cartella Vuota al Primo Agente (Google Antigravity)', duration: '15:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_01.pdf?v=20261115_pro_v1' },
+  { id: 2, title: '2. La Costituzione dell\'Agente: Regole, Memoria e AGENTS.md', duration: '14:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_02.pdf?v=20261115_pro_v1' },
+  { id: 3, title: '3. Come Pensa un Agente: Thinking, File ed Error-Correction', duration: '16:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_03.pdf?v=20261115_pro_v1' },
+  { id: 4, title: '4. Compiti Autonomi & Tool Isolati: Esecuzione Sicura', duration: '12:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_04.pdf?v=20261115_pro_v1' },
+  { id: 5, title: '5. Cosa sono le API: Il Cameriere Digitale & Chat vs Backend', duration: '15:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_05.pdf?v=20261115_pro_v1' },
+  { id: 6, title: '6. Google AI Studio: Generare la Prima Chiave Gratuita (Gemini 2.5 Flash)', duration: '18:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_06.pdf?v=20261115_pro_v1' },
+  { id: 7, title: '7. OpenAI Platform: Limiti di Spesa (5€ Cap), Modelli & Playground', duration: '17:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_07.pdf?v=20261115_pro_v1' },
+  { id: 8, title: '8. JSON & Risposte Strutturate: Costringere l\'AI a non Divagare', duration: '16:15', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_08.pdf?v=20261115_pro_v1' },
+  { id: 9, title: '9. Benvenuti in n8n: L\'Interfaccia Visuale, Trigger & Nodi', duration: '20:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_09.pdf?v=20261115_pro_v1' },
+  { id: 10, title: '10. Il Primo Webhook: Ricevere Dati in Tempo Reale', duration: '15:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_10.pdf?v=20261115_pro_v1' },
+  { id: 11, title: '11. Collegare l\'AI al Webhook: Elaborazione Dati Automatica', duration: '22:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_11.pdf?v=20261115_pro_v1' },
+  { id: 12, title: '12. Fogli di Calcolo Automatici: Google Sheets & Excel senza Codice', duration: '19:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_12.pdf?v=20261115_pro_v1' },
+  { id: 13, title: '13. Smistatore Email Intelligente: Triage della Posta & Filtro Lead', duration: '24:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_13.pdf?v=20261115_pro_v1' },
+  { id: 14, title: '14. L\'Assistente Preventivi: Dal Listino Prezzi alla Proposta PDF', duration: '26:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_14.pdf?v=20261115_pro_v1' },
+  { id: 15, title: '15. RAG Aziendale (Parte 1): Caricare Cataloghi, Manuali e Procedure', duration: '21:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_15.pdf?v=20261115_pro_v1' },
+  { id: 16, title: '16. RAG Aziendale (Parte 2): Interrogazione PDF con Fonti e Citazioni', duration: '23:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_16.pdf?v=20261115_pro_v1' },
+  { id: 17, title: '17. Human-in-the-Loop su Telegram: Approvazione Preventivi con Tasti OK/NO', duration: '25:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_17.pdf?v=20261115_pro_v1' },
+  { id: 18, title: '18. Trascrizione Audio & Verbali di Riunione da Vocali WhatsApp', duration: '18:45', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_18.pdf?v=20261115_pro_v1' },
+  { id: 19, title: '19. Sicurezza, Privacy Dati Aziendali & Gestione Errori (Fallback)', duration: '17:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_19.pdf?v=20261115_pro_v1' },
+  { id: 20, title: '20. Deploy h24, Manutenzione Workflow & Certificazione AI Pro', duration: '30:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_20.pdf?v=20261115_pro_v1' },
 ]
 
 function generateCertificateDataUrl(studentName: string, dateStr: string, certCode: string, courseTitleStr?: string): string {
@@ -2874,7 +2874,7 @@ function CorsiInnerContent() {
                       )}
 
                       <a
-                        href={currentActive.resourcesPdfUrl || '/dispense/dispensa-modulo-1.pdf'}
+                        href={currentActive.resourcesPdfUrl || '/dispense/DISPENSA_STUDENTE_MODULO_01.pdf?v=20261115_base_v1'}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-full"
