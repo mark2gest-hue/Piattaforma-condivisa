@@ -1,12 +1,12 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-16 13:35
+Ultimo aggiornamento: 2026-11-16 13:55
 Stato corrente:
 - **Fix Dispense Corso Base (`AI Start`) vs Corso `AI Pro` COMPLETATO & DEPLOYATO (`v2.3.0 • Build #111`, commit `2971bdf`)**:
   - Risolto il disallineamento tra il programma del Corso Base e le dispense mostrate in Academy: ora ciascun corso carica le proprie dispense dedicate.
 - **ROADMAP IN VALUTAZIONE — Allineamento Chat & Workspace a Slack (4 Fasi)**:
   - *Fase 1*: PWA (`manifest.json` + `sw.js`) + Notifiche Web Push reali (VAPID + `push_subscriptions` su Supabase) in sostituzione di Telegram, con UX `/chat` mobile-first full-screen per iPhone/iPad.
-  - *Fase 2*: Thread di risposta (`parent_message_id`), `@menzioni` con autocomplete, badge non letti per canale (`last_read_at`) e reazioni emoji rapide in `/chat`.
+  - *Fase 2*: **Layout Full-Screen Stile Slack Desktop/Mobile & Thread**: rimozione `max-w-7xl` e `p-4 md:p-8` in `dashboard-shell.tsx` per `/chat` (full-bleed a tutta altezza e larghezza), header unico integrato, sidebar canali fissa a `240px`, timeline messaggi centrale `flex-1`, pannello Thread destro a `360px` on-demand, thread di risposta (`parent_message_id`), `@menzioni` con autocomplete, badge non letti (`last_read_at`) e reazioni emoji rapide.
   - *Fase 3*: **Ruolo `collaborator` (Guest stile Slack)** + isolamento `channel_members`/`project_members` (Middleware + Sidebar + RLS Supabase: accesso solo a `/chat`, `/lavori`, `/files`, `/videocall` sui propri progetti; blocco di `/corsi`, `/clienti`, `/posta`, `/cervello`, `/growth-studio`, `/workshop-agenti`), DM 1-a-1, canali dinamici su tabella `channels` (sostituendo i 6 `CHANNELS` fissi in `chat/page.tsx`) e ricerca globale (`⌘K`).
   - *Fase 4*: Slash command (`/task`, `/lead`, `/ai`) e Webhook in entrata `/api/webhooks/chat` (HMAC) da `n8n` / Stripe / VPS.
 - **CRM Commerciale Stile Torch / GoHighLevel (`/clienti`) & Pagina Pubblica Prenotazione (`/prenota`) COMPLETATI (`ba65bc7`)**:
