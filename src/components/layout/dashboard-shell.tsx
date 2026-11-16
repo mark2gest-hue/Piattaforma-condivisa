@@ -44,7 +44,11 @@ export function DashboardShell({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors duration-200">
+    <div
+      className={`${
+        isFullBleedChat ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
+      } bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors duration-200`}
+    >
       {/* Sidebar: Desktop fluid neon dock e Mobile drawer */}
       <Sidebar
         isOpenMobile={isMobileMenuOpen}
@@ -57,7 +61,7 @@ export function DashboardShell({
       <div
         className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-out ${
           isSidebarPinned ? 'md:pl-68' : 'md:pl-[84px]'
-        }`}
+        } ${isFullBleedChat ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : ''}`}
       >
         <Navbar
           userName={userName}
@@ -69,7 +73,7 @@ export function DashboardShell({
         <main
           className={
             isFullBleedChat
-              ? 'flex-1 p-0 overflow-hidden w-full h-[calc(100dvh-4rem)]'
+              ? 'flex-1 min-h-0 p-0 overflow-hidden w-full'
               : 'flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto'
           }
         >

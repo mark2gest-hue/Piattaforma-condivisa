@@ -1,7 +1,12 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-16 21:20
+Ultimo aggiornamento: 2026-11-16 21:33
 Stato corrente:
+- **Fix Viewport 100dvh, Scroll Isolato & Chiusura Thread COMPLETATO & DEPLOYATO (`v2.3.0 • Build #114`)**:
+  - Bloccato il viewport di `/chat` a `100dvh max-h-[100dvh] overflow-hidden` sia sul root shell sia sulla colonna principale (eliminando qualsiasi scrollbar esterna della pagina).
+  - Eliminato il metodo intrusivo `scrollIntoView` sui messaggi e sul thread: ora lo scorrimento verso il basso opera esclusivamente all'interno dei rispettivi contenitori interni con `scrollTo({ top: scrollHeight })`.
+  - Aggiunta chiusura rapida del Thread con il tasto fisico `Esc` e inserito pulsante `✕ Chiudi` esplicito e ben visibile nell'header del pannello Thread.
+  - Riorganizzata la colonna sinistra canali con `overflow-hidden`: i 6 Canali Tematici rimangono stabilmente ancorati in alto (`shrink-0`), mentre la lista Team sottostante scorre indipendentemente solo se necessario.
 - **Fase 2 Chat & Workspace Stile Slack COMPLETATA & DEPLOYATA (`v2.3.0 • Build #113`)**:
   - Implementato Thread laterale a scomparsa da `360px` su desktop (drawer a schermo intero su mobile) collegato a `parent_message_id` con visualizzazione messaggio padre originale, elenco cronologico risposte e input bar dedicata.
   - Sotto i messaggi radice con risposte compare il pulsante stile Slack `💬 X risposte • Vedi thread`.
