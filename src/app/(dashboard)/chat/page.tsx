@@ -7,11 +7,9 @@ import {
   Send,
   Paperclip,
   Hash,
-  Sparkles,
   Loader2,
   Menu,
   X,
-  ChevronRight,
   FileText,
   Image as ImageIcon,
   Download,
@@ -19,6 +17,10 @@ import {
   Bell,
   BellRing,
   Check,
+  MessageCircle,
+  AtSign,
+  Smile,
+  CornerDownRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -38,6 +40,7 @@ import {
   savePushSubscriptionAction,
   sendTestPushNotificationAction,
 } from '@/app/actions/notifications'
+import { toggleMessageReactionAction, ChatMetadataItem } from '@/app/actions/chat'
 
 type MessageWithSender = Message & { sender?: Profile }
 
@@ -58,6 +61,59 @@ const CHANNELS = [
   { id: 'ch-6', name: 'idee-innovazione', desc: 'Nuovi modelli AI, spunti creativi, tool e automazioni', icon: Hash },
 ]
 
+const QUICK_REACTIONS = ['✅', '👀', '🔥', '👍']
+
+/**
+ * Estrae parent_id, reactions e file reali da attachments del messaggio.
+ */
+function extractMessageMeta(msg: MessageWithSender) {
+  const raw = Array.isArray(msg.attachments) ? (msg.attachments as any[]) : []
+  const meta = raw.find((a) => a && a.type === '__chat_meta__')
+  return {
+    parentId: (msg as any).parent_message_id || meta?.parent_id || null,
+    reactions: (meta?.reactions || {}) as Record<string, string[]>,
+    files: raw.filter((a) => a && a.type !== '__chat_meta__') as ChatAttachment[],
+  }
+}
+
+/**
+ * Estrae tutti i nomi menzionati con `@`.
+ */
+function extractMentions(text: string): string[] {
+  const matches = text.match(/@([a-zA-Z0-9À-ÿ_]+)/g)
+  if (!matches) return []
+  return Array.from(new Set(matches.map((m) => m.slice(1))))
+}
+
+/**
+ * Renderizza il testo del messaggio evidenziando le @menzioni come pill.
+ */
+function renderMessageContent(content: string, isMe: boolean) {
+  if (!content) return null
+  const parts = content.split(/(@[a-zA-Z0-9À-ÿ_]+)/g)
+  return (
+    <span>
+      {parts.map((part, idx) => {
+        if (part.startsWith('@')) {
+          return (
+            <span
+              key={idx}
+              className={`inline-flex items-center px-1.5 py-0.2 mx-0.5 rounded-md font-semibold text-[11px] sm:text-xs transition-colors ${
+                isMe
+                  ? 'bg-blue-700 text-white shadow-xs'
+                  : 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+              }`}
+            >
+              {part}
+            </span>
+          )
+        }
+        return <span key={idx}>{part}</span>
+      })}
+    </span>
+  )
+}
+
 export default function ChatPage() {
   const [activeChannel, setActiveChannel] = useState('generale')
   const [messages, setMessages] = useState<MessageWithSender[]>([])
@@ -77,9 +133,22 @@ export default function ChatPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [previewModalUrl, setPreviewModalUrl] = useState<string | null>(null)
 
+  // Phase 2 States: Badge non letti & Thread laterale & Autocomplete @menzioni
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
+  const [threadInputMessage, setThreadInputMessage] = useState('')
+  const [isSendingThreadReply, setIsSendingThreadReply] = useState(false)
+
+  // Autocomplete Menzioni
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null)
+  const [mentionTarget, setMentionTarget] = useState<'main' | 'thread' | null>(null)
+
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const threadEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const mainInputRef = useRef<HTMLInputElement>(null)
+  const threadInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
@@ -97,6 +166,16 @@ export default function ChatPage() {
     const timer = setTimeout(() => scrollToBottom('smooth'), 100)
     return () => clearTimeout(timer)
   }, [messages, activeChannel])
+
+  // Scroll bottom on active thread change / new reply
+  useEffect(() => {
+    if (activeThreadId) {
+      const timer = setTimeout(() => {
+        threadEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [activeThreadId, messages])
 
   // Check Web Push Status on mount
   useEffect(() => {
@@ -120,6 +199,20 @@ export default function ChatPage() {
       }
     }
   }, [])
+
+  // Persistenza e azzeramento letture canale
+  const markChannelAsRead = (ch: string) => {
+    if (!currentUser) return
+    const key = `aiutiamoci_chat_last_read_${currentUser.id}`
+    try {
+      const existing = JSON.parse(localStorage.getItem(key) || '{}')
+      existing[ch] = new Date().toISOString()
+      localStorage.setItem(key, JSON.stringify(existing))
+    } catch (e) {
+      console.warn('Errore salvataggio last_read:', e)
+    }
+    setUnreadCounts((prev) => ({ ...prev, [ch]: 0 }))
+  }
 
   // Fetch initial user, team members, and messages for channel
   useEffect(() => {
@@ -145,23 +238,23 @@ export default function ChatPage() {
       }
 
       await fetchMessages(activeChannel)
+      markChannelAsRead(activeChannel)
       setLoading(false)
     }
 
     initChat()
   }, [activeChannel])
 
-  // Setup Supabase Realtime Subscription
+  // Setup Supabase Realtime Subscription (ascolta tutti i canali per non letti e update reazioni)
   useEffect(() => {
     const channel = supabase
-      .channel('public:messages')
+      .channel('public:messages_realtime_all')
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `channel=eq.${activeChannel}`,
         },
         (payload) => {
           const newMessage = payload.new as Message
@@ -172,15 +265,50 @@ export default function ChatPage() {
             sender: senderProfile,
           }
 
-          setMessages((prev) => [...prev, messageWithSender])
+          if (newMessage.channel === activeChannel) {
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === newMessage.id)) return prev
+              return [...prev, messageWithSender]
+            })
+            markChannelAsRead(activeChannel)
+          } else {
+            if (currentUser && newMessage.sender_id !== currentUser.id) {
+              setUnreadCounts((prev) => ({
+                ...prev,
+                [newMessage.channel]: (prev[newMessage.channel] || 0) + 1,
+              }))
+            }
+          }
 
           if (currentUser && newMessage.sender_id !== currentUser.id) {
             sendDesktopNotification(
-              `Messaggio da ${senderProfile?.full_name || 'Team'} in #${activeChannel}`,
-              { body: newMessage.content || 'Nuovo allegato' },
+              `Messaggio da ${senderProfile?.full_name || 'Team'} in #${newMessage.channel}`,
+              { body: newMessage.content || 'Nuovo messaggio o allegato' },
               'chat'
             )
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const updatedMessage = payload.new as Message
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === updatedMessage.id
+                ? {
+                    ...m,
+                    ...updatedMessage,
+                    sender: m.sender || teamMembers.find((p) => p.id === updatedMessage.sender_id),
+                  }
+                : m
+            )
+          )
         }
       )
       .subscribe()
@@ -200,6 +328,49 @@ export default function ChatPage() {
     if (data && !error) {
       setMessages(data)
     }
+  }
+
+  // Toggle Reazione Emoji con aggiornamento ottimistico
+  const handleToggleReaction = async (messageId: string, emoji: string) => {
+    if (!currentUser) return
+    const userId = currentUser.id
+
+    // Aggiornamento ottimistico locale
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== messageId) return m
+        const raw: any[] = Array.isArray(m.attachments) ? [...m.attachments] : []
+        const metaIdx = raw.findIndex((a: any) => a && a.type === '__chat_meta__')
+        let meta: ChatMetadataItem =
+          metaIdx >= 0 ? { ...(raw[metaIdx] as any) } : { type: '__chat_meta__', reactions: {} }
+
+        const reactions = { ...(meta.reactions || {}) }
+        const currentUsers = Array.isArray(reactions[emoji]) ? [...reactions[emoji]] : []
+        const userIdx = currentUsers.indexOf(userId)
+        if (userIdx >= 0) {
+          currentUsers.splice(userIdx, 1)
+        } else {
+          currentUsers.push(userId)
+        }
+
+        if (currentUsers.length > 0) {
+          reactions[emoji] = currentUsers
+        } else {
+          delete reactions[emoji]
+        }
+
+        meta.reactions = reactions
+        if (metaIdx >= 0) {
+          raw[metaIdx] = meta as any
+        } else {
+          raw.push(meta as any)
+        }
+        return { ...m, attachments: raw as any }
+      })
+    )
+
+    // Server Action
+    await toggleMessageReactionAction(messageId, emoji)
   }
 
   const handleEnablePush = async () => {
@@ -293,20 +464,23 @@ export default function ChatPage() {
     return uploaded
   }
 
+  // Invio messaggio principale
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if ((!inputMessage.trim() && pendingFiles.length === 0) || !currentUser || isUploading) return
 
     setIsUploading(true)
-    let uploadedAttachments: ChatAttachment[] = []
+    let uploadedAttachments: any[] = []
 
     if (pendingFiles.length > 0) {
-      uploadedAttachments = await uploadAttachments(pendingFiles)
+      const files = await uploadAttachments(pendingFiles)
+      uploadedAttachments = [...files]
     }
 
     const messageContent = inputMessage.trim()
     setInputMessage('')
     setPendingFiles([])
+    setMentionQuery(null)
 
     const { error } = await (supabase as any).from('messages').insert({
       channel: activeChannel,
@@ -324,13 +498,108 @@ export default function ChatPage() {
       const notifyText =
         messageContent ||
         (uploadedAttachments.length > 0 ? `📎 Ha inviato ${uploadedAttachments.length} allegato/i` : '')
-      notifyChatMessageAction(activeChannel, notifyText, currentUser.full_name).catch((err) =>
-        console.error('Chat push & Telegram notify error:', err)
-      )
+      const mentions = extractMentions(messageContent)
+      notifyChatMessageAction(activeChannel, notifyText, currentUser.full_name, {
+        mentionedNames: mentions,
+      }).catch((err) => console.error('Chat push & Telegram notify error:', err))
     }
   }
 
+  // Invio risposta nel thread
+  const handleSendThreadReply = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!threadInputMessage.trim() || !currentUser || !activeThreadId || isSendingThreadReply) return
+
+    setIsSendingThreadReply(true)
+    const replyText = threadInputMessage.trim()
+    setThreadInputMessage('')
+    setMentionQuery(null)
+
+    const metaItem: ChatMetadataItem = {
+      type: '__chat_meta__',
+      parent_id: activeThreadId,
+    }
+
+    const { error } = await (supabase as any).from('messages').insert({
+      channel: activeChannel,
+      content: replyText,
+      attachments: [metaItem],
+      sender_id: currentUser.id,
+      is_system: false,
+    })
+
+    setIsSendingThreadReply(false)
+
+    if (error) {
+      console.error('Error sending thread reply:', error)
+    } else {
+      const mentions = extractMentions(replyText)
+      notifyChatMessageAction(activeChannel, replyText, currentUser.full_name, {
+        isThreadReply: true,
+        mentionedNames: mentions,
+      }).catch((err) => console.error('Thread notify error:', err))
+    }
+  }
+
+  // Gestione input menzioni
+  const handleInputChangeWithMentions = (
+    val: string,
+    target: 'main' | 'thread'
+  ) => {
+    if (target === 'main') setInputMessage(val)
+    else setThreadInputMessage(val)
+
+    const match = val.match(/@([a-zA-Z0-9À-ÿ]*)$/)
+    if (match) {
+      setMentionQuery(match[1].toLowerCase())
+      setMentionTarget(target)
+    } else {
+      setMentionQuery(null)
+      setMentionTarget(null)
+    }
+  }
+
+  const handleSelectMention = (name: string) => {
+    if (mentionTarget === 'main') {
+      const updated = inputMessage.replace(/@([a-zA-Z0-9À-ÿ]*)$/, `@${name} `)
+      setInputMessage(updated)
+      mainInputRef.current?.focus()
+    } else if (mentionTarget === 'thread') {
+      const updated = threadInputMessage.replace(/@([a-zA-Z0-9À-ÿ]*)$/, `@${name} `)
+      setThreadInputMessage(updated)
+      threadInputRef.current?.focus()
+    }
+    setMentionQuery(null)
+    setMentionTarget(null)
+  }
+
+  // Calcolo messaggi principali e raggruppamento thread
+  const mainMessages = messages.filter((m) => !extractMessageMeta(m).parentId)
+  const repliesByParent = messages.reduce<Record<string, MessageWithSender[]>>((acc, m) => {
+    const pId = extractMessageMeta(m).parentId
+    if (pId) {
+      if (!acc[pId]) acc[pId] = []
+      acc[pId].push(m)
+    }
+    return acc
+  }, {})
+
+  const activeThreadParent = activeThreadId
+    ? messages.find((m) => m.id === activeThreadId) || null
+    : null
+  const activeThreadReplies = activeThreadId ? repliesByParent[activeThreadId] || [] : []
+
   const currentChannelObj = CHANNELS.find((c) => c.name === activeChannel) || CHANNELS[0]
+
+  // Candidati menzioni filtrati (token singolo pulito: @Marco, @Stefano, @Lorenzo)
+  const mentionCandidates = [
+    { id: 'all', name: 'tutti', role: 'Team All' },
+    ...teamMembers.map((m) => ({
+      id: m.id,
+      name: (m.full_name || 'team').trim().split(/\s+/)[0],
+      role: m.role,
+    })),
+  ].filter((c) => !mentionQuery || c.name.toLowerCase().includes(mentionQuery))
 
   return (
     <div className="flex flex-col h-full w-full min-h-0 overflow-hidden bg-white dark:bg-slate-900">
@@ -379,21 +648,31 @@ export default function ChatPage() {
               {CHANNELS.map((ch) => {
                 const isActive = activeChannel === ch.name
                 const Icon = ch.icon
+                const unread = unreadCounts[ch.name] || 0
                 return (
                   <button
                     key={ch.id}
                     onClick={() => {
                       setActiveChannel(ch.name)
                       setShowMobileChannels(false)
+                      setActiveThreadId(null)
+                      markChannelAsRead(ch.name)
                     }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors text-left ${
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors text-left ${
                       isActive
                         ? 'bg-blue-600 text-white shadow-xs'
                         : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
                     }`}
                   >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">#{ch.name}</span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">#{ch.name}</span>
+                    </div>
+                    {unread > 0 && !isActive && (
+                      <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500 text-white animate-pulse">
+                        {unread}
+                      </span>
+                    )}
                   </button>
                 )
               })}
@@ -437,7 +716,7 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Right: Message Stream */}
+        {/* Center: Main Message Stream */}
         <div className="flex-1 min-w-0 h-full flex flex-col bg-slate-50/20 dark:bg-slate-950/40 relative overflow-hidden">
           {/* Channel Header */}
           <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur shrink-0 z-10 gap-2">
@@ -517,7 +796,7 @@ export default function ChatPage() {
             </div>
           </div>
 
-          {/* Messages List */}
+          {/* Messages List (Timeline principale dei messaggi radice) */}
           <div
             ref={chatContainerRef}
             className="p-3 sm:p-4 space-y-3 sm:space-y-4 flex-1 overflow-y-auto min-h-0 overscroll-contain"
@@ -526,16 +805,20 @@ export default function ChatPage() {
               <div className="h-full flex items-center justify-center">
                 <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
               </div>
-            ) : messages.length > 0 ? (
-              messages.map((msg) => {
+            ) : mainMessages.length > 0 ? (
+              mainMessages.map((msg) => {
                 const isMe = msg.sender_id === currentUser?.id
-                const msgAttachments =
-                  msg.attachments && Array.isArray(msg.attachments)
-                    ? (msg.attachments as unknown as ChatAttachment[])
-                    : []
+                const { reactions, files } = extractMessageMeta(msg)
+                const replies = repliesByParent[msg.id] || []
+                const isThreadOpen = activeThreadId === msg.id
 
                 return (
-                  <div key={msg.id} className={`flex items-start gap-2.5 sm:gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                  <div
+                    key={msg.id}
+                    className={`group flex items-start gap-2.5 sm:gap-3 ${isMe ? 'flex-row-reverse' : ''} ${
+                      isThreadOpen ? 'bg-blue-50/40 dark:bg-blue-950/20 p-2 rounded-2xl -mx-2 transition-colors' : ''
+                    }`}
+                  >
                     <Avatar
                       fallback={msg.sender?.full_name || '?'}
                       src={msg.sender?.avatar_url || undefined}
@@ -558,14 +841,14 @@ export default function ChatPage() {
                               : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 rounded-tl-xs'
                           }`}
                         >
-                          {msg.content}
+                          {renderMessageContent(msg.content, isMe)}
                         </div>
                       )}
 
-                      {/* Attachments Rendering */}
-                      {msgAttachments.length > 0 && (
+                      {/* Attachments Files Rendering */}
+                      {files.length > 0 && (
                         <div className="space-y-2 max-w-[88%] sm:max-w-[85%]">
-                          {msgAttachments.map((att, attIdx) => {
+                          {files.map((att, attIdx) => {
                             const isImg =
                               att.type?.startsWith('image/') ||
                               /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(att.name || '')
@@ -618,6 +901,70 @@ export default function ChatPage() {
                           })}
                         </div>
                       )}
+
+                      {/* Reazioni & Azioni Rapide */}
+                      <div className={`flex flex-wrap items-center gap-1.5 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                        {/* Pill delle reazioni esistenti */}
+                        {Object.entries(reactions).map(([emoji, userIds]) => {
+                          const hasReacted = currentUser && userIds.includes(currentUser.id)
+                          return (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => handleToggleReaction(msg.id, emoji)}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+                                hasReacted
+                                  ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 shadow-xs'
+                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750'
+                              }`}
+                              title={`Reagito da ${userIds.length} utente/i`}
+                            >
+                              <span>{emoji}</span>
+                              <span className="font-semibold text-[10px]">{userIds.length}</span>
+                            </button>
+                          )
+                        })}
+
+                        {/* Barra Reazioni Rapide + Tasto Rispondi */}
+                        <div className="flex items-center gap-0.5 opacity-60 hover:opacity-100 transition-opacity">
+                          {QUICK_REACTIONS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => handleToggleReaction(msg.id, emoji)}
+                              className="h-6 w-6 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 text-xs flex items-center justify-center transition-transform hover:scale-120"
+                              title={`Reagisci con ${emoji}`}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+
+                          <button
+                            type="button"
+                            onClick={() => setActiveThreadId(msg.id)}
+                            className="h-6 px-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/60 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-medium flex items-center gap-1 transition-colors"
+                            title="Rispondi nel thread"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Rispondi</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Link "X risposte • Vedi thread" */}
+                      {replies.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveThreadId(msg.id)}
+                          className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200/60 dark:border-blue-800/60 transition-colors shadow-xs w-fit"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          <span>
+                            {replies.length} {replies.length === 1 ? 'risposta' : 'risposte'}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-normal">• Vedi thread</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 )
@@ -662,8 +1009,29 @@ export default function ChatPage() {
             </div>
           )}
 
-          {/* Input Bar */}
-          <div className="p-2.5 sm:p-3.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
+          {/* Autocomplete Popup Menzioni per Input Principale */}
+          {mentionQuery !== null && mentionTarget === 'main' && mentionCandidates.length > 0 && (
+            <div className="absolute bottom-16 left-4 z-30 w-64 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden py-1 max-h-48 overflow-y-auto animate-in fade-in slide-in-from-bottom-2 duration-150">
+              <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 border-b border-slate-100 dark:border-slate-700/60">
+                <AtSign className="h-3 w-3" />
+                <span>Menziona membro</span>
+              </div>
+              {mentionCandidates.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => handleSelectMention(c.name)}
+                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 dark:hover:bg-slate-700 flex items-center justify-between transition-colors"
+                >
+                  <span className="font-medium text-slate-800 dark:text-slate-200">@{c.name}</span>
+                  <span className="text-[10px] text-slate-400 uppercase">{c.role}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input Bar Principale */}
+          <div className="p-2.5 sm:p-3.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 relative">
             <form
               onSubmit={handleSendMessage}
               className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 sm:p-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner"
@@ -680,11 +1048,14 @@ export default function ChatPage() {
                 <Paperclip className="h-4 w-4" />
               </Button>
               <input
+                ref={mainInputRef}
                 type="text"
                 value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
+                onChange={(e) => handleInputChangeWithMentions(e.target.value, 'main')}
                 placeholder={
-                  pendingFiles.length > 0 ? 'Aggiungi una didascalia...' : `Scrivi in #${activeChannel}...`
+                  pendingFiles.length > 0
+                    ? 'Aggiungi una didascalia...'
+                    : `Scrivi in #${activeChannel}... (digita @ per menzionare)`
                 }
                 className="flex-1 text-xs sm:text-sm focus:outline-none bg-transparent px-2 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 min-w-0"
                 disabled={!currentUser || isUploading}
@@ -710,6 +1081,198 @@ export default function ChatPage() {
             </form>
           </div>
         </div>
+
+        {/* Right: Thread Lateral Panel (360px desktop, full drawer mobile) */}
+        {activeThreadParent && (
+          <div className="fixed inset-0 z-40 md:static md:z-auto w-full md:w-[360px] lg:w-[380px] shrink-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full shadow-2xl md:shadow-none animate-in slide-in-from-right-4 duration-200">
+            {/* Thread Header */}
+            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur shrink-0">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Thread</h3>
+                <span className="text-xs text-slate-400">#{activeChannel}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveThreadId(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                aria-label="Chiudi thread"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Thread Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 min-h-0">
+              {/* Messaggio Padre Originale */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Avatar
+                    fallback={activeThreadParent.sender?.full_name || '?'}
+                    src={activeThreadParent.sender?.avatar_url || undefined}
+                    className="h-6 w-6 text-[10px]"
+                  />
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">
+                    {activeThreadParent.sender?.full_name || 'Utente'}
+                  </span>
+                  <span className="text-[10px] text-slate-400 ml-auto">
+                    {formatDate(activeThreadParent.created_at)}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed break-words">
+                  {renderMessageContent(activeThreadParent.content, false)}
+                </div>
+                {/* Reazioni padre */}
+                <div className="flex flex-wrap items-center gap-1 pt-1">
+                  {Object.entries(extractMessageMeta(activeThreadParent).reactions).map(([emoji, userIds]) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => handleToggleReaction(activeThreadParent.id, emoji)}
+                      className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                    >
+                      <span>{emoji}</span>
+                      <span className="font-semibold">{userIds.length}</span>
+                    </button>
+                  ))}
+                  {QUICK_REACTIONS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => handleToggleReaction(activeThreadParent.id, emoji)}
+                      className="h-5 w-5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[11px] flex items-center justify-center"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Separatore Risposte */}
+              <div className="flex items-center gap-2 my-2">
+                <div className="h-px bg-slate-200 dark:border-slate-800 flex-1" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {activeThreadReplies.length}{' '}
+                  {activeThreadReplies.length === 1 ? 'Risposta' : 'Risposte'}
+                </span>
+                <div className="h-px bg-slate-200 dark:border-slate-800 flex-1" />
+              </div>
+
+              {/* Elenco Risposte del Thread */}
+              {activeThreadReplies.length > 0 ? (
+                activeThreadReplies.map((reply) => {
+                  const isMe = reply.sender_id === currentUser?.id
+                  const { reactions: replyReactions } = extractMessageMeta(reply)
+                  return (
+                    <div key={reply.id} className="flex items-start gap-2.5">
+                      <Avatar
+                        fallback={reply.sender?.full_name || '?'}
+                        src={reply.sender?.avatar_url || undefined}
+                        className="h-6 w-6 text-[10px] shrink-0 mt-0.5"
+                      />
+                      <div className="flex flex-col flex-1 space-y-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                            {isMe ? 'Tu' : reply.sender?.full_name || 'Utente'}
+                          </span>
+                          <span className="text-[9px] text-slate-400">{formatDate(reply.created_at)}</span>
+                        </div>
+                        <div
+                          className={`text-xs p-2 rounded-xl shadow-xs leading-relaxed break-words ${
+                            isMe
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          {renderMessageContent(reply.content, isMe)}
+                        </div>
+
+                        {/* Reazioni risposta */}
+                        <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                          {Object.entries(replyReactions).map(([emoji, userIds]) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => handleToggleReaction(reply.id, emoji)}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                            >
+                              <span>{emoji}</span>
+                              <span className="font-semibold">{userIds.length}</span>
+                            </button>
+                          ))}
+                          {QUICK_REACTIONS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => handleToggleReaction(reply.id, emoji)}
+                              className="h-5 w-5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[10px] flex items-center justify-center"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="text-center py-6 text-xs text-slate-400">
+                  Nessuna risposta in questo thread. Sii il primo a rispondere!
+                </div>
+              )}
+              <div ref={threadEndRef} />
+            </div>
+
+            {/* Autocomplete Popup Menzioni per Thread */}
+            {mentionQuery !== null && mentionTarget === 'thread' && mentionCandidates.length > 0 && (
+              <div className="absolute bottom-16 right-4 z-30 w-64 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden py-1 max-h-44 overflow-y-auto animate-in fade-in slide-in-from-bottom-2 duration-150">
+                <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 border-b border-slate-100 dark:border-slate-700/60">
+                  <AtSign className="h-3 w-3" />
+                  <span>Menziona membro</span>
+                </div>
+                {mentionCandidates.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => handleSelectMention(c.name)}
+                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 dark:hover:bg-slate-700 flex items-center justify-between transition-colors"
+                  >
+                    <span className="font-medium text-slate-800 dark:text-slate-200">@{c.name}</span>
+                    <span className="text-[10px] text-slate-400 uppercase">{c.role}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Thread Input Form */}
+            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+              <form onSubmit={handleSendThreadReply} className="flex items-center gap-2">
+                <input
+                  ref={threadInputRef}
+                  type="text"
+                  value={threadInputMessage}
+                  onChange={(e) => handleInputChangeWithMentions(e.target.value, 'thread')}
+                  placeholder="Rispondi al thread... (@ per menzionare)"
+                  className="flex-1 text-xs focus:outline-none bg-slate-50 dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 min-w-0"
+                  disabled={isSendingThreadReply || !currentUser}
+                />
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!threadInputMessage.trim() || isSendingThreadReply || !currentUser}
+                  className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3 rounded-lg shrink-0 text-xs gap-1"
+                >
+                  {isSendingThreadReply ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <CornerDownRight className="h-3.5 w-3.5" />
+                  )}
+                  <span className="hidden sm:inline">Invia</span>
+                </Button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Image Preview Zoom Modal */}

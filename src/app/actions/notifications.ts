@@ -90,7 +90,12 @@ export async function notifyFileUploadAction(fileName: string, isFolder: boolean
   }
 }
 
-export async function notifyChatMessageAction(channel: string, content: string, senderName?: string) {
+export async function notifyChatMessageAction(
+  channel: string,
+  content: string,
+  senderName?: string,
+  options?: { isThreadReply?: boolean; mentionedNames?: string[] }
+) {
   try {
     let senderUserId: string | undefined
     let userName = senderName
@@ -110,11 +115,25 @@ export async function notifyChatMessageAction(channel: string, content: string, 
     }
     const channelLabel = `#${channel}`
 
+    const telegramTitle = options?.mentionedNames && options.mentionedNames.length > 0
+      ? `🔔 <b>Menzione in Chat (${escapeHtml(channelLabel)})</b>`
+      : options?.isThreadReply
+      ? `💬 <b>Risposta al Thread in Chat (${escapeHtml(channelLabel)})</b>`
+      : `💬 <b>Nuovo Messaggio in Chat (${escapeHtml(channelLabel)})</b>`
+
     const telegramMessage =
-      `💬 <b>Nuovo Messaggio in Chat (${escapeHtml(channelLabel)})</b>\n\n` +
+      `${telegramTitle}\n\n` +
       `👤 <b>Da:</b> ${escapeHtml(userName)}\n` +
       `📝 <b>Messaggio:</b> <i>"${escapeHtml(content)}"</i>\n\n` +
       `🔗 <a href="https://aiutiamoci.cloud/chat">Apri la Chat su Aiutiamoci</a>`
+
+    // Titolo Web Push personalizzato per menzioni o risposte a thread
+    let pushTitle = `💬 #${channel} — ${userName}`
+    if (options?.mentionedNames && options.mentionedNames.length > 0) {
+      pushTitle = `🔔 ${userName} ti ha menzionato in #${channel}`
+    } else if (options?.isThreadReply) {
+      pushTitle = `💬 Risposta al thread in #${channel} — ${userName}`
+    }
 
     // Esecuzione concorrente: invio Web Push alle altre sessioni + invio su canale Telegram
     const [telegramResult, pushResult] = await Promise.allSettled([
@@ -124,7 +143,7 @@ export async function notifyChatMessageAction(channel: string, content: string, 
         if (recipients.length === 0) return { delivered: 0 }
 
         const pushPayload = {
-          title: `💬 #${channel} — ${userName}`,
+          title: pushTitle,
           body: content,
           url: `/chat?channel=${encodeURIComponent(channel)}`,
           tag: `chat-${channel}`,
