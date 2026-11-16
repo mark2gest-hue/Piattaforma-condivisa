@@ -85,3 +85,107 @@ export function sendDesktopNotification(
     })
   }
 }
+
+/**
+ * Converte una stringa base64url in un Uint8Array per applicationServerKey VAPID.
+ */
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i)
+  }
+  return outputArray
+}
+
+/**
+ * Converte un ArrayBuffer in stringa base64url.
+ */
+function arrayBufferToBase64Url(buffer: ArrayBuffer | null): string {
+  if (!buffer) return ''
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/**
+ * Verifica lo stato attuale del supporto e della sottoscrizione Web Push.
+ */
+export async function getWebPushStatus(): Promise<'unsupported' | 'denied' | 'subscribed' | 'prompt'> {
+  if (typeof window === 'undefined') return 'unsupported'
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    return 'unsupported'
+  }
+
+  if (Notification.permission === 'denied') {
+    return 'denied'
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.getRegistration('/sw.js')
+    if (reg) {
+      const sub = await reg.pushManager.getSubscription()
+      if (sub) {
+        return 'subscribed'
+      }
+    }
+  } catch (e) {
+    console.warn('[notifications] Errore verifica push status:', e)
+  }
+
+  return 'prompt'
+}
+
+/**
+ * Registra il Service Worker /sw.js, richiede i permessi di notifica
+ * e sottoscrive il browser al server VAPID.
+ */
+export async function registerWebPushSubscription(vapidPublicKey: string): Promise<{
+  endpoint: string
+  keys: { p256dh: string; auth: string }
+  userAgent: string
+}> {
+  if (typeof window === 'undefined') {
+    throw new Error('Ambiente browser non disponibile')
+  }
+
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    throw new Error('Web Push non supportato su questo browser')
+  }
+
+  const permission = await Notification.requestPermission()
+  if (permission !== 'granted') {
+    throw new Error('Permesso notifiche non concesso')
+  }
+
+  // Registrazione Service Worker
+  const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+  await navigator.serviceWorker.ready
+
+  const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey)
+
+  let subscription = await reg.pushManager.getSubscription()
+  if (!subscription) {
+    subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: applicationServerKey as any,
+    })
+  }
+
+  const p256dhKey = subscription.getKey('p256dh')
+  const authKey = subscription.getKey('auth')
+
+  const p256dh = arrayBufferToBase64Url(p256dhKey)
+  const auth = arrayBufferToBase64Url(authKey)
+
+  return {
+    endpoint: subscription.endpoint,
+    keys: { p256dh, auth },
+    userAgent: navigator.userAgent,
+  }
+}

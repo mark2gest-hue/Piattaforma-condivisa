@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Navbar } from '@/components/layout/navbar'
 
@@ -19,6 +20,8 @@ export function DashboardShell({
   avatarUrl,
   children,
 }: DashboardShellProps) {
+  const pathname = usePathname()
+  const isFullBleedChat = pathname?.startsWith('/chat')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarPinned, setIsSidebarPinned] = useState(false)
 
@@ -63,7 +66,13 @@ export function DashboardShell({
           avatarUrl={avatarUrl}
           onToggleMobileMenu={() => setIsMobileMenuOpen((prev) => !prev)}
         />
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main
+          className={
+            isFullBleedChat
+              ? 'flex-1 p-0 overflow-hidden w-full h-[calc(100dvh-4rem)]'
+              : 'flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto'
+          }
+        >
           {children}
         </main>
       </div>

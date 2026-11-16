@@ -16,6 +16,9 @@ import {
   Image as ImageIcon,
   Download,
   Eye,
+  Bell,
+  BellRing,
+  Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -23,8 +26,18 @@ import { Badge } from '@/components/ui/badge'
 import { formatDate, formatBytes } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Message, Profile } from '@/types/index'
-import { requestNotificationPermission, sendDesktopNotification } from '@/lib/notifications'
-import { notifyChatMessageAction } from '@/app/actions/notifications'
+import {
+  requestNotificationPermission,
+  sendDesktopNotification,
+  getWebPushStatus,
+  registerWebPushSubscription,
+} from '@/lib/notifications'
+import {
+  notifyChatMessageAction,
+  getVapidPublicKeyAction,
+  savePushSubscriptionAction,
+  sendTestPushNotificationAction,
+} from '@/app/actions/notifications'
 
 type MessageWithSender = Message & { sender?: Profile }
 
@@ -54,6 +67,11 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true)
   const [showMobileChannels, setShowMobileChannels] = useState(false)
 
+  // Web Push States
+  const [pushStatus, setPushStatus] = useState<'loading' | 'unsupported' | 'denied' | 'subscribed' | 'prompt'>('loading')
+  const [isSendingTestPush, setIsSendingTestPush] = useState(false)
+  const [testPushSent, setTestPushSent] = useState(false)
+
   // Attachment States
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -80,13 +98,38 @@ export default function ChatPage() {
     return () => clearTimeout(timer)
   }, [messages, activeChannel])
 
+  // Check Web Push Status on mount
+  useEffect(() => {
+    const checkPush = async () => {
+      try {
+        const status = await getWebPushStatus()
+        setPushStatus(status)
+      } catch {
+        setPushStatus('unsupported')
+      }
+    }
+    checkPush()
+  }, [])
+
+  // Auto-select channel from URL query parameter if present
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const paramChannel = new URLSearchParams(window.location.search).get('channel')
+      if (paramChannel && CHANNELS.some((c) => c.name === paramChannel)) {
+        setActiveChannel(paramChannel)
+      }
+    }
+  }, [])
+
   // Fetch initial user, team members, and messages for channel
   useEffect(() => {
     const initChat = async () => {
       setLoading(true)
       requestNotificationPermission()
-      
-      const { data: { user } } = await supabase.auth.getUser()
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -122,13 +165,13 @@ export default function ChatPage() {
         },
         (payload) => {
           const newMessage = payload.new as Message
-          const senderProfile = teamMembers.find(p => p.id === newMessage.sender_id)
-          
+          const senderProfile = teamMembers.find((p) => p.id === newMessage.sender_id)
+
           const messageWithSender: MessageWithSender = {
             ...newMessage,
             sender: senderProfile,
           }
-          
+
           setMessages((prev) => [...prev, messageWithSender])
 
           if (currentUser && newMessage.sender_id !== currentUser.id) {
@@ -156,6 +199,48 @@ export default function ChatPage() {
 
     if (data && !error) {
       setMessages(data)
+    }
+  }
+
+  const handleEnablePush = async () => {
+    try {
+      setPushStatus('loading')
+      const resKey = await getVapidPublicKeyAction()
+      if (!resKey.success || !resKey.publicKey) {
+        alert('Errore configurazione VAPID: ' + (resKey.error || 'chiave pubblica non disponibile'))
+        setPushStatus('prompt')
+        return
+      }
+
+      const sub = await registerWebPushSubscription(resKey.publicKey)
+      const saveRes = await savePushSubscriptionAction(sub)
+      if (saveRes.success) {
+        setPushStatus('subscribed')
+      } else {
+        alert('Errore registrazione sottoscrizione: ' + saveRes.error)
+        setPushStatus('prompt')
+      }
+    } catch (err: any) {
+      console.error('Attivazione Web Push fallita:', err)
+      const current = await getWebPushStatus()
+      setPushStatus(current)
+    }
+  }
+
+  const handleSendTestPush = async () => {
+    try {
+      setIsSendingTestPush(true)
+      const res = await sendTestPushNotificationAction()
+      if (res.success) {
+        setTestPushSent(true)
+        setTimeout(() => setTestPushSent(false), 3000)
+      } else {
+        alert(res.error || 'Impossibile inviare la notifica test')
+      }
+    } catch (err: any) {
+      alert('Errore invio notifica test: ' + err.message)
+    } finally {
+      setIsSendingTestPush(false)
     }
   }
 
@@ -236,9 +321,11 @@ export default function ChatPage() {
     if (error) {
       console.error('Error sending message:', error)
     } else {
-      const notifyText = messageContent || (uploadedAttachments.length > 0 ? `📎 Ha inviato ${uploadedAttachments.length} allegato/i` : '')
+      const notifyText =
+        messageContent ||
+        (uploadedAttachments.length > 0 ? `📎 Ha inviato ${uploadedAttachments.length} allegato/i` : '')
       notifyChatMessageAction(activeChannel, notifyText, currentUser.full_name).catch((err) =>
-        console.error('Telegram chat notify error:', err)
+        console.error('Chat push & Telegram notify error:', err)
       )
     }
   }
@@ -246,7 +333,7 @@ export default function ChatPage() {
   const currentChannelObj = CHANNELS.find((c) => c.name === activeChannel) || CHANNELS[0]
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-8rem)] md:h-[calc(100vh-8.5rem)] space-y-3 sm:space-y-4 min-h-0">
+    <div className="flex flex-col h-full w-full min-h-0 overflow-hidden bg-white dark:bg-slate-900">
       {/* Hidden File Input for Attachments */}
       <input
         type="file"
@@ -257,39 +344,8 @@ export default function ChatPage() {
         className="hidden"
       />
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 shrink-0">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
-            Chat di Team Realtime
-          </h1>
-          <p className="hidden sm:block text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Comunicazione istantanea sincronizzata via Supabase Realtime per i membri del team.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 justify-between sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowMobileChannels(true)}
-            className="md:hidden text-xs h-8 gap-1.5 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs"
-          >
-            <Menu className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-            <span>#{activeChannel}</span>
-            <ChevronRight className="h-3 w-3 text-slate-400" />
-          </Button>
-          <Badge variant="success" className="py-0.5 sm:py-1 px-2.5 sm:px-3 text-[11px] sm:text-xs flex items-center gap-1.5 w-fit">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            Realtime Connesso
-          </Badge>
-        </div>
-      </div>
-
       {/* Main Chat Interface */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 gap-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden relative">
-        
+      <div className="flex-1 min-h-0 flex flex-row overflow-hidden relative w-full h-full">
         {/* Mobile Drawer Backdrop */}
         {showMobileChannels && (
           <div
@@ -301,8 +357,8 @@ export default function ChatPage() {
         {/* Left: Channels & Team List */}
         <div
           className={`
-            fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 p-4 flex flex-col justify-between shadow-2xl transition-transform duration-200 ease-in-out
-            md:static md:z-auto md:w-auto md:shadow-none md:translate-x-0 md:flex md:col-span-4 lg:col-span-3 md:border-r border-slate-200 dark:border-slate-800 md:bg-slate-50/50 md:dark:bg-slate-900/60 overflow-y-auto min-h-0 h-full
+            fixed inset-y-0 left-0 z-50 w-72 h-[100dvh] bg-white dark:bg-slate-900 p-4 flex flex-col justify-between shadow-2xl transition-transform duration-200 ease-in-out
+            md:static md:z-auto md:w-[240px] lg:w-[250px] md:h-full md:shadow-none md:translate-x-0 md:flex md:shrink-0 md:border-r border-slate-200 dark:border-slate-800 md:bg-slate-50/50 md:dark:bg-slate-900/60 overflow-y-auto min-h-0
             ${showMobileChannels ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           `}
         >
@@ -352,10 +408,19 @@ export default function ChatPage() {
             </div>
             <div className="space-y-2 text-xs">
               {teamMembers.map((member) => (
-                <div key={member.id} className="flex items-center justify-between px-2 py-1.5 bg-white dark:bg-slate-800/80 rounded-lg border border-slate-200/60 dark:border-slate-700/60 shadow-xs">
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between px-2 py-1.5 bg-white dark:bg-slate-800/80 rounded-lg border border-slate-200/60 dark:border-slate-700/60 shadow-xs"
+                >
                   <div className="flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${member.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
-                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">{member.full_name}</span>
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        member.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                      }`}
+                    />
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">
+                      {member.full_name}
+                    </span>
                   </div>
                   <Badge
                     variant={member.role === 'dev' ? 'purple' : member.role === 'admin' ? 'destructive' : 'info'}
@@ -373,9 +438,9 @@ export default function ChatPage() {
         </div>
 
         {/* Right: Message Stream */}
-        <div className="md:col-span-8 lg:col-span-9 flex flex-col h-full min-h-0 bg-slate-50/20 dark:bg-slate-950/40 relative overflow-hidden">
+        <div className="flex-1 min-w-0 h-full flex flex-col bg-slate-50/20 dark:bg-slate-950/40 relative overflow-hidden">
           {/* Channel Header */}
-          <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur shrink-0 z-10">
+          <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur shrink-0 z-10 gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <button
                 onClick={() => setShowMobileChannels(true)}
@@ -389,13 +454,74 @@ export default function ChatPage() {
                   <Hash className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
                   <span className="truncate">{currentChannelObj.name}</span>
                 </h2>
-                <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">{currentChannelObj.desc}</p>
+                <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">
+                  {currentChannelObj.desc}
+                </p>
               </div>
+            </div>
+
+            {/* Right Header Actions: Web Push Button & Realtime Badge */}
+            <div className="flex items-center gap-2 shrink-0">
+              {pushStatus === 'subscribed' ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isSendingTestPush}
+                  onClick={handleSendTestPush}
+                  className="text-xs h-8 px-2.5 gap-1.5 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors shadow-xs"
+                  title="Notifiche Web Push attive. Clicca per inviare una notifica test su questo dispositivo."
+                >
+                  {isSendingTestPush ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : testPushSent ? (
+                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                  ) : (
+                    <BellRing className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {testPushSent ? 'Notifica Inviata!' : isSendingTestPush ? 'Invio test...' : 'Push Attive · Test'}
+                  </span>
+                  <span className="sm:hidden">{testPushSent ? 'Inviata!' : 'Push OK'}</span>
+                </Button>
+              ) : pushStatus === 'prompt' ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEnablePush}
+                  className="text-xs h-8 px-2.5 gap-1.5 border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 bg-blue-50/70 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors shadow-xs"
+                  title="Attiva le notifiche Web Push per ricevere avvisi istantanei su questo dispositivo."
+                >
+                  <Bell className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>Attiva Push</span>
+                </Button>
+              ) : pushStatus === 'denied' ? (
+                <span
+                  className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-1 rounded bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800"
+                  title="I permessi per le notifiche sono bloccati nelle impostazioni del browser"
+                >
+                  <Bell className="h-3 w-3" />
+                  <span className="hidden sm:inline">Push bloccate</span>
+                </span>
+              ) : null}
+
+              <Badge
+                variant="success"
+                className="py-0.5 sm:py-1 px-2.5 sm:px-3 text-[11px] sm:text-xs flex items-center gap-1.5 w-fit"
+              >
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="hidden sm:inline">Realtime Connesso</span>
+                <span className="sm:hidden">Realtime</span>
+              </Badge>
             </div>
           </div>
 
           {/* Messages List */}
-          <div ref={chatContainerRef} className="p-3 sm:p-4 space-y-3 sm:space-y-4 flex-1 overflow-y-auto min-h-0 overscroll-contain">
+          <div
+            ref={chatContainerRef}
+            className="p-3 sm:p-4 space-y-3 sm:space-y-4 flex-1 overflow-y-auto min-h-0 overscroll-contain"
+          >
             {loading ? (
               <div className="h-full flex items-center justify-center">
                 <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
@@ -403,7 +529,10 @@ export default function ChatPage() {
             ) : messages.length > 0 ? (
               messages.map((msg) => {
                 const isMe = msg.sender_id === currentUser?.id
-                const msgAttachments = (msg.attachments && Array.isArray(msg.attachments)) ? (msg.attachments as unknown as ChatAttachment[]) : []
+                const msgAttachments =
+                  msg.attachments && Array.isArray(msg.attachments)
+                    ? (msg.attachments as unknown as ChatAttachment[])
+                    : []
 
                 return (
                   <div key={msg.id} className={`flex items-start gap-2.5 sm:gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
@@ -422,11 +551,13 @@ export default function ChatPage() {
 
                       {/* Text Bubble */}
                       {msg.content && (
-                        <div className={`text-xs sm:text-sm p-2.5 sm:p-3 rounded-2xl shadow-xs leading-relaxed max-w-[88%] sm:max-w-[85%] break-words ${
-                          isMe 
-                            ? 'bg-blue-600 text-white rounded-tr-xs' 
-                            : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 rounded-tl-xs'
-                        }`}>
+                        <div
+                          className={`text-xs sm:text-sm p-2.5 sm:p-3 rounded-2xl shadow-xs leading-relaxed max-w-[88%] sm:max-w-[85%] break-words ${
+                            isMe
+                              ? 'bg-blue-600 text-white rounded-tr-xs'
+                              : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 rounded-tl-xs'
+                          }`}
+                        >
                           {msg.content}
                         </div>
                       )}
@@ -435,7 +566,9 @@ export default function ChatPage() {
                       {msgAttachments.length > 0 && (
                         <div className="space-y-2 max-w-[88%] sm:max-w-[85%]">
                           {msgAttachments.map((att, attIdx) => {
-                            const isImg = att.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(att.name || '')
+                            const isImg =
+                              att.type?.startsWith('image/') ||
+                              /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(att.name || '')
                             return (
                               <div key={attIdx} className="overflow-hidden rounded-xl">
                                 {isImg ? (
@@ -471,7 +604,9 @@ export default function ChatPage() {
                                         <FileText className="h-4 w-4" />
                                       </div>
                                       <div className="flex flex-col min-w-0 text-left">
-                                        <span className="text-xs font-semibold truncate max-w-[180px] sm:max-w-[260px]">{att.name}</span>
+                                        <span className="text-xs font-semibold truncate max-w-[180px] sm:max-w-[260px]">
+                                          {att.name}
+                                        </span>
                                         <span className="text-[10px] opacity-75">{formatBytes(att.size || 0)}</span>
                                       </div>
                                     </div>
@@ -501,9 +636,18 @@ export default function ChatPage() {
               {pendingFiles.map((file, idx) => {
                 const isImg = file.type.startsWith('image/')
                 return (
-                  <div key={idx} className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-xl text-xs shrink-0 shadow-xs">
-                    {isImg ? <ImageIcon className="h-3.5 w-3.5 text-blue-500 shrink-0" /> : <FileText className="h-3.5 w-3.5 text-amber-500 shrink-0" />}
-                    <span className="truncate max-w-[120px] font-medium text-slate-800 dark:text-slate-200">{file.name}</span>
+                  <div
+                    key={idx}
+                    className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-xl text-xs shrink-0 shadow-xs"
+                  >
+                    {isImg ? (
+                      <ImageIcon className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                    ) : (
+                      <FileText className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                    )}
+                    <span className="truncate max-w-[120px] font-medium text-slate-800 dark:text-slate-200">
+                      {file.name}
+                    </span>
                     <span className="text-[10px] text-slate-400 font-mono">({formatBytes(file.size)})</span>
                     <button
                       type="button"
@@ -519,7 +663,7 @@ export default function ChatPage() {
           )}
 
           {/* Input Bar */}
-          <div className="p-2.5 sm:p-3.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
+          <div className="p-2.5 sm:p-3.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
             <form
               onSubmit={handleSendMessage}
               className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 sm:p-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner"
@@ -539,7 +683,9 @@ export default function ChatPage() {
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder={pendingFiles.length > 0 ? `Aggiungi una didascalia...` : `Scrivi in #${activeChannel}...`}
+                placeholder={
+                  pendingFiles.length > 0 ? 'Aggiungi una didascalia...' : `Scrivi in #${activeChannel}...`
+                }
                 className="flex-1 text-xs sm:text-sm focus:outline-none bg-transparent px-2 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 min-w-0"
                 disabled={!currentUser || isUploading}
               />
@@ -572,7 +718,10 @@ export default function ChatPage() {
           className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
           onClick={() => setPreviewModalUrl(null)}
         >
-          <div className="relative max-w-4xl max-h-[90vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative max-w-4xl max-h-[90vh] flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setPreviewModalUrl(null)}
               className="absolute -top-10 right-0 p-1.5 rounded-full bg-slate-800 text-white hover:bg-slate-700 transition-colors shadow-lg"
@@ -591,4 +740,3 @@ export default function ChatPage() {
     </div>
   )
 }
-

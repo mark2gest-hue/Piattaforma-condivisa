@@ -1,12 +1,16 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-16 20:22
+Ultimo aggiornamento: 2026-11-16 20:54
 Stato corrente:
-- **Fix Dispense Corso Base (`AI Start`) vs Corso `AI Pro` COMPLETATO & DEPLOYATO (`v2.3.0 • Build #111`, commit `2971bdf`)**:
-  - Risolto il disallineamento tra il programma del Corso Base e le dispense mostrate in Academy: ora ciascun corso carica le proprie dispense dedicate.
-- **ROADMAP IN VALUTAZIONE — Allineamento Chat & Workspace a Slack (5 Fasi)**:
-  - *Fase 1*: PWA (`manifest.json` + `sw.js`) + Notifiche Web Push reali (VAPID + `push_subscriptions` su Supabase) in sostituzione di Telegram, con UX `/chat` mobile-first full-screen per iPhone/iPad.
-  - *Fase 2*: **Layout Full-Screen Stile Slack Desktop/Mobile & Thread**: rimozione `max-w-7xl` e `p-4 md:p-8` in `dashboard-shell.tsx` per `/chat` (full-bleed a tutta altezza e larghezza), header unico integrato, sidebar canali fissa a `240px`, timeline messaggi centrale `flex-1`, pannello Thread destro a `360px` on-demand, thread di risposta (`parent_message_id`), `@menzioni` con autocomplete, badge non letti (`last_read_at`) e reazioni emoji rapide.
+- **Fase 1 Chat & Workspace Stile Slack COMPLETATA & DEPLOYATA (`v2.3.0 • Build #112`)**:
+  - Implementata architettura PWA con `public/manifest.json` (`AIutiamoci Workspace`, display standalone) e `public/sw.js` (gestione ciclo di vita, notifiche ed evento click con focus/navigate finestra).
+  - Web Push VAPID nativo zero-dipendenze (`src/lib/web-push.ts`) con RFC 8291 (`aes128gcm`) e chiavi P-256 (ES256), migrazione database Supabase `public.push_subscriptions` e fallback resiliente locale `.push-subscriptions.json`.
+  - Nuove Server Action (`getVapidPublicKeyAction`, `savePushSubscriptionAction`, `sendTestPushNotificationAction`) e invio concorrente push + telegram in `notifyChatMessageAction`.
+  - Layout `/chat` full-bleed ergonomico (`src/components/layout/dashboard-shell.tsx` a `h-[calc(100dvh-4rem)]`, sidebar canali fissa a 250px su desktop, drawer 100dvh su mobile, safe-area inset su iPhone/iPad e pulsante interattivo Web Push nel Channel Header).
+  - Esclusione deterministica di `manifest.json` e `sw.js` dal Middleware Next.js e Supabase per prevenire redirect 307 in produzione.
+- **ROADMAP ALLINEAMENTO CHAT & WORKSPACE A SLACK (Fasi 2-5)**:
+  - *Fase 1*: ✅ COMPLETATA & DEPLOYATA (Build #112)
+  - *Fase 2*: **Thread di Risposta & Reazioni Emoji**: pannello Thread destro a `360px` on-demand (`parent_message_id`), `@menzioni` con autocomplete, badge non letti (`last_read_at`) e reazioni emoji rapide.
   - *Fase 3*: **Ruolo `collaborator` (Guest stile Slack)** + isolamento `channel_members`/`project_members` (Middleware + Sidebar + RLS Supabase: accesso solo a `/chat`, `/lavori`, `/files`, `/videocall` sui propri progetti; blocco di `/corsi`, `/clienti`, `/posta`, `/cervello`, `/growth-studio`, `/workshop-agenti`), DM 1-a-1, canali dinamici su tabella `channels` (sostituendo i 6 `CHANNELS` fissi in `chat/page.tsx`) e ricerca globale (`⌘K`).
   - *Fase 4*: Slash command (`/task`, `/lead`, `/ai`) e Webhook in entrata `/api/webhooks/chat` (HMAC) da `n8n` / Stripe / VPS.
   - *Fase 5*: **Inbox Assistenza Nativa (Studenti & Aziende B2B)**: tabelle `support_tickets` + `support_messages` (Supabase Realtime + RLS), auto-routing per categoria (`Tecnico/Piattaforma` -> Marco/Stefano, `Didattica/Moduli` -> docente, `Commerciale/B2B` -> Lorenzo) con `assigned_to` automatico, widget "Chiedi Assistenza" in `/corsi` e pagine B2B con contesto automatico (utente, corso, modulo, azienda), gestione diretta a 2 colonne in `/assistenza` (stati Aperto/In attesa/Risolto, filtro "I miei ticket" vs "Tutti", riassegnazione 1-click), notifiche Web Push mirate al solo assegnatario e avviso email automatico allo studente offline (sostituendo il giro Telegram senza installare Chatwoot).
