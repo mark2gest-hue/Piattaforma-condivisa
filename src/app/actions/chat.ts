@@ -3,6 +3,7 @@
 import fs from 'fs'
 import path from 'path'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { generateNvidiaCompletion } from '@/lib/nvidia'
 
 export interface ChatMetadataItem {
   type: '__chat_meta__'
@@ -23,14 +24,7 @@ export interface CustomChannelItem {
 const CHANNELS_LOCAL_FILE = path.join(process.cwd(), '.chat-channels.json')
 const COLLABORATORS_LOCAL_FILE = path.join(process.cwd(), '.chat-collaborators.json')
 
-const SYSTEM_CHANNEL_NAMES = [
-  'generale',
-  'progetti',
-  'marketing-social',
-  'corsi-academy',
-  'commerciale-b2b',
-  'idee-innovazione',
-]
+const SYSTEM_CHANNEL_NAMES = ['generale']
 
 function readLocalCollaboratorIds(): string[] {
   try {
@@ -419,6 +413,24 @@ export async function inviteCollaboratorAction(input: {
       return { success: false, error: 'La password temporanea deve contenere almeno 8 caratteri' }
     }
 
+    // Guardia Anti-Sovrascrittura: impedisce di alterare account di membri interni del team
+    const { data: existingProfile } = await (admin.from('profiles') as any)
+      .select('id, role')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (existingProfile) {
+      const isAlreadyCollab =
+        existingProfile.role === 'collaborator' ||
+        localCollaborators.includes(existingProfile.id)
+      if (!isAlreadyCollab) {
+        return {
+          success: false,
+          error: 'Questa email appartiene già a un membro interno del team',
+        }
+      }
+    }
+
     let targetUserId: string | null = null
 
     // 1. Creazione utente su Supabase Auth
@@ -436,11 +448,21 @@ export async function inviteCollaboratorAction(input: {
     if (createRes.data?.user) {
       targetUserId = createRes.data.user.id
     } else if (createRes.error) {
-      // Se l'utente esiste già, recuperiamo il suo ID
+      // Se l'utente esiste già, verifichiamo che non sia un membro interno prima di aggiornare
       try {
         const { data: usersList } = await admin.auth.admin.listUsers({ perPage: 1000 })
         const existing = usersList?.users?.find((u) => u.email?.toLowerCase() === email)
         if (existing) {
+          const isCollabUser =
+            existing.user_metadata?.role === 'collaborator' ||
+            localCollaborators.includes(existing.id)
+          if (!isCollabUser && existingProfile && existingProfile.role !== 'collaborator') {
+            return {
+              success: false,
+              error: 'Questa email appartiene già a un membro interno del team',
+            }
+          }
+
           targetUserId = existing.id
           await admin.auth.admin.updateUserById(existing.id, {
             password: pwd,
@@ -666,6 +688,208 @@ export async function changeOwnPasswordAction(input: {
     return { success: true }
   } catch (err: any) {
     console.error('[changeOwnPasswordAction] Error:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+/**
+ * Esegue uno slash command (/task, /lead, /ai) direttamente all'interno della chat.
+ */
+export async function executeSlashCommandAction(input: {
+  channel: string
+  commandText: string
+}) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Non autorizzato' }
+    }
+
+    const admin = createAdminClient()
+    const { data: profile } = await (admin.from('profiles') as any)
+      .select('role, full_name')
+      .eq('id', user.id)
+      .single()
+
+    const localCollaborators = readLocalCollaboratorIds()
+    const isCollaborator =
+      user.user_metadata?.role === 'collaborator' ||
+      localCollaborators.includes(user.id) ||
+      profile?.role === 'collaborator'
+
+    const effectiveRole = isCollaborator
+      ? 'collaborator'
+      : profile?.role || user.user_metadata?.role || 'member'
+
+    const raw = input.commandText.trim()
+    const cmd = raw.split(/\s+/)[0].toLowerCase()
+    const arg = raw.slice(cmd.length).trim()
+
+    // 1. Comando /task: crea attività nel Kanban (/lavori)
+    if (cmd === '/task') {
+      if (!arg) {
+        return {
+          success: false,
+          error: "Specificare il titolo dell'attività. Es: /task Creare landing page per PMI | Descrizione",
+        }
+      }
+
+      const parts = arg.split('|').map((s) => s.trim())
+      const title = parts[0]
+      const description = parts.length > 1 ? parts.slice(1).join(' | ') : null
+
+      const { data: taskData, error: taskError } = await (admin.from('tasks') as any)
+        .insert({
+          title,
+          description,
+          status: 'todo',
+          priority: 'medium',
+          created_by: user.id,
+        })
+        .select('id')
+        .single()
+
+      if (taskError) {
+        return { success: false, error: `Errore creazione task: ${taskError.message}` }
+      }
+
+      await (admin.from('messages') as any).insert({
+        channel: input.channel,
+        sender_id: user.id,
+        is_system: false,
+        content: `✅ [Comando /task] Attività creata nel Kanban (/lavori): "${title}"`,
+      })
+
+      return { success: true, type: 'task', taskId: taskData?.id }
+    }
+
+    // 2. Comando /lead: inserisce nuovo lead in Pipeline CRM (/clienti)
+    if (cmd === '/lead') {
+      if (effectiveRole === 'collaborator') {
+        return {
+          success: false,
+          error: 'Il comando /lead è riservato ai membri interni del team',
+        }
+      }
+
+      if (!arg) {
+        return {
+          success: false,
+          error: 'Specificare il nome o azienda del lead. Es: /lead Azienda Alfa 2500',
+        }
+      }
+
+      // Estrazione importo opzionale (€2500 o 2500 alla fine della stringa)
+      let dealValue = 1500
+      let leadString = arg
+
+      const valueMatch = arg.match(/(?:€\s*|\b)([0-9]+(?:[.,][0-9]{1,2})?)\s*(?:€)?$/i)
+      if (valueMatch) {
+        const val = parseFloat(valueMatch[1].replace(',', '.'))
+        if (!isNaN(val) && val > 0) {
+          dealValue = val
+          leadString = arg.slice(0, valueMatch.index).trim()
+        }
+      }
+
+      if (!leadString) {
+        leadString = arg
+      }
+
+      // Estrazione eventuale indirizzo email
+      let email = `lead.${Date.now()}@da-qualificare.local`
+      const emailMatch = leadString.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/)
+      if (emailMatch) {
+        email = emailMatch[1]
+        leadString = leadString.replace(emailMatch[0], '').trim()
+      }
+
+      const nameParts = leadString.split(/\s+/).filter(Boolean)
+      const firstName = nameParts[0] || 'Lead'
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Da Qualificare'
+      const companyName = leadString
+
+      const { data: clientData, error: clientError } = await (admin.from('clients') as any)
+        .insert({
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          company: companyName,
+          category: 'business',
+          status: 'prospect',
+          created_by: user.id,
+          notes: `[STAGE:nuovo_lead|VAL:${dealValue}] Creato da comando /lead in chat`,
+        })
+        .select('id')
+        .single()
+
+      if (clientError) {
+        return { success: false, error: `Errore creazione lead: ${clientError.message}` }
+      }
+
+      await (admin.from('messages') as any).insert({
+        channel: input.channel,
+        sender_id: user.id,
+        is_system: false,
+        content: `💰 [Comando /lead] Nuovo Lead inserito in Pipeline CRM (/clienti): "${companyName}" (€ ${dealValue})`,
+      })
+
+      return { success: true, type: 'lead', clientId: clientData?.id }
+    }
+
+    // 3. Comando /ai: consultazione Copilot AI con NVIDIA NIM
+    if (cmd === '/ai') {
+      if (!arg) {
+        return {
+          success: false,
+          error: "Specificare una richiesta per l'AI Copilot. Es: /ai Riassumi lo stato del progetto",
+        }
+      }
+
+      // Inserisci prima il messaggio utente visibile
+      await (admin.from('messages') as any).insert({
+        channel: input.channel,
+        sender_id: user.id,
+        is_system: false,
+        content: raw,
+      })
+
+      const aiRes = await generateNvidiaCompletion({
+        userPrompt: arg,
+        systemPrompt:
+          'Sei il Copilot AI operativo del team AIutiamoci. Rispondi in italiano in modo diretto, pratico e conciso.',
+      })
+
+      if (aiRes.success && aiRes.content) {
+        await (admin.from('messages') as any).insert({
+          channel: input.channel,
+          sender_id: user.id,
+          is_system: true,
+          content: `🤖 **AI Copilot**:\n${aiRes.content}`,
+        })
+        return { success: true, type: 'ai' }
+      } else {
+        const errorMsg = aiRes.error || 'Errore elaborazione risposta AI'
+        await (admin.from('messages') as any).insert({
+          channel: input.channel,
+          sender_id: user.id,
+          is_system: true,
+          content: `🤖 **AI Copilot**: ⚠️ ${errorMsg}`,
+        })
+        return { success: false, error: errorMsg }
+      }
+    }
+
+    return {
+      success: false,
+      error: 'Comando non riconosciuto. Usa /task, /lead o /ai',
+    }
+  } catch (err: any) {
+    console.error('[executeSlashCommandAction] Error:', err)
     return { success: false, error: err.message }
   }
 }

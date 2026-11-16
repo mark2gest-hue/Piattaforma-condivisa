@@ -179,19 +179,23 @@ export function Navbar({
         .single()
 
       const resolvedName = resolveUserName(profile?.full_name, user.user_metadata?.full_name, user.email)
+      const resolvedRole =
+        user.user_metadata?.role === 'collaborator'
+          ? 'collaborator'
+          : profile?.role || user.user_metadata?.role || 'dev'
 
       if (profile) {
         setCurrentUser({
           name: resolvedName,
           email: profile.email || user.email || '',
-          role: profile.role || user.user_metadata?.role || 'dev',
+          role: resolvedRole,
           avatarUrl: profile.avatar_url || user.user_metadata?.avatar_url || null,
         })
       } else {
         setCurrentUser({
           name: resolvedName,
           email: user.email || '',
-          role: user.user_metadata?.role || 'dev',
+          role: resolvedRole,
           avatarUrl: user.user_metadata?.avatar_url || null,
         })
       }
@@ -438,7 +442,7 @@ export function Navbar({
               <div className="flex items-center gap-1.5 leading-none">
                 <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{currentUser.name}</span>
                 <Badge
-                  variant={currentUser.role === 'dev' ? 'purple' : currentUser.role === 'admin' ? 'warning' : 'info'}
+                  variant={currentUser.role === 'dev' ? 'purple' : currentUser.role === 'admin' ? 'warning' : currentUser.role === 'collaborator' ? 'outline' : 'info'}
                   className="text-[9px] px-1.5 py-0 uppercase"
                 >
                   {currentUser.role}

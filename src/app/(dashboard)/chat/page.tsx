@@ -27,6 +27,8 @@ import {
   Copy,
   CheckCircle2,
   UserPlus,
+  Terminal,
+  Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -53,6 +55,7 @@ import {
   deleteCustomChannelAction,
   inviteCollaboratorAction,
   updateChannelMembersAction,
+  executeSlashCommandAction,
   ChatMetadataItem,
   CustomChannelItem,
 } from '@/app/actions/chat'
@@ -80,14 +83,43 @@ interface DisplayChannel {
 
 const SYSTEM_CHANNELS: DisplayChannel[] = [
   { id: 'ch-1', name: 'generale', desc: 'Comunicazioni generali, avvisi e allineamento team', icon: Hash, isPrivate: false, isCustom: false },
-  { id: 'ch-2', name: 'progetti', desc: 'Discussioni operative su task, sprint e deliverable', icon: Hash, isPrivate: false, isCustom: false },
-  { id: 'ch-3', name: 'marketing-social', desc: 'Campagne, Growth Studio, reel video e grafiche', icon: Hash, isPrivate: false, isCustom: false },
-  { id: 'ch-4', name: 'corsi-academy', desc: 'Materiale didattico, studenti AI Start/Pro e certificazioni', icon: Hash, isPrivate: false, isCustom: false },
-  { id: 'ch-5', name: 'commerciale-b2b', desc: 'Lead, proposte commerciali per PMI e discovery di flusso', icon: Hash, isPrivate: false, isCustom: false },
-  { id: 'ch-6', name: 'idee-innovazione', desc: 'Nuovi modelli AI, spunti creativi, tool e automazioni', icon: Hash, isPrivate: false, isCustom: false },
 ]
 
 const QUICK_REACTIONS = ['✅', '👀', '🔥', '👍']
+
+interface SlashCommandItem {
+  command: string
+  title: string
+  description: string
+  example: string
+  icon: any
+  requiresTeam?: boolean
+}
+
+const AVAILABLE_SLASH_COMMANDS: SlashCommandItem[] = [
+  {
+    command: '/task',
+    title: '/task',
+    description: 'Crea una nuova attività nel Kanban (/lavori)',
+    example: '/task Titolo attività | Descrizione opzionale',
+    icon: Terminal,
+  },
+  {
+    command: '/lead',
+    title: '/lead',
+    description: 'Inserisci un nuovo lead nel CRM (/clienti)',
+    example: '/lead Azienda Alfa 2500',
+    icon: Sparkles,
+    requiresTeam: true,
+  },
+  {
+    command: '/ai',
+    title: '/ai',
+    description: 'Chiedi una risposta immediata al Copilot AI in canale',
+    example: '/ai Come posso ottimizzare questo flusso?',
+    icon: Sparkles,
+  },
+]
 
 /**
  * Estrae parent_id, reactions e file reali da attachments del messaggio.
@@ -271,6 +303,14 @@ export default function ChatPage() {
       if (res.success && res.channels) {
         setCustomChannels(res.channels)
         if (res.userRole) setUserRole(res.userRole)
+        const collabIds: string[] = (res as any)?.collaboratorIds || []
+        if (collabIds.length > 0) {
+          setTeamMembers((prev) =>
+            prev.map((m) =>
+              collabIds.includes(m.id) ? { ...m, role: 'collaborator' as any } : m
+            )
+          )
+        }
         return res
       }
     } catch (e) {
@@ -330,14 +370,20 @@ export default function ChatPage() {
       }
 
       const { data: profiles } = await supabase.from('profiles').select('*')
-      if (profiles) {
-        setTeamMembers(profiles.filter((p: any) => !p.is_agent))
-      }
+      let initialMembers: Profile[] = profiles ? profiles.filter((p: any) => !p.is_agent) : []
 
       const customRes = await loadCustomChannels()
       const allowedChannels: CustomChannelItem[] = customRes?.channels || []
       const finalRole = customRes?.userRole || effectiveRole
       setUserRole(finalRole)
+
+      const collabIds: string[] = (customRes as any)?.collaboratorIds || []
+      if (collabIds.length > 0) {
+        initialMembers = initialMembers.map((m) =>
+          collabIds.includes(m.id) ? { ...m, role: 'collaborator' as any } : m
+        )
+      }
+      setTeamMembers(initialMembers)
 
       let targetChannel = activeChannel
       if (finalRole === 'collaborator') {
@@ -594,6 +640,21 @@ export default function ChatPage() {
   const isPrivateChannel = Boolean(currentCustomChannel?.isPrivate)
   const privateMemberIds = currentCustomChannel?.memberIds || []
 
+  // Suggerimenti comandi slash filtrati
+  const matchingSlashCommands = AVAILABLE_SLASH_COMMANDS.filter((cmd) => {
+    if (cmd.requiresTeam && userRole === 'collaborator') return false
+    return cmd.command.startsWith(inputMessage.toLowerCase().trim())
+  })
+
+  const handleSelectSlashCommand = (cmdStr: string) => {
+    setInputMessage(`${cmdStr} `)
+    setMentionQuery(null)
+    setMentionTarget(null)
+    if (mainInputRef.current) {
+      mainInputRef.current.focus()
+    }
+  }
+
   // Invio messaggio principale
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -611,6 +672,36 @@ export default function ChatPage() {
     setInputMessage('')
     setPendingFiles([])
     setMentionQuery(null)
+
+    // Intercettazione Slash Commands (/task, /lead, /ai)
+    if (
+      pendingFiles.length === 0 &&
+      (messageContent.startsWith('/task ') ||
+        messageContent.startsWith('/lead ') ||
+        messageContent.startsWith('/ai ') ||
+        messageContent === '/task' ||
+        messageContent === '/lead' ||
+        messageContent === '/ai')
+    ) {
+      const cmdRes = await executeSlashCommandAction({
+        channel: activeChannel,
+        commandText: messageContent,
+      })
+      setIsUploading(false)
+      if (!cmdRes.success) {
+        alert(cmdRes.error || 'Errore esecuzione comando slash')
+      } else {
+        await fetchMessages(activeChannel)
+        if (!isDirectMessage && !isPrivateChannel) {
+          notifyChatMessageAction(
+            activeChannel,
+            messageContent,
+            currentUser.full_name
+          ).catch((err) => console.error('Slash notify push error:', err))
+        }
+      }
+      return
+    }
 
     const { error } = await (supabase as any).from('messages').insert({
       channel: activeChannel,
@@ -1043,7 +1134,7 @@ export default function ChatPage() {
                       className="flex items-center gap-2 min-w-0 flex-1 text-left"
                     >
                       <Icon className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate">#{ch.name}</span>
+                      <span className="truncate">{ch.name}</span>
                     </button>
 
                     <div className="flex items-center gap-1 shrink-0 ml-1">
@@ -1558,6 +1649,40 @@ export default function ChatPage() {
                   <span className="text-[10px] text-slate-400 uppercase">{c.role}</span>
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Autocomplete Popup Comandi Slash */}
+          {inputMessage.startsWith('/') && !inputMessage.includes(' ') && matchingSlashCommands.length > 0 && (
+            <div className="absolute bottom-16 left-4 z-30 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden py-1 max-h-56 overflow-y-auto animate-in fade-in slide-in-from-bottom-2 duration-150">
+              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-700/60">
+                <Terminal className="h-3 w-3 text-blue-500" />
+                <span>Comandi Rapidi (Slash Commands)</span>
+              </div>
+              <div className="divide-y divide-slate-100 dark:divide-slate-700/40">
+                {matchingSlashCommands.map((cmd) => {
+                  const CmdIcon = cmd.icon
+                  return (
+                    <button
+                      key={cmd.command}
+                      type="button"
+                      onClick={() => handleSelectSlashCommand(cmd.command)}
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 dark:hover:bg-slate-700/80 flex items-start gap-2.5 transition-colors group"
+                    >
+                      <div className="p-1 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors mt-0.5">
+                        <CmdIcon className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{cmd.command}</span>
+                          <span className="text-[10px] text-slate-400 font-mono truncate">{cmd.example}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">{cmd.description}</p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
 

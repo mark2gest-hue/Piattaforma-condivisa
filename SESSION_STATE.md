@@ -1,7 +1,26 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-16 22:25
+Ultimo aggiornamento: 2026-11-16 23:00
 Stato corrente:
+- **Fase 4 Chat & Workspace (Slash Commands & Webhook HMAC) + Pulizia Canali COMPLETATI & IN DEPLOY (`v2.3.0 • Build #117`)**:
+  - **Pulizia Canali di Default & Fix Doppio `# #`**:
+    - Ridotto `SYSTEM_CHANNEL_NAMES` in `src/app/actions/chat.ts` e `SYSTEM_CHANNELS` in `src/app/(dashboard)/chat/page.tsx` al solo canale `#generale` (eliminati i 5 canali fittizi `progetti`, `marketing-social`, `corsi-academy`, `commerciale-b2b`, `idee-innovazione` per un workspace minimale e privo di bloat).
+    - Risolto il duplicato visivo `# #generale` nella sidebar sinistra con visualizzazione pulita del nome canale accanto all'icona `#` o `🔒`.
+  - **Fase 4A: Slash Commands Operativi (`/task`, `/lead`, `/ai`)**:
+    - Nuova Server Action `executeSlashCommandAction` in `src/app/actions/chat.ts` con isolamento rigoroso dei ruoli:
+      - `/task [titolo] | [descrizione]`: crea istantaneamente l'attività in `public.tasks` e notifica il canale con link a `/lavori`.
+      - `/lead [nome azienda] [valore €]`: riservato ai membri interni del team (bloccato per `collaborator`), inserisce il contatto in `public.clients` nella colonna *Nuovo Lead* con tag trasparente `[STAGE:nuovo_lead|VAL:...]` e placeholder email deterministico se assente.
+      - `/ai [richiesta]`: interroga il client NVIDIA NIM (`generateNvidiaCompletion` con modello `nvidia/nemotron-3-ultra-550b-a55b`) e pubblica la risposta formattata direttamente nel canale.
+    - Popup di autocompletamento intelligente sopra la barra di input principale in `chat/page.tsx` quando l'utente digita `/` (filtrando `/lead` per i collaboratori esterni).
+  - **Fase 4B: Webhook Inbound Blindato HMAC (`src/app/api/webhooks/chat/route.ts`)**:
+    - Endpoint API POST ad alte prestazioni con firma crittografica obbligatoria HMAC SHA-256 (`x-signature-256` o `x-hub-signature-256`) verificata a tempo costante con `crypto.timingSafeEqual`.
+    - Risoluzione automatica di un profilo `admin`/`dev` esistente per soddisfare il vincolo DB `sender_id REFERENCES profiles(id)`.
+    - Inserimento del messaggio formattato in `public.messages` e broadcast Web Push istantaneo a tutte le sottoscrizioni attive senza bloccare l'endpoint.
+  - **Guardia Anti-Sovrascrittura Membri Interni & Precedenza Collaboratori**:
+    - In `src/app/actions/chat.ts`: blocco preventivo contro la declassazione di account di membri del team.
+    - In `src/components/layout/navbar.tsx`: precedenza deterministica al badge `COLLABORATOR`.
+    - In `chat/page.tsx`: mappatura automatica collaboratori sui membri del team.
+  - **PROSSIMO BLOCCO — Fase 5: Inbox Assistenza Nativa + 2 Tasti nella stanza studenti (`/corsi`) (`💬 Canale Studenti #studenti-academy` & `🛟 Assistenza 1-a-1`) con rimozione completa di Telegram**.
 - **Fix Contrasto Dark Mode, Invito Collaboratore Esterno 1-Click & Cambio Password COMPLETATI & DEPLOYATI (`v2.3.0 • Build #116`)**:
   - Eliminazione di tutte le classi non standard `slate-850` e `slate-750` in `src/app/(dashboard)/chat/page.tsx`, sostituite con `slate-800` e `slate-750` -> `slate-700` per garantire contrasto ottimale, piena leggibilità e colori nitidi in Dark Mode.
   - Implementazione del ruolo `collaborator` a livello di database ([supabase/migrations/20261116221500_add_collaborator_role.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261116221500_add_collaborator_role.sql)) e tipo TypeScript `UserRole`.
