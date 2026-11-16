@@ -1,8 +1,21 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-16 23:00
+Ultimo aggiornamento: 2026-11-16 23:20
 Stato corrente:
-- **Fase 4 Chat & Workspace (Slash Commands & Webhook HMAC) + Pulizia Canali COMPLETATI & IN DEPLOY (`v2.3.0 • Build #117`)**:
+- **Roster Partecipanti Canale ("Chi c'è dentro"), Canale `#community-studenti` & DM 1-a-1 al Click sul Nome COMPLETATI (`v2.3.0 • Build #118`)**:
+  - `src/app/actions/chat.ts`:
+    - Aggiornato `SYSTEM_CHANNEL_NAMES = ['generale', 'community-studenti']`.
+    - Estesa l'interfaccia `ChatMetadataItem` con metadati autore (`sender_name`, `sender_email`, `sender_student_id`).
+    - Esportata l'interfaccia `EnrolledStudentChatMember` con formato deterministico `id: 'student-' + row.id` (evitando underscore per coerenza con il routing `dm:`).
+    - In `getCustomChannelsAction()`: recupero e deduplica dinamica di tutti gli studenti iscritti attivi unendo `student_codes` e `course_registrations` approvate, con isolamento Zero-Leak garantito (oscurato per i collaboratori esterni).
+  - `src/app/(dashboard)/chat/page.tsx`:
+    - Nuovo canale di sistema **`#community-studenti`** con icona `Users`, spazio ufficiale di scambio per i corsisti Academy e i docenti.
+    - Header del Canale: link/pill cliccabile `👥 X presenti` sotto il titolo (con anteprima primi 2–3 nomi su desktop) e pulsante compatto `👥 Partecipanti (X)` nella barra delle azioni a destra.
+    - Modale Partecipanti ("Chi c'è in #${activeChannel}"): modale responsivo con barra di ricerca interna in tempo reale, avatar, dot verde attivo, eventuale codice corso (`AI-START-...`), badge ruolo (`TEAM`, `STUDENTE`, `COLLABORATOR`), nome cliccabile e pulsante **`💬 Messaggio`** per avviare chat 1-a-1 immediata.
+    - Nomi Autore Cliccabili per DM 1-a-1: sopra ogni messaggio nella timeline principale e nei thread laterali, il nome dell'autore è un bottone interattivo che apre istantaneamente la conversazione privata con quella persona.
+    - Risoluzione partner DM estesa: supporta sia membri del team che studenti con routing trasparente `dm:${sortedIds}`.
+  - **PROSSIMO BLOCCO — Fase 5: Inbox Assistenza Nativa (`/assistenza`) + 2 Tasti nella stanza studenti (`/corsi`) (`💬 Canale Studenti #community-studenti` & `🛟 Assistenza 1-a-1`) con rimozione integrale di Telegram**.
+- **Fase 4 Chat & Workspace (Slash Commands & Webhook HMAC) + Pulizia Canali COMPLETATI & DEPLOYATI (`v2.3.0 • Build #117`)**:
   - **Pulizia Canali di Default & Fix Doppio `# #`**:
     - Ridotto `SYSTEM_CHANNEL_NAMES` in `src/app/actions/chat.ts` e `SYSTEM_CHANNELS` in `src/app/(dashboard)/chat/page.tsx` al solo canale `#generale` (eliminati i 5 canali fittizi `progetti`, `marketing-social`, `corsi-academy`, `commerciale-b2b`, `idee-innovazione` per un workspace minimale e privo di bloat).
     - Risolto il duplicato visivo `# #generale` nella sidebar sinistra con visualizzazione pulita del nome canale accanto all'icona `#` o `🔒`.

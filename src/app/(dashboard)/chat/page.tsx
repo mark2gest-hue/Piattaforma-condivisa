@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import {
   MessageSquare,
   Users,
@@ -58,6 +58,7 @@ import {
   executeSlashCommandAction,
   ChatMetadataItem,
   CustomChannelItem,
+  EnrolledStudentChatMember,
 } from '@/app/actions/chat'
 
 type MessageWithSender = Message & { sender?: Profile }
@@ -81,8 +82,32 @@ interface DisplayChannel {
   isCustom?: boolean
 }
 
+export interface ChannelParticipant {
+  id: string
+  full_name: string
+  email?: string
+  role: string
+  is_active?: boolean
+  code?: string
+}
+
 const SYSTEM_CHANNELS: DisplayChannel[] = [
-  { id: 'ch-1', name: 'generale', desc: 'Comunicazioni generali, avvisi e allineamento team', icon: Hash, isPrivate: false, isCustom: false },
+  {
+    id: 'ch-1',
+    name: 'generale',
+    desc: 'Comunicazioni generali, avvisi e allineamento team',
+    icon: Hash,
+    isPrivate: false,
+    isCustom: false,
+  },
+  {
+    id: 'ch-community',
+    name: 'community-studenti',
+    desc: 'Community Corsisti AI Start & AI Pro — Tutti gli studenti iscritti e docenti',
+    icon: Users,
+    isPrivate: false,
+    isCustom: false,
+  },
 ]
 
 const QUICK_REACTIONS = ['✅', '👀', '🔥', '👍']
@@ -131,6 +156,9 @@ function extractMessageMeta(msg: MessageWithSender) {
     parentId: (msg as any).parent_message_id || meta?.parent_id || null,
     reactions: (meta?.reactions || {}) as Record<string, string[]>,
     files: raw.filter((a) => a && a.type !== '__chat_meta__') as ChatAttachment[],
+    senderName: (meta?.sender_name || null) as string | null,
+    senderEmail: (meta?.sender_email || null) as string | null,
+    senderStudentId: (meta?.sender_student_id || null) as string | null,
   }
 }
 
@@ -210,6 +238,11 @@ export default function ChatPage() {
   const [isManageInviting, setIsManageInviting] = useState(false)
   const [manageCollabResult, setManageCollabResult] = useState<{ message: string; user: any } | null>(null)
   const [manageCollabCopied, setManageCollabCopied] = useState(false)
+
+  // Studenti Iscritti & Modal Partecipanti ("Chi c'è nel canale")
+  const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudentChatMember[]>([])
+  const [showParticipantsModal, setShowParticipantsModal] = useState(false)
+  const [participantSearchQuery, setParticipantSearchQuery] = useState('')
 
   // Channel Search Query (Fase 3)
   const [searchQuery, setSearchQuery] = useState('')
@@ -310,6 +343,9 @@ export default function ChatPage() {
               collabIds.includes(m.id) ? { ...m, role: 'collaborator' as any } : m
             )
           )
+        }
+        if (Array.isArray((res as any)?.enrolledStudents)) {
+          setEnrolledStudents((res as any).enrolledStudents)
         }
         return res
       }
@@ -628,17 +664,126 @@ export default function ChatPage() {
     return uploaded
   }
 
-  // Risoluzione partner per canali DM
+  // Risoluzione partner per canali DM (cerca sia nel team che negli studenti iscritti)
   const isDirectMessage = activeChannel.startsWith('dm:')
   const dmPartnerId = isDirectMessage
     ? activeChannel.replace('dm:', '').split('_').find((id) => id !== currentUser?.id)
     : null
-  const dmPartner = dmPartnerId ? teamMembers.find((m) => m.id === dmPartnerId) : null
+  const dmPartner = dmPartnerId
+    ? teamMembers.find((m) => m.id === dmPartnerId) ||
+      (enrolledStudents.find((s) => s.id === dmPartnerId) as any) ||
+      null
+    : null
+
+  // Apertura rapida DM 1-a-1 con qualsiasi iscritto o membro del team
+  const openDirectMessageWith = (targetId: string) => {
+    if (!currentUser || !targetId || targetId === currentUser.id) return
+    const dmId = `dm:${[currentUser.id, targetId].sort().join('_')}`
+    setActiveChannel(dmId)
+    setShowMobileChannels(false)
+    setShowParticipantsModal(false)
+    setShowManageMembersModal(false)
+    setActiveThreadId(null)
+    markChannelAsRead(dmId)
+  }
 
   // Risoluzione canale attivo e configurazione privacy
   const currentCustomChannel = customChannels.find((c) => c.name === activeChannel)
   const isPrivateChannel = Boolean(currentCustomChannel?.isPrivate)
   const privateMemberIds = currentCustomChannel?.memberIds || []
+
+  // Calcolo Partecipanti Canale ("Chi c'è dentro")
+  const currentChannelParticipants: ChannelParticipant[] = useMemo(() => {
+    if (isDirectMessage) {
+      const list: ChannelParticipant[] = []
+      if (currentUser) {
+        list.push({
+          id: currentUser.id,
+          full_name: currentUser.full_name,
+          email: currentUser.email,
+          role: userRole,
+          is_active: true,
+        })
+      }
+      if (dmPartner) {
+        list.push({
+          id: dmPartner.id,
+          full_name: dmPartner.full_name,
+          email: dmPartner.email,
+          role: dmPartner.role,
+          is_active: dmPartner.is_active,
+          code: (dmPartner as any).code,
+        })
+      }
+      return list
+    }
+
+    if (activeChannel === 'community-studenti') {
+      // Membri interni del team (esclusi collaborator) + tutti gli studenti iscritti
+      const teamList: ChannelParticipant[] = teamMembers
+        .filter((m) => m.role !== 'collaborator')
+        .map((m) => ({
+          id: m.id,
+          full_name: m.full_name,
+          email: m.email,
+          role: m.role || 'member',
+          is_active: m.is_active,
+        }))
+
+      const studentList: ChannelParticipant[] = enrolledStudents.map((s) => ({
+        id: s.id,
+        full_name: s.full_name,
+        email: s.email,
+        role: 'student',
+        is_active: s.is_active,
+        code: s.code,
+      }))
+
+      const map = new Map<string, ChannelParticipant>()
+      for (const p of [...teamList, ...studentList]) {
+        map.set(p.id, p)
+      }
+      return Array.from(map.values())
+    }
+
+    if (isPrivateChannel) {
+      return teamMembers
+        .filter(
+          (m) =>
+            privateMemberIds.includes(m.id) ||
+            m.id === currentCustomChannel?.createdBy
+        )
+        .map((m) => ({
+          id: m.id,
+          full_name: m.full_name,
+          email: m.email,
+          role: m.role || 'member',
+          is_active: m.is_active,
+        }))
+    }
+
+    // Canale pubblico (#generale o custom pubblico): tutti i membri interni del team
+    return teamMembers
+      .filter((m) => m.role !== 'collaborator')
+      .map((m) => ({
+        id: m.id,
+        full_name: m.full_name,
+        email: m.email,
+        role: m.role || 'member',
+        is_active: m.is_active,
+      }))
+  }, [
+    isDirectMessage,
+    currentUser,
+    userRole,
+    dmPartner,
+    activeChannel,
+    teamMembers,
+    enrolledStudents,
+    isPrivateChannel,
+    privateMemberIds,
+    currentCustomChannel,
+  ])
 
   // Suggerimenti comandi slash filtrati
   const matchingSlashCommands = AVAILABLE_SLASH_COMMANDS.filter((cmd) => {
@@ -1270,19 +1415,57 @@ export default function ChatPage() {
                     </>
                   )}
                 </h2>
-                <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">
-                  {isDirectMessage
-                    ? 'Messaggio Diretto Privato 1-a-1 • Notifiche personali'
-                    : isPrivateChannel
-                    ? `${currentChannelObj.desc || 'Canale Riservato'} • ${privateMemberIds.length} membri autorizzati`
-                    : currentChannelObj.desc}
-                </p>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 truncate">
+                    {isDirectMessage
+                      ? 'Messaggio Diretto Privato 1-a-1 • Notifiche personali'
+                      : currentChannelObj.desc}
+                  </p>
+                  {!isDirectMessage && (
+                    <button
+                      type="button"
+                      onClick={() => setShowParticipantsModal(true)}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline bg-blue-50/70 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800/60 cursor-pointer transition-colors"
+                      title="Visualizza chi è presente in questo canale e scrivi in privato"
+                    >
+                      <Users className="h-3 w-3 shrink-0" />
+                      <span>{currentChannelParticipants.length} presenti</span>
+                      {currentChannelParticipants.length > 0 && (
+                        <span className="hidden lg:inline text-slate-400 font-normal">
+                          (
+                          {currentChannelParticipants
+                            .slice(0, 3)
+                            .map((p: ChannelParticipant) => p.full_name.split(' ')[0])
+                            .join(', ')}
+                          {currentChannelParticipants.length > 3 ? '...' : ''}
+                          )
+                        </span>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Right Header Actions: Membri, Ricerca, Web Push & Realtime Badge */}
+            {/* Right Header Actions: Partecipanti, Gestione Membri, Ricerca, Web Push & Realtime Badge */}
             <div className="flex items-center gap-2 shrink-0">
-              {/* Gestione Membri Canale Privato / Custom */}
+              {/* Pulsante Partecipanti ("Chi c'è nel canale") */}
+              {!isDirectMessage && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowParticipantsModal(true)}
+                  className="text-xs h-8 px-2.5 gap-1.5 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer"
+                  title="Visualizza l'elenco completo delle persone nel canale e avvia chat 1-a-1"
+                >
+                  <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <span className="hidden sm:inline">Partecipanti ({currentChannelParticipants.length})</span>
+                  <span className="sm:hidden">{currentChannelParticipants.length}</span>
+                </Button>
+              )}
+
+              {/* Gestione Membri Canale Privato / Custom (Riservato Team) */}
               {(isPrivateChannel || currentChannelObj.isCustom) && userRole !== 'collaborator' && (
                 <Button
                   type="button"
@@ -1294,16 +1477,11 @@ export default function ChatPage() {
                     setManageCollabResult(null)
                     setShowManageMembersModal(true)
                   }}
-                  className="text-xs h-8 px-2.5 gap-1.5 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer"
-                  title="Gestisci i membri autorizzati di questo canale"
+                  className="text-xs h-8 px-2.5 gap-1.5 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 shadow-xs cursor-pointer"
+                  title="Gestisci i membri autorizzati di questo canale privato"
                 >
-                  <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span className="hidden sm:inline">
-                    Membri ({customChannels.find((c) => c.name === activeChannel)?.memberIds?.length || 0})
-                  </span>
-                  <span className="sm:hidden">
-                    {customChannels.find((c) => c.name === activeChannel)?.memberIds?.length || 0}
-                  </span>
+                  <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                  <span className="hidden sm:inline">Gestisci</span>
                 </Button>
               )}
 
@@ -1445,9 +1623,33 @@ export default function ChatPage() {
                     />
                     <div className={`flex flex-col flex-1 space-y-1 ${isMe ? 'items-end' : 'items-start'}`}>
                       <div className={`flex items-center gap-1.5 sm:gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
-                        <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white">
-                          {isMe ? 'Tu' : msg.sender?.full_name || 'Utente Sconosciuto'}
-                        </span>
+                        {isMe ? (
+                          <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white">
+                            Tu
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openDirectMessageWith(
+                                extractMessageMeta(msg).senderStudentId || msg.sender_id
+                              )
+                            }
+                            className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors text-left flex items-center gap-1 group/author cursor-pointer"
+                            title={`Clicca per scrivere in privato a ${
+                              extractMessageMeta(msg).senderName ||
+                              msg.sender?.full_name ||
+                              'questo utente'
+                            }`}
+                          >
+                            <span>
+                              {extractMessageMeta(msg).senderName ||
+                                msg.sender?.full_name ||
+                                'Utente Sconosciuto'}
+                            </span>
+                            <MessageCircle className="h-2.5 w-2.5 opacity-0 group-hover/author:opacity-100 text-blue-500 transition-opacity" />
+                          </button>
+                        )}
                         <span className="text-[9px] sm:text-[10px] text-slate-400">{formatDate(msg.created_at)}</span>
                       </div>
 
@@ -1773,9 +1975,29 @@ export default function ChatPage() {
                     src={activeThreadParent.sender?.avatar_url || undefined}
                     className="h-6 w-6 text-[10px]"
                   />
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">
-                    {activeThreadParent.sender?.full_name || 'Utente'}
-                  </span>
+                  {activeThreadParent.sender_id === currentUser?.id ? (
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
+                      Tu
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openDirectMessageWith(
+                          extractMessageMeta(activeThreadParent).senderStudentId ||
+                            activeThreadParent.sender_id
+                        )
+                      }
+                      className="text-xs font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors text-left flex items-center gap-1 cursor-pointer"
+                      title="Scrivi in privato"
+                    >
+                      <span>
+                        {extractMessageMeta(activeThreadParent).senderName ||
+                          activeThreadParent.sender?.full_name ||
+                          'Utente'}
+                      </span>
+                    </button>
+                  )}
                   <span className="text-[10px] text-slate-400 ml-auto">
                     {formatDate(activeThreadParent.created_at)}
                   </span>
@@ -1833,9 +2055,28 @@ export default function ChatPage() {
                       />
                       <div className="flex flex-col flex-1 space-y-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                            {isMe ? 'Tu' : reply.sender?.full_name || 'Utente'}
-                          </span>
+                          {isMe ? (
+                            <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                              Tu
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openDirectMessageWith(
+                                  extractMessageMeta(reply).senderStudentId || reply.sender_id
+                                )
+                              }
+                              className="text-xs font-bold text-slate-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors text-left flex items-center gap-1 cursor-pointer"
+                              title="Scrivi in privato"
+                            >
+                              <span>
+                                {extractMessageMeta(reply).senderName ||
+                                  reply.sender?.full_name ||
+                                  'Utente'}
+                              </span>
+                            </button>
+                          )}
                           <span className="text-[9px] text-slate-400">{formatDate(reply.created_at)}</span>
                         </div>
                         <div
@@ -2387,6 +2628,164 @@ export default function ChatPage() {
                   <Check className="h-3.5 w-3.5" />
                 )}
                 <span>Salva Modifiche Membri</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Elenco Partecipanti Canale ("Chi c'è dentro") */}
+      {showParticipantsModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setShowParticipantsModal(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4 max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Modale */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                  <Users className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>Partecipanti</span>
+                    <span className="text-blue-600 dark:text-blue-400">#{activeChannel}</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    {currentChannelParticipants.length}{' '}
+                    {currentChannelParticipants.length === 1 ? 'persona presente' : 'persone presenti'} nel canale
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowParticipantsModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Barra di Ricerca Partecipanti */}
+            <div className="relative shrink-0">
+              <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={participantSearchQuery}
+                onChange={(e) => setParticipantSearchQuery(e.target.value)}
+                placeholder="Filtra persone per nome o email..."
+                className="w-full pl-9 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              {participantSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setParticipantSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Elenco Partecipanti con Scroll */}
+            <div className="flex-1 overflow-y-auto space-y-1.5 min-h-0 pr-1">
+              {currentChannelParticipants
+                .filter((p: ChannelParticipant) => {
+                  if (!participantSearchQuery.trim()) return true
+                  const q = participantSearchQuery.toLowerCase()
+                  return (
+                    p.full_name?.toLowerCase().includes(q) ||
+                    (p.email && p.email.toLowerCase().includes(q)) ||
+                    (p.code && p.code.toLowerCase().includes(q))
+                  )
+                })
+                .map((person: ChannelParticipant) => {
+                  const isMe = person.id === currentUser?.id
+                  return (
+                    <div
+                      key={person.id}
+                      className="flex items-center justify-between p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200/50 dark:border-slate-700/50"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="relative shrink-0">
+                          <Avatar
+                            fallback={person.full_name || '?'}
+                            className="h-8 w-8 text-xs font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200"
+                          />
+                          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                              {person.full_name}
+                            </span>
+                            {isMe && (
+                              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                                (Tu)
+                              </span>
+                            )}
+                            {person.code && (
+                              <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                                {person.code}
+                              </span>
+                            )}
+                          </div>
+                          {person.email && (
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                              {person.email}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        <Badge
+                          variant="outline"
+                          className={`text-[9px] px-1.5 py-0.2 uppercase font-semibold ${
+                            person.role === 'student'
+                              ? 'border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/40'
+                              : person.role === 'collaborator'
+                              ? 'border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-950/40'
+                              : 'border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-400 bg-blue-50/60 dark:bg-blue-950/40'
+                          }`}
+                        >
+                          {person.role === 'student' ? 'Studente' : person.role}
+                        </Badge>
+
+                        {!isMe && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openDirectMessageWith(person.id)}
+                            className="h-7 px-2.5 text-xs gap-1 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/60 cursor-pointer"
+                            title={`Avvia messaggio diretto 1-a-1 con ${person.full_name}`}
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                            <span>Messaggio</span>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+
+            {/* Footer Modale */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 shrink-0">
+              <span>Clicca su &ldquo;Messaggio&rdquo; per aprire una chat 1-a-1 istantanea</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setShowParticipantsModal(false)}
+                className="text-xs h-7 px-3"
+              >
+                Chiudi
               </Button>
             </div>
           </div>

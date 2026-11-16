@@ -9,6 +9,18 @@ export interface ChatMetadataItem {
   type: '__chat_meta__'
   parent_id?: string | null
   reactions?: Record<string, string[]> // emoji -> array of user_ids
+  sender_name?: string | null
+  sender_email?: string | null
+  sender_student_id?: string | null
+}
+
+export interface EnrolledStudentChatMember {
+  id: string // prefisso con trattino: student-${row.id} (MAI underscore per DM routing)
+  full_name: string
+  email: string
+  code?: string
+  role: 'student'
+  is_active: boolean
 }
 
 export interface CustomChannelItem {
@@ -24,7 +36,7 @@ export interface CustomChannelItem {
 const CHANNELS_LOCAL_FILE = path.join(process.cwd(), '.chat-channels.json')
 const COLLABORATORS_LOCAL_FILE = path.join(process.cwd(), '.chat-collaborators.json')
 
-const SYSTEM_CHANNEL_NAMES = ['generale']
+const SYSTEM_CHANNEL_NAMES = ['generale', 'community-studenti']
 
 function readLocalCollaboratorIds(): string[] {
   try {
@@ -217,12 +229,78 @@ export async function getCustomChannelsAction() {
       })
     }
 
+    // 3. Recupero studenti iscritti attivi (riservato al team, oscurato per collaborator)
+    let enrolledStudents: EnrolledStudentChatMember[] = []
+    if (effectiveRole !== 'collaborator') {
+      try {
+        const studentMap = new Map<string, EnrolledStudentChatMember>()
+
+        // Escludi le email dei profili team esistenti
+        const { data: teamProfiles } = await (admin.from('profiles') as any).select('email')
+        const teamEmails = new Set(
+          (Array.isArray(teamProfiles) ? teamProfiles : [])
+            .map((p) => p.email?.trim().toLowerCase())
+            .filter(Boolean)
+        )
+
+        // Query 1: student_codes attivi
+        const { data: codesData } = await (admin.from('student_codes') as any)
+          .select('id, code, student_name, student_email, is_active')
+          .eq('is_active', true)
+
+        if (Array.isArray(codesData)) {
+          for (const row of codesData) {
+            const email = (row.student_email || '').trim().toLowerCase()
+            if (email && !teamEmails.has(email) && !studentMap.has(email)) {
+              studentMap.set(email, {
+                id: `student-${row.id}`,
+                full_name: (row.student_name || 'Studente').trim(),
+                email,
+                code: row.code || undefined,
+                role: 'student',
+                is_active: Boolean(row.is_active),
+              })
+            }
+          }
+        }
+
+        // Query 2: course_registrations approvate
+        const { data: regData } = await (admin.from('course_registrations') as any)
+          .select('id, name, email, access_code, approved, status')
+
+        if (Array.isArray(regData)) {
+          for (const row of regData) {
+            if (row.approved === true || row.status === 'approved') {
+              const email = (row.email || '').trim().toLowerCase()
+              if (email && !teamEmails.has(email) && !studentMap.has(email)) {
+                studentMap.set(email, {
+                  id: `student-${row.id}`,
+                  full_name: (row.name || 'Studente').trim(),
+                  email,
+                  code: row.access_code || undefined,
+                  role: 'student',
+                  is_active: true,
+                })
+              }
+            }
+          }
+        }
+
+        enrolledStudents = Array.from(studentMap.values()).sort((a, b) =>
+          a.full_name.localeCompare(b.full_name, 'it', { sensitivity: 'base' })
+        )
+      } catch (err) {
+        console.warn('[getCustomChannelsAction] Errore recupero studenti iscritti:', err)
+      }
+    }
+
     return {
       success: true,
       channels: allowed,
       userRole: effectiveRole,
       userId: user.id,
       collaboratorIds: localCollaborators,
+      enrolledStudents,
     }
   } catch (err: any) {
     console.error('[getCustomChannelsAction] Error:', err)
