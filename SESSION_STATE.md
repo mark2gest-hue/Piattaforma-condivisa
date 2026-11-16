@@ -1,7 +1,14 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-03 19:48
+Ultimo aggiornamento: 2026-11-16 13:24
 Stato corrente:
+- **Fix Dispense Corso Base (`AI Start`) vs Corso `AI Pro` COMPLETATO & DEPLOYATO (`v2.3.0 • Build #111`, commit `2971bdf`)**:
+  - Risolto il disallineamento tra il programma del Corso Base e le dispense mostrate in Academy: ora ciascun corso carica le proprie dispense dedicate.
+- **ROADMAP IN VALUTAZIONE — Allineamento Chat & Workspace a Slack (4 Fasi)**:
+  - *Fase 1*: PWA (`manifest.json` + `sw.js`) + Notifiche Web Push reali (VAPID + `push_subscriptions` su Supabase) collegate a `notifyChatMessageAction`.
+  - *Fase 2*: Thread di risposta (`parent_message_id`), `@menzioni` con autocomplete, badge non letti per canale (`last_read_at`) e reazioni emoji rapide in `/chat`.
+  - *Fase 3*: DM 1-a-1, canali dinamici su tabella `channels` (sostituendo i 6 `CHANNELS` fissi in `chat/page.tsx`) e ricerca globale (`⌘K`).
+  - *Fase 4*: Slash command (`/task`, `/lead`, `/ai`) e Webhook in entrata `/api/webhooks/chat` (HMAC) da `n8n` / Stripe / VPS.
 - **CRM Commerciale Stile Torch / GoHighLevel (`/clienti`) & Pagina Pubblica Prenotazione (`/prenota`) COMPLETATI (`ba65bc7`)**:
   - **Pipeline Vendite in `/clienti` (`src/app/(dashboard)/clienti/page.tsx`)**: 3 KPI Cards commerciali (`Pipeline in Trattativa €`, `Fatturato Acquisito Vinto €`, `Call & Proposte Calde`), switch vista `[ 💰 Pipeline Vendite | 📋 Lista Contatti ]`, Kanban a 4 fasi (`Nuovo Lead`, `Call Fissata`, `Proposta / Preventivo`, `Cliente Vinto`) con valore economico `€`, frecce di avanzamento rapido (`←`/`→`) persistite in `notes` (`[STAGE:...|VAL:...]`) e bottone WhatsApp 1-click (`wa.me`).
   - **Booking Pubblico `/prenota` (`src/app/prenota/page.tsx` + `src/lib/supabase/middleware.ts`)**: Pagina pubblica `https://aiutiamoci.cloud/prenota` accessibile senza login (HTTP 200 OK) per aziende B2B e corsisti Academy, sincronizzata con le disponibilità reali del team.
