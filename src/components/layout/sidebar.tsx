@@ -47,6 +47,7 @@ export function Sidebar({
   const [teamCount, setTeamCount] = useState<number>(3)
   const [teamSubtitle, setTeamSubtitle] = useState<string>('2 Dev • 1 Business')
   const [userNameSlug, setUserNameSlug] = useState<string>('marco')
+  const [currentUserRole, setCurrentUserRole] = useState<string>('member')
   const supabase = createClient()
 
   // Definizione dei 4 Macro-Gruppi Fluidi
@@ -191,8 +192,21 @@ export function Sidebar({
     },
   ]
 
+  // Filtro di isolamento Zero-Leak per Collaboratori Esterni (Guest / Collaborator)
+  const visibleNavGroups = navGroups
+    .map((group) => {
+      if (currentUserRole !== 'collaborator') return group
+      const filteredItems = group.items.filter((item) =>
+        ['/lavori', '/calendario', '/chat', '/videocall', '/files'].some((allowed) =>
+          item.href === allowed || item.href.startsWith(allowed + '/')
+        )
+      )
+      return { ...group, items: filteredItems }
+    })
+    .filter((group) => group.items.length > 0)
+
   // Calcola il gruppo a cui appartiene la pagina corrente
-  const activeGroup = navGroups.find((g) =>
+  const activeGroup = visibleNavGroups.find((g) =>
     g.items.some((item) =>
       item.href.startsWith('http')
         ? false
@@ -227,9 +241,12 @@ export function Sidebar({
       if (user) {
         const { data: profile } = await (supabase as any)
           .from('profiles')
-          .select('full_name')
+          .select('full_name, role')
           .eq('id', user.id)
           .maybeSingle()
+
+        const role = profile?.role || user.user_metadata?.role || 'member'
+        setCurrentUserRole(role)
 
         const fullName = (profile?.full_name || user.email || '').toLowerCase()
         if (fullName.includes('lorenzo')) {
@@ -299,7 +316,7 @@ export function Sidebar({
       {/* SE LA SIDEBAR È COLLASSATA (expanded = false): Mostra le 4 Macro-Icone in colonna */}
       {!expanded ? (
         <div className="flex flex-col items-center gap-3 pt-2">
-          {navGroups.map((group) => {
+          {visibleNavGroups.map((group) => {
             const GroupIcon = group.icon
             const isGroupActive = group.id === activeGroupId
             const hasUnread = group.id === 'operativita' && unreadEmailCount > 0
@@ -342,9 +359,9 @@ export function Sidebar({
           })}
         </div>
       ) : (
-        /* SE LA SIDEBAR È ESPANSA (expanded = true): Mostra i 4 Macro-Gruppi con Header e Sotto-Voci Fluide */
+        /* SE LA SIDEBAR È ESPANSA (expanded = true): Mostra i Macro-Gruppi con Header e Sotto-Voci Fluide */
         <div className="space-y-2.5">
-          {navGroups.map((group) => {
+          {visibleNavGroups.map((group) => {
             const GroupIcon = group.icon
             const isGroupOpen = openGroupId === group.id
             const isGroupActive = group.id === activeGroupId

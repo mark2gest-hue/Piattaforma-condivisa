@@ -1,7 +1,17 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-16 21:33
+Ultimo aggiornamento: 2026-11-16 21:51
 Stato corrente:
+- **Fase 3 Chat & Workspace Stile Slack COMPLETATA & DEPLOYATA (`v2.3.0 • Build #115`)**:
+  - Implementati canali dinamici e privati (`🔒`) con gestione `member_ids` e modale interattivo di creazione (nome slug, descrizione, switch pubblico/privato e selezione membri autorizzati) con storage ibrido duale (`.chat-channels.json` + `public.chat_channels`).
+  - Implementata la sezione **Messaggi Diretti (DM 1-a-1)** nella sidebar: conversazioni private dirette con routing su `dm:${sortedIds}`, badge numerico non letti specifico per singolo collega e header contestuale.
+  - Notifiche Web Push riservate per DM e canali privati indirizzate esclusivamente ai destinatari autorizzati (`recipientUserIds`) e **zero leak su Telegram** (i messaggi confidenziali non vengono mai inoltrati al gruppo Telegram).
+  - Aggiunta barra di ricerca messaggi (`🔍 Cerca`) nell'header del canale: filtraggio istantaneo della timeline per parole chiave nel testo o nomi di file allegati.
+  - Blindatura Zero-Leak del ruolo `collaborator` (Guest stile Slack):
+    - Nel Middleware Next.js: redirect forzato a `/chat` se un collaboratore tenta di accedere a `/clienti`, `/posta`, `/cervello`, `/growth-studio`, `/workshop-agenti`, `/corsi`, `/zona-compiti`, `/convert`.
+    - Nella Sidebar: mascheramento automatico di tutte le sezioni riservate, mostrando al collaboratore esclusivamente le voci operative consentite (`/chat`, `/lavori`, `/calendario`, `/videocall`, `/files`).
+    - Nella Chat: il collaboratore vede ed accede unicamente ai canali a cui è stato espressamente invitato.
+  - Migrazione database [supabase/migrations/20261116214000_chat_phase3_channels_collaborators.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261116214000_chat_phase3_channels_collaborators.sql).
 - **Fix Viewport 100dvh, Scroll Isolato & Chiusura Thread COMPLETATO & DEPLOYATO (`v2.3.0 • Build #114`)**:
   - Bloccato il viewport di `/chat` a `100dvh max-h-[100dvh] overflow-hidden` sia sul root shell sia sulla colonna principale (eliminando qualsiasi scrollbar esterna della pagina).
   - Eliminato il metodo intrusivo `scrollIntoView` sui messaggi e sul thread: ora lo scorrimento verso il basso opera esclusivamente all'interno dei rispettivi contenitori interni con `scrollTo({ top: scrollHeight })`.
@@ -20,10 +30,10 @@ Stato corrente:
   - Nuove Server Action (`getVapidPublicKeyAction`, `savePushSubscriptionAction`, `sendTestPushNotificationAction`) e invio concorrente push + telegram in `notifyChatMessageAction`.
   - Layout `/chat` full-bleed ergonomico (`src/components/layout/dashboard-shell.tsx` a `h-[calc(100dvh-4rem)]`, sidebar canali fissa a 250px su desktop, drawer 100dvh su mobile, safe-area inset su iPhone/iPad e pulsante interattivo Web Push nel Channel Header).
   - Esclusione deterministica di `manifest.json` e `sw.js` dal Middleware Next.js e Supabase per prevenire redirect 307 in produzione.
-- **ROADMAP ALLINEAMENTO CHAT & WORKSPACE A SLACK (Fasi 3-5)**:
+- **ROADMAP ALLINEAMENTO CHAT & WORKSPACE A SLACK (Fasi 4-5)**:
   - *Fase 1*: ✅ COMPLETATA & DEPLOYATA (Build #112)
   - *Fase 2*: ✅ COMPLETATA & DEPLOYATA (Build #113)
-  - *Fase 3*: **Ruolo `collaborator` (Guest stile Slack)** + isolamento `channel_members`/`project_members` (Middleware + Sidebar + RLS Supabase: accesso solo a `/chat`, `/lavori`, `/files`, `/videocall` sui propri progetti; blocco di `/corsi`, `/clienti`, `/posta`, `/cervello`, `/growth-studio`, `/workshop-agenti`), DM 1-a-1, canali dinamici su tabella `channels` (sostituendo i 6 `CHANNELS` fissi in `chat/page.tsx`) e ricerca globale (`⌘K`).
+  - *Fase 3*: ✅ COMPLETATA & DEPLOYATA (Build #115)
   - *Fase 4*: Slash command (`/task`, `/lead`, `/ai`) e Webhook in entrata `/api/webhooks/chat` (HMAC) da `n8n` / Stripe / VPS.
   - *Fase 5*: **Inbox Assistenza Nativa (Studenti & Aziende B2B)**: tabelle `support_tickets` + `support_messages` (Supabase Realtime + RLS), auto-routing per categoria (`Tecnico/Piattaforma` -> Marco/Stefano, `Didattica/Moduli` -> docente, `Commerciale/B2B` -> Lorenzo) con `assigned_to` automatico, widget "Chiedi Assistenza" in `/corsi` e pagine B2B con contesto automatico (utente, corso, modulo, azienda), gestione diretta a 2 colonne in `/assistenza` (stati Aperto/In attesa/Risolto, filtro "I miei ticket" vs "Tutti", riassegnazione 1-click), notifiche Web Push mirate al solo assegnatario e avviso email automatico allo studente offline (sostituendo il giro Telegram senza installare Chatwoot).
 - **CRM Commerciale Stile Torch / GoHighLevel (`/clienti`) & Pagina Pubblica Prenotazione (`/prenota`) COMPLETATI (`ba65bc7`)**:

@@ -19,8 +19,11 @@ import {
   Check,
   MessageCircle,
   AtSign,
-  Smile,
   CornerDownRight,
+  Lock,
+  Plus,
+  Trash2,
+  Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -40,7 +43,14 @@ import {
   savePushSubscriptionAction,
   sendTestPushNotificationAction,
 } from '@/app/actions/notifications'
-import { toggleMessageReactionAction, ChatMetadataItem } from '@/app/actions/chat'
+import {
+  toggleMessageReactionAction,
+  getCustomChannelsAction,
+  createCustomChannelAction,
+  deleteCustomChannelAction,
+  ChatMetadataItem,
+  CustomChannelItem,
+} from '@/app/actions/chat'
 
 type MessageWithSender = Message & { sender?: Profile }
 
@@ -52,13 +62,24 @@ interface ChatAttachment {
   storage_path?: string
 }
 
-const CHANNELS = [
-  { id: 'ch-1', name: 'generale', desc: 'Comunicazioni generali, avvisi e allineamento team', icon: Hash },
-  { id: 'ch-2', name: 'progetti', desc: 'Discussioni operative su task, sprint e deliverable', icon: Hash },
-  { id: 'ch-3', name: 'marketing-social', desc: 'Campagne, Growth Studio, reel video e grafiche', icon: Hash },
-  { id: 'ch-4', name: 'corsi-academy', desc: 'Materiale didattico, studenti AI Start/Pro e certificazioni', icon: Hash },
-  { id: 'ch-5', name: 'commerciale-b2b', desc: 'Lead, proposte commerciali per PMI e discovery di flusso', icon: Hash },
-  { id: 'ch-6', name: 'idee-innovazione', desc: 'Nuovi modelli AI, spunti creativi, tool e automazioni', icon: Hash },
+interface DisplayChannel {
+  id: string
+  name: string
+  desc: string
+  icon: any
+  isPrivate: boolean
+  memberIds?: string[]
+  createdBy?: string
+  isCustom?: boolean
+}
+
+const SYSTEM_CHANNELS: DisplayChannel[] = [
+  { id: 'ch-1', name: 'generale', desc: 'Comunicazioni generali, avvisi e allineamento team', icon: Hash, isPrivate: false, isCustom: false },
+  { id: 'ch-2', name: 'progetti', desc: 'Discussioni operative su task, sprint e deliverable', icon: Hash, isPrivate: false, isCustom: false },
+  { id: 'ch-3', name: 'marketing-social', desc: 'Campagne, Growth Studio, reel video e grafiche', icon: Hash, isPrivate: false, isCustom: false },
+  { id: 'ch-4', name: 'corsi-academy', desc: 'Materiale didattico, studenti AI Start/Pro e certificazioni', icon: Hash, isPrivate: false, isCustom: false },
+  { id: 'ch-5', name: 'commerciale-b2b', desc: 'Lead, proposte commerciali per PMI e discovery di flusso', icon: Hash, isPrivate: false, isCustom: false },
+  { id: 'ch-6', name: 'idee-innovazione', desc: 'Nuovi modelli AI, spunti creativi, tool e automazioni', icon: Hash, isPrivate: false, isCustom: false },
 ]
 
 const QUICK_REACTIONS = ['✅', '👀', '🔥', '👍']
@@ -120,8 +141,22 @@ export default function ChatPage() {
   const [inputMessage, setInputMessage] = useState('')
   const [teamMembers, setTeamMembers] = useState<Profile[]>([])
   const [currentUser, setCurrentUser] = useState<Profile | null>(null)
+  const [userRole, setUserRole] = useState<string>('member')
   const [loading, setLoading] = useState(true)
   const [showMobileChannels, setShowMobileChannels] = useState(false)
+
+  // Custom Channels States (Fase 3)
+  const [customChannels, setCustomChannels] = useState<CustomChannelItem[]>([])
+  const [showCreateChannelModal, setShowCreateChannelModal] = useState(false)
+  const [newChannelName, setNewChannelName] = useState('')
+  const [newChannelDesc, setNewChannelDesc] = useState('')
+  const [newChannelIsPrivate, setNewChannelIsPrivate] = useState(false)
+  const [newChannelMemberIds, setNewChannelMemberIds] = useState<string[]>([])
+  const [isCreatingChannel, setIsCreatingChannel] = useState(false)
+
+  // Channel Search Query (Fase 3)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   // Web Push States
   const [pushStatus, setPushStatus] = useState<'loading' | 'unsupported' | 'denied' | 'subscribed' | 'prompt'>('loading')
@@ -145,8 +180,6 @@ export default function ChatPage() {
 
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const threadContainerRef = useRef<HTMLDivElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const threadEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const mainInputRef = useRef<HTMLInputElement>(null)
   const threadInputRef = useRef<HTMLInputElement>(null)
@@ -184,13 +217,14 @@ export default function ChatPage() {
   // Close active thread on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && activeThreadId) {
-        setActiveThreadId(null)
+      if (e.key === 'Escape') {
+        if (activeThreadId) setActiveThreadId(null)
+        if (isSearchOpen && !searchQuery) setIsSearchOpen(false)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [activeThreadId])
+  }, [activeThreadId, isSearchOpen, searchQuery])
 
   // Check Web Push Status on mount
   useEffect(() => {
@@ -205,11 +239,24 @@ export default function ChatPage() {
     checkPush()
   }, [])
 
+  // Carica i canali personalizzati
+  const loadCustomChannels = async () => {
+    try {
+      const res = await getCustomChannelsAction()
+      if (res.success && res.channels) {
+        setCustomChannels(res.channels)
+        if (res.userRole) setUserRole(res.userRole)
+      }
+    } catch (e) {
+      console.warn('Errore caricamento custom channels:', e)
+    }
+  }
+
   // Auto-select channel from URL query parameter if present
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const paramChannel = new URLSearchParams(window.location.search).get('channel')
-      if (paramChannel && CHANNELS.some((c) => c.name === paramChannel)) {
+      if (paramChannel) {
         setActiveChannel(paramChannel)
       }
     }
@@ -244,7 +291,10 @@ export default function ChatPage() {
           .select('*')
           .eq('id', user.id)
           .single()
-        if (profile) setCurrentUser(profile)
+        if (profile) {
+          setCurrentUser(profile)
+          if (profile.role) setUserRole(profile.role)
+        }
       }
 
       const { data: profiles } = await supabase.from('profiles').select('*')
@@ -252,6 +302,7 @@ export default function ChatPage() {
         setTeamMembers(profiles.filter((p: any) => !p.is_agent))
       }
 
+      await loadCustomChannels()
       await fetchMessages(activeChannel)
       markChannelAsRead(activeChannel)
       setLoading(false)
@@ -479,6 +530,18 @@ export default function ChatPage() {
     return uploaded
   }
 
+  // Risoluzione partner per canali DM
+  const isDirectMessage = activeChannel.startsWith('dm:')
+  const dmPartnerId = isDirectMessage
+    ? activeChannel.replace('dm:', '').split('_').find((id) => id !== currentUser?.id)
+    : null
+  const dmPartner = dmPartnerId ? teamMembers.find((m) => m.id === dmPartnerId) : null
+
+  // Risoluzione canale attivo e configurazione privacy
+  const currentCustomChannel = customChannels.find((c) => c.name === activeChannel)
+  const isPrivateChannel = Boolean(currentCustomChannel?.isPrivate)
+  const privateMemberIds = currentCustomChannel?.memberIds || []
+
   // Invio messaggio principale
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -514,9 +577,23 @@ export default function ChatPage() {
         messageContent ||
         (uploadedAttachments.length > 0 ? `📎 Ha inviato ${uploadedAttachments.length} allegato/i` : '')
       const mentions = extractMentions(messageContent)
-      notifyChatMessageAction(activeChannel, notifyText, currentUser.full_name, {
+
+      // Configura le opzioni di notifica per DM o canale privato
+      const notifyOptions: any = {
         mentionedNames: mentions,
-      }).catch((err) => console.error('Chat push & Telegram notify error:', err))
+      }
+
+      if (isDirectMessage && dmPartnerId) {
+        notifyOptions.isDirectMessage = true
+        notifyOptions.recipientUserIds = [dmPartnerId]
+      } else if (isPrivateChannel) {
+        notifyOptions.isPrivateChannel = true
+        notifyOptions.recipientUserIds = privateMemberIds
+      }
+
+      notifyChatMessageAction(activeChannel, notifyText, currentUser.full_name, notifyOptions).catch((err) =>
+        console.error('Chat push notify error:', err)
+      )
     }
   }
 
@@ -549,18 +626,69 @@ export default function ChatPage() {
       console.error('Error sending thread reply:', error)
     } else {
       const mentions = extractMentions(replyText)
-      notifyChatMessageAction(activeChannel, replyText, currentUser.full_name, {
+      const notifyOptions: any = {
         isThreadReply: true,
         mentionedNames: mentions,
-      }).catch((err) => console.error('Thread notify error:', err))
+      }
+
+      if (isDirectMessage && dmPartnerId) {
+        notifyOptions.isDirectMessage = true
+        notifyOptions.recipientUserIds = [dmPartnerId]
+      } else if (isPrivateChannel) {
+        notifyOptions.isPrivateChannel = true
+        notifyOptions.recipientUserIds = privateMemberIds
+      }
+
+      notifyChatMessageAction(activeChannel, replyText, currentUser.full_name, notifyOptions).catch((err) =>
+        console.error('Thread notify error:', err)
+      )
+    }
+  }
+
+  // Gestione creazione nuovo canale custom
+  const handleCreateChannelSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newChannelName.trim() || isCreatingChannel) return
+
+    setIsCreatingChannel(true)
+    const res = await createCustomChannelAction({
+      name: newChannelName,
+      desc: newChannelDesc,
+      isPrivate: newChannelIsPrivate,
+      memberIds: newChannelMemberIds,
+    })
+
+    setIsCreatingChannel(false)
+
+    if (res.success && res.channel) {
+      await loadCustomChannels()
+      setActiveChannel(res.channel.name)
+      setShowCreateChannelModal(false)
+      setNewChannelName('')
+      setNewChannelDesc('')
+      setNewChannelIsPrivate(false)
+      setNewChannelMemberIds([])
+    } else {
+      alert(res.error || 'Errore creazione canale')
+    }
+  }
+
+  // Eliminazione canale custom
+  const handleDeleteChannel = async (channelName: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare il canale "#${channelName}"?`)) return
+    const res = await deleteCustomChannelAction(channelName)
+    if (res.success) {
+      await loadCustomChannels()
+      if (activeChannel === channelName) {
+        setActiveChannel('generale')
+      }
+    } else {
+      alert(res.error || 'Impossibile eliminare il canale')
     }
   }
 
   // Gestione input menzioni
-  const handleInputChangeWithMentions = (
-    val: string,
-    target: 'main' | 'thread'
-  ) => {
+  const handleInputChangeWithMentions = (val: string, target: 'main' | 'thread') => {
     if (target === 'main') setInputMessage(val)
     else setThreadInputMessage(val)
 
@@ -588,8 +716,48 @@ export default function ChatPage() {
     setMentionTarget(null)
   }
 
+  // Lista canali combinata in base al ruolo (Guest/Collaborator vs Team)
+  const displayChannels: DisplayChannel[] =
+    userRole === 'collaborator'
+      ? customChannels.map((c) => ({
+          id: c.id,
+          name: c.name,
+          desc: c.desc,
+          icon: Lock,
+          isPrivate: true,
+          memberIds: c.memberIds,
+          createdBy: c.createdBy,
+          isCustom: true,
+        }))
+      : [
+          ...SYSTEM_CHANNELS,
+          ...customChannels.map((c) => ({
+            id: c.id,
+            name: c.name,
+            desc: c.desc,
+            icon: c.isPrivate ? Lock : Hash,
+            isPrivate: c.isPrivate,
+            memberIds: c.memberIds,
+            createdBy: c.createdBy,
+            isCustom: true,
+          })),
+        ]
+
   // Calcolo messaggi principali e raggruppamento thread
   const mainMessages = messages.filter((m) => !extractMessageMeta(m).parentId)
+
+  // Filtraggio messaggi per ricerca interna al canale
+  const filteredMainMessages = searchQuery.trim()
+    ? mainMessages.filter((m) => {
+        const q = searchQuery.toLowerCase()
+        const textMatch = m.content?.toLowerCase().includes(q)
+        const fileMatch = (m.attachments as any[])?.some(
+          (a) => a && a.name && a.name.toLowerCase().includes(q)
+        )
+        return textMatch || fileMatch
+      })
+    : mainMessages
+
   const repliesByParent = messages.reduce<Record<string, MessageWithSender[]>>((acc, m) => {
     const pId = extractMessageMeta(m).parentId
     if (pId) {
@@ -599,12 +767,17 @@ export default function ChatPage() {
     return acc
   }, {})
 
-  const activeThreadParent = activeThreadId
-    ? messages.find((m) => m.id === activeThreadId) || null
-    : null
+  const activeThreadParent = activeThreadId ? messages.find((m) => m.id === activeThreadId) || null : null
   const activeThreadReplies = activeThreadId ? repliesByParent[activeThreadId] || [] : []
 
-  const currentChannelObj = CHANNELS.find((c) => c.name === activeChannel) || CHANNELS[0]
+  const currentChannelObj =
+    displayChannels.find((c) => c.name === activeChannel) || {
+      id: 'custom',
+      name: activeChannel,
+      desc: isDirectMessage ? 'Conversazione diretta riservata' : 'Canale tematico',
+      icon: isDirectMessage ? MessageSquare : isPrivateChannel ? Lock : Hash,
+      isPrivate: isPrivateChannel,
+    }
 
   // Candidati menzioni filtrati (token singolo pulito: @Marco, @Stefano, @Lorenzo)
   const mentionCandidates = [
@@ -638,7 +811,7 @@ export default function ChatPage() {
           />
         )}
 
-        {/* Left: Channels & Team List */}
+        {/* Left: Channels & DM List */}
         <div
           className={`
             fixed inset-y-0 left-0 z-50 w-72 h-[100dvh] bg-white dark:bg-slate-900 p-4 flex flex-col shadow-2xl transition-transform duration-200 ease-in-out
@@ -646,87 +819,162 @@ export default function ChatPage() {
             ${showMobileChannels ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           `}
         >
+          {/* Canali Tematici */}
           <div className="shrink-0 space-y-3">
             <div className="flex items-center justify-between px-2">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Canali Tematici
+                Canali {userRole === 'collaborator' ? 'Assegnati' : 'Tematici'}
               </div>
-              <button
-                onClick={() => setShowMobileChannels(false)}
-                className="md:hidden p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                aria-label="Chiudi menu canali"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                {userRole !== 'collaborator' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateChannelModal(true)}
+                    className="p-1 rounded-md text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    title="Crea nuovo canale"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowMobileChannels(false)}
+                  className="md:hidden p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  aria-label="Chiudi menu canali"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <div className="space-y-1">
-              {CHANNELS.map((ch) => {
+
+            <div className="space-y-1 max-h-[40vh] overflow-y-auto">
+              {displayChannels.map((ch) => {
                 const isActive = activeChannel === ch.name
                 const Icon = ch.icon
                 const unread = unreadCounts[ch.name] || 0
+                const canDelete =
+                  ch.isCustom &&
+                  (userRole === 'dev' || userRole === 'admin' || ch.createdBy === currentUser?.id)
+
                 return (
-                  <button
+                  <div
                     key={ch.id}
-                    onClick={() => {
-                      setActiveChannel(ch.name)
-                      setShowMobileChannels(false)
-                      setActiveThreadId(null)
-                      markChannelAsRead(ch.name)
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors text-left ${
+                    className={`group/ch flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
                       isActive
                         ? 'bg-blue-600 text-white shadow-xs'
                         : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon className="h-4 w-4 shrink-0" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveChannel(ch.name)
+                        setShowMobileChannels(false)
+                        setActiveThreadId(null)
+                        markChannelAsRead(ch.name)
+                      }}
+                      className="flex items-center gap-2 min-w-0 flex-1 text-left"
+                    >
+                      <Icon className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate">#{ch.name}</span>
+                    </button>
+
+                    <div className="flex items-center gap-1 shrink-0 ml-1">
+                      {unread > 0 && !isActive && (
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500 text-white animate-pulse">
+                          {unread}
+                        </span>
+                      )}
+                      {canDelete && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteChannel(ch.name)
+                          }}
+                          className={`opacity-0 group-hover/ch:opacity-100 p-1 rounded hover:text-red-400 transition-opacity ${
+                            isActive ? 'text-white/80' : 'text-slate-400'
+                          }`}
+                          title="Elimina canale"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
                     </div>
-                    {unread > 0 && !isActive && (
-                      <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500 text-white animate-pulse">
-                        {unread}
-                      </span>
-                    )}
-                  </button>
+                  </div>
                 )
               })}
+
+              {displayChannels.length === 0 && (
+                <div className="px-2 py-2 text-[11px] text-slate-400 text-center">
+                  Nessun canale assegnato.
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Team Members */}
+          {/* Messaggi Diretti (DM 1-a-1) */}
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 flex-1 min-h-0 overflow-y-auto space-y-3">
             <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 flex items-center justify-between">
-              <span>Team</span>
+              <span>Messaggi Diretti</span>
               <Users className="h-3.5 w-3.5" />
             </div>
-            <div className="space-y-2 text-xs">
-              {teamMembers.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between px-2 py-1.5 bg-white dark:bg-slate-800/80 rounded-lg border border-slate-200/60 dark:border-slate-700/60 shadow-xs"
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`h-2 w-2 rounded-full ${
-                        member.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
-                      }`}
-                    />
-                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">
-                      {member.full_name}
-                    </span>
-                  </div>
-                  <Badge
-                    variant={member.role === 'dev' ? 'purple' : member.role === 'admin' ? 'destructive' : 'info'}
-                    className="text-[9px] px-1.5 py-0 uppercase"
+            <div className="space-y-1 text-xs">
+              {teamMembers.map((member) => {
+                const isMe = member.id === currentUser?.id
+                const dmChannelId = currentUser
+                  ? `dm:${[currentUser.id, member.id].sort().join('_')}`
+                  : ''
+                const isActive = activeChannel === dmChannelId
+                const unread = unreadCounts[dmChannelId] || 0
+
+                return (
+                  <button
+                    key={member.id}
+                    type="button"
+                    disabled={isMe}
+                    onClick={() => {
+                      if (!isMe && dmChannelId) {
+                        setActiveChannel(dmChannelId)
+                        setShowMobileChannels(false)
+                        setActiveThreadId(null)
+                        markChannelAsRead(dmChannelId)
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg border transition-all text-left ${
+                      isActive
+                        ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                        : isMe
+                        ? 'opacity-60 bg-transparent border-transparent'
+                        : 'bg-white dark:bg-slate-800/80 border-slate-200/60 dark:border-slate-700/60 hover:border-blue-400 text-slate-800 dark:text-slate-200 shadow-xs'
+                    }`}
                   >
-                    {member.role}
-                  </Badge>
-                </div>
-              ))}
-              {teamMembers.length === 0 && (
-                <div className="text-slate-400 px-2 py-1">Nessun membro trovato</div>
-              )}
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`h-2 w-2 rounded-full shrink-0 ${
+                          member.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                        }`}
+                      />
+                      <span className="font-semibold truncate max-w-[110px]">
+                        {member.full_name} {isMe ? '(Tu)' : ''}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {unread > 0 && !isActive && (
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500 text-white animate-pulse">
+                          {unread}
+                        </span>
+                      )}
+                      <Badge
+                        variant={member.role === 'dev' ? 'purple' : member.role === 'admin' ? 'destructive' : 'info'}
+                        className="text-[9px] px-1 py-0 uppercase"
+                      >
+                        {member.role}
+                      </Badge>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -735,7 +983,7 @@ export default function ChatPage() {
         <div className="flex-1 min-w-0 h-full flex flex-col bg-slate-50/20 dark:bg-slate-950/40 relative overflow-hidden">
           {/* Channel Header */}
           <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur shrink-0 z-10 gap-2">
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <button
                 onClick={() => setShowMobileChannels(true)}
                 className="md:hidden p-1.5 -ml-1 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
@@ -743,19 +991,75 @@ export default function ChatPage() {
               >
                 <Menu className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </button>
-              <div className="min-w-0">
+
+              <div className="min-w-0 flex-1">
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
-                  <Hash className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                  <span className="truncate">{currentChannelObj.name}</span>
+                  {isDirectMessage ? (
+                    <>
+                      <MessageCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="truncate">DM: {dmPartner?.full_name || 'Conversazione Diretta'}</span>
+                    </>
+                  ) : isPrivateChannel ? (
+                    <>
+                      <Lock className="h-4 w-4 text-amber-500 shrink-0" />
+                      <span className="truncate">{currentChannelObj.name}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Hash className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span className="truncate">{currentChannelObj.name}</span>
+                    </>
+                  )}
                 </h2>
                 <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">
-                  {currentChannelObj.desc}
+                  {isDirectMessage
+                    ? 'Messaggio Diretto Privato 1-a-1 • Notifiche personali'
+                    : isPrivateChannel
+                    ? `${currentChannelObj.desc || 'Canale Riservato'} • ${privateMemberIds.length} membri autorizzati`
+                    : currentChannelObj.desc}
                 </p>
               </div>
             </div>
 
-            {/* Right Header Actions: Web Push Button & Realtime Badge */}
+            {/* Right Header Actions: Ricerca, Web Push & Realtime Badge */}
             <div className="flex items-center gap-2 shrink-0">
+              {/* Barra di Ricerca Interna */}
+              <div className="relative flex items-center">
+                {isSearchOpen ? (
+                  <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-2 py-1 border border-slate-300 dark:border-slate-700 animate-in fade-in duration-150">
+                    <Search className="h-3.5 w-3.5 text-slate-400 shrink-0 mr-1.5" />
+                    <input
+                      type="text"
+                      autoFocus
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Cerca nei messaggi..."
+                      className="bg-transparent text-xs text-slate-900 dark:text-white focus:outline-none w-32 sm:w-44"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('')
+                        setIsSearchOpen(false)
+                      }}
+                      className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsSearchOpen(true)}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-xs"
+                    title="Cerca messaggi nel canale"
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Bottone Notifiche Push */}
               {pushStatus === 'subscribed' ? (
                 <Button
                   type="button"
@@ -811,6 +1115,22 @@ export default function ChatPage() {
             </div>
           </div>
 
+          {/* Banner Risultati Ricerca attiva */}
+          {searchQuery.trim() && (
+            <div className="px-4 py-2 bg-blue-50/80 dark:bg-blue-950/40 border-b border-blue-200/60 dark:border-blue-800/60 flex items-center justify-between text-xs text-blue-800 dark:text-blue-300">
+              <span>
+                Filtro ricerca: <strong>&ldquo;{searchQuery}&rdquo;</strong> ({filteredMainMessages.length} risultati)
+              </span>
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="text-xs font-semibold underline hover:text-blue-900 dark:hover:text-white"
+              >
+                Azzera
+              </button>
+            </div>
+          )}
+
           {/* Messages List (Timeline principale dei messaggi radice) */}
           <div
             ref={chatContainerRef}
@@ -820,8 +1140,8 @@ export default function ChatPage() {
               <div className="h-full flex items-center justify-center">
                 <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
               </div>
-            ) : mainMessages.length > 0 ? (
-              mainMessages.map((msg) => {
+            ) : filteredMainMessages.length > 0 ? (
+              filteredMainMessages.map((msg) => {
                 const isMe = msg.sender_id === currentUser?.id
                 const { reactions, files } = extractMessageMeta(msg)
                 const replies = repliesByParent[msg.id] || []
@@ -986,10 +1306,13 @@ export default function ChatPage() {
               })
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                Nessun messaggio in #{activeChannel}. Inizia la conversazione!
+                {searchQuery.trim()
+                  ? `Nessun messaggio trovato per "${searchQuery}".`
+                  : isDirectMessage
+                  ? `Inizia la conversazione privata con ${dmPartner?.full_name || 'questo membro'}.`
+                  : `Nessun messaggio in #${activeChannel}. Inizia la conversazione!`}
               </div>
             )}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Pending Files Preview Strip */}
@@ -1070,6 +1393,8 @@ export default function ChatPage() {
                 placeholder={
                   pendingFiles.length > 0
                     ? 'Aggiungi una didascalia...'
+                    : isDirectMessage
+                    ? `Scrivi a ${dmPartner?.full_name || 'membro'}...`
                     : `Scrivi in #${activeChannel}... (digita @ per menzionare)`
                 }
                 className="flex-1 text-xs sm:text-sm focus:outline-none bg-transparent px-2 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 min-w-0"
@@ -1105,7 +1430,9 @@ export default function ChatPage() {
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Thread</h3>
-                <span className="text-xs text-slate-400">#{activeChannel}</span>
+                <span className="text-xs text-slate-400">
+                  {isDirectMessage ? 'DM' : `#${activeChannel}`}
+                </span>
               </div>
               <button
                 type="button"
@@ -1236,7 +1563,6 @@ export default function ChatPage() {
                   Nessuna risposta in questo thread. Sii il primo a rispondere!
                 </div>
               )}
-              <div ref={threadEndRef} />
             </div>
 
             {/* Autocomplete Popup Menzioni per Thread */}
@@ -1290,6 +1616,163 @@ export default function ChatPage() {
           </div>
         )}
       </div>
+
+      {/* Modal Creazione Nuovo Canale Dinamico / Privato (Fase 3) */}
+      {showCreateChannelModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setShowCreateChannelModal(false)}
+        >
+          <div
+            className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                  <Hash className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Crea Nuovo Canale</h3>
+                  <p className="text-[11px] text-slate-400">Organizza conversazioni per progetto o argomento</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateChannelModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateChannelSubmit} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Nome Canale (slug)
+                </label>
+                <div className="flex items-center bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs">
+                  <span className="text-slate-400 font-mono mr-1">#</span>
+                  <input
+                    type="text"
+                    required
+                    value={newChannelName}
+                    onChange={(e) => setNewChannelName(e.target.value)}
+                    placeholder="es. progetto-alpha, clienti-vip"
+                    className="flex-1 bg-transparent focus:outline-none text-slate-900 dark:text-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Descrizione (opzionale)
+                </label>
+                <input
+                  type="text"
+                  value={newChannelDesc}
+                  onChange={(e) => setNewChannelDesc(e.target.value)}
+                  placeholder="Di cosa si parla in questo canale..."
+                  className="w-full bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs focus:outline-none text-slate-900 dark:text-white"
+                />
+              </div>
+
+              {/* Switch Canale Privato */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Lock className={`h-4 w-4 ${newChannelIsPrivate ? 'text-amber-500' : 'text-slate-400'}`} />
+                  <div>
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
+                      Canale Privato
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {newChannelIsPrivate
+                        ? 'Visibile e accessibile solo ai membri selezionati'
+                        : 'Aperto a tutti i membri del team'}
+                    </span>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={newChannelIsPrivate}
+                  onChange={(e) => setNewChannelIsPrivate(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                />
+              </div>
+
+              {/* Seleziona Membri (solo se Privato) */}
+              {newChannelIsPrivate && (
+                <div className="space-y-1.5 animate-in fade-in duration-150">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Invita Membri Autorizzati
+                  </label>
+                  <div className="max-h-36 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 p-2 space-y-1 bg-slate-50/50 dark:bg-slate-850/50">
+                    {teamMembers.map((m) => {
+                      const isMe = m.id === currentUser?.id
+                      const isChecked = isMe || newChannelMemberIds.includes(m.id)
+                      return (
+                        <label
+                          key={m.id}
+                          className={`flex items-center justify-between p-1.5 rounded-lg text-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                            isMe ? 'opacity-70 cursor-not-allowed' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              disabled={isMe}
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setNewChannelMemberIds((prev) => [...prev, m.id])
+                                } else {
+                                  setNewChannelMemberIds((prev) => prev.filter((id) => id !== m.id))
+                                }
+                              }}
+                              className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-slate-800 dark:text-slate-200 font-medium">
+                              {m.full_name} {isMe ? '(Tu - Creatore)' : ''}
+                            </span>
+                          </div>
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 uppercase">
+                            {m.role}
+                          </Badge>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCreateChannelModal(false)}
+                  className="text-xs h-8"
+                >
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!newChannelName.trim() || isCreatingChannel}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 gap-1.5"
+                >
+                  {isCreatingChannel ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Check className="h-3.5 w-3.5" />
+                  )}
+                  <span>Crea Canale</span>
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Image Preview Zoom Modal */}
       {previewModalUrl && (

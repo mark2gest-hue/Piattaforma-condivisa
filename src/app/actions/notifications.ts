@@ -94,7 +94,13 @@ export async function notifyChatMessageAction(
   channel: string,
   content: string,
   senderName?: string,
-  options?: { isThreadReply?: boolean; mentionedNames?: string[] }
+  options?: {
+    isThreadReply?: boolean
+    mentionedNames?: string[]
+    recipientUserIds?: string[]
+    isDirectMessage?: boolean
+    isPrivateChannel?: boolean
+  }
 ) {
   try {
     let senderUserId: string | undefined
@@ -113,7 +119,9 @@ export async function notifyChatMessageAction(
     if (!userName) {
       userName = await getCurrentUserProfileName()
     }
-    const channelLabel = `#${channel}`
+    const channelLabel = channel.startsWith('dm:') ? 'DM Privato' : `#${channel}`
+
+    const isConfidential = Boolean(options?.isDirectMessage || options?.isPrivateChannel)
 
     const telegramTitle = options?.mentionedNames && options.mentionedNames.length > 0
       ? `🔔 <b>Menzione in Chat (${escapeHtml(channelLabel)})</b>`
@@ -127,19 +135,31 @@ export async function notifyChatMessageAction(
       `📝 <b>Messaggio:</b> <i>"${escapeHtml(content)}"</i>\n\n` +
       `🔗 <a href="https://aiutiamoci.cloud/chat">Apri la Chat su Aiutiamoci</a>`
 
-    // Titolo Web Push personalizzato per menzioni o risposte a thread
+    // Titolo Web Push personalizzato per menzioni, DM, canali privati o risposte a thread
     let pushTitle = `💬 #${channel} — ${userName}`
-    if (options?.mentionedNames && options.mentionedNames.length > 0) {
+    if (options?.isDirectMessage) {
+      pushTitle = `💬 Messaggio diretto da ${userName}`
+    } else if (options?.isPrivateChannel) {
+      pushTitle = `🔒 #${channel} — ${userName}`
+    } else if (options?.mentionedNames && options.mentionedNames.length > 0) {
       pushTitle = `🔔 ${userName} ti ha menzionato in #${channel}`
     } else if (options?.isThreadReply) {
       pushTitle = `💬 Risposta al thread in #${channel} — ${userName}`
     }
 
-    // Esecuzione concorrente: invio Web Push alle altre sessioni + invio su canale Telegram
+    // Esecuzione concorrente: invio Web Push (filtrate per destinatari se DM o canale privato) + invio Telegram (solo per canali pubblici)
     const [telegramResult, pushResult] = await Promise.allSettled([
-      sendTelegramMessage(telegramMessage),
+      isConfidential ? Promise.resolve({ success: true, skipped: true }) : sendTelegramMessage(telegramMessage),
       (async () => {
-        const recipients = await getAllPushSubscriptions(senderUserId)
+        let recipients = await getAllPushSubscriptions(senderUserId)
+
+        // Se sono specificati destinatari mirati (es. DM 1-a-1 o membri canale privato)
+        if (options?.recipientUserIds && options.recipientUserIds.length > 0) {
+          recipients = recipients.filter(
+            (sub) => sub.user_id && options.recipientUserIds!.includes(sub.user_id)
+          )
+        }
+
         if (recipients.length === 0) return { delivered: 0 }
 
         const pushPayload = {

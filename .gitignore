@@ -80,4 +80,6 @@ scripts/render_masterclass_ref.sh
 # Web Push local fallback store & VAPID keys
 .push-subscriptions.json
 .vapid-keys.json
+.chat-channels.json
+
 

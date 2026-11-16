@@ -67,5 +67,38 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Isolamento Zero-Leak per Collaboratori Esterni (Guest / Collaborator):
+  // Hanno accesso esclusivamente a /chat, /lavori, /calendario, /videocall, /files.
+  // Tentativi di accesso a rotte riservate del team vengono reindirizzati a /chat.
+  const isInternalOnlyRoute =
+    pathname.startsWith('/clienti') ||
+    pathname.startsWith('/posta') ||
+    pathname.startsWith('/cervello') ||
+    pathname.startsWith('/growth-studio') ||
+    pathname.startsWith('/workshop-agenti') ||
+    pathname.startsWith('/corsi') ||
+    pathname.startsWith('/zona-compiti') ||
+    pathname.startsWith('/convert')
+
+  if (user && isInternalOnlyRoute) {
+    let userRole = user.user_metadata?.role
+    if (!userRole) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        userRole = (profile as any)?.role
+      } catch {}
+    }
+
+    if (userRole === 'collaborator') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/chat'
+      return NextResponse.redirect(url)
+    }
+  }
+
   return supabaseResponse
 }
