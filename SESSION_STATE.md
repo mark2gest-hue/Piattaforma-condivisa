@@ -14,7 +14,12 @@ Stato corrente:
     - Modale Partecipanti ("Chi c'è in #${activeChannel}"): modale responsivo con barra di ricerca interna in tempo reale, avatar, dot verde attivo, eventuale codice corso (`AI-START-...`), badge ruolo (`TEAM`, `STUDENTE`, `COLLABORATOR`), nome cliccabile e pulsante **`💬 Messaggio`** per avviare chat 1-a-1 immediata.
     - Nomi Autore Cliccabili per DM 1-a-1: sopra ogni messaggio nella timeline principale e nei thread laterali, il nome dell'autore è un bottone interattivo che apre istantaneamente la conversazione privata con quella persona.
     - Risoluzione partner DM estesa: supporta sia membri del team che studenti con routing trasparente `dm:${sortedIds}`.
-  - **PROSSIMO BLOCCO — Fase 5: Inbox Assistenza Nativa (`/assistenza`) + 2 Tasti nella stanza studenti (`/corsi`) (`💬 Canale Studenti #community-studenti` & `🛟 Assistenza 1-a-1`) con rimozione integrale di Telegram**.
+  - **PROSSIMO BLOCCO — Fase 5: Inbox Assistenza Nativa (`/assistenza`) + 2 Tasti nella stanza studenti (`/corsi`) (`💬 Canale Studenti #community-studenti` & `🛟 Assistenza 1-a-1`) + Sistema Notifiche Studenti a 3 Livelli (Rimozione Integrale Telegram)**:
+    - **Livello 1 — Web Push Nativa per Studenti (`student-<id>`)**: pulsante `🔔 Attiva Notifiche` integrato nella stanza `/corsi` per consentire ai corsisti di ricevere notifiche push istantanee su smartphone e desktop all'arrivo di nuovi messaggi in `#community-studenti`, DM 1-a-1 e risposte sui propri ticket di assistenza.
+    - **Livello 2 — Avviso Email Automatico Intelligente (Zero-Spam)**:
+      - Su `#community-studenti`: trigger automatico di notifica email a tutti gli iscritti quando un membro del team cita `@tutti` o attiva il toggle `📧 Avvisa iscritti via Email` durante la pubblicazione di avvisi importanti (con estratto e link diretto ad `/corsi`), evitando spam sui messaggi ordinari.
+      - Nei Messaggi Diretti (DM 1-a-1) e nelle risposte dello staff su ticket `/assistenza`: inoltro email immediato allo studente destinatario.
+    - **Livello 3 — Badge Rosso Numerico (`🔴 N nuovi`) in Tempo Reale in `/corsi`**: contatore visivo dei messaggi non letti sui 2 pulsanti `💬 Canale Studenti` (`#community-studenti`) e `🛟 Assistenza 1-a-1` con persistenza `last_read_at` locale/sessione.
 - **Fase 4 Chat & Workspace (Slash Commands & Webhook HMAC) + Pulizia Canali COMPLETATI & DEPLOYATI (`v2.3.0 • Build #117`)**:
   - **Pulizia Canali di Default & Fix Doppio `# #`**:
     - Ridotto `SYSTEM_CHANNEL_NAMES` in `src/app/actions/chat.ts` e `SYSTEM_CHANNELS` in `src/app/(dashboard)/chat/page.tsx` al solo canale `#generale` (eliminati i 5 canali fittizi `progetti`, `marketing-social`, `corsi-academy`, `commerciale-b2b`, `idee-innovazione` per un workspace minimale e privo di bloat).
