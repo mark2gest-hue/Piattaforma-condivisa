@@ -23,7 +23,12 @@ import {
   Megaphone,
   Folder,
   Sparkles,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Lock,
 } from 'lucide-react'
+import { changeOwnPasswordAction } from '@/app/actions/chat'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -98,6 +103,16 @@ export function Navbar({
   const [isCommandOpen, setIsCommandOpen] = useState(false)
   const [cmdSearchQuery, setCmdSearchQuery] = useState('')
 
+  // Password Change Modal State
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [isForcedPasswordChange, setIsForcedPasswordChange] = useState(false)
+  const [newPasswordVal, setNewPasswordVal] = useState('')
+  const [confirmPasswordVal, setConfirmPasswordVal] = useState('')
+  const [showPasswordVal, setShowPasswordVal] = useState(false)
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -152,6 +167,11 @@ export function Navbar({
   const fetchCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
+      if (user.user_metadata?.must_change_password === true) {
+        setIsForcedPasswordChange(true)
+        setIsPasswordModalOpen(true)
+      }
+
       const { data: profile } = await (supabase as any)
         .from('profiles')
         .select('*')
@@ -175,6 +195,44 @@ export function Navbar({
           avatarUrl: user.user_metadata?.avatar_url || null,
         })
       }
+    }
+  }
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordError(null)
+
+    if (newPasswordVal.length < 8) {
+      setPasswordError('La nuova password deve contenere almeno 8 caratteri')
+      return
+    }
+
+    if (newPasswordVal !== confirmPasswordVal) {
+      setPasswordError('Le due password inserite non coincidono')
+      return
+    }
+
+    setPasswordLoading(true)
+    try {
+      const res = await changeOwnPasswordAction({ newPassword: newPasswordVal })
+      if (!res.success) {
+        setPasswordError(res.error || 'Errore durante l\'aggiornamento password')
+        setPasswordLoading(false)
+        return
+      }
+
+      setPasswordSuccess(true)
+      setTimeout(() => {
+        setPasswordSuccess(false)
+        setIsForcedPasswordChange(false)
+        setIsPasswordModalOpen(false)
+        setNewPasswordVal('')
+        setConfirmPasswordVal('')
+      }, 1400)
+    } catch (err: any) {
+      setPasswordError(err.message || 'Errore imprevisto durante il salvataggio')
+    } finally {
+      setPasswordLoading(false)
     }
   }
 
@@ -270,6 +328,19 @@ export function Navbar({
         <div className="flex items-center gap-3 relative">
           {/* Theme Toggle */}
           <ThemeToggle />
+
+          {/* Change Password Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsForcedPasswordChange(false)
+              setIsPasswordModalOpen(true)
+            }}
+            className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            title="Cambia Password Personale"
+          >
+            <KeyRound className="h-5 w-5" />
+          </button>
 
           {/* Notifications Bell Button */}
           <button
@@ -580,6 +651,117 @@ export function Navbar({
               <span>Naviga con un clic</span>
               <span>Aiutiamoci Hub</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Cambio Password Personale / Forzato */}
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 text-left">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <KeyRound className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                    {isForcedPasswordChange
+                      ? 'Imposta la tua Password Personale'
+                      : 'Cambia Password Personale'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {isForcedPasswordChange
+                      ? 'Primo accesso: per sicurezza imposta una password riservata'
+                      : 'Aggiorna la tua chiave di accesso all\'account'}
+                  </p>
+                </div>
+              </div>
+
+              {!isForcedPasswordChange && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsPasswordModalOpen(false)}
+                  className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            <form onSubmit={handlePasswordSubmit} className="p-5 space-y-4 text-xs">
+              {passwordError && (
+                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300">
+                  {passwordError}
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>Password aggiornata con successo!</span>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                  Nuova Password (minimo 8 caratteri) *
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showPasswordVal ? 'text' : 'password'}
+                    required
+                    value={newPasswordVal}
+                    onChange={(e) => setNewPasswordVal(e.target.value)}
+                    placeholder="Almeno 8 caratteri sicuri"
+                    className="pr-10 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordVal(!showPasswordVal)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    {showPasswordVal ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                  Conferma Nuova Password *
+                </label>
+                <Input
+                  type={showPasswordVal ? 'text' : 'password'}
+                  required
+                  value={confirmPasswordVal}
+                  onChange={(e) => setConfirmPasswordVal(e.target.value)}
+                  placeholder="Ripeti la nuova password"
+                  className="bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                {!isForcedPasswordChange && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setIsPasswordModalOpen(false)}
+                    disabled={passwordLoading}
+                  >
+                    Annulla
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  disabled={passwordLoading || !newPasswordVal || !confirmPasswordVal}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-1.5 cursor-pointer"
+                >
+                  {passwordLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  <span>Salva Nuova Password</span>
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

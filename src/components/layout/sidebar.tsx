@@ -245,7 +245,10 @@ export function Sidebar({
           .eq('id', user.id)
           .maybeSingle()
 
-        const role = profile?.role || user.user_metadata?.role || 'member'
+        const role =
+          user.user_metadata?.role === 'collaborator'
+            ? 'collaborator'
+            : profile?.role || user.user_metadata?.role || 'member'
         setCurrentUserRole(role)
 
         const fullName = (profile?.full_name || user.email || '').toLowerCase()

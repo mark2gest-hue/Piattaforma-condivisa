@@ -1,7 +1,15 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-16 21:51
+Ultimo aggiornamento: 2026-11-16 22:25
 Stato corrente:
+- **Fix Contrasto Dark Mode, Invito Collaboratore Esterno 1-Click & Cambio Password COMPLETATI & DEPLOYATI (`v2.3.0 • Build #116`)**:
+  - Eliminazione di tutte le classi non standard `slate-850` e `slate-750` in `src/app/(dashboard)/chat/page.tsx`, sostituite con `slate-800` e `slate-750` -> `slate-700` per garantire contrasto ottimale, piena leggibilità e colori nitidi in Dark Mode.
+  - Implementazione del ruolo `collaborator` a livello di database ([supabase/migrations/20261116221500_add_collaborator_role.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261116221500_add_collaborator_role.sql)) e tipo TypeScript `UserRole`.
+  - Architettura resiliente duale con `.chat-collaborators.json` e priorità assoluta su `user.user_metadata?.role === 'collaborator'`: isolamento immediato garantito anche prima dell'esecuzione della migrazione sullo schema Postgres remoto.
+  - Box espandibile `+ Crea e Invita Collaboratore Esterno` nel modale di creazione canale con generazione automatica credenziali temporanee, salvataggio profilo, spunta automatica tra i membri del canale e pulsante `📋 Copia Messaggio Invito`.
+  - Tasto `👥 Membri (N)` nell'header dei canali privati/custom: modale dedicato per gestire i membri autorizzati e invitare collaboratori al volo direttamente nel canale.
+  - Modale cambio password in `navbar.tsx`: cambio password volontario tramite icona `🔑` nella topbar e forzato al primo accesso per gli utenti marcati con `must_change_password: true`.
+  - Isolamento all'accesso: per il ruolo `collaborator`, bypass totale del canale `#generale` con selezione automatica del primo canale assegnato o empty state dedicato.
 - **Fase 3 Chat & Workspace Stile Slack COMPLETATA & DEPLOYATA (`v2.3.0 • Build #115`)**:
   - Implementati canali dinamici e privati (`🔒`) con gestione `member_ids` e modale interattivo di creazione (nome slug, descrizione, switch pubblico/privato e selezione membri autorizzati) con storage ibrido duale (`.chat-channels.json` + `public.chat_channels`).
   - Implementata la sezione **Messaggi Diretti (DM 1-a-1)** nella sidebar: conversazioni private dirette con routing su `dm:${sortedIds}`, badge numerico non letti specifico per singolo collega e header contestuale.

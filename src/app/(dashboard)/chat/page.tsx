@@ -24,6 +24,9 @@ import {
   Plus,
   Trash2,
   Search,
+  Copy,
+  CheckCircle2,
+  UserPlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -48,6 +51,8 @@ import {
   getCustomChannelsAction,
   createCustomChannelAction,
   deleteCustomChannelAction,
+  inviteCollaboratorAction,
+  updateChannelMembersAction,
   ChatMetadataItem,
   CustomChannelItem,
 } from '@/app/actions/chat'
@@ -154,6 +159,26 @@ export default function ChatPage() {
   const [newChannelMemberIds, setNewChannelMemberIds] = useState<string[]>([])
   const [isCreatingChannel, setIsCreatingChannel] = useState(false)
 
+  // Collaborator Invite in Create Channel Modal
+  const [showInviteCollabSection, setShowInviteCollabSection] = useState(false)
+  const [collabFullName, setCollabFullName] = useState('')
+  const [collabEmail, setCollabEmail] = useState('')
+  const [collabPassword, setCollabPassword] = useState('Collab!2026!')
+  const [isInvitingCollab, setIsInvitingCollab] = useState(false)
+  const [inviteCollabResult, setInviteCollabResult] = useState<{ message: string; user: any } | null>(null)
+  const [collabCopied, setCollabCopied] = useState(false)
+
+  // Manage Channel Members Modal (per canali custom/privati)
+  const [showManageMembersModal, setShowManageMembersModal] = useState(false)
+  const [manageMemberIds, setManageMemberIds] = useState<string[]>([])
+  const [isSavingMembers, setIsSavingMembers] = useState(false)
+  const [manageCollabFullName, setManageCollabFullName] = useState('')
+  const [manageCollabEmail, setManageCollabEmail] = useState('')
+  const [manageCollabPassword, setManageCollabPassword] = useState('Collab!2026!')
+  const [isManageInviting, setIsManageInviting] = useState(false)
+  const [manageCollabResult, setManageCollabResult] = useState<{ message: string; user: any } | null>(null)
+  const [manageCollabCopied, setManageCollabCopied] = useState(false)
+
   // Channel Search Query (Fase 3)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -246,10 +271,12 @@ export default function ChatPage() {
       if (res.success && res.channels) {
         setCustomChannels(res.channels)
         if (res.userRole) setUserRole(res.userRole)
+        return res
       }
     } catch (e) {
       console.warn('Errore caricamento custom channels:', e)
     }
+    return null
   }
 
   // Auto-select channel from URL query parameter if present
@@ -285,16 +312,21 @@ export default function ChatPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser()
+      let effectiveRole = 'member'
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single()
+        effectiveRole =
+          user.user_metadata?.role === 'collaborator'
+            ? 'collaborator'
+            : profile?.role || user.user_metadata?.role || 'member'
         if (profile) {
           setCurrentUser(profile)
-          if (profile.role) setUserRole(profile.role)
         }
+        setUserRole(effectiveRole)
       }
 
       const { data: profiles } = await supabase.from('profiles').select('*')
@@ -302,9 +334,29 @@ export default function ChatPage() {
         setTeamMembers(profiles.filter((p: any) => !p.is_agent))
       }
 
-      await loadCustomChannels()
-      await fetchMessages(activeChannel)
-      markChannelAsRead(activeChannel)
+      const customRes = await loadCustomChannels()
+      const allowedChannels: CustomChannelItem[] = customRes?.channels || []
+      const finalRole = customRes?.userRole || effectiveRole
+      setUserRole(finalRole)
+
+      let targetChannel = activeChannel
+      if (finalRole === 'collaborator') {
+        const allowedNames = allowedChannels.map((c) => c.name)
+        if (!allowedNames.includes(activeChannel)) {
+          if (allowedChannels.length > 0) {
+            targetChannel = allowedChannels[0].name
+            setActiveChannel(targetChannel)
+          } else {
+            // Nessun canale ancora assegnato al collaboratore
+            setMessages([])
+            setLoading(false)
+            return
+          }
+        }
+      }
+
+      await fetchMessages(targetChannel)
+      markChannelAsRead(targetChannel)
       setLoading(false)
     }
 
@@ -687,6 +739,122 @@ export default function ChatPage() {
     }
   }
 
+  // Invito rapido collaboratore dal modale di creazione canale
+  const handleInviteCollabInModal = async () => {
+    if (!collabEmail.trim() || !collabFullName.trim()) {
+      alert('Inserisci nome completo ed email del collaboratore')
+      return
+    }
+    setIsInvitingCollab(true)
+    try {
+      const res = await inviteCollaboratorAction({
+        email: collabEmail,
+        fullName: collabFullName,
+        tempPassword: collabPassword,
+      })
+      if (res.success && res.user) {
+        setInviteCollabResult({
+          message: res.inviteMessage || '',
+          user: res.user,
+        })
+        // Aggiungi al team locale per visualizzarlo subito
+        setTeamMembers((prev) => {
+          if (prev.some((m) => m.id === res.user.id)) return prev
+          return [
+            ...prev,
+            {
+              id: res.user.id,
+              full_name: res.user.fullName,
+              email: res.user.email,
+              role: 'collaborator' as any,
+              is_active: true,
+              avatar_url: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]
+        })
+        // Spunta automaticamente il nuovo collaboratore tra i membri del canale
+        setNewChannelMemberIds((prev) => Array.from(new Set([...prev, res.user.id])))
+      } else {
+        alert(res.error || 'Errore durante la creazione del collaboratore')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Errore imprevisto')
+    } finally {
+      setIsInvitingCollab(false)
+    }
+  }
+
+  // Salvataggio membri canale da modale Gestione Membri
+  const handleSaveManageMembers = async () => {
+    setIsSavingMembers(true)
+    try {
+      const res = await updateChannelMembersAction({
+        channelName: activeChannel,
+        memberIds: manageMemberIds,
+      })
+      if (res.success) {
+        await loadCustomChannels()
+        setShowManageMembersModal(false)
+      } else {
+        alert(res.error || 'Errore salvataggio membri')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Errore imprevisto')
+    } finally {
+      setIsSavingMembers(false)
+    }
+  }
+
+  // Invito rapido collaboratore dal modale Gestione Membri canale
+  const handleInviteCollabInManage = async () => {
+    if (!manageCollabEmail.trim() || !manageCollabFullName.trim()) {
+      alert('Inserisci nome completo ed email del collaboratore')
+      return
+    }
+    setIsManageInviting(true)
+    try {
+      const res = await inviteCollaboratorAction({
+        email: manageCollabEmail,
+        fullName: manageCollabFullName,
+        tempPassword: manageCollabPassword,
+        channelName: activeChannel,
+      })
+      if (res.success && res.user) {
+        setManageCollabResult({
+          message: res.inviteMessage || '',
+          user: res.user,
+        })
+        // Aggiungi a team locale e seleziona tra i membri
+        setTeamMembers((prev) => {
+          if (prev.some((m) => m.id === res.user.id)) return prev
+          return [
+            ...prev,
+            {
+              id: res.user.id,
+              full_name: res.user.fullName,
+              email: res.user.email,
+              role: 'collaborator' as any,
+              is_active: true,
+              avatar_url: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]
+        })
+        setManageMemberIds((prev) => Array.from(new Set([...prev, res.user.id])))
+        await loadCustomChannels()
+      } else {
+        alert(res.error || 'Errore durante la creazione del collaboratore')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Errore imprevisto')
+    } finally {
+      setIsManageInviting(false)
+    }
+  }
+
   // Gestione input menzioni
   const handleInputChangeWithMentions = (val: string, target: 'main' | 'thread') => {
     if (target === 'main') setInputMessage(val)
@@ -1021,8 +1189,33 @@ export default function ChatPage() {
               </div>
             </div>
 
-            {/* Right Header Actions: Ricerca, Web Push & Realtime Badge */}
+            {/* Right Header Actions: Membri, Ricerca, Web Push & Realtime Badge */}
             <div className="flex items-center gap-2 shrink-0">
+              {/* Gestione Membri Canale Privato / Custom */}
+              {(isPrivateChannel || currentChannelObj.isCustom) && userRole !== 'collaborator' && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const currentChannelItem = customChannels.find((c) => c.name === activeChannel)
+                    setManageMemberIds(currentChannelItem?.memberIds || [])
+                    setManageCollabResult(null)
+                    setShowManageMembersModal(true)
+                  }}
+                  className="text-xs h-8 px-2.5 gap-1.5 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer"
+                  title="Gestisci i membri autorizzati di questo canale"
+                >
+                  <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <span className="hidden sm:inline">
+                    Membri ({customChannels.find((c) => c.name === activeChannel)?.memberIds?.length || 0})
+                  </span>
+                  <span className="sm:hidden">
+                    {customChannels.find((c) => c.name === activeChannel)?.memberIds?.length || 0}
+                  </span>
+                </Button>
+              )}
+
               {/* Barra di Ricerca Interna */}
               <div className="relative flex items-center">
                 {isSearchOpen ? (
@@ -1214,7 +1407,7 @@ export default function ChatPage() {
                                     className={`flex items-center justify-between p-2.5 rounded-xl border transition-colors ${
                                       isMe
                                         ? 'bg-blue-700/80 hover:bg-blue-700 border-blue-500/50 text-white shadow-xs'
-                                        : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 shadow-xs'
+                                        : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 shadow-xs'
                                     }`}
                                   >
                                     <div className="flex items-center gap-2.5 min-w-0">
@@ -1250,7 +1443,7 @@ export default function ChatPage() {
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
                                 hasReacted
                                   ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 shadow-xs'
-                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750'
+                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                               }`}
                               title={`Reagito da ${userIds.length} utente/i`}
                             >
@@ -1448,7 +1641,7 @@ export default function ChatPage() {
             {/* Thread Scrollable Content */}
             <div ref={threadContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 min-h-0">
               {/* Messaggio Padre Originale */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750 space-y-2">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 space-y-2">
                 <div className="flex items-center gap-2">
                   <Avatar
                     fallback={activeThreadParent.sender?.full_name || '?'}
@@ -1651,7 +1844,7 @@ export default function ChatPage() {
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Nome Canale (slug)
                 </label>
-                <div className="flex items-center bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs">
+                <div className="flex items-center bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs">
                   <span className="text-slate-400 font-mono mr-1">#</span>
                   <input
                     type="text"
@@ -1673,12 +1866,12 @@ export default function ChatPage() {
                   value={newChannelDesc}
                   onChange={(e) => setNewChannelDesc(e.target.value)}
                   placeholder="Di cosa si parla in questo canale..."
-                  className="w-full bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs focus:outline-none text-slate-900 dark:text-white"
+                  className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs focus:outline-none text-slate-900 dark:text-white"
                 />
               </div>
 
               {/* Switch Canale Privato */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Lock className={`h-4 w-4 ${newChannelIsPrivate ? 'text-amber-500' : 'text-slate-400'}`} />
                   <div>
@@ -1706,7 +1899,7 @@ export default function ChatPage() {
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Invita Membri Autorizzati
                   </label>
-                  <div className="max-h-36 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 p-2 space-y-1 bg-slate-50/50 dark:bg-slate-850/50">
+                  <div className="max-h-36 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 p-2 space-y-1 bg-slate-50/50 dark:bg-slate-800/50">
                     {teamMembers.map((m) => {
                       const isMe = m.id === currentUser?.id
                       const isChecked = isMe || newChannelMemberIds.includes(m.id)
@@ -1745,6 +1938,118 @@ export default function ChatPage() {
                 </div>
               )}
 
+              {/* Box Espandibile Invito Collaboratore Esterno 1-Click */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setShowInviteCollabSection(!showInviteCollabSection)}
+                  className="w-full flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <UserPlus className="h-4 w-4" />
+                    <span>+ Crea e Invita Collaboratore Esterno</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">
+                    {showInviteCollabSection ? 'Chiudi' : 'Espandi'}
+                  </span>
+                </button>
+
+                {showInviteCollabSection && (
+                  <div className="pt-2 space-y-2.5 animate-in fade-in duration-150 border-t border-slate-200/60 dark:border-slate-700/60">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Crea un account limitato alla sola chat e aggiungilo subito a questo canale.
+                    </p>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-0.5">
+                        Nome Completo *
+                      </label>
+                      <input
+                        type="text"
+                        value={collabFullName}
+                        onChange={(e) => setCollabFullName(e.target.value)}
+                        placeholder="es. Mario Rossi (Partner)"
+                        className="w-full bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-0.5">
+                        Indirizzo Email *
+                      </label>
+                      <input
+                        type="email"
+                        value={collabEmail}
+                        onChange={(e) => setCollabEmail(e.target.value)}
+                        placeholder="mario.rossi@partner.com"
+                        className="w-full bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-0.5">
+                        Password Temporanea
+                      </label>
+                      <input
+                        type="text"
+                        value={collabPassword}
+                        onChange={(e) => setCollabPassword(e.target.value)}
+                        placeholder="Collab!2026!"
+                        className="w-full bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">
+                        Al primo login l'utente dovrà impostare la propria password personale.
+                      </span>
+                    </div>
+
+                    <div className="pt-1 flex items-center justify-between">
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={isInvitingCollab || !collabFullName.trim() || !collabEmail.trim()}
+                        onClick={handleInviteCollabInModal}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7 px-3 gap-1 cursor-pointer"
+                      >
+                        {isInvitingCollab ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Check className="h-3 w-3" />
+                        )}
+                        <span>Crea Account & Spunta</span>
+                      </Button>
+                    </div>
+
+                    {inviteCollabResult && (
+                      <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-200 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold flex items-center gap-1">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                            Collaboratore creato e aggiunto!
+                          </span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              navigator.clipboard.writeText(inviteCollabResult.message)
+                              setCollabCopied(true)
+                              setTimeout(() => setCollabCopied(false), 2000)
+                            }}
+                            className="h-6 px-2 text-[10px] text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Copy className="h-3 w-3" />
+                            <span>{collabCopied ? 'Copiato!' : 'Copia Messaggio'}</span>
+                          </Button>
+                        </div>
+                        <pre className="whitespace-pre-wrap font-mono text-[10px] bg-white/70 dark:bg-slate-900/70 p-2 rounded border border-emerald-200/50 dark:border-emerald-800/50">
+                          {inviteCollabResult.message}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-2">
                 <Button
                   type="button"
@@ -1770,6 +2075,195 @@ export default function ChatPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Gestione Membri del Canale Privato / Custom */}
+      {showManageMembersModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setShowManageMembersModal(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                  <Users className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Gestione Membri: #{activeChannel}
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Seleziona chi può visualizzare e scrivere in questo canale
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowManageMembersModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Elenco Membri Attuali con Checkbox */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Membri Autorizzati ({manageMemberIds.length})
+              </label>
+              <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 p-2 space-y-1 bg-slate-50/50 dark:bg-slate-800/50">
+                {teamMembers.map((m) => {
+                  const currentChannelItem = customChannels.find((c) => c.name === activeChannel)
+                  const isCreator = currentChannelItem?.createdBy === m.id
+                  const isChecked = isCreator || manageMemberIds.includes(m.id)
+                  return (
+                    <label
+                      key={m.id}
+                      className={`flex items-center justify-between p-1.5 rounded-lg text-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                        isCreator ? 'opacity-70 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          disabled={isCreator}
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setManageMemberIds((prev) => [...prev, m.id])
+                            } else {
+                              setManageMemberIds((prev) => prev.filter((id) => id !== m.id))
+                            }
+                          }}
+                          className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-slate-800 dark:text-slate-200 font-medium">
+                          {m.full_name} {isCreator ? '(Creatore)' : ''}
+                        </span>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 uppercase">
+                        {m.role}
+                      </Badge>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Box Invito Collaboratore Esterno al Volo in questo canale */}
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <UserPlus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Invita nuovo Collaboratore in questo canale</span>
+              </span>
+
+              <div className="space-y-2 pt-1 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={manageCollabFullName}
+                    onChange={(e) => setManageCollabFullName(e.target.value)}
+                    placeholder="Nome Completo *"
+                    className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
+                  />
+                  <input
+                    type="email"
+                    value={manageCollabEmail}
+                    onChange={(e) => setManageCollabEmail(e.target.value)}
+                    placeholder="Email Collaboratore *"
+                    className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={manageCollabPassword}
+                    onChange={(e) => setManageCollabPassword(e.target.value)}
+                    placeholder="Password temporanea"
+                    className="flex-1 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={
+                      isManageInviting ||
+                      !manageCollabFullName.trim() ||
+                      !manageCollabEmail.trim()
+                    }
+                    onClick={handleInviteCollabInManage}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8 px-3 shrink-0 cursor-pointer"
+                  >
+                    {isManageInviting ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <UserPlus className="h-3 w-3" />
+                    )}
+                    <span>Crea & Aggiungi</span>
+                  </Button>
+                </div>
+
+                {manageCollabResult && (
+                  <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                        Collaboratore creato e inserito nel canale!
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          navigator.clipboard.writeText(manageCollabResult.message)
+                          setManageCollabCopied(true)
+                          setTimeout(() => setManageCollabCopied(false), 2000)
+                        }}
+                        className="h-6 px-2 text-[10px] text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Copy className="h-3 w-3" />
+                        <span>{manageCollabCopied ? 'Copiato!' : 'Copia Messaggio'}</span>
+                      </Button>
+                    </div>
+                    <pre className="whitespace-pre-wrap font-mono text-[10px] bg-white/70 dark:bg-slate-900/70 p-2 rounded border border-emerald-200/50 dark:border-emerald-800/50">
+                      {manageCollabResult.message}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowManageMembersModal(false)}
+                className="text-xs h-8"
+              >
+                Annulla
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={isSavingMembers}
+                onClick={handleSaveManageMembers}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 gap-1.5 cursor-pointer"
+              >
+                {isSavingMembers ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+                <span>Salva Modifiche Membri</span>
+              </Button>
+            </div>
           </div>
         </div>
       )}

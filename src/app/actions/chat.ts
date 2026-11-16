@@ -21,6 +21,7 @@ export interface CustomChannelItem {
 }
 
 const CHANNELS_LOCAL_FILE = path.join(process.cwd(), '.chat-channels.json')
+const COLLABORATORS_LOCAL_FILE = path.join(process.cwd(), '.chat-collaborators.json')
 
 const SYSTEM_CHANNEL_NAMES = [
   'generale',
@@ -30,6 +31,30 @@ const SYSTEM_CHANNEL_NAMES = [
   'commerciale-b2b',
   'idee-innovazione',
 ]
+
+function readLocalCollaboratorIds(): string[] {
+  try {
+    if (!fs.existsSync(COLLABORATORS_LOCAL_FILE)) return []
+    const raw = fs.readFileSync(COLLABORATORS_LOCAL_FILE, 'utf8')
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch (err) {
+    console.warn('[chat.ts] Impossibile leggere .chat-collaborators.json:', err)
+    return []
+  }
+}
+
+function addLocalCollaboratorId(userId: string): void {
+  try {
+    const list = readLocalCollaboratorIds()
+    if (!list.includes(userId)) {
+      list.push(userId)
+      fs.writeFileSync(COLLABORATORS_LOCAL_FILE, JSON.stringify(list, null, 2), 'utf8')
+    }
+  } catch (err) {
+    console.warn('[chat.ts] Impossibile scrivere .chat-collaborators.json:', err)
+  }
+}
 
 function readLocalCustomChannels(): CustomChannelItem[] {
   try {
@@ -142,7 +167,15 @@ export async function getCustomChannelsAction() {
       .eq('id', user.id)
       .single()
 
-    const userRole = profile?.role || user.user_metadata?.role || 'member'
+    const localCollaborators = readLocalCollaboratorIds()
+    const isCollaborator =
+      user.user_metadata?.role === 'collaborator' ||
+      localCollaborators.includes(user.id) ||
+      profile?.role === 'collaborator'
+
+    const effectiveRole = isCollaborator
+      ? 'collaborator'
+      : profile?.role || user.user_metadata?.role || 'member'
 
     const channelsMap = new Map<string, CustomChannelItem>()
 
@@ -174,7 +207,7 @@ export async function getCustomChannelsAction() {
     const allCustom = Array.from(channelsMap.values())
 
     let allowed: CustomChannelItem[] = []
-    if (userRole === 'collaborator') {
+    if (effectiveRole === 'collaborator') {
       // Isolamento rigido per guest/collaborator: solo canali in cui è esplicitamente presente
       allowed = allCustom.filter((ch) => ch.memberIds && ch.memberIds.includes(user.id))
     } else {
@@ -184,13 +217,19 @@ export async function getCustomChannelsAction() {
         return (
           (ch.memberIds && ch.memberIds.includes(user.id)) ||
           ch.createdBy === user.id ||
-          userRole === 'dev' ||
-          userRole === 'admin'
+          effectiveRole === 'dev' ||
+          effectiveRole === 'admin'
         )
       })
     }
 
-    return { success: true, channels: allowed, userRole, userId: user.id }
+    return {
+      success: true,
+      channels: allowed,
+      userRole: effectiveRole,
+      userId: user.id,
+      collaboratorIds: localCollaborators,
+    }
   } catch (err: any) {
     console.error('[getCustomChannelsAction] Error:', err)
     return { success: false, error: err.message, channels: [], userRole: 'member' }
@@ -322,6 +361,311 @@ export async function deleteCustomChannelAction(name: string) {
     return { success: true }
   } catch (err: any) {
     console.error('[deleteCustomChannelAction] Error:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+/**
+ * Invita e crea un nuovo collaboratore esterno 1-click.
+ * L'account viene marcato con role: 'collaborator' e must_change_password: true.
+ * Viene inserito in .chat-collaborators.json e aggiunto ai memberIds del canale selezionato.
+ */
+export async function inviteCollaboratorAction(input: {
+  email: string
+  fullName: string
+  tempPassword?: string
+  channelName?: string
+}) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Non autorizzato' }
+    }
+
+    const admin = createAdminClient()
+    const { data: callerProfile } = await (admin.from('profiles') as any)
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const localCollaborators = readLocalCollaboratorIds()
+    const isCollabCaller =
+      user.user_metadata?.role === 'collaborator' ||
+      localCollaborators.includes(user.id) ||
+      callerProfile?.role === 'collaborator'
+
+    if (isCollabCaller) {
+      return {
+        success: false,
+        error: 'I collaboratori esterni non hanno il permesso di invitare altri utenti',
+      }
+    }
+
+    const email = input.email.trim().toLowerCase()
+    const fullName = input.fullName.trim()
+    const pwd = input.tempPassword?.trim() || 'Collab!2026!'
+
+    if (!email || !email.includes('@')) {
+      return { success: false, error: 'Indirizzo email non valido' }
+    }
+    if (!fullName || fullName.length < 2) {
+      return { success: false, error: 'Nome completo obbligatorio (almeno 2 caratteri)' }
+    }
+    if (pwd.length < 8) {
+      return { success: false, error: 'La password temporanea deve contenere almeno 8 caratteri' }
+    }
+
+    let targetUserId: string | null = null
+
+    // 1. Creazione utente su Supabase Auth
+    const createRes = await admin.auth.admin.createUser({
+      email,
+      password: pwd,
+      email_confirm: true,
+      user_metadata: {
+        full_name: fullName,
+        role: 'collaborator',
+        must_change_password: true,
+      },
+    })
+
+    if (createRes.data?.user) {
+      targetUserId = createRes.data.user.id
+    } else if (createRes.error) {
+      // Se l'utente esiste già, recuperiamo il suo ID
+      try {
+        const { data: usersList } = await admin.auth.admin.listUsers({ perPage: 1000 })
+        const existing = usersList?.users?.find((u) => u.email?.toLowerCase() === email)
+        if (existing) {
+          targetUserId = existing.id
+          await admin.auth.admin.updateUserById(existing.id, {
+            password: pwd,
+            user_metadata: {
+              ...(existing.user_metadata || {}),
+              full_name: fullName || existing.user_metadata?.full_name,
+              role: 'collaborator',
+              must_change_password: true,
+            },
+          })
+        } else {
+          return { success: false, error: createRes.error.message }
+        }
+      } catch (listErr: any) {
+        return { success: false, error: createRes.error.message || listErr.message }
+      }
+    }
+
+    if (!targetUserId) {
+      return { success: false, error: 'Impossibile determinare l\'identificativo utente' }
+    }
+
+    // 2. Registrazione in .chat-collaborators.json (store locale resiliente)
+    addLocalCollaboratorId(targetUserId)
+
+    // 3. Upsert su tabella profiles con fallback resiliente se l'enum DB non include 'collaborator'
+    try {
+      const { error: upsertErr } = await (admin.from('profiles') as any).upsert({
+        id: targetUserId,
+        email,
+        full_name: fullName,
+        role: 'collaborator',
+        is_active: true,
+      })
+      if (upsertErr) {
+        throw upsertErr
+      }
+    } catch (upsertError) {
+      console.warn(
+        '[inviteCollaboratorAction] Fallback upsert profiles con role member:',
+        upsertError
+      )
+      try {
+        await (admin.from('profiles') as any).upsert({
+          id: targetUserId,
+          email,
+          full_name: fullName,
+          role: 'member',
+          is_active: true,
+        })
+      } catch (fallbackError) {
+        console.error(
+          '[inviteCollaboratorAction] Fallback upsert profiles fallito:',
+          fallbackError
+        )
+      }
+    }
+
+    // 4. Se specificato un canale, aggiungi subito il collaboratore ai memberIds
+    if (input.channelName) {
+      const currentChannels = readLocalCustomChannels()
+      const targetChannel = currentChannels.find((c) => c.name === input.channelName)
+      if (targetChannel) {
+        if (!targetChannel.memberIds.includes(targetUserId)) {
+          targetChannel.memberIds.push(targetUserId)
+          writeLocalCustomChannels(currentChannels)
+        }
+      }
+
+      try {
+        const { data: dbCh } = await (admin.from('chat_channels') as any)
+          .select('member_ids')
+          .eq('name', input.channelName)
+          .single()
+        if (dbCh) {
+          const existingIds: string[] = Array.isArray(dbCh.member_ids) ? dbCh.member_ids : []
+          if (!existingIds.includes(targetUserId)) {
+            await (admin.from('chat_channels') as any)
+              .update({ member_ids: [...existingIds, targetUserId] })
+              .eq('name', input.channelName)
+          }
+        }
+      } catch {
+        // Tabella chat_channels opzionale se non migrata sul DB remoto
+      }
+    }
+
+    const inviteMessage = `Ciao ${fullName}! Sei stato invitato su AIutiamoci (Piattaforma Lavoro Condivisa).
+🔗 Accesso: https://aiutiamoci.cloud/login
+📧 Email: ${email}
+🔑 Password temporanea: ${pwd}
+
+Al primo accesso ti verrà richiesto di impostare la tua nuova password personale. Una volta entrato avrai accesso diretto alla chat e al canale dedicato.`
+
+    return {
+      success: true,
+      user: {
+        id: targetUserId,
+        email,
+        fullName,
+        tempPassword: pwd,
+      },
+      inviteMessage,
+    }
+  } catch (err: any) {
+    console.error('[inviteCollaboratorAction] Error:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+/**
+ * Aggiorna i membri di un canale custom esistente.
+ */
+export async function updateChannelMembersAction(input: {
+  channelName: string
+  memberIds: string[]
+}) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Non autorizzato' }
+    }
+
+    const admin = createAdminClient()
+    const { data: profile } = await (admin.from('profiles') as any)
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const localCollaborators = readLocalCollaboratorIds()
+    const isCollab =
+      user.user_metadata?.role === 'collaborator' ||
+      localCollaborators.includes(user.id) ||
+      profile?.role === 'collaborator'
+
+    if (isCollab) {
+      return {
+        success: false,
+        error: 'I collaboratori esterni non possono modificare i membri del canale',
+      }
+    }
+
+    const currentChannels = readLocalCustomChannels()
+    const target = currentChannels.find((c) => c.name === input.channelName)
+    if (!target) {
+      return { success: false, error: 'Canale non trovato' }
+    }
+
+    if (
+      target.createdBy &&
+      target.createdBy !== user.id &&
+      profile?.role !== 'dev' &&
+      profile?.role !== 'admin'
+    ) {
+      return {
+        success: false,
+        error: 'Solo il creatore o un amministratore possono modificare i membri di questo canale',
+      }
+    }
+
+    const members = Array.from(new Set([...(input.memberIds || []), target.createdBy || user.id]))
+    target.memberIds = members
+    writeLocalCustomChannels(currentChannels)
+
+    try {
+      await (admin.from('chat_channels') as any)
+        .update({ member_ids: members })
+        .eq('name', input.channelName)
+    } catch (err) {
+      console.warn('[updateChannelMembersAction] Fallback su store locale:', err)
+    }
+
+    return { success: true, channel: target }
+  } catch (err: any) {
+    console.error('[updateChannelMembersAction] Error:', err)
+    return { success: false, error: err.message }
+  }
+}
+
+/**
+ * Permette all'utente loggato di aggiornare la propria password personale
+ * e rimuove il flag must_change_password dai metadati.
+ */
+export async function changeOwnPasswordAction(input: {
+  currentPassword?: string
+  newPassword: string
+}) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Non autorizzato' }
+    }
+
+    const newPwd = input.newPassword ? input.newPassword.trim() : ''
+    if (newPwd.length < 8) {
+      return {
+        success: false,
+        error: 'La nuova password deve contenere almeno 8 caratteri',
+      }
+    }
+
+    const admin = createAdminClient()
+    const { error } = await admin.auth.admin.updateUserById(user.id, {
+      password: newPwd,
+      user_metadata: {
+        ...(user.user_metadata || {}),
+        must_change_password: false,
+      },
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err: any) {
+    console.error('[changeOwnPasswordAction] Error:', err)
     return { success: false, error: err.message }
   }
 }

@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type UserRole = 'dev' | 'member' | 'admin'
+export type UserRole = 'dev' | 'member' | 'admin' | 'collaborator'
 export type ProjectCategory = 'course' | 'consulting' | 'ai_agent' | 'internal'
 export type ProjectStatus = 'active' | 'paused' | 'completed' | 'archived'
 export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'review' | 'done'

@@ -81,5 +81,6 @@ scripts/render_masterclass_ref.sh
 .push-subscriptions.json
 .vapid-keys.json
 .chat-channels.json
+.chat-collaborators.json
 
 
