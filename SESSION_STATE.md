@@ -1,13 +1,13 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-16 13:24
+Ultimo aggiornamento: 2026-11-16 13:35
 Stato corrente:
 - **Fix Dispense Corso Base (`AI Start`) vs Corso `AI Pro` COMPLETATO & DEPLOYATO (`v2.3.0 • Build #111`, commit `2971bdf`)**:
   - Risolto il disallineamento tra il programma del Corso Base e le dispense mostrate in Academy: ora ciascun corso carica le proprie dispense dedicate.
 - **ROADMAP IN VALUTAZIONE — Allineamento Chat & Workspace a Slack (4 Fasi)**:
-  - *Fase 1*: PWA (`manifest.json` + `sw.js`) + Notifiche Web Push reali (VAPID + `push_subscriptions` su Supabase) collegate a `notifyChatMessageAction`.
+  - *Fase 1*: PWA (`manifest.json` + `sw.js`) + Notifiche Web Push reali (VAPID + `push_subscriptions` su Supabase) in sostituzione di Telegram, con UX `/chat` mobile-first full-screen per iPhone/iPad.
   - *Fase 2*: Thread di risposta (`parent_message_id`), `@menzioni` con autocomplete, badge non letti per canale (`last_read_at`) e reazioni emoji rapide in `/chat`.
-  - *Fase 3*: DM 1-a-1, canali dinamici su tabella `channels` (sostituendo i 6 `CHANNELS` fissi in `chat/page.tsx`) e ricerca globale (`⌘K`).
+  - *Fase 3*: **Ruolo `collaborator` (Guest stile Slack)** + isolamento `channel_members`/`project_members` (Middleware + Sidebar + RLS Supabase: accesso solo a `/chat`, `/lavori`, `/files`, `/videocall` sui propri progetti; blocco di `/corsi`, `/clienti`, `/posta`, `/cervello`, `/growth-studio`, `/workshop-agenti`), DM 1-a-1, canali dinamici su tabella `channels` (sostituendo i 6 `CHANNELS` fissi in `chat/page.tsx`) e ricerca globale (`⌘K`).
   - *Fase 4*: Slash command (`/task`, `/lead`, `/ai`) e Webhook in entrata `/api/webhooks/chat` (HMAC) da `n8n` / Stripe / VPS.
 - **CRM Commerciale Stile Torch / GoHighLevel (`/clienti`) & Pagina Pubblica Prenotazione (`/prenota`) COMPLETATI (`ba65bc7`)**:
   - **Pipeline Vendite in `/clienti` (`src/app/(dashboard)/clienti/page.tsx`)**: 3 KPI Cards commerciali (`Pipeline in Trattativa €`, `Fatturato Acquisito Vinto €`, `Call & Proposte Calde`), switch vista `[ 💰 Pipeline Vendite | 📋 Lista Contatti ]`, Kanban a 4 fasi (`Nuovo Lead`, `Call Fissata`, `Proposta / Preventivo`, `Cliente Vinto`) con valore economico `€`, frecce di avanzamento rapido (`←`/`→`) persistite in `notes` (`[STAGE:...|VAL:...]`) e bottone WhatsApp 1-click (`wa.me`).
