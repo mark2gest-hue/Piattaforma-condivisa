@@ -12,6 +12,7 @@ import {
   Maximize2,
   Minimize2,
   Users,
+  SlidersHorizontal,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,7 @@ export interface ChatHuddleBarProps {
 
 interface HuddlePeerPresence {
   userId: string
+  sessionId?: string
   name: string
   avatarUrl?: string | null
   audioEnabled: boolean
@@ -49,11 +51,28 @@ interface RemotePeerState {
   screenSharing: boolean
 }
 
+interface DeviceItem {
+  deviceId: string
+  label: string
+  groupId?: string
+}
+
 const RTC_ICE_SERVERS: RTCConfiguration = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
   ],
+}
+
+function isContinuityOrPhoneDevice(label: string): boolean {
+  return /iphone|ipad|continuity|fotocamera di|microfono di/i.test(label || '')
+}
+
+function isDesktopClient(): boolean {
+  return (
+    typeof navigator !== 'undefined' &&
+    !/iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '')
+  )
 }
 
 function StreamMediaView({
@@ -68,17 +87,26 @@ function StreamMediaView({
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
+  const trackSignature = stream
+    ? stream
+        .getTracks()
+        .map((t) => `${t.kind}:${t.id}:${t.readyState}`)
+        .join('|')
+    : ''
+
   useEffect(() => {
     if (hasVideo && videoRef.current) {
       if (videoRef.current.srcObject !== stream) {
         videoRef.current.srcObject = stream
       }
+      videoRef.current.play().catch(() => {})
     } else if (!hasVideo && audioRef.current) {
       if (audioRef.current.srcObject !== stream) {
         audioRef.current.srcObject = stream
       }
+      audioRef.current.play().catch(() => {})
     }
-  }, [stream, hasVideo])
+  }, [stream, hasVideo, trackSignature])
 
   if (hasVideo) {
     return (
@@ -105,6 +133,12 @@ export function ChatHuddleBar({
   const supabaseRef = useRef(createClient())
   const channelRef = useRef<ReturnType<ReturnType<typeof createClient>['channel']> | null>(null)
 
+  const clientSessionIdRef = useRef<string>(
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2)
+  )
+
   const [joined, setJoined] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [isExpanded, setIsExpanded] = useState(true)
@@ -112,6 +146,17 @@ export function ChatHuddleBar({
   const [videoEnabled, setVideoEnabled] = useState(false)
   const [screenSharing, setScreenSharing] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const [audioInputs, setAudioInputs] = useState<DeviceItem[]>([])
+  const [videoInputs, setVideoInputs] = useState<DeviceItem[]>([])
+  const [selectedAudioInputId, setSelectedAudioInputId] = useState<string | null>(null)
+  const [selectedVideoInputId, setSelectedVideoInputId] = useState<string | null>(null)
+  const [showDeviceSettings, setShowDeviceSettings] = useState(false)
+
+  const selectedAudioInputIdRef = useRef<string | null>(null)
+  const selectedVideoInputIdRef = useRef<string | null>(null)
+  selectedAudioInputIdRef.current = selectedAudioInputId
+  selectedVideoInputIdRef.current = selectedVideoInputId
 
   const [activePeers, setActivePeers] = useState<HuddlePeerPresence[]>([])
   const [remotePeers, setRemotePeers] = useState<Record<string, RemotePeerState>>({})
@@ -134,12 +179,88 @@ export function ChatHuddleBar({
   onJoinedChangeRef.current = onJoinedChange
   onNotifyStartRef.current = onNotifyStart
 
+  const pickBestDevice = useCallback(
+    (
+      devices: MediaDeviceInfo[],
+      kind: 'audioinput' | 'videoinput',
+      manualId?: string | null
+    ): string | undefined => {
+      const matching = devices.filter((d) => d.kind === kind && d.deviceId)
+      if (matching.length === 0) return undefined
+
+      if (manualId && matching.some((d) => d.deviceId === manualId)) {
+        return manualId
+      }
+
+      const isDesktop = isDesktopClient()
+      const candidates = isDesktop
+        ? matching.filter((d) => !isContinuityOrPhoneDevice(d.label))
+        : matching
+
+      const pool = candidates.length > 0 ? candidates : matching
+
+      const builtIn = pool.find(
+        (d) =>
+          /built-in|integrat|facetime|macbook|imac|mac mini|studio display|internal/i.test(d.label) &&
+          d.deviceId !== 'default' &&
+          d.deviceId !== 'communications'
+      )
+      if (builtIn) return builtIn.deviceId
+
+      const nonDefault = pool.find(
+        (d) => d.deviceId !== 'default' && d.deviceId !== 'communications'
+      )
+      if (nonDefault) return nonDefault.deviceId
+
+      return pool[0]?.deviceId
+    },
+    []
+  )
+
+  const refreshDevices = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) return
+    try {
+      const all = await navigator.mediaDevices.enumerateDevices()
+      const audios: DeviceItem[] = all
+        .filter((d) => d.kind === 'audioinput' && d.deviceId)
+        .map((d, idx) => ({
+          deviceId: d.deviceId,
+          label: d.label || `Microfono ${idx + 1}`,
+          groupId: d.groupId,
+        }))
+      const videos: DeviceItem[] = all
+        .filter((d) => d.kind === 'videoinput' && d.deviceId)
+        .map((d, idx) => ({
+          deviceId: d.deviceId,
+          label: d.label || `Videocamera ${idx + 1}`,
+          groupId: d.groupId,
+        }))
+
+      setAudioInputs(audios)
+      setVideoInputs(videos)
+    } catch (err) {
+      console.warn('[ChatHuddleBar] enumerateDevices warning:', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshDevices()
+    const handler = () => {
+      refreshDevices()
+    }
+    navigator.mediaDevices?.addEventListener?.('devicechange', handler)
+    return () => {
+      navigator.mediaDevices?.removeEventListener?.('devicechange', handler)
+    }
+  }, [refreshDevices])
+
   const syncLocalDisplayStream = useCallback(() => {
     const camStream = localStreamRef.current
     const screenStream = screenStreamRef.current
     const screenVideoTrack = screenStream?.getVideoTracks()?.[0]
     const camVideoTrack = camStream?.getVideoTracks()?.[0]
-    const activeVideoTrack = screenVideoTrack || (videoEnabledRef.current ? camVideoTrack : undefined)
+    const activeVideoTrack =
+      screenVideoTrack || (videoEnabledRef.current ? camVideoTrack : undefined)
 
     if (activeVideoTrack) {
       setLocalDisplayStream(new MediaStream([activeVideoTrack]))
@@ -155,6 +276,7 @@ export function ChatHuddleBar({
       try {
         await ch.track({
           userId: currentUser.id,
+          sessionId: clientSessionIdRef.current,
           name: currentUser.full_name,
           avatarUrl: currentUser.avatar_url || null,
           audioEnabled: overrides?.audioEnabled ?? audioEnabledRef.current,
@@ -168,25 +290,28 @@ export function ChatHuddleBar({
     [currentUser.avatar_url, currentUser.full_name, currentUser.id]
   )
 
-  const updateRemotePeersMetaFromPresence = useCallback((list: HuddlePeerPresence[]) => {
-    setRemotePeers((prev) => {
-      const next = { ...prev }
-      for (const peer of list) {
-        if (peer.userId === currentUser.id) continue
-        if (next[peer.userId]) {
-          next[peer.userId] = {
-            ...next[peer.userId],
-            name: peer.name,
-            avatarUrl: peer.avatarUrl,
-            audioEnabled: peer.audioEnabled,
-            videoEnabled: peer.videoEnabled,
-            screenSharing: peer.screenSharing,
+  const updateRemotePeersMetaFromPresence = useCallback(
+    (list: HuddlePeerPresence[]) => {
+      setRemotePeers((prev) => {
+        const next = { ...prev }
+        for (const peer of list) {
+          if (peer.userId === currentUser.id) continue
+          if (next[peer.userId]) {
+            next[peer.userId] = {
+              ...next[peer.userId],
+              name: peer.name,
+              avatarUrl: peer.avatarUrl,
+              audioEnabled: peer.audioEnabled,
+              videoEnabled: peer.videoEnabled,
+              screenSharing: peer.screenSharing,
+            }
           }
         }
-      }
-      return next
-    })
-  }, [currentUser.id])
+        return next
+      })
+    },
+    [currentUser.id]
+  )
 
   const closePeerConnection = useCallback((peerId: string) => {
     const pc = pcsRef.current[peerId]
@@ -211,11 +336,19 @@ export function ChatHuddleBar({
     })
   }, [])
 
-  const attachLocalTracksToPc = useCallback((pc: RTCPeerConnection) => {
+  const attachLocalTracksToPc = useCallback(async (pc: RTCPeerConnection): Promise<void> => {
     const senders = pc.getSenders()
     const audioTrack = localStreamRef.current?.getAudioTracks()?.[0]
-    if (audioTrack && !senders.some((s) => s.track?.kind === 'audio')) {
-      pc.addTrack(audioTrack, localStreamRef.current!)
+    if (audioTrack) {
+      const audioTransceiver = pc
+        .getTransceivers()
+        .find((t) => t.receiver?.track?.kind === 'audio' || t.sender?.track?.kind === 'audio')
+      if (audioTransceiver) {
+        audioTransceiver.direction = 'sendrecv'
+        await audioTransceiver.sender.replaceTrack(audioTrack).catch(() => {})
+      } else if (!senders.some((s) => s.track?.kind === 'audio')) {
+        pc.addTrack(audioTrack, localStreamRef.current!)
+      }
     }
 
     const screenVideoTrack = screenStreamRef.current?.getVideoTracks()?.[0]
@@ -225,29 +358,27 @@ export function ChatHuddleBar({
     const videoTrack = screenVideoTrack || camVideoTrack
     const videoSourceStream = screenVideoTrack ? screenStreamRef.current : localStreamRef.current
 
+    const videoTransceiver = pc
+      .getTransceivers()
+      .find((t) => t.receiver?.track?.kind === 'video' || t.sender?.track?.kind === 'video')
+
     if (videoTrack && videoSourceStream) {
-      const existingVideoSender =
-        pc
-          .getTransceivers()
-          .find((t) => t.receiver?.track?.kind === 'video' || t.sender?.track?.kind === 'video')
-          ?.sender || senders.find((s) => s.track?.kind === 'video')
-      if (existingVideoSender) {
-        existingVideoSender.replaceTrack(videoTrack).catch(() => {})
+      if (videoTransceiver) {
+        videoTransceiver.direction = 'sendrecv'
+        await videoTransceiver.sender.replaceTrack(videoTrack).catch(() => {})
       } else {
         pc.addTrack(videoTrack, videoSourceStream)
       }
-    }
-  }, [])
-
-  const flushPendingIce = useCallback(async (peerId: string, pc: RTCPeerConnection) => {
-    const queued = pendingIceRef.current[peerId]
-    if (!queued || queued.length === 0) return
-    pendingIceRef.current[peerId] = []
-    for (const candidate of queued) {
+    } else if (videoTransceiver) {
+      if (videoTransceiver.direction !== 'recvonly') {
+        videoTransceiver.direction = 'recvonly'
+        await videoTransceiver.sender.replaceTrack(null).catch(() => {})
+      }
+    } else {
       try {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate))
-      } catch (err) {
-        console.warn('[ChatHuddleBar] ICE flush warning:', err)
+        pc.addTransceiver('video', { direction: 'recvonly' })
+      } catch {
+        // fallback
       }
     }
   }, [])
@@ -255,14 +386,17 @@ export function ChatHuddleBar({
   const getOrCreatePeerConnection = useCallback(
     (peerId: string): RTCPeerConnection => {
       const existing = pcsRef.current[peerId]
-      if (existing && existing.connectionState !== 'closed') {
-        return existing
+      if (existing) {
+        if (existing.connectionState !== 'closed' && existing.connectionState !== 'failed') {
+          return existing
+        }
+        if (existing.connectionState === 'failed') {
+          closePeerConnection(peerId)
+        }
       }
 
       const pc = new RTCPeerConnection(RTC_ICE_SERVERS)
       pcsRef.current[peerId] = pc
-
-      attachLocalTracksToPc(pc)
 
       pc.onicecandidate = (event) => {
         if (event.candidate && channelRef.current) {
@@ -294,19 +428,31 @@ export function ChatHuddleBar({
           stream.addTrack(event.track)
         }
 
-        const meta = activePeersRef.current.find((p) => p.userId === peerId)
-        setRemotePeers((prev) => ({
-          ...prev,
-          [peerId]: {
-            userId: peerId,
-            name: meta?.name || prev[peerId]?.name || 'Partecipante',
-            avatarUrl: meta?.avatarUrl ?? prev[peerId]?.avatarUrl ?? null,
-            stream,
-            audioEnabled: meta?.audioEnabled ?? prev[peerId]?.audioEnabled ?? true,
-            videoEnabled: meta?.videoEnabled ?? prev[peerId]?.videoEnabled ?? false,
-            screenSharing: meta?.screenSharing ?? prev[peerId]?.screenSharing ?? false,
-          },
-        }))
+        const updatePeerStreamInstance = () => {
+          const curStream = remoteStreamsRef.current[peerId]
+          if (!curStream) return
+          const nextStream = new MediaStream(curStream.getTracks())
+          remoteStreamsRef.current[peerId] = nextStream
+          const meta = activePeersRef.current.find((p) => p.userId === peerId)
+          setRemotePeers((prev) => ({
+            ...prev,
+            [peerId]: {
+              userId: peerId,
+              name: meta?.name || prev[peerId]?.name || 'Partecipante',
+              avatarUrl: meta?.avatarUrl ?? prev[peerId]?.avatarUrl ?? null,
+              stream: nextStream,
+              audioEnabled: meta?.audioEnabled ?? prev[peerId]?.audioEnabled ?? true,
+              videoEnabled: meta?.videoEnabled ?? prev[peerId]?.videoEnabled ?? false,
+              screenSharing: meta?.screenSharing ?? prev[peerId]?.screenSharing ?? false,
+            },
+          }))
+        }
+
+        event.track.onunmute = () => {
+          updatePeerStreamInstance()
+        }
+
+        updatePeerStreamInstance()
       }
 
       pc.onconnectionstatechange = () => {
@@ -317,8 +463,21 @@ export function ChatHuddleBar({
 
       return pc
     },
-    [attachLocalTracksToPc, closePeerConnection, currentUser.id]
+    [closePeerConnection, currentUser.id]
   )
+
+  const flushPendingIce = useCallback(async (peerId: string, pc: RTCPeerConnection) => {
+    const queued = pendingIceRef.current[peerId]
+    if (!queued || queued.length === 0) return
+    pendingIceRef.current[peerId] = []
+    for (const candidate of queued) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate))
+      } catch (err) {
+        console.warn('[ChatHuddleBar] ICE flush warning:', err)
+      }
+    }
+  }, [])
 
   const sendOfferToPeer = useCallback(
     async (peerId: string) => {
@@ -326,7 +485,8 @@ export function ChatHuddleBar({
       if (!ch || !joinedRef.current) return
       try {
         const pc = getOrCreatePeerConnection(peerId)
-        attachLocalTracksToPc(pc)
+        if (pc.connectionState === 'closed') return
+        await attachLocalTracksToPc(pc)
         const offer = await pc.createOffer()
         await pc.setLocalDescription(offer)
         ch.send({
@@ -345,6 +505,154 @@ export function ChatHuddleBar({
     [attachLocalTracksToPc, currentUser.id, getOrCreatePeerConnection]
   )
 
+  const updateVideoTrackOnAllPeers = useCallback(
+    async (nextTrack: MediaStreamTrack | null, sourceStream: MediaStream | null) => {
+      const peerIds = Object.keys(pcsRef.current)
+      for (const peerId of peerIds) {
+        const pc = pcsRef.current[peerId]
+        if (!pc) continue
+
+        const videoTransceiver = pc
+          .getTransceivers()
+          .find((t) => t.receiver?.track?.kind === 'video' || t.sender?.track?.kind === 'video')
+
+        if (videoTransceiver) {
+          if (nextTrack) {
+            videoTransceiver.direction = 'sendrecv'
+            await videoTransceiver.sender.replaceTrack(nextTrack).catch((err) => {
+              console.warn('[ChatHuddleBar] replaceTrack warning:', err)
+            })
+          } else {
+            await videoTransceiver.sender.replaceTrack(null).catch(() => {})
+            videoTransceiver.direction = 'recvonly'
+          }
+          if (pc.signalingState === 'stable') {
+            await sendOfferToPeer(peerId)
+          }
+        } else if (nextTrack && sourceStream) {
+          pc.addTrack(nextTrack, sourceStream)
+          if (pc.signalingState === 'stable') {
+            await sendOfferToPeer(peerId)
+          }
+        }
+      }
+    },
+    [sendOfferToPeer]
+  )
+
+  const handleTrackEnded = useCallback(
+    async (kind: 'audio' | 'video', endedTrack: MediaStreamTrack) => {
+      if (!joinedRef.current) return
+      console.warn(`[ChatHuddleBar] Local ${kind} track ended inaspettatamente:`, endedTrack.label)
+
+      if (kind === 'audio') {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices().catch(() => [])
+          const bestMic = pickBestDevice(devices, 'audioinput')
+          const newStream = await navigator.mediaDevices.getUserMedia({
+            audio: bestMic ? { deviceId: { exact: bestMic } } : true,
+          })
+          const newAudioTrack = newStream.getAudioTracks()[0]
+          if (newAudioTrack && joinedRef.current) {
+            newAudioTrack.enabled = audioEnabledRef.current
+            newAudioTrack.onended = () => {
+              handleTrackEnded('audio', newAudioTrack)
+            }
+
+            if (localStreamRef.current) {
+              localStreamRef.current.removeTrack(endedTrack)
+              localStreamRef.current.addTrack(newAudioTrack)
+            } else {
+              localStreamRef.current = newStream
+            }
+
+            for (const pc of Object.values(pcsRef.current)) {
+              const audioTransceiver = pc
+                .getTransceivers()
+                .find(
+                  (t) => t.receiver?.track?.kind === 'audio' || t.sender?.track?.kind === 'audio'
+                )
+              if (audioTransceiver) {
+                audioTransceiver.direction = 'sendrecv'
+                await audioTransceiver.sender.replaceTrack(newAudioTrack).catch(() => {})
+              } else {
+                const sender = pc.getSenders().find((s) => s.track?.kind === 'audio')
+                if (sender) {
+                  await sender.replaceTrack(newAudioTrack).catch(() => {})
+                }
+              }
+            }
+            setErrorMsg('Microfono commutato su dispositivo locale.')
+            setTimeout(() => setErrorMsg(null), 3000)
+          }
+        } catch (fallbackErr) {
+          console.error('[ChatHuddleBar] Auto-fallback audio fallito:', fallbackErr)
+        }
+      } else if (kind === 'video') {
+        if (screenSharingRef.current) return
+
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices().catch(() => [])
+          const bestCam = pickBestDevice(devices, 'videoinput')
+
+          if (bestCam) {
+            const newStream = await navigator.mediaDevices.getUserMedia({
+              video: { deviceId: { exact: bestCam } },
+            })
+            const newVideoTrack = newStream.getVideoTracks()[0]
+            if (newVideoTrack && joinedRef.current && videoEnabledRef.current) {
+              newVideoTrack.onended = () => {
+                handleTrackEnded('video', newVideoTrack)
+              }
+              if (localStreamRef.current) {
+                localStreamRef.current.removeTrack(endedTrack)
+                localStreamRef.current.addTrack(newVideoTrack)
+              } else {
+                localStreamRef.current = newStream
+              }
+              await updateVideoTrackOnAllPeers(newVideoTrack, localStreamRef.current)
+              syncLocalDisplayStream()
+              setErrorMsg('Videocamera commutata su dispositivo locale.')
+              setTimeout(() => setErrorMsg(null), 3000)
+              return
+            }
+          }
+        } catch (camErr) {
+          console.warn('[ChatHuddleBar] Riconnessione video fallita:', camErr)
+        }
+
+        videoEnabledRef.current = false
+        setVideoEnabled(false)
+        if (localStreamRef.current) {
+          localStreamRef.current.removeTrack(endedTrack)
+        }
+        await updateVideoTrackOnAllPeers(null, null)
+        syncLocalDisplayStream()
+        await trackCurrentPresence({ videoEnabled: false })
+        setErrorMsg('Videocamera disconnessa. Chiamata mantenuta in solo audio.')
+        setTimeout(() => setErrorMsg(null), 4000)
+      }
+    },
+    [pickBestDevice, syncLocalDisplayStream, trackCurrentPresence, updateVideoTrackOnAllPeers]
+  )
+
+  const attachTrackEndedHandlers = useCallback(
+    (stream: MediaStream) => {
+      stream.getTracks().forEach((track) => {
+        if (track.kind === 'audio') {
+          track.onended = () => {
+            handleTrackEnded('audio', track)
+          }
+        } else if (track.kind === 'video') {
+          track.onended = () => {
+            handleTrackEnded('video', track)
+          }
+        }
+      })
+    },
+    [handleTrackEnded]
+  )
+
   const leaveHuddle = useCallback(
     (notifyRemote = true) => {
       if (notifyRemote && channelRef.current && joinedRef.current) {
@@ -352,7 +660,10 @@ export function ChatHuddleBar({
           channelRef.current.send({
             type: 'broadcast',
             event: 'peer-leave',
-            payload: { from: currentUser.id },
+            payload: {
+              from: currentUser.id,
+              sessionId: clientSessionIdRef.current,
+            },
           })
           channelRef.current.untrack()
         } catch {
@@ -361,11 +672,17 @@ export function ChatHuddleBar({
       }
 
       if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((t) => t.stop())
+        localStreamRef.current.getTracks().forEach((t) => {
+          t.onended = null
+          t.stop()
+        })
         localStreamRef.current = null
       }
       if (screenStreamRef.current) {
-        screenStreamRef.current.getTracks().forEach((t) => t.stop())
+        screenStreamRef.current.getTracks().forEach((t) => {
+          t.onended = null
+          t.stop()
+        })
         screenStreamRef.current = null
       }
 
@@ -386,6 +703,7 @@ export function ChatHuddleBar({
       setLocalDisplayStream(null)
       setRemotePeers({})
       setErrorMsg(null)
+      setShowDeviceSettings(false)
       onJoinedChangeRef.current?.(false)
     },
     [closePeerConnection, currentUser.id]
@@ -403,11 +721,149 @@ export function ChatHuddleBar({
       setErrorMsg(null)
 
       try {
-        const wantVideo = mode === 'video'
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: wantVideo,
-        })
+        let wantVideo = mode === 'video'
+        const allDevices = await navigator.mediaDevices.enumerateDevices().catch(() => [])
+
+        const bestAudio = pickBestDevice(allDevices, 'audioinput', selectedAudioInputIdRef.current)
+        const bestVideo = wantVideo
+          ? pickBestDevice(allDevices, 'videoinput', selectedVideoInputIdRef.current)
+          : undefined
+
+        let stream: MediaStream | null = null
+
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: bestAudio ? { deviceId: { exact: bestAudio } } : true,
+            video: wantVideo ? (bestVideo ? { deviceId: { exact: bestVideo } } : true) : false,
+          })
+        } catch (firstErr) {
+          if (wantVideo) {
+            let recovered = false
+            if (bestVideo) {
+              try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                  audio: bestAudio ? { deviceId: { exact: bestAudio } } : true,
+                  video: true,
+                })
+                recovered = true
+              } catch {
+                // fallback to audio
+              }
+            }
+            if (!recovered) {
+              try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                  audio: bestAudio ? { deviceId: { exact: bestAudio } } : true,
+                  video: false,
+                })
+                wantVideo = false
+                setErrorMsg('Videocamera non disponibile. Connesso in solo audio.')
+              } catch {
+                try {
+                  stream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: false,
+                  })
+                  wantVideo = false
+                  setErrorMsg('Videocamera non disponibile. Connesso in solo audio.')
+                } catch {
+                  throw firstErr
+                }
+              }
+            }
+          } else {
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: false,
+              })
+            } catch {
+              throw firstErr
+            }
+          }
+        }
+
+        if (!stream) {
+          throw new Error('Impossibile acquisire il flusso multimediale.')
+        }
+
+        await refreshDevices()
+        const updatedDevices = await navigator.mediaDevices.enumerateDevices().catch(() => [])
+
+        let currentAudioTrack = stream.getAudioTracks()[0]
+        if (currentAudioTrack && isDesktopClient() && isContinuityOrPhoneDevice(currentAudioTrack.label)) {
+          const localMicId = pickBestDevice(updatedDevices, 'audioinput')
+          const chosenLabel = updatedDevices.find((d) => d.deviceId === localMicId)?.label || ''
+          if (localMicId && !isContinuityOrPhoneDevice(chosenLabel)) {
+            try {
+              const replacementStream = await navigator.mediaDevices.getUserMedia({
+                audio: { deviceId: { exact: localMicId } },
+                video: false,
+              })
+              const replacementTrack = replacementStream.getAudioTracks()[0]
+              if (replacementTrack) {
+                currentAudioTrack.onended = null
+                currentAudioTrack.stop()
+                stream.removeTrack(currentAudioTrack)
+                stream.addTrack(replacementTrack)
+                currentAudioTrack = replacementTrack
+              }
+            } catch (switchErr) {
+              console.warn('[ChatHuddleBar] Continuity auto-switch audio failed:', switchErr)
+            }
+          }
+        }
+
+        let currentVideoTrack = stream.getVideoTracks()[0]
+        if (currentVideoTrack && isDesktopClient() && isContinuityOrPhoneDevice(currentVideoTrack.label)) {
+          const localCamId = pickBestDevice(updatedDevices, 'videoinput')
+          const chosenLabel = updatedDevices.find((d) => d.deviceId === localCamId)?.label || ''
+          if (localCamId && !isContinuityOrPhoneDevice(chosenLabel)) {
+            try {
+              const replacementStream = await navigator.mediaDevices.getUserMedia({
+                video: { deviceId: { exact: localCamId } },
+              })
+              const replacementTrack = replacementStream.getVideoTracks()[0]
+              if (replacementTrack) {
+                currentVideoTrack.onended = null
+                currentVideoTrack.stop()
+                stream.removeTrack(currentVideoTrack)
+                stream.addTrack(replacementTrack)
+                currentVideoTrack = replacementTrack
+              }
+            } catch (switchErr) {
+              console.warn('[ChatHuddleBar] Continuity auto-switch video failed:', switchErr)
+            }
+          }
+        }
+
+        if (currentAudioTrack) {
+          const actualAudioDeviceId =
+            currentAudioTrack.getSettings?.().deviceId ||
+            updatedDevices.find(
+              (d) => d.kind === 'audioinput' && d.label && d.label === currentAudioTrack.label
+            )?.deviceId ||
+            ''
+          if (actualAudioDeviceId) {
+            selectedAudioInputIdRef.current = actualAudioDeviceId
+            setSelectedAudioInputId(actualAudioDeviceId)
+          }
+        }
+
+        if (currentVideoTrack && wantVideo) {
+          const actualVideoDeviceId =
+            currentVideoTrack.getSettings?.().deviceId ||
+            updatedDevices.find(
+              (d) => d.kind === 'videoinput' && d.label && d.label === currentVideoTrack.label
+            )?.deviceId ||
+            ''
+          if (actualVideoDeviceId) {
+            selectedVideoInputIdRef.current = actualVideoDeviceId
+            setSelectedVideoInputId(actualVideoDeviceId)
+          }
+        }
+
+        attachTrackEndedHandlers(stream)
 
         localStreamRef.current = stream
         audioEnabledRef.current = true
@@ -437,7 +893,10 @@ export function ChatHuddleBar({
           channelRef.current.send({
             type: 'broadcast',
             event: 'peer-join',
-            payload: { from: currentUser.id },
+            payload: {
+              from: currentUser.id,
+              sessionId: clientSessionIdRef.current,
+            },
           })
         }
 
@@ -457,40 +916,89 @@ export function ChatHuddleBar({
       }
     },
     [
+      attachTrackEndedHandlers,
       currentUser.id,
       isConnecting,
       leaveHuddle,
+      pickBestDevice,
+      refreshDevices,
       syncLocalDisplayStream,
       trackCurrentPresence,
     ]
   )
 
-  const updateVideoTrackOnAllPeers = useCallback(
-    async (nextTrack: MediaStreamTrack | null, sourceStream: MediaStream | null) => {
-      const peerIds = Object.keys(pcsRef.current)
-      for (const peerId of peerIds) {
-        const pc = pcsRef.current[peerId]
-        if (!pc) continue
-        const existingVideoSender =
-          pc
-            .getTransceivers()
-            .find((t) => t.receiver?.track?.kind === 'video' || t.sender?.track?.kind === 'video')
-            ?.sender || pc.getSenders().find((s) => s.track?.kind === 'video')
+  const switchAudioDevice = async (deviceId: string) => {
+    selectedAudioInputIdRef.current = deviceId
+    setSelectedAudioInputId(deviceId)
+    if (!joinedRef.current) return
 
-        if (existingVideoSender) {
-          try {
-            await existingVideoSender.replaceTrack(nextTrack)
-          } catch (err) {
-            console.warn('[ChatHuddleBar] replaceTrack warning:', err)
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        audio: { deviceId: { exact: deviceId } },
+      })
+      const newAudioTrack = newStream.getAudioTracks()[0]
+      if (!newAudioTrack) return
+      newAudioTrack.enabled = audioEnabledRef.current
+
+      const oldAudioTrack = localStreamRef.current?.getAudioTracks()[0]
+      if (oldAudioTrack) {
+        oldAudioTrack.onended = null
+        oldAudioTrack.stop()
+        localStreamRef.current?.removeTrack(oldAudioTrack)
+      }
+      localStreamRef.current?.addTrack(newAudioTrack)
+      if (localStreamRef.current) {
+        attachTrackEndedHandlers(localStreamRef.current)
+      }
+
+      for (const pc of Object.values(pcsRef.current)) {
+        const audioTransceiver = pc
+          .getTransceivers()
+          .find((t) => t.receiver?.track?.kind === 'audio' || t.sender?.track?.kind === 'audio')
+        if (audioTransceiver) {
+          audioTransceiver.direction = 'sendrecv'
+          await audioTransceiver.sender.replaceTrack(newAudioTrack).catch(() => {})
+        } else {
+          const sender = pc.getSenders().find((s) => s.track?.kind === 'audio')
+          if (sender) {
+            await sender.replaceTrack(newAudioTrack).catch(() => {})
           }
-        } else if (nextTrack && sourceStream) {
-          pc.addTrack(nextTrack, sourceStream)
-          await sendOfferToPeer(peerId)
         }
       }
-    },
-    [sendOfferToPeer]
-  )
+    } catch (err) {
+      console.warn('[ChatHuddleBar] switchAudioDevice error:', err)
+    }
+  }
+
+  const switchVideoDevice = async (deviceId: string) => {
+    selectedVideoInputIdRef.current = deviceId
+    setSelectedVideoInputId(deviceId)
+    if (!joinedRef.current || !videoEnabledRef.current || screenSharingRef.current) return
+
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { deviceId: { exact: deviceId } },
+      })
+      const newVideoTrack = newStream.getVideoTracks()[0]
+      if (!newVideoTrack) return
+
+      const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0]
+      if (oldVideoTrack) {
+        oldVideoTrack.onended = null
+        oldVideoTrack.stop()
+        localStreamRef.current?.removeTrack(oldVideoTrack)
+      }
+      localStreamRef.current?.addTrack(newVideoTrack)
+      if (localStreamRef.current) {
+        attachTrackEndedHandlers(localStreamRef.current)
+      }
+
+      await updateVideoTrackOnAllPeers(newVideoTrack, localStreamRef.current)
+      syncLocalDisplayStream()
+    } catch (err) {
+      console.warn('[ChatHuddleBar] switchVideoDevice error:', err)
+    }
+  }
 
   const toggleAudio = async () => {
     const next = !audioEnabledRef.current
@@ -510,12 +1018,55 @@ export function ChatHuddleBar({
       let camTrack = localStreamRef.current?.getVideoTracks()?.[0] || null
       if (!camTrack) {
         try {
-          const camStream = await navigator.mediaDevices.getUserMedia({ video: true })
+          const allDevs = await navigator.mediaDevices.enumerateDevices().catch(() => [])
+          const bestCam = pickBestDevice(allDevs, 'videoinput', selectedVideoInputIdRef.current)
+          let camStream = await navigator.mediaDevices.getUserMedia({
+            video: bestCam ? { deviceId: { exact: bestCam } } : true,
+          })
           camTrack = camStream.getVideoTracks()[0] || null
-          if (camTrack && localStreamRef.current) {
-            localStreamRef.current.addTrack(camTrack)
-          } else if (camTrack) {
-            localStreamRef.current = camStream
+
+          if (camTrack) {
+            await refreshDevices()
+            const updatedDevs = await navigator.mediaDevices.enumerateDevices().catch(() => [])
+            if (isDesktopClient() && isContinuityOrPhoneDevice(camTrack.label)) {
+              const localCamId = pickBestDevice(updatedDevs, 'videoinput')
+              const chosenLabel = updatedDevs.find((d) => d.deviceId === localCamId)?.label || ''
+              if (localCamId && !isContinuityOrPhoneDevice(chosenLabel)) {
+                try {
+                  const replStream = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { exact: localCamId } },
+                  })
+                  const replTrack = replStream.getVideoTracks()[0]
+                  if (replTrack) {
+                    camTrack.stop()
+                    camStream = replStream
+                    camTrack = replTrack
+                  }
+                } catch (replErr) {
+                  console.warn('[ChatHuddleBar] Continuity auto-switch in toggleVideo failed:', replErr)
+                }
+              }
+            }
+
+            const activeCamTrack = camTrack
+            const actualCamId =
+              activeCamTrack.getSettings?.().deviceId ||
+              updatedDevs.find(
+                (d) => d.kind === 'videoinput' && d.label && d.label === activeCamTrack.label
+              )?.deviceId ||
+              ''
+            if (actualCamId) {
+              selectedVideoInputIdRef.current = actualCamId
+              setSelectedVideoInputId(actualCamId)
+            }
+
+            if (localStreamRef.current) {
+              localStreamRef.current.addTrack(camTrack)
+              attachTrackEndedHandlers(localStreamRef.current)
+            } else {
+              localStreamRef.current = camStream
+              attachTrackEndedHandlers(localStreamRef.current)
+            }
           }
         } catch (err) {
           console.error('[ChatHuddleBar] Errore attivazione cam:', err)
@@ -536,6 +1087,7 @@ export function ChatHuddleBar({
       videoEnabledRef.current = false
       setVideoEnabled(false)
       localStreamRef.current?.getVideoTracks().forEach((t) => {
+        t.onended = null
         t.enabled = false
         t.stop()
         localStreamRef.current?.removeTrack(t)
@@ -560,8 +1112,9 @@ export function ChatHuddleBar({
     screenSharingRef.current = false
     setScreenSharing(false)
 
-    const fallbackCamTrack =
-      videoEnabledRef.current ? localStreamRef.current?.getVideoTracks()?.[0] || null : null
+    const fallbackCamTrack = videoEnabledRef.current
+      ? localStreamRef.current?.getVideoTracks()?.[0] || null
+      : null
     await updateVideoTrackOnAllPeers(
       fallbackCamTrack,
       fallbackCamTrack ? localStreamRef.current : null
@@ -611,7 +1164,7 @@ export function ChatHuddleBar({
   useEffect(() => {
     const supabase = supabaseRef.current
     const roomChannel = supabase.channel(`huddle:${channelName}`, {
-      config: { presence: { key: currentUser.id } },
+      config: { presence: { key: `${currentUser.id}:${clientSessionIdRef.current}` } },
     })
     channelRef.current = roomChannel
 
@@ -633,6 +1186,14 @@ export function ChatHuddleBar({
         setActivePeers(list)
         updateRemotePeersMetaFromPresence(list)
 
+        // Se siamo uniti e la nostra presenza non è registrata nel sync, re-traccia silenziosamente
+        if (joinedRef.current) {
+          const myKey = `${currentUser.id}:${clientSessionIdRef.current}`
+          if (!state[myKey]) {
+            trackCurrentPresence().catch(() => {})
+          }
+        }
+
         const presentIds = new Set(list.map((p) => p.userId))
         for (const peerId of Object.keys(pcsRef.current)) {
           if (!presentIds.has(peerId)) {
@@ -647,8 +1208,28 @@ export function ChatHuddleBar({
       })
       .on('broadcast', { event: 'peer-leave' }, ({ payload }) => {
         const from = payload?.from as string | undefined
+        const leaveSessionId = payload?.sessionId as string | undefined
         if (!from || from === currentUser.id) return
-        closePeerConnection(from)
+
+        // Verifica se from ha ancora un'altra sessione attiva
+        const state = roomChannel.presenceState<HuddlePeerPresence>()
+        let hasOtherActiveSession = false
+        for (const key of Object.keys(state)) {
+          const entries = state[key]
+          if (Array.isArray(entries)) {
+            for (const e of entries) {
+              if (e.userId === from && (!leaveSessionId || e.sessionId !== leaveSessionId)) {
+                hasOtherActiveSession = true
+                break
+              }
+            }
+          }
+          if (hasOtherActiveSession) break
+        }
+
+        if (!hasOtherActiveSession) {
+          closePeerConnection(from)
+        }
       })
       .on('broadcast', { event: 'webrtc-offer' }, async ({ payload }) => {
         const to = payload?.to as string | undefined
@@ -668,7 +1249,7 @@ export function ChatHuddleBar({
 
           await pc.setRemoteDescription(new RTCSessionDescription(sdp))
           await flushPendingIce(from, pc)
-          attachLocalTracksToPc(pc)
+          await attachLocalTracksToPc(pc)
 
           const answer = await pc.createAnswer()
           await pc.setLocalDescription(answer)
@@ -739,6 +1320,7 @@ export function ChatHuddleBar({
     getOrCreatePeerConnection,
     leaveHuddle,
     sendOfferToPeer,
+    trackCurrentPresence,
     updateRemotePeersMetaFromPresence,
   ])
 
@@ -877,6 +1459,81 @@ export function ChatHuddleBar({
             <MonitorUp className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{screenSharing ? 'Stop Schermo' : 'Schermo'}</span>
           </Button>
+
+          {/* Selettore Dispositivi Live */}
+          <div className="relative">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowDeviceSettings((v) => !v)}
+              className={`h-7 px-2 text-xs gap-1 ${
+                showDeviceSettings
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+              title="Scegli microfono o videocamera"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Dispositivi</span>
+            </Button>
+
+            {showDeviceSettings && (
+              <div className="absolute right-0 top-9 z-50 w-72 rounded-xl bg-slate-900 border border-slate-700 p-3 shadow-xl space-y-3 animate-in fade-in slide-in-from-top-1 text-xs">
+                <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
+                  <span className="font-semibold text-white flex items-center gap-1.5">
+                    <SlidersHorizontal className="h-3.5 w-3.5 text-blue-400" />
+                    <span>Dispositivi Audio / Video</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowDeviceSettings(false)}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    <Minimize2 className="h-3 w-3" />
+                  </button>
+                </div>
+
+                {/* Microfono */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-300 flex items-center gap-1">
+                    <Mic className="h-3 w-3 text-emerald-400" />
+                    <span>Microfono</span>
+                  </label>
+                  <select
+                    value={selectedAudioInputId || ''}
+                    onChange={(e) => switchAudioDevice(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    {audioInputs.map((d) => (
+                      <option key={d.deviceId} value={d.deviceId}>
+                        {d.label || `Microfono (${d.deviceId.slice(0, 8)})`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Videocamera */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-300 flex items-center gap-1">
+                    <Video className="h-3 w-3 text-blue-400" />
+                    <span>Videocamera</span>
+                  </label>
+                  <select
+                    value={selectedVideoInputId || ''}
+                    onChange={(e) => switchVideoDevice(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    {videoInputs.map((d) => (
+                      <option key={d.deviceId} value={d.deviceId}>
+                        {d.label || `Videocamera (${d.deviceId.slice(0, 8)})`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
 
           <Button
             type="button"

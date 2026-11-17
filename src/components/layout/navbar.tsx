@@ -34,6 +34,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { BuildVersionBadge } from '@/components/layout/build-version-badge'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound, requestNotificationPermission } from '@/lib/notifications'
 import { Project } from '@/types/index'
@@ -308,6 +309,8 @@ export function Navbar({
               <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
               <span>Workspace Condiviso</span>
             </Badge>
+            <BuildVersionBadge className="hidden sm:inline-flex shrink-0 whitespace-nowrap" />
+            <BuildVersionBadge compact className="sm:hidden shrink-0 whitespace-nowrap" />
           </div>
         </div>
 

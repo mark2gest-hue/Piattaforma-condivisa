@@ -1,9 +1,15 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { cn } from '@/lib/utils'
 import versionData from '../../../version.json'
 
-export function BuildVersionBadge() {
+interface BuildVersionBadgeProps {
+  compact?: boolean
+  className?: string
+}
+
+export function BuildVersionBadge({ compact = false, className }: BuildVersionBadgeProps) {
   const [versionInfo, setVersionInfo] = useState({
     version: versionData.version || '1.0.0',
     build: versionData.build || 1,
@@ -56,11 +62,14 @@ export function BuildVersionBadge() {
   return (
     <div
       onClick={hasUpdate ? handleManualReload : undefined}
-      className={`fixed bottom-2 right-3 z-40 select-none px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold backdrop-blur-xs shadow-sm flex items-center gap-1.5 transition-all ${
+      className={cn(
+        'inline-flex items-center gap-1.5 select-none rounded-full font-mono font-semibold transition-all backdrop-blur-xs shadow-xs',
+        compact ? 'px-2 py-0.5 text-[9px]' : 'px-2.5 py-0.5 text-[10px]',
         hasUpdate
           ? 'cursor-pointer pointer-events-auto bg-amber-950/90 text-amber-200 border border-amber-500/60 hover:bg-amber-900 animate-pulse'
-          : 'pointer-events-none bg-slate-900/80 text-slate-300 border border-slate-700/70'
-      }`}
+          : 'bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80',
+        className
+      )}
       title={
         hasUpdate
           ? `Nuova versione disponibile (v${versionInfo.version} • Build #${versionInfo.build}). Clicca per aggiornare la pagina!`
@@ -68,13 +77,24 @@ export function BuildVersionBadge() {
       }
     >
       <span
-        className={`w-1.5 h-1.5 rounded-full ${
+        className={cn(
+          'rounded-full shrink-0',
+          compact ? 'w-1 h-1' : 'w-1.5 h-1.5',
           hasUpdate ? 'bg-amber-400' : 'bg-emerald-400'
-        }`}
+        )}
       />
       <span>
-        v{versionInfo.version} • Build #{versionInfo.build}
-        {hasUpdate && ' (Aggiorna ↻)'}
+        {compact ? (
+          <>
+            #{versionInfo.build}
+            {hasUpdate && ' (↻)'}
+          </>
+        ) : (
+          <>
+            v{versionInfo.version} • Build #{versionInfo.build}
+            {hasUpdate && ' (Aggiorna ↻)'}
+          </>
+        )}
       </span>
     </div>
   )

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { BuildVersionBadge } from '@/components/layout/build-version-badge'
 
 interface SidebarProps {
   isOpenMobile?: boolean
@@ -591,6 +592,14 @@ export function Sidebar({
             </button>
           </div>
         )}
+        <BuildVersionBadge
+          compact={!expanded}
+          className={
+            !expanded
+              ? 'w-full justify-center px-1.5 bg-slate-800/80 text-slate-300 border-slate-700/70'
+              : 'w-full justify-center bg-slate-800/80 text-slate-300 border-slate-700/70'
+          }
+        />
       </div>
     </div>
   )
