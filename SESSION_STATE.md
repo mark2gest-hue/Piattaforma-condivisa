@@ -1,8 +1,9 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-17 12:58
+Ultimo aggiornamento: 2026-11-17 13:15
 Stato corrente:
-- **Fase 5 Chat & Assistenza Nativa COMPLETATA & DEPLOYATA (`v2.3.0 • Build #119`)**:
+- **Fase 5 Chat & Assistenza Nativa COMPLETATA & DEPLOYATA (`v2.3.0 • Build #120`)**:
+  - Aggiunto pulsante rapido **`🛟 Inbox Assistenza`** direttamente dentro `/chat` (nella colonna sinistra canali e nell'header) con link inverso **`💬 Chat`** in `/assistenza` per passare con 1 click tra chat team e ticket (riservato ai membri interni).
   - **Migrazione SQL ([supabase/migrations/20261117123000_chat_phase5_support_inbox.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261117123000_chat_phase5_support_inbox.sql))**:
     - Nuove tabelle `public.support_tickets` e `public.support_messages` con indici, RLS per il team interno (esclusi `collaborator`) e abilitazione a `supabase_realtime`.
     - Estensione `public.push_subscriptions.user_id` a tipo `TEXT` per supportare anche sottoscrizioni studente `student-<id>`.

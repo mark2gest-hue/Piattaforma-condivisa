@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
+import Link from 'next/link'
 import {
   MessageSquare,
   Users,
@@ -30,6 +31,7 @@ import {
   Terminal,
   Sparkles,
   Mail,
+  LifeBuoy,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -1243,6 +1245,25 @@ export default function ChatPage() {
             ${showMobileChannels ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           `}
         >
+          {/* Accesso rapido Inbox Assistenza (solo team interno) */}
+          {userRole !== 'collaborator' && (
+            <div className="shrink-0 mb-3">
+              <Link
+                href="/assistenza"
+                onClick={() => setShowMobileChannels(false)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 transition-all shadow-xs"
+              >
+                <span className="flex items-center gap-2">
+                  <LifeBuoy className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <span>Inbox Assistenza</span>
+                </span>
+                <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                  Ticket 1-a-1
+                </span>
+              </Link>
+            </div>
+          )}
+
           {/* Canali Tematici */}
           <div className="shrink-0 space-y-3">
             <div className="flex items-center justify-between px-2">
@@ -1467,8 +1488,19 @@ export default function ChatPage() {
               </div>
             </div>
 
-            {/* Right Header Actions: Partecipanti, Gestione Membri, Ricerca, Web Push & Realtime Badge */}
+            {/* Right Header Actions: Assistenza, Partecipanti, Gestione Membri, Ricerca, Web Push & Realtime Badge */}
             <div className="flex items-center gap-2 shrink-0">
+              {userRole !== 'collaborator' && (
+                <Link
+                  href="/assistenza"
+                  className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/60 shadow-xs transition-colors"
+                  title="Apri Inbox Assistenza Ticket Studenti & B2B"
+                >
+                  <LifeBuoy className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span className="hidden lg:inline">Assistenza</span>
+                </Link>
+              )}
+
               {/* Pulsante Partecipanti ("Chi c'è nel canale") */}
               {!isDirectMessage && (
                 <Button

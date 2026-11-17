@@ -280,17 +280,27 @@ function AssistenzaInner() {
               </div>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => loadTickets(true)}
-              disabled={refreshing}
-              className="h-8 w-8 rounded-lg"
-              title="Aggiorna ticket"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Link
+                href="/chat"
+                className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                title="Torna alla Chat Team"
+              >
+                <MessageCircle className="h-3.5 w-3.5 text-blue-500" />
+                <span>Chat</span>
+              </Link>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => loadTickets(true)}
+                disabled={refreshing}
+                className="h-8 w-8 rounded-lg"
+                title="Aggiorna ticket"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
 
           {/* Switch "I miei ticket" vs "Tutti" */}
