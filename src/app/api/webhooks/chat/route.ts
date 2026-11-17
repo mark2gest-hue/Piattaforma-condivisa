@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const channel = (payload.channel || 'generale').trim().toLowerCase()
+    const channel = (payload.channel || 'aiuteam').trim().toLowerCase()
     const source = (payload.source || 'webhook').trim()
     const title = payload.title?.trim() || null
     const message = payload.message.trim()

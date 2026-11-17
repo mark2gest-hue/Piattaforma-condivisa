@@ -33,7 +33,12 @@ import {
   Mail,
   LifeBuoy,
   UploadCloud,
+  Mic,
+  Headphones,
+  Video,
+  Volume2,
 } from 'lucide-react'
+import { ChatHuddleBar } from '@/components/chat/ChatHuddleBar'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -215,6 +220,89 @@ function isRealChatProfile(p: any): boolean {
   return true
 }
 
+function formatVoiceDuration(totalSeconds: number): string {
+  const mins = Math.floor(totalSeconds / 60)
+  const secs = totalSeconds % 60
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+}
+
+function VoiceAudioPlayer({ att, isMe }: { att: ChatAttachment; isMe: boolean }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [playbackRate, setPlaybackRate] = useState<1 | 1.5 | 2>(1)
+
+  const cycleSpeed = () => {
+    const next: 1 | 1.5 | 2 = playbackRate === 1 ? 1.5 : playbackRate === 1.5 ? 2 : 1
+    setPlaybackRate(next)
+    if (audioRef.current) {
+      audioRef.current.playbackRate = next
+    }
+  }
+
+  const displayName = /^vocale-/i.test(att.name || '') ? 'Messaggio vocale' : att.name
+
+  return (
+    <div
+      className={`p-2.5 rounded-xl border shadow-xs flex flex-col gap-2 min-w-[230px] sm:min-w-[280px] ${
+        isMe
+          ? 'bg-blue-700/85 border-blue-500/60 text-white'
+          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div
+            className={`p-1.5 rounded-lg shrink-0 ${
+              isMe ? 'bg-blue-500/30 text-white' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+            }`}
+          >
+            <Volume2 className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold truncate">{displayName}</p>
+            <p className="text-[10px] opacity-75">{formatBytes(att.size || 0)}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={cycleSpeed}
+            className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
+              isMe
+                ? 'bg-blue-600/80 hover:bg-blue-600 border-blue-400/50 text-white'
+                : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200'
+            }`}
+            title="Cambia velocità riproduzione"
+          >
+            {playbackRate}x
+          </button>
+          <a
+            href={att.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            download={att.name}
+            className="p-1 rounded hover:opacity-80 transition-opacity"
+            title="Scarica audio"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      </div>
+      <audio
+        ref={audioRef}
+        controls
+        preload="metadata"
+        src={att.url}
+        onLoadedMetadata={() => {
+          if (audioRef.current) {
+            audioRef.current.playbackRate = playbackRate
+          }
+        }}
+        className="w-full h-8"
+      />
+    </div>
+  )
+}
+
 export default function ChatPage() {
   const [activeChannel, setActiveChannel] = useState('community-studenti')
   const [messages, setMessages] = useState<MessageWithSender[]>([])
@@ -279,6 +367,19 @@ export default function ChatPage() {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
   const dragCounterRef = useRef(0)
 
+  // Voice Messages & Live Huddle States
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false)
+  const [recordingSeconds, setRecordingSeconds] = useState(0)
+  const [isSendingVoice, setIsSendingVoice] = useState(false)
+  const [huddleRequest, setHuddleRequest] = useState<{ mode: 'audio' | 'video'; seq: number } | null>(null)
+  const [isInHuddle, setIsInHuddle] = useState(false)
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordingChunksRef = useRef<Blob[]>([])
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const recordingStreamRef = useRef<MediaStream | null>(null)
+  const cancelRecordingRef = useRef(false)
+
   // Phase 2 States: Badge non letti & Thread laterale & Autocomplete @menzioni
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
@@ -309,6 +410,30 @@ export default function ChatPage() {
     const timer = setTimeout(() => scrollToBottom('smooth'), 100)
     return () => clearTimeout(timer)
   }, [messages, activeChannel])
+
+  // Cleanup registrazione vocale al cambio canale o unmount
+  useEffect(() => {
+    return () => {
+      cancelRecordingRef.current = true
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current)
+        recordingTimerRef.current = null
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop()
+        } catch {
+          // ignore
+        }
+      }
+      if (recordingStreamRef.current) {
+        recordingStreamRef.current.getTracks().forEach((t) => t.stop())
+        recordingStreamRef.current = null
+      }
+      setIsRecordingVoice(false)
+      setRecordingSeconds(0)
+    }
+  }, [activeChannel])
 
   // Scroll bottom on active thread change / new reply (senza scrollare la pagina esterna)
   useEffect(() => {
@@ -766,6 +891,152 @@ export default function ChatPage() {
       }, 2000)
     } catch (err) {
       console.error('Errore copia messaggio:', err)
+    }
+  }
+
+  const startVoiceRecording = async () => {
+    if (!currentUser || isUploading || isSendingVoice || isRecordingVoice) return
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      alert('Registrazione vocale non supportata su questo browser.')
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      recordingStreamRef.current = stream
+      recordingChunksRef.current = []
+      cancelRecordingRef.current = false
+
+      const candidateMimes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/ogg;codecs=opus',
+        'audio/ogg',
+      ]
+      const supportedMime = candidateMimes.find((m) => MediaRecorder.isTypeSupported(m)) || ''
+      const recorder = supportedMime
+        ? new MediaRecorder(stream, { mimeType: supportedMime })
+        : new MediaRecorder(stream)
+
+      mediaRecorderRef.current = recorder
+      let secondsCounter = 0
+
+      recorder.ondataavailable = (ev) => {
+        if (ev.data && ev.data.size > 0) {
+          recordingChunksRef.current.push(ev.data)
+        }
+      }
+
+      recorder.onstop = async () => {
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current)
+          recordingTimerRef.current = null
+        }
+        if (recordingStreamRef.current) {
+          recordingStreamRef.current.getTracks().forEach((t) => t.stop())
+          recordingStreamRef.current = null
+        }
+
+        const wasCancelled = cancelRecordingRef.current
+        const chunks = [...recordingChunksRef.current]
+        const mimeType = recorder.mimeType || supportedMime || 'audio/webm'
+        const durationLabel = formatVoiceDuration(secondsCounter)
+
+        recordingChunksRef.current = []
+        mediaRecorderRef.current = null
+        setIsRecordingVoice(false)
+        setRecordingSeconds(0)
+
+        if (wasCancelled || chunks.length === 0) return
+
+        const ext = mimeType.includes('mp4')
+          ? 'm4a'
+          : mimeType.includes('ogg')
+          ? 'ogg'
+          : 'webm'
+
+        const voiceBlob = new Blob(chunks, { type: mimeType })
+        const voiceFile = new File([voiceBlob], `vocale-${Date.now()}.${ext}`, {
+          type: mimeType,
+        })
+
+        setIsSendingVoice(true)
+        try {
+          const uploaded = await uploadAttachments([voiceFile])
+          if (uploaded.length === 0) {
+            alert('Errore durante il caricamento del messaggio vocale.')
+            return
+          }
+
+          const { error } = await (supabase as any).from('messages').insert({
+            channel: activeChannel,
+            content: '',
+            attachments: uploaded,
+            sender_id: currentUser.id,
+            is_system: false,
+          })
+
+          if (error) {
+            console.error('Error sending voice message:', error)
+          } else {
+            const notifyOptions: any = {}
+            if (isDirectMessage && dmPartnerId) {
+              notifyOptions.isDirectMessage = true
+              notifyOptions.recipientUserIds = [dmPartnerId]
+            } else if (isPrivateChannel) {
+              notifyOptions.isPrivateChannel = true
+              notifyOptions.recipientUserIds = privateMemberIds
+            }
+
+            notifyChatMessageAction(
+              activeChannel,
+              `🎙️ Messaggio vocale (${durationLabel})`,
+              currentUser.full_name,
+              notifyOptions
+            ).catch((err) => console.error('Voice notify error:', err))
+          }
+        } finally {
+          setIsSendingVoice(false)
+        }
+      }
+
+      recorder.start(250)
+      setIsRecordingVoice(true)
+      setRecordingSeconds(0)
+      recordingTimerRef.current = setInterval(() => {
+        secondsCounter += 1
+        setRecordingSeconds(secondsCounter)
+      }, 1000)
+    } catch (err: any) {
+      console.error('Errore avvio registrazione vocale:', err)
+      if (recordingStreamRef.current) {
+        recordingStreamRef.current.getTracks().forEach((t) => t.stop())
+        recordingStreamRef.current = null
+      }
+      alert(
+        err?.name === 'NotAllowedError'
+          ? 'Permesso microfono negato. Abilitalo nelle impostazioni del browser.'
+          : 'Impossibile avviare la registrazione vocale.'
+      )
+    }
+  }
+
+  const stopVoiceRecording = (shouldSend: boolean) => {
+    cancelRecordingRef.current = !shouldSend
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    } else {
+      if (recordingStreamRef.current) {
+        recordingStreamRef.current.getTracks().forEach((t) => t.stop())
+        recordingStreamRef.current = null
+      }
+      setIsRecordingVoice(false)
+      setRecordingSeconds(0)
     }
   }
 
@@ -1351,7 +1622,7 @@ export default function ChatPage() {
         ref={fileInputRef}
         onChange={handleFileSelect}
         multiple
-        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
+        accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
         className="hidden"
       />
 
@@ -1638,8 +1909,41 @@ export default function ChatPage() {
               </div>
             </div>
 
-            {/* Right Header Actions: Gestione Membri, Ricerca, Web Push & Realtime Badge */}
+            {/* Right Header Actions: Huddle Live, Gestione Membri, Ricerca, Web Push & Realtime Badge */}
             <div className="flex items-center gap-2 shrink-0">
+              {/* Tasti Stanza Live Voce / Video */}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!currentUser}
+                onClick={() => setHuddleRequest({ mode: 'audio', seq: Date.now() })}
+                className={`text-xs h-8 px-2.5 gap-1.5 shadow-xs cursor-pointer transition-colors ${
+                  isInHuddle
+                    ? 'border-emerald-400 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
+                    : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title="Avvia o unisciti alla stanza vocale live"
+              >
+                <Headphones className="h-3.5 w-3.5" />
+                <span className="hidden lg:inline">Vocale</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!currentUser}
+                onClick={() => setHuddleRequest({ mode: 'video', seq: Date.now() })}
+                className={`text-xs h-8 px-2.5 gap-1.5 shadow-xs cursor-pointer transition-colors ${
+                  isInHuddle
+                    ? 'border-emerald-400 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
+                    : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title="Avvia o unisciti alla videochiamata / condivisione schermo"
+              >
+                <Video className="h-3.5 w-3.5" />
+                <span className="hidden lg:inline">Video</span>
+              </Button>
 
               {/* Gestione Membri Canale Privato / Custom (Riservato Team) */}
               {(isPrivateChannel || currentChannelObj.isCustom) && userRole !== 'collaborator' && (
@@ -1753,6 +2057,41 @@ export default function ChatPage() {
             </div>
           </div>
 
+          {/* Stanza Live Voce / Video / Schermo (WebRTC P2P) */}
+          {currentUser && (
+            <ChatHuddleBar
+              channelName={activeChannel}
+              currentUser={{
+                id: currentUser.id,
+                full_name: currentUser.full_name,
+                avatar_url: currentUser.avatar_url,
+              }}
+              huddleRequest={huddleRequest}
+              onJoinedChange={setIsInHuddle}
+              onNotifyStart={(mode) => {
+                const notifyOptions: any = {}
+                if (isDirectMessage && dmPartnerId) {
+                  notifyOptions.isDirectMessage = true
+                  notifyOptions.recipientUserIds = [dmPartnerId]
+                } else if (isPrivateChannel) {
+                  notifyOptions.isPrivateChannel = true
+                  notifyOptions.recipientUserIds = privateMemberIds
+                } else if (activeChannel === 'community-studenti') {
+                  notifyOptions.recipientUserIds = teamMembers
+                    .filter((m) => m.role !== 'collaborator' && m.id !== currentUser.id)
+                    .map((m) => m.id)
+                }
+                const label =
+                  mode === 'video'
+                    ? '📹 Ha avviato una videochiamata live nella chat'
+                    : '🎧 Ha avviato una stanza vocale live nella chat'
+                notifyChatMessageAction(activeChannel, label, currentUser.full_name, notifyOptions).catch(
+                  (err) => console.error('Huddle notify error:', err)
+                )
+              }}
+            />
+          )}
+
           {/* Banner Risultati Ricerca attiva */}
           {searchQuery.trim() && (
             <div className="px-4 py-2 bg-blue-50/80 dark:bg-blue-950/40 border-b border-blue-200/60 dark:border-blue-800/60 flex items-center justify-between text-xs text-blue-800 dark:text-blue-300">
@@ -1850,6 +2189,10 @@ export default function ChatPage() {
                             const isImg =
                               att.type?.startsWith('image/') ||
                               /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(att.name || '')
+                            const isAudio =
+                              att.type?.startsWith('audio/') ||
+                              (!att.type?.startsWith('video/') &&
+                                /\.(webm|ogg|mp3|m4a|wav|aac)$/i.test(att.name || ''))
                             return (
                               <div key={attIdx} className="overflow-hidden rounded-xl">
                                 {isImg ? (
@@ -1868,6 +2211,8 @@ export default function ChatPage() {
                                       <span>Ingrandisci</span>
                                     </div>
                                   </div>
+                                ) : isAudio ? (
+                                  <VoiceAudioPlayer att={att} isMe={isMe} />
                                 ) : (
                                   <a
                                     href={att.url}
@@ -2120,51 +2465,105 @@ export default function ChatPage() {
               onSubmit={handleSendMessage}
               className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 sm:p-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner"
             >
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading || !currentUser}
-                title="Allega foto o documenti"
-                className="h-8 w-8 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 shrink-0"
-              >
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              <input
-                ref={mainInputRef}
-                type="text"
-                value={inputMessage}
-                onChange={(e) => handleInputChangeWithMentions(e.target.value, 'main')}
-                onPaste={handlePasteFiles}
-                placeholder={
-                  pendingFiles.length > 0
-                    ? 'Aggiungi una didascalia...'
-                    : isDirectMessage
-                    ? `Scrivi a ${dmPartner?.full_name || 'membro'}... (incolla o trascina file)`
-                    : `Scrivi in #${activeChannel}... (incolla o trascina file, @ per menzionare)`
-                }
-                className="flex-1 text-xs sm:text-sm focus:outline-none bg-transparent px-2 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 min-w-0"
-                disabled={!currentUser || isUploading}
-              />
-              <Button
-                type="submit"
-                size="sm"
-                disabled={(!inputMessage.trim() && pendingFiles.length === 0) || !currentUser || isUploading}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 sm:h-9 px-3 sm:px-4 gap-1.5 shadow-xs rounded-lg shrink-0"
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span className="hidden sm:inline">Invio...</span>
-                  </>
-                ) : (
-                  <>
+              {isRecordingVoice ? (
+                <>
+                  <div className="flex-1 flex items-center gap-2.5 px-2 min-w-0">
+                    <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                    <span className="text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400 truncate">
+                      Registrazione vocale {formatVoiceDuration(recordingSeconds)}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => stopVoiceRecording(false)}
+                    className="h-8 px-2.5 text-xs text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 gap-1 shrink-0"
+                    title="Annulla registrazione"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Annulla</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => stopVoiceRecording(true)}
+                    className="bg-rose-600 hover:bg-rose-700 text-white text-xs h-8 sm:h-9 px-3 sm:px-4 gap-1.5 shadow-xs rounded-lg shrink-0"
+                    title="Invia messaggio vocale"
+                  >
                     <Send className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Invia</span>
-                  </>
-                )}
-              </Button>
+                    <span>Invia Vocale</span>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading || isSendingVoice || !currentUser}
+                    title="Allega foto o documenti"
+                    className="h-8 w-8 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 shrink-0"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={startVoiceRecording}
+                    disabled={isUploading || isSendingVoice || !currentUser}
+                    title="Registra messaggio vocale"
+                    className="h-8 w-8 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 shrink-0"
+                  >
+                    {isSendingVoice ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <input
+                    ref={mainInputRef}
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => handleInputChangeWithMentions(e.target.value, 'main')}
+                    onPaste={handlePasteFiles}
+                    placeholder={
+                      pendingFiles.length > 0
+                        ? 'Aggiungi una didascalia...'
+                        : isDirectMessage
+                        ? `Scrivi a ${dmPartner?.full_name || 'membro'}... (incolla o trascina file)`
+                        : `Scrivi in #${activeChannel}... (incolla o trascina file, @ per menzionare)`
+                    }
+                    className="flex-1 text-xs sm:text-sm focus:outline-none bg-transparent px-2 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 min-w-0"
+                    disabled={!currentUser || isUploading}
+                  />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={
+                      (!inputMessage.trim() && pendingFiles.length === 0) ||
+                      !currentUser ||
+                      isUploading ||
+                      isSendingVoice
+                    }
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 sm:h-9 px-3 sm:px-4 gap-1.5 shadow-xs rounded-lg shrink-0"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span className="hidden sm:inline">Invio...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Invia</span>
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
             </form>
           </div>
         </div>

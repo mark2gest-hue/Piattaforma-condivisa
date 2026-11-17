@@ -1,7 +1,11 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-17 19:52
+Ultimo aggiornamento: 2026-11-17 20:05
 Stato corrente:
+- **Chat `/chat` — Messaggi Vocali con Player Inline, Stanze Live Voce/Video/Schermo (`ChatHuddleBar` WebRTC) & Riallineamento `#aiuteam` (`v2.3.0 • Build #126`)**:
+  - Nuovo componente [src/components/chat/ChatHuddleBar.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/components/chat/ChatHuddleBar.tsx) con stanze live P2P WebRTC (`RTCPeerConnection`, coda ICE candidates, gestione glare `rollback`, `replaceTrack`/rinegoziazione su camera e `getDisplayMedia` con `onended`) orchestrate su Supabase Realtime Presence & Broadcast (`huddle:${channelName}`), banner stanza attiva per chi non è ancora entrato e pannello collassabile `LIVE • N connessi`.
+  - Aggiunti messaggi vocali nativi `MediaRecorder` in [src/app/(dashboard)/chat/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/chat/page.tsx) (pulsante microfono `Mic`, barra registrazione live `MM:SS` con `Annulla`/`Invia Vocale`, upload su `team-files`, notifiche privacy-aware) e player inline `VoiceAudioPlayer` con selettore velocità ciclico **`1x` → `1.5x` → `2x`** + download.
+  - Riallineati gli ultimi riferimenti residui a `#generale` su `#aiuteam` in [src/components/layout/navbar.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/components/layout/navbar.tsx) e [src/app/api/webhooks/chat/route.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/api/webhooks/chat/route.ts).
 - **Chat `/chat` — Rimozione canale `#generale` & Default su `#community-studenti` (`v2.3.0 • Build #125`)**:
   - Rimosso il canale di sistema `#generale` da `SYSTEM_CHANNELS` in [src/app/(dashboard)/chat/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/chat/page.tsx) e da `SYSTEM_CHANNEL_NAMES` in [src/app/actions/chat.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/chat.ts).
   - Impostato `#community-studenti` come nuovo canale iniziale di default (`useState('community-studenti')` e fallback in `handleDeleteChannel`) e filtrati eventuali record residui `generale` in `getCustomChannelsAction`.

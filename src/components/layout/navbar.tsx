@@ -75,7 +75,7 @@ export function Navbar({
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
       id: 'n-1',
-      title: 'Nuovo Messaggio in #generale',
+      title: 'Nuovo Messaggio in #aiuteam',
       desc: 'Sincronizzazione Supabase Realtime attiva',
       time: 'Adesso',
       type: 'chat',
