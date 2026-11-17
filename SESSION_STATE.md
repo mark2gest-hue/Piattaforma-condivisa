@@ -1,7 +1,10 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-17 17:35
+Ultimo aggiornamento: 2026-11-17 19:52
 Stato corrente:
+- **Chat `/chat` — Rimozione canale `#generale` & Default su `#community-studenti` (`v2.3.0 • Build #125`)**:
+  - Rimosso il canale di sistema `#generale` da `SYSTEM_CHANNELS` in [src/app/(dashboard)/chat/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/chat/page.tsx) e da `SYSTEM_CHANNEL_NAMES` in [src/app/actions/chat.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/chat.ts).
+  - Impostato `#community-studenti` come nuovo canale iniziale di default (`useState('community-studenti')` e fallback in `handleDeleteChannel`) e filtrati eventuali record residui `generale` in `getCustomChannelsAction`.
 - **Chat `/chat` — Copia & Incolla Screenshot/File, Drag & Drop Allegati e Copia Rapida Messaggi (`v2.3.0 • Build #124`)**:
   - Supporto **Paste (`Ctrl/Cmd+V`)** in [src/app/(dashboard)/chat/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/chat/page.tsx) sia sul contenitore principale che sull'input `mainInputRef`: estrazione automatica di screenshot/immagini/file da `clipboardData`, rinomina automatica dei file generici (`image.png` -> `screenshot-<timestamp>.<ext>`) e aggiunta a `pendingFiles` senza bloccare il normale incolla testuale.
   - Supporto **Drag & Drop HTML5** sul contenitore centrale della chat con contatore `dragCounterRef` anti-flickering, filtro su `dataTransfer.types.includes('Files')`, overlay visuale dedicato (`UploadCloud`) e focus automatico sull'input al rilascio.

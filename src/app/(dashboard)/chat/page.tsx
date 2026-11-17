@@ -97,14 +97,6 @@ export interface ChannelParticipant {
 
 const SYSTEM_CHANNELS: DisplayChannel[] = [
   {
-    id: 'ch-1',
-    name: 'generale',
-    desc: 'Comunicazioni generali, avvisi e allineamento team',
-    icon: Hash,
-    isPrivate: false,
-    isCustom: false,
-  },
-  {
     id: 'ch-community',
     name: 'community-studenti',
     desc: 'Community Corsisti AI Start & AI Pro — Tutti gli studenti iscritti e docenti',
@@ -224,7 +216,7 @@ function isRealChatProfile(p: any): boolean {
 }
 
 export default function ChatPage() {
-  const [activeChannel, setActiveChannel] = useState('generale')
+  const [activeChannel, setActiveChannel] = useState('community-studenti')
   const [messages, setMessages] = useState<MessageWithSender[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [teamMembers, setTeamMembers] = useState<Profile[]>([])
@@ -910,7 +902,7 @@ export default function ChatPage() {
         }))
     }
 
-    // Canale pubblico (#generale o custom pubblico): tutti i membri interni del team
+    // Canale pubblico custom: tutti i membri interni del team
     return teamMembers
       .filter((m) => m.role !== 'collaborator')
       .map((m) => ({
@@ -1126,7 +1118,7 @@ export default function ChatPage() {
     if (res.success) {
       await loadCustomChannels()
       if (activeChannel === channelName) {
-        setActiveChannel('generale')
+        setActiveChannel('community-studenti')
       }
     } else {
       alert(res.error || 'Impossibile eliminare il canale')

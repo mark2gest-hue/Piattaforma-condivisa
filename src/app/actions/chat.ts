@@ -38,7 +38,7 @@ export interface CustomChannelItem {
 const CHANNELS_LOCAL_FILE = path.join(process.cwd(), '.chat-channels.json')
 const COLLABORATORS_LOCAL_FILE = path.join(process.cwd(), '.chat-collaborators.json')
 
-const SYSTEM_CHANNEL_NAMES = ['generale', 'community-studenti']
+const SYSTEM_CHANNEL_NAMES = ['community-studenti']
 
 function readLocalCollaboratorIds(): string[] {
   try {
@@ -212,7 +212,7 @@ export async function getCustomChannelsAction() {
       // Tabella non ancora disponibile sul DB remoto
     }
 
-    const allCustom = Array.from(channelsMap.values())
+    const allCustom = Array.from(channelsMap.values()).filter((ch) => ch.name !== 'generale')
 
     let allowed: CustomChannelItem[] = []
     if (effectiveRole === 'collaborator') {
