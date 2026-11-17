@@ -1,7 +1,11 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-17 17:15
+Ultimo aggiornamento: 2026-11-17 17:35
 Stato corrente:
+- **Chat `/chat` — Copia & Incolla Screenshot/File, Drag & Drop Allegati e Copia Rapida Messaggi (`v2.3.0 • Build #124`)**:
+  - Supporto **Paste (`Ctrl/Cmd+V`)** in [src/app/(dashboard)/chat/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/chat/page.tsx) sia sul contenitore principale che sull'input `mainInputRef`: estrazione automatica di screenshot/immagini/file da `clipboardData`, rinomina automatica dei file generici (`image.png` -> `screenshot-<timestamp>.<ext>`) e aggiunta a `pendingFiles` senza bloccare il normale incolla testuale.
+  - Supporto **Drag & Drop HTML5** sul contenitore centrale della chat con contatore `dragCounterRef` anti-flickering, filtro su `dataTransfer.types.includes('Files')`, overlay visuale dedicato (`UploadCloud`) e focus automatico sull'input al rilascio.
+  - **Copia rapida messaggi & leggibilità testo**: aggiunto pulsante rapido **`Copia` / `Copiato`** (con `navigator.clipboard.writeText` e reset a 2s) accanto a `Rispondi` e aggiunte le classi `whitespace-pre-wrap select-text` sulle bolle principali e sulle risposte thread.
 - **Fase 5 Chat & Assistenza Nativa COMPLETATA & DEPLOYATA (`v2.3.0 • Build #123`)**:
   - Rifinitura Area Studenti `/corsi`: rimosso il pulsante duplicato `Assistenza 1-a-1` dal box chat `@AI` e dal titolo modulo (lasciato il solo pulsante in alto), reso sempre visibile il tasto Notifiche Push anche in stato `denied` / `unsupported` con istruzioni dedicate, e aggiunte nelle Istruzioni (`Guida & Istruzioni`) le spiegazioni per **Canale Studenti**, **Assistenza 1-a-1** e **Attiva Notifiche**.
   - Pulizia UI header `/chat`: rimossi i duplicati `Assistenza` e `Partecipanti (X)` dalla barra azioni a destra (mantenendo solo `Inbox Assistenza` a sinistra su riga singola e `👥 X presenti` cliccabile sotto il titolo).

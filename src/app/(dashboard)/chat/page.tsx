@@ -32,6 +32,7 @@ import {
   Sparkles,
   Mail,
   LifeBuoy,
+  UploadCloud,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -282,6 +283,9 @@ export default function ChatPage() {
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [previewModalUrl, setPreviewModalUrl] = useState<string | null>(null)
+  const [isDraggingOver, setIsDraggingOver] = useState(false)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+  const dragCounterRef = useRef(0)
 
   // Phase 2 States: Badge non letti & Thread laterale & Autocomplete @menzioni
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
@@ -666,6 +670,111 @@ export default function ChatPage() {
 
   const handleRemovePendingFile = (index: number) => {
     setPendingFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const normalizePastedOrDroppedFiles = (files: File[], isPaste = false): File[] => {
+    return files.map((file) => {
+      const isGenericName =
+        !file.name ||
+        /^image(\.(png|jpe?g|webp|gif))?$/i.test(file.name) ||
+        file.name === 'blob'
+      if (isPaste && isGenericName) {
+        const rawExt = file.type?.split('/')[1]?.split('+')[0] || 'png'
+        const ext = rawExt.toLowerCase() === 'jpeg' ? 'jpg' : rawExt.toLowerCase()
+        return new File([file], `screenshot-${Date.now()}.${ext}`, {
+          type: file.type || `image/${ext}`,
+        })
+      }
+      return file
+    })
+  }
+
+  const handlePasteFiles = (e: React.ClipboardEvent) => {
+    if (!currentUser || isUploading) return
+
+    const extracted: File[] = []
+    const items = e.clipboardData?.items
+    if (items && items.length > 0) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (item.kind === 'file') {
+          const file = item.getAsFile()
+          if (file) extracted.push(file)
+        }
+      }
+    }
+    if (extracted.length === 0 && e.clipboardData?.files && e.clipboardData.files.length > 0) {
+      extracted.push(...Array.from(e.clipboardData.files))
+    }
+
+    if (extracted.length > 0) {
+      e.preventDefault()
+      e.stopPropagation()
+      const normalized = normalizePastedOrDroppedFiles(extracted, true)
+      setPendingFiles((prev) => [...prev, ...normalized])
+    }
+  }
+
+  const hasFilesInDrag = (e: React.DragEvent<HTMLDivElement>) =>
+    Boolean(e.dataTransfer?.types?.includes('Files'))
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!hasFilesInDrag(e)) return
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current += 1
+    if (!isDraggingOver) {
+      setIsDraggingOver(true)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!hasFilesInDrag(e)) return
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'copy'
+    }
+    if (!isDraggingOver) {
+      setIsDraggingOver(true)
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!hasFilesInDrag(e)) return
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current -= 1
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0
+      setIsDraggingOver(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!hasFilesInDrag(e) && !(e.dataTransfer?.files && e.dataTransfer.files.length > 0)) return
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current = 0
+    setIsDraggingOver(false)
+    if (!currentUser || isUploading) return
+    if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+      const normalized = normalizePastedOrDroppedFiles(Array.from(e.dataTransfer.files), false)
+      setPendingFiles((prev) => [...prev, ...normalized])
+      mainInputRef.current?.focus()
+    }
+  }
+
+  const handleCopyMessage = async (msgId: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedMessageId(msgId)
+      setTimeout(() => {
+        setCopiedMessageId((prev) => (prev === msgId ? null : prev))
+      }, 2000)
+    } catch (err) {
+      console.error('Errore copia messaggio:', err)
+    }
   }
 
   const uploadAttachments = async (filesToUpload: File[]): Promise<ChatAttachment[]> => {
@@ -1452,7 +1561,29 @@ export default function ChatPage() {
         </div>
 
         {/* Center: Main Message Stream */}
-        <div className="flex-1 min-w-0 h-full flex flex-col bg-slate-50/20 dark:bg-slate-950/40 relative overflow-hidden">
+        <div
+          className="flex-1 min-w-0 h-full flex flex-col bg-slate-50/20 dark:bg-slate-950/40 relative overflow-hidden"
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onPaste={handlePasteFiles}
+        >
+          {isDraggingOver && (
+            <div className="absolute inset-0 z-30 bg-blue-600/10 dark:bg-blue-500/15 backdrop-blur-xs border-2 border-dashed border-blue-500 flex flex-col items-center justify-center pointer-events-none p-6 text-center">
+              <div className="p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-blue-200 dark:border-blue-800 shadow-xl flex flex-col items-center gap-2 max-w-sm">
+                <UploadCloud className="h-10 w-10 text-blue-600 dark:text-blue-400 animate-bounce" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  Rilascia per allegare
+                </p>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  {isDirectMessage
+                    ? `Rilascia qui immagini, screenshot o documenti per allegarli in DM con ${dmPartner?.full_name || 'questo membro'}`
+                    : `Rilascia qui immagini, screenshot o documenti per allegarli in #${activeChannel}`}
+                </p>
+              </div>
+            </div>
+          )}
           {/* Channel Header */}
           <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur shrink-0 z-10 gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1710,7 +1841,7 @@ export default function ChatPage() {
                       {/* Text Bubble */}
                       {msg.content && (
                         <div
-                          className={`text-xs sm:text-sm p-2.5 sm:p-3 rounded-2xl shadow-xs leading-relaxed max-w-[88%] sm:max-w-[85%] break-words ${
+                          className={`text-xs sm:text-sm p-2.5 sm:p-3 rounded-2xl shadow-xs leading-relaxed max-w-[88%] sm:max-w-[85%] break-words whitespace-pre-wrap select-text ${
                             isMe
                               ? 'bg-blue-600 text-white rounded-tr-xs'
                               : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 rounded-tl-xs'
@@ -1823,6 +1954,31 @@ export default function ChatPage() {
                             <MessageCircle className="h-3.5 w-3.5" />
                             <span className="hidden sm:inline">Rispondi</span>
                           </button>
+
+                          {msg.content && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopyMessage(msg.id, msg.content)}
+                              className={`h-6 px-1.5 rounded-md text-[11px] font-medium flex items-center gap-1 transition-colors ${
+                                copiedMessageId === msg.id
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
+                                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                              }`}
+                              title="Copia testo messaggio"
+                            >
+                              {copiedMessageId === msg.id ? (
+                                <>
+                                  <Check className="h-3.5 w-3.5" />
+                                  <span className="hidden sm:inline">Copiato</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-3.5 w-3.5" />
+                                  <span className="hidden sm:inline">Copia</span>
+                                </>
+                              )}
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -1988,12 +2144,13 @@ export default function ChatPage() {
                 type="text"
                 value={inputMessage}
                 onChange={(e) => handleInputChangeWithMentions(e.target.value, 'main')}
+                onPaste={handlePasteFiles}
                 placeholder={
                   pendingFiles.length > 0
                     ? 'Aggiungi una didascalia...'
                     : isDirectMessage
-                    ? `Scrivi a ${dmPartner?.full_name || 'membro'}...`
-                    : `Scrivi in #${activeChannel}... (digita @ per menzionare)`
+                    ? `Scrivi a ${dmPartner?.full_name || 'membro'}... (incolla o trascina file)`
+                    : `Scrivi in #${activeChannel}... (incolla o trascina file, @ per menzionare)`
                 }
                 className="flex-1 text-xs sm:text-sm focus:outline-none bg-transparent px-2 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 min-w-0"
                 disabled={!currentUser || isUploading}
@@ -2159,7 +2316,7 @@ export default function ChatPage() {
                           <span className="text-[9px] text-slate-400">{formatDate(reply.created_at)}</span>
                         </div>
                         <div
-                          className={`text-xs p-2 rounded-xl shadow-xs leading-relaxed break-words ${
+                          className={`text-xs p-2 rounded-xl shadow-xs leading-relaxed break-words whitespace-pre-wrap select-text ${
                             isMe
                               ? 'bg-blue-600 text-white'
                               : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700'
