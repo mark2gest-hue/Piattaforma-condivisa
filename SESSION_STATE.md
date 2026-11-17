@@ -1,8 +1,9 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-17 13:28
+Ultimo aggiornamento: 2026-11-17 13:37
 Stato corrente:
-- **Fase 5 Chat & Assistenza Nativa COMPLETATA & DEPLOYATA (`v2.3.0 • Build #121`)**:
+- **Fase 5 Chat & Assistenza Nativa COMPLETATA & DEPLOYATA (`v2.3.0 • Build #122`)**:
+  - Pulizia UI header `/chat`: rimossi i duplicati `Assistenza` e `Partecipanti (X)` dalla barra azioni a destra (mantenendo solo `Inbox Assistenza` a sinistra su riga singola e `👥 X presenti` cliccabile sotto il titolo).
   - Pulizia profili Chat/Team ([supabase/migrations/20261117132500_clean_profiles_and_names.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261117132500_clean_profiles_and_names.sql)): rimosso definitivamente l'account di test `pentest79456` (`profiles` + `auth.users`), impostato `is_agent = true` su `Nemotron Lead Agent` (nascosto da `/chat`, attivo in `/lavori`), normalizzati i nomi reali dei soci (`Marco`, `Lorenzo`, `Stefano`) in DB e UI.
   - Aggiunto pulsante rapido **`🛟 Inbox Assistenza`** direttamente dentro `/chat` (nella colonna sinistra canali e nell'header) con link inverso **`💬 Chat`** in `/assistenza` per passare con 1 click tra chat team e ticket (riservato ai membri interni).
   - **Migrazione SQL ([supabase/migrations/20261117123000_chat_phase5_support_inbox.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261117123000_chat_phase5_support_inbox.sql))**:

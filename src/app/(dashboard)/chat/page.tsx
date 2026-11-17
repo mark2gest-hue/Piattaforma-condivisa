@@ -1278,14 +1278,14 @@ export default function ChatPage() {
               <Link
                 href="/assistenza"
                 onClick={() => setShowMobileChannels(false)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 transition-all shadow-xs"
+                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 transition-all shadow-xs"
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 min-w-0">
                   <LifeBuoy className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Inbox Assistenza</span>
+                  <span className="truncate">Inbox Assistenza</span>
                 </span>
-                <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-                  Ticket 1-a-1
+                <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 whitespace-nowrap shrink-0">
+                  Ticket
                 </span>
               </Link>
             </div>
@@ -1515,34 +1515,8 @@ export default function ChatPage() {
               </div>
             </div>
 
-            {/* Right Header Actions: Assistenza, Partecipanti, Gestione Membri, Ricerca, Web Push & Realtime Badge */}
+            {/* Right Header Actions: Gestione Membri, Ricerca, Web Push & Realtime Badge */}
             <div className="flex items-center gap-2 shrink-0">
-              {userRole !== 'collaborator' && (
-                <Link
-                  href="/assistenza"
-                  className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/60 shadow-xs transition-colors"
-                  title="Apri Inbox Assistenza Ticket Studenti & B2B"
-                >
-                  <LifeBuoy className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="hidden lg:inline">Assistenza</span>
-                </Link>
-              )}
-
-              {/* Pulsante Partecipanti ("Chi c'è nel canale") */}
-              {!isDirectMessage && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowParticipantsModal(true)}
-                  className="text-xs h-8 px-2.5 gap-1.5 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-xs cursor-pointer"
-                  title="Visualizza l'elenco completo delle persone nel canale e avvia chat 1-a-1"
-                >
-                  <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span className="hidden sm:inline">Partecipanti ({currentChannelParticipants.length})</span>
-                  <span className="sm:hidden">{currentChannelParticipants.length}</span>
-                </Button>
-              )}
 
               {/* Gestione Membri Canale Privato / Custom (Riservato Team) */}
               {(isPrivateChannel || currentChannelObj.isCustom) && userRole !== 'collaborator' && (
