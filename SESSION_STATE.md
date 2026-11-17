@@ -1,8 +1,9 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-17 13:37
+Ultimo aggiornamento: 2026-11-17 17:15
 Stato corrente:
-- **Fase 5 Chat & Assistenza Nativa COMPLETATA & DEPLOYATA (`v2.3.0 • Build #122`)**:
+- **Fase 5 Chat & Assistenza Nativa COMPLETATA & DEPLOYATA (`v2.3.0 • Build #123`)**:
+  - Rifinitura Area Studenti `/corsi`: rimosso il pulsante duplicato `Assistenza 1-a-1` dal box chat `@AI` e dal titolo modulo (lasciato il solo pulsante in alto), reso sempre visibile il tasto Notifiche Push anche in stato `denied` / `unsupported` con istruzioni dedicate, e aggiunte nelle Istruzioni (`Guida & Istruzioni`) le spiegazioni per **Canale Studenti**, **Assistenza 1-a-1** e **Attiva Notifiche**.
   - Pulizia UI header `/chat`: rimossi i duplicati `Assistenza` e `Partecipanti (X)` dalla barra azioni a destra (mantenendo solo `Inbox Assistenza` a sinistra su riga singola e `👥 X presenti` cliccabile sotto il titolo).
   - Pulizia profili Chat/Team ([supabase/migrations/20261117132500_clean_profiles_and_names.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261117132500_clean_profiles_and_names.sql)): rimosso definitivamente l'account di test `pentest79456` (`profiles` + `auth.users`), impostato `is_agent = true` su `Nemotron Lead Agent` (nascosto da `/chat`, attivo in `/lavori`), normalizzati i nomi reali dei soci (`Marco`, `Lorenzo`, `Stefano`) in DB e UI.
   - Aggiunto pulsante rapido **`🛟 Inbox Assistenza`** direttamente dentro `/chat` (nella colonna sinistra canali e nell'header) con link inverso **`💬 Chat`** in `/assistenza` per passare con 1 click tra chat team e ticket (riservato ai membri interni).

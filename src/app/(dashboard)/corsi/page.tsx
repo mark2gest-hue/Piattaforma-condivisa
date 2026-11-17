@@ -2452,18 +2452,50 @@ function CorsiInnerContent() {
                 {studentPushStatus === 'subscribed' ? (
                   <Badge
                     variant="success"
-                    className="h-8 px-2.5 text-[11px] flex items-center gap-1 rounded-xl shrink-0"
+                    className="h-8 px-2.5 text-[11px] flex items-center gap-1.5 rounded-xl shrink-0"
                     title="Notifiche Web Push attive su questo dispositivo"
                   >
                     <BellRing className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Notifiche Attive</span>
+                    <span>Notifiche Attive</span>
                   </Badge>
-                ) : studentPushStatus === 'prompt' ? (
+                ) : studentPushStatus === 'denied' ? (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    disabled={isEnablingStudentPush}
+                    onClick={() =>
+                      alert(
+                        '🔔 Le notifiche risultano bloccate nel browser.\n\nPer attivarle:\n• Clicca sull’icona del lucchetto/impostazioni accanto all’indirizzo del sito in alto\n• Imposta "Notifiche" su Consenti\n• Ricarica la pagina e premi di nuovo Attiva Notifiche.'
+                      )
+                    }
+                    className="text-xs h-8 px-2.5 rounded-xl gap-1.5 border-amber-500/40 bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 font-semibold shadow-xs cursor-pointer shrink-0"
+                    title="Notifiche bloccate dal browser: clicca per sapere come sbloccarle"
+                  >
+                    <Bell className="h-3.5 w-3.5 text-amber-400" />
+                    <span>Sblocca Notifiche</span>
+                  </Button>
+                ) : studentPushStatus === 'unsupported' ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      alert(
+                        '📱 Come attivare le Notifiche Push su questo dispositivo:\n\n• Su iPhone / iPad (Safari): tocca Condividi (quadrato con freccia in su) → "Aggiungi alla schermata Home", poi apri AIutiamoci dall’icona sulla Home e premi Attiva Notifiche.\n• Su Android / PC / Mac: usa Google Chrome, Edge o Safari aggiornato in modalità standard (non in finestra anonima).'
+                      )
+                    }
+                    className="text-xs h-8 px-2.5 rounded-xl gap-1.5 border-sky-500/40 bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 font-semibold shadow-xs cursor-pointer shrink-0"
+                    title="Istruzioni per attivare le notifiche push"
+                  >
+                    <Bell className="h-3.5 w-3.5 text-sky-400" />
+                    <span>Notifiche Push</span>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isEnablingStudentPush || studentPushStatus === 'loading'}
                     onClick={handleEnableStudentPush}
                     className="text-xs h-8 px-2.5 rounded-xl gap-1.5 border-sky-500/40 bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 font-semibold shadow-xs cursor-pointer shrink-0"
                     title="Attiva le notifiche push per ricevere risposte e avvisi in tempo reale"
@@ -2475,7 +2507,7 @@ function CorsiInnerContent() {
                     )}
                     <span>Attiva Notifiche</span>
                   </Button>
-                ) : null}
+                )}
 
                 <Button
                   variant="outline"
@@ -3104,29 +3136,13 @@ function CorsiInnerContent() {
                   <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
                     {/* Header Titolo e Info Modulo */}
                     <div className="space-y-1.5">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="purple" className="text-[10px] uppercase font-mono px-2.5 py-0.5">
-                            Modulo {currentActive.id} di {activeList.length}
-                          </Badge>
-                          <span className="text-xs text-slate-400 font-mono font-medium">
-                            Durata: {currentActive.duration}
-                          </span>
-                        </div>
-                        {effectivePortalStudentCode && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSupportInitialTicketId(null)
-                              setSupportInitialCreateMode(true)
-                              setIsSupportModalOpen(true)
-                            }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[11px] font-semibold transition-all cursor-pointer"
-                          >
-                            <LifeBuoy className="h-3.5 w-3.5" />
-                            <span>Chiedi Assistenza su questo Modulo</span>
-                          </button>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <Badge variant="purple" className="text-[10px] uppercase font-mono px-2.5 py-0.5">
+                          Modulo {currentActive.id} di {activeList.length}
+                        </Badge>
+                        <span className="text-xs text-slate-400 font-mono font-medium">
+                          Durata: {currentActive.duration}
+                        </span>
                       </div>
                       <h3 className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">
                         {currentActive.title}
@@ -3638,22 +3654,7 @@ function CorsiInnerContent() {
                     <p className="text-[10px] text-slate-400">Scrivi @AI per risposte automatiche sui 20 moduli</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSupportInitialTicketId(null)
-                      setSupportInitialCreateMode(true)
-                      setIsSupportModalOpen(true)
-                    }}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-bold transition-all cursor-pointer"
-                    title="Apri Assistenza 1-a-1 dedicata con il Team AIutiamoci"
-                  >
-                    <LifeBuoy className="h-3 w-3" />
-                    <span>Assistenza 1-a-1</span>
-                  </button>
-                  <Badge variant="success" className="text-[9px] uppercase">Online 24/7</Badge>
-                </div>
+                <Badge variant="success" className="text-[9px] uppercase">Online 24/7</Badge>
               </div>
 
               <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
@@ -7202,6 +7203,18 @@ function CorsiInnerContent() {
                   <li className="flex items-start gap-2">
                     <Download className="h-3.5 w-3.5 text-purple-400 shrink-0 mt-0.5" />
                     <span><strong className="text-white">Dispensa PDF:</strong> Scarica la guida rapida e i prompt pronti della lezione attiva.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <MessageCircle className="h-3.5 w-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                    <span><strong className="text-white">Canale Studenti (in alto a destra):</strong> Bacheca <code className="text-indigo-300">#community-studenti</code> per confrontarti con gli altri corsisti e sezione <strong>Messaggi Diretti</strong> per scrivere in privato 1-a-1 ai docenti. Quando ci sono novità vedrai un bollino rosso <strong className="text-rose-400">N nuovi</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <LifeBuoy className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span><strong className="text-white">Assistenza 1-a-1 (in alto a destra):</strong> Apri un ticket diretto con il team per dubbi didattici, problemi tecnici o richieste commerciali; ogni risposta viene notificata anche via Email.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Bell className="h-3.5 w-3.5 text-sky-400 shrink-0 mt-0.5" />
+                    <span><strong className="text-white">Attiva Notifiche (in alto a destra):</strong> Abilita le notifiche push sul telefono o computer per essere avvisato subito quando un docente risponde ai tuoi ticket o pubblica un avviso. <em>(Su iPhone/iPad aggiungi prima il sito alla schermata Home da Safari.)</em></span>
                   </li>
                   <li className="flex items-start gap-2">
                     <HelpCircle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
