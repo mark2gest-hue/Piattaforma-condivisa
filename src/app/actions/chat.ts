@@ -1045,19 +1045,37 @@ export async function getStudentCommunityChatAction(studentCode: string) {
 
     const dmMessages = Array.isArray(dmData) ? dmData : []
 
-    // 3. Elenco docenti/team interni (esclusi agenti e collaboratori esterni)
+    // 3. Elenco docenti/team interni (esclusi agenti, account test e collaboratori esterni)
     const { data: profiles } = await (admin.from('profiles') as any)
-      .select('id, full_name, role, avatar_url, is_agent')
+      .select('id, full_name, email, role, avatar_url, is_agent')
       .order('created_at', { ascending: true })
 
     const teamTeachers: StudentCommunityTeacher[] = (Array.isArray(profiles) ? profiles : [])
-      .filter((p) => !p.is_agent && p.role !== 'collaborator')
-      .map((p) => ({
-        id: p.id,
-        full_name: p.full_name || 'Docente AIutiamoci',
-        role: p.role || 'member',
-        avatar_url: p.avatar_url || null,
-      }))
+      .filter((p) => {
+        if (p.is_agent || p.role === 'collaborator') return false
+        const n = (p.full_name || '').toLowerCase()
+        const e = (p.email || '').toLowerCase()
+        return !n.includes('nemotron') && !n.includes('pentest') && !e.includes('nemotron') && !e.includes('pentest')
+      })
+      .map((p) => {
+        const lower = (p.full_name || '').toLowerCase()
+        const mail = (p.email || '').toLowerCase()
+        const cleanName =
+          lower.includes('gerelmo') || mail.includes('gerelmo')
+            ? 'Marco'
+            : lower.includes('lorenzolodi') || mail.includes('lorenzo')
+            ? 'Lorenzo'
+            : lower.includes('malaisi') || lower.includes('maraisi') || mail.includes('malaisi') || mail.includes('maraisi')
+            ? 'Stefano'
+            : p.full_name || 'Docente AIutiamoci'
+
+        return {
+          id: p.id,
+          full_name: cleanName,
+          role: p.role || 'member',
+          avatar_url: p.avatar_url || null,
+        }
+      })
 
     return {
       success: true,

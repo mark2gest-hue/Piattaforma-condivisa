@@ -262,9 +262,12 @@ async function resolveAutoAssignee(category: SupportCategory): Promise<{
       .select('id, full_name, email, role, is_agent')
       .order('created_at', { ascending: true })
 
-    const team = (Array.isArray(profiles) ? profiles : []).filter(
-      (p) => !p.is_agent && p.role !== 'collaborator'
-    )
+    const team = (Array.isArray(profiles) ? profiles : []).filter((p) => {
+      if (p.is_agent || p.role === 'collaborator') return false
+      const n = (p.full_name || '').toLowerCase()
+      const e = (p.email || '').toLowerCase()
+      return !n.includes('nemotron') && !n.includes('pentest') && !e.includes('nemotron') && !e.includes('pentest')
+    })
 
     if (team.length === 0) {
       return {
@@ -802,7 +805,12 @@ export async function getTeamSupportTicketsAction() {
       .order('created_at', { ascending: true })
 
     const teamMembers: TeamSupportMember[] = (Array.isArray(profiles) ? profiles : [])
-      .filter((p) => !p.is_agent && p.role !== 'collaborator')
+      .filter((p) => {
+        if (p.is_agent || p.role === 'collaborator') return false
+        const n = (p.full_name || '').toLowerCase()
+        const e = (p.email || '').toLowerCase()
+        return !n.includes('nemotron') && !n.includes('pentest') && !e.includes('nemotron') && !e.includes('pentest')
+      })
       .map((p) => ({
         id: p.id,
         full_name: p.full_name || p.email?.split('@')[0] || 'Team',

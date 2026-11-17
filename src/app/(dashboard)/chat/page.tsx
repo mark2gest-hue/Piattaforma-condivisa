@@ -203,6 +203,25 @@ function renderMessageContent(content: string, isMe: boolean) {
   )
 }
 
+function normalizeTeamDisplayName(fullName?: string | null, email?: string | null): string {
+  const raw = (fullName || '').trim()
+  const lower = raw.toLowerCase()
+  const mail = (email || '').toLowerCase()
+  if (lower.includes('gerelmo') || mail.includes('gerelmo')) return 'Marco'
+  if (lower.includes('lorenzolodi') || mail.includes('lorenzo')) return 'Lorenzo'
+  if (lower.includes('malaisi') || lower.includes('maraisi') || mail.includes('malaisi') || mail.includes('maraisi') || mail.includes('stefano')) return 'Stefano'
+  return raw || (email ? email.split('@')[0] : 'Team')
+}
+
+function isRealChatProfile(p: any): boolean {
+  if (!p || p.is_agent) return false
+  const nameLower = (p.full_name || '').toLowerCase()
+  const mailLower = (p.email || '').toLowerCase()
+  if (nameLower.includes('nemotron') || mailLower.includes('nemotron')) return false
+  if (nameLower.includes('pentest') || mailLower.includes('pentest')) return false
+  return true
+}
+
 export default function ChatPage() {
   const [activeChannel, setActiveChannel] = useState('generale')
   const [messages, setMessages] = useState<MessageWithSender[]>([])
@@ -406,13 +425,21 @@ export default function ChatPage() {
             ? 'collaborator'
             : profile?.role || user.user_metadata?.role || 'member'
         if (profile) {
-          setCurrentUser(profile)
+          setCurrentUser({
+            ...profile,
+            full_name: normalizeTeamDisplayName(profile.full_name, profile.email || user.email),
+          })
         }
         setUserRole(effectiveRole)
       }
 
       const { data: profiles } = await supabase.from('profiles').select('*')
-      let initialMembers: Profile[] = profiles ? profiles.filter((p: any) => !p.is_agent) : []
+      let initialMembers: Profile[] = profiles
+        ? profiles.filter(isRealChatProfile).map((p: any) => ({
+            ...p,
+            full_name: normalizeTeamDisplayName(p.full_name, p.email),
+          }))
+        : []
 
       const customRes = await loadCustomChannels()
       const allowedChannels: CustomChannelItem[] = customRes?.channels || []
