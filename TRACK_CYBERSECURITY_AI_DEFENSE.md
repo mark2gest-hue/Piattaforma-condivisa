@@ -1,17 +1,51 @@
-# 🛡️ TRACK VERTICALE CYBERSECURITY & AI DEFENSE: DALLA VULNERABILITÀ ALLA BLINDATURA
+# 🛡️ CORSO COMPLETO CYBERSECURITY & AI DEFENSE (12 LEZIONI: PRIVATI, AZIENDE B2B & TECH)
 
-> **Obiettivo Formativo**: Fornire a programmatori, tecnici IT e builder avanzati una guida pratica, passo-passo e dimostrativa per identificare, testare e neutralizzare le vulnerabilità informatiche più critiche nelle applicazioni create con l'IA.
-> **Format didattico**: Ogni modulo è diviso in **Concetto chiave -> Codice vulnerabile vs Codice sicuro -> Dimostrazione live a schermo -> Prompt di difesa**.
+> **Obiettivo Formativo**: Percorso progressivo in **3 Blocchi da 4 Lezioni (12 moduli totali)**: parte dalla sicurezza quotidiana (Lez. 1–4), prosegue con una sezione verticale dedicata alle **Aziende B2B / Uffici PMI** (Lez. 5–8, zero codice, con Attestato Aziendale), e conclude con la **difesa tecnica di codice AI, Database RLS, Prompt Injection, Webhook n8n & EU CRA** (Lez. 9–12).
+> **Manuali PDF di Regia Video pronti**:
+> - `Guida_Video_Cybersecurity_1_Privati_e_Aziende_B2B.pdf` *(Setup pre-REC, timeline e copioni parlati Lezioni 1–8)*
+> - `Guida_Video_Cybersecurity_2_Tech_e_AI_Defense.pdf` *(Manuale tecnico screencast, codice vulnerabile vs blindato e copioni Lezioni 9–12)*
 
 ---
 
-# 📑 INDICE GENERALE DEI MODULI
-1. **Modulo 1: Vibe Coding & OWASP Top 10 — Anatomia di una SQL Injection**
-2. **Modulo 2: Database Fort Knox — Row Level Security (RLS) & Architettura Zero-Trust**
-3. **Modulo 3: Prompt Injection & Jailbreak — La Nuova Frontiera degli Attacchi ai Modelli LLM**
-4. **Modulo 4: API, Webhook & n8n Blindati — Proteggere Flussi e Credenziali Esterne**
-5. **Modulo 5: Ethical Hacking con l'IA — Automatizzare i Security Audit prima del Deploy**
-6. **Modulo 6: Vibe Coding, Supply Chain & EU Cyber Resilience Act (CRA UE 2024/2847)**
+# 📑 INDICE GENERALE DEI 12 MODULI (3 BLOCCHI)
+
+### 🔹 BLOCCO 1 — Difesa Quotidiana & Anti-Truffa (Per Tutti)
+1. **Lezione 1: Identità Blindata — Password, Passkey, 2FA & Data Breach**
+2. **Lezione 2: Phishing, Quishing (QR Code) & Siti Clone nel 2026**
+3. **Lezione 3: Deepfake Vocali, Truffe WhatsApp & Ingegneria Sociale**
+4. **Lezione 4: Sicurezza Smartphone, Wi-Fi Pubblici & Dispositivi Mobili**
+
+### 🏢 BLOCCO 2 — Parte Diretta alle Aziende B2B (Ufficio, Amministrazione & Titolari — Zero Codice)
+5. **Lezione 5: Blindare l'Amministrazione — Frode del Bonifico (BEC) & Fatture con IBAN Manomesso**
+6. **Lezione 6: Emergenza Ransomware in Ufficio — Dal Doppio Click al Blocco del Gestionale (Tripla Blindatura & WORM)**
+7. **Lezione 7: Shadow AI, GDPR & Segreti Aziendali — Regole d'Uso dell'AI in Ufficio (AI Act Art. 4)**
+8. **Lezione 8: Reti Ufficio, Smart Working & Piano di Risposta in 30 Minuti (NIS2 / GDPR)** *(+ Esame Aziendale)*
+
+### 💻 BLOCCO 3 — Parte Tecnica: AI Defense, n8n & Vibe Coding Sicuro
+9. **Lezione 9 (ex Modulo 1): Vibe Coding & OWASP Top 10 — Anatomia di una SQL Injection**
+10. **Lezione 10 (ex Modulo 2): Database Fort Knox — Row Level Security (RLS) & Architettura Zero-Trust**
+11. **Lezione 11 (ex Modulo 3): Prompt Injection & Jailbreak — La Nuova Frontiera degli Attacchi ai Modelli LLM**
+12. **Lezione 12 (ex Moduli 4–6): API, Webhook HMAC & n8n Blindati, Ethical Hacking SAST con l'IA & EU CRA (2024/2847)**
+
+---
+
+# 🔹 BLOCCO 1 & 🏢 BLOCCO 2 — SINTESI OPERATIVA (LEZIONI 1–8)
+> *I copioni parlati completi, le checklist pre-REC e le scalette minuto-per-minuto delle Lezioni 1–8 sono raccolti nel manuale PDF `Guida_Video_Cybersecurity_1_Privati_e_Aziende_B2B.pdf`.*
+
+- **Lez. 1 — Identità Blindata**: Controllo su `haveibeenpwned.com`, difesa da Credential Stuffing, limite SMS 2FA (SIM Swapping), attivazione App Authenticator / Passkey + Password Manager (Bitwarden).
+- **Lez. 2 — Phishing, Quishing & Siti Clone**: Lettura URL da destra a sinistra prima del primo `/`, ispezione hover, trappola QR Code su mobile, verifica oggettiva in sandbox isolata (logica *Lo Scudo*).
+- **Lez. 3 — Deepfake Vocali & Truffe WhatsApp**: Clonazione vocale con 5–10s di audio, i 3 segnali dell'ingegneria sociale (Urgenza, Autorità/Affetto, Isolamento), Parola d'Ordine di famiglia/team, PIN verifica in due passaggi WhatsApp.
+- **Lez. 4 — Smartphone & Wi-Fi Pubblici**: Rischio Evil Twin su Wi-Fi aperti (usare Hotspot 4G/5G o VPN), audit permessi app (blocco abusi Accessibilità/SMS), disattivazione anteprime notifiche a schermo bloccato e procedura emergenza furto.
+- **Lez. 5 [B2B] — Frode del Bonifico (BEC) & Fatture IBAN**: Attacco Man-in-the-Email sulle fatture PDF fornitori e CEO Fraud. **Protocollo "Zero Bonifici al Buio"**: divieto cambio IBAN via email/PDF, richiamata su numero storico da gestionale, verifica `Reply-To`.
+- **Lez. 6 [B2B] — Emergenza Ransomware & Tripla Blindatura PMI**: Pericolo estensioni nascoste (`.pdf.exe`) e dischi USB collegati al server. **Tripla Blindatura**: Perimetro + Endpoint Hardening (Utente Standard + *Controlled Folder Access*) + **Backup Immutabile Cloud WORM (Object Lock)** che non può essere criptato né cancellato.
+- **Lez. 7 [B2B] — Shadow AI, GDPR & AI Act Art. 4**: Rischi incollando contratti/listini su chat AI consumer, setting Opt-Out training, differenza piani Free vs Zero-Retention, anonimizzazione in 15 secondi e **Semaforo AI Aziendale** (Verde / Giallo / Rosso).
+- **Lez. 8 [B2B] — Reti Ufficio, Smart Working & SOS 30 Minuti**: Wi-Fi Ospiti separato, divieto RDP aperto senza VPN/2FA, e **Poster "SOS Attacco Informatico"**: 1) Stacca cavo/Wi-Fi (NON spegnere il PC per preservare RAM/prove); 2) Fotografa; 3) Revoca password; 4) Ripristina da Vault WORM; 5) Valuta finestra legale 24h ACN (NIS2/CRA) / 72h Garante Privacy (GDPR).
+
+---
+---
+
+# 💻 BLOCCO 3 — MODULI TECNICI (LEZIONI 9–12)
+> **Format didattico**: Ogni modulo è diviso in **Concetto chiave -> Codice vulnerabile vs Codice sicuro -> Dimostrazione live a schermo -> Prompt di difesa**. (Vedi anche `Guida_Video_Cybersecurity_2_Tech_e_AI_Defense.pdf`.)
 
 ---
 
