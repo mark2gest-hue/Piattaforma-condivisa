@@ -4,6 +4,8 @@ import fs from 'fs'
 import path from 'path'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { generateNvidiaCompletion } from '@/lib/nvidia'
+import { resolveStudentIdentityByCode } from '@/app/actions/support'
+import { getAllPushSubscriptions, sendWebPushNotification } from '@/lib/web-push'
 
 export interface ChatMetadataItem {
   type: '__chat_meta__'
@@ -969,5 +971,268 @@ export async function executeSlashCommandAction(input: {
   } catch (err: any) {
     console.error('[executeSlashCommandAction] Error:', err)
     return { success: false, error: err.message }
+  }
+}
+
+export interface StudentCommunityTeacher {
+  id: string
+  full_name: string
+  role: string
+  avatar_url?: string | null
+}
+
+/**
+ * Recupera i messaggi di #community-studenti, gli eventuali DM 1-a-1 dello studente
+ * con i docenti del team e l'elenco docenti disponibili.
+ */
+export async function getStudentCommunityChatAction(studentCode: string) {
+  try {
+    const admin = createAdminClient()
+    let studentId = ''
+    let studentName = ''
+    let studentEmail = ''
+
+    if (studentCode === 'TEAM-PREVIEW') {
+      const supabase = await createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
+        return { success: false, error: 'Non autorizzato', communityMessages: [], dmMessages: [], teamTeachers: [] }
+      }
+      const { data: prof } = await (admin.from('profiles') as any)
+        .select('full_name, email, role')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (user.user_metadata?.role === 'collaborator' || prof?.role === 'collaborator') {
+        return { success: false, error: 'Accesso negato', communityMessages: [], dmMessages: [], teamTeachers: [] }
+      }
+      studentId = user.id
+      studentName = prof?.full_name || user.user_metadata?.full_name || 'Team'
+      studentEmail = prof?.email || user.email || ''
+    } else {
+      const identity = await resolveStudentIdentityByCode(studentCode)
+      if (!identity) {
+        return {
+          success: false,
+          error: 'Codice studente non valido o non attivo',
+          communityMessages: [],
+          dmMessages: [],
+          teamTeachers: [],
+        }
+      }
+      studentId = identity.studentId
+      studentName = identity.name
+      studentEmail = identity.email
+    }
+
+    // 1. Messaggi del canale pubblico #community-studenti (ultimi 100 in ordine cronologico)
+    const { data: commData } = await (admin.from('messages') as any)
+      .select('id, channel, content, attachments, sender_id, is_system, created_at, sender:profiles(id, full_name, role, avatar_url)')
+      .eq('channel', 'community-studenti')
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    const communityMessages = Array.isArray(commData) ? [...commData].reverse() : []
+
+    // 2. Messaggi Diretti (DM 1-a-1) dove partecipa questo studente (o questo utente preview)
+    const { data: dmData } = await (admin.from('messages') as any)
+      .select('id, channel, content, attachments, sender_id, is_system, created_at, sender:profiles(id, full_name, role, avatar_url)')
+      .like('channel', 'dm:%')
+      .ilike('channel', `%${studentId}%`)
+      .order('created_at', { ascending: true })
+      .limit(200)
+
+    const dmMessages = Array.isArray(dmData) ? dmData : []
+
+    // 3. Elenco docenti/team interni (esclusi agenti e collaboratori esterni)
+    const { data: profiles } = await (admin.from('profiles') as any)
+      .select('id, full_name, role, avatar_url, is_agent')
+      .order('created_at', { ascending: true })
+
+    const teamTeachers: StudentCommunityTeacher[] = (Array.isArray(profiles) ? profiles : [])
+      .filter((p) => !p.is_agent && p.role !== 'collaborator')
+      .map((p) => ({
+        id: p.id,
+        full_name: p.full_name || 'Docente AIutiamoci',
+        role: p.role || 'member',
+        avatar_url: p.avatar_url || null,
+      }))
+
+    return {
+      success: true,
+      student: {
+        id: studentId,
+        name: studentName,
+        email: studentEmail,
+        code: studentCode,
+      },
+      communityMessages,
+      dmMessages,
+      teamTeachers,
+    }
+  } catch (err: any) {
+    console.error('[getStudentCommunityChatAction] Error:', err)
+    return {
+      success: false,
+      error: err?.message || 'Errore caricamento community',
+      communityMessages: [],
+      dmMessages: [],
+      teamTeachers: [],
+    }
+  }
+}
+
+/**
+ * Invia un messaggio da parte dello studente su #community-studenti oppure in DM 1-a-1 verso un docente.
+ */
+export async function sendStudentCommunityMessageAction(input: {
+  studentCode: string
+  content: string
+  targetChannel?: string
+  parentId?: string
+}) {
+  try {
+    const content = (input.content || '').trim()
+    if (!content) {
+      return { success: false, error: 'Scrivi un messaggio prima di inviare.' }
+    }
+
+    const admin = createAdminClient()
+    const targetChannel = (input.targetChannel || 'community-studenti').trim()
+
+    let studentId = ''
+    let studentName = ''
+    let studentEmail = ''
+    let isTeamPreview = false
+
+    if (input.studentCode === 'TEAM-PREVIEW') {
+      const supabase = await createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
+        return { success: false, error: 'Non autorizzato' }
+      }
+      const { data: prof } = await (admin.from('profiles') as any)
+        .select('full_name, email, role')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (user.user_metadata?.role === 'collaborator' || prof?.role === 'collaborator') {
+        return { success: false, error: 'Accesso negato' }
+      }
+      isTeamPreview = true
+      studentId = user.id
+      studentName = prof?.full_name || user.user_metadata?.full_name || 'Team'
+      studentEmail = prof?.email || user.email || ''
+    } else {
+      const identity = await resolveStudentIdentityByCode(input.studentCode)
+      if (!identity) {
+        return { success: false, error: 'Codice studente non valido o non attivo' }
+      }
+      studentId = identity.studentId
+      studentName = identity.name
+      studentEmail = identity.email
+    }
+
+    // Verifica rigida canale consentito (solo #community-studenti o DM personale con docente)
+    let dmTeacherId: string | null = null
+    if (targetChannel !== 'community-studenti') {
+      if (!targetChannel.startsWith('dm:')) {
+        return { success: false, error: 'Canale non consentito per gli studenti' }
+      }
+      const participants = targetChannel.replace('dm:', '').split('_')
+      if (!participants.includes(studentId) || participants.length !== 2) {
+        return { success: false, error: 'Conversazione diretta non autorizzata' }
+      }
+      dmTeacherId = participants.find((id) => id !== studentId) || null
+      if (!dmTeacherId) {
+        return { success: false, error: 'Destinatario DM non valido' }
+      }
+    }
+
+    // Risoluzione profilo di sistema per vincolo FK sender_id -> profiles(id)
+    let senderProfileId = isTeamPreview ? studentId : ''
+    if (!senderProfileId) {
+      const { data: systemProfile, error: profErr } = await (admin.from('profiles') as any)
+        .select('id')
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .single()
+
+      if (profErr || !systemProfile?.id) {
+        return { success: false, error: 'Profilo di sistema non disponibile' }
+      }
+      senderProfileId = systemProfile.id
+    }
+
+    const attachments: ChatMetadataItem[] = []
+    if (!isTeamPreview) {
+      attachments.push({
+        type: '__chat_meta__',
+        parent_id: input.parentId || null,
+        sender_name: `${studentName} (Studente)`,
+        sender_email: studentEmail,
+        sender_student_id: studentId,
+      })
+    } else if (input.parentId) {
+      attachments.push({
+        type: '__chat_meta__',
+        parent_id: input.parentId,
+      })
+    }
+
+    const { data: inserted, error: insertErr } = await (admin.from('messages') as any)
+      .insert({
+        channel: targetChannel,
+        sender_id: senderProfileId,
+        is_system: false,
+        content,
+        attachments,
+      })
+      .select('id, channel, content, attachments, sender_id, is_system, created_at')
+      .single()
+
+    if (insertErr) {
+      return { success: false, error: insertErr.message }
+    }
+
+    // Notifiche Web Push mirate (Zero Telegram)
+    try {
+      const subs = await getAllPushSubscriptions(studentId)
+      if (targetChannel === 'community-studenti') {
+        const pushTargets = subs.filter((s) => s.user_id && s.user_id !== studentId)
+        await Promise.allSettled(
+          pushTargets.map((sub) => {
+            const isStudentSub = sub.user_id?.startsWith('student-')
+            return sendWebPushNotification(sub, {
+              title: `💬 #community-studenti — ${studentName}`,
+              body: content.slice(0, 160),
+              url: isStudentSub ? '/corsi?community=1' : '/chat?channel=community-studenti',
+              tag: 'chat-community-studenti',
+            })
+          })
+        )
+      } else if (dmTeacherId) {
+        const teacherTargets = subs.filter((s) => s.user_id === dmTeacherId)
+        await Promise.allSettled(
+          teacherTargets.map((sub) =>
+            sendWebPushNotification(sub, {
+              title: `💬 Messaggio privato da ${studentName} (Studente)`,
+              body: content.slice(0, 160),
+              url: `/chat?channel=${encodeURIComponent(targetChannel)}`,
+              tag: `chat-${targetChannel}`,
+            })
+          )
+        )
+      }
+    } catch (pushErr) {
+      console.warn('[sendStudentCommunityMessageAction] Push non riuscita:', pushErr)
+    }
+
+    return { success: true, message: inserted }
+  } catch (err: any) {
+    console.error('[sendStudentCommunityMessageAction] Error:', err)
+    return { success: false, error: err?.message || 'Errore invio messaggio' }
   }
 }

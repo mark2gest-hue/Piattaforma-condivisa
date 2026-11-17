@@ -29,6 +29,7 @@ import {
   UserPlus,
   Terminal,
   Sparkles,
+  Mail,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
@@ -248,6 +249,9 @@ export default function ChatPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
+  // Toggle Email Broadcast su #community-studenti (Fase 5 - Zero Spam)
+  const [notifyStudentsEmailToggle, setNotifyStudentsEmailToggle] = useState(false)
+
   // Web Push States
   const [pushStatus, setPushStatus] = useState<'loading' | 'unsupported' | 'denied' | 'subscribed' | 'prompt'>('loading')
   const [isSendingTestPush, setIsSendingTestPush] = useState(false)
@@ -464,6 +468,12 @@ export default function ChatPage() {
             ...newMessage,
             sender: senderProfile,
           }
+          const incomingMeta = extractMessageMeta(messageWithSender)
+          const isIncomingFromMe = Boolean(
+            currentUser &&
+              newMessage.sender_id === currentUser.id &&
+              !incomingMeta.senderStudentId
+          )
 
           if (newMessage.channel === activeChannel) {
             setMessages((prev) => {
@@ -472,7 +482,7 @@ export default function ChatPage() {
             })
             markChannelAsRead(activeChannel)
           } else {
-            if (currentUser && newMessage.sender_id !== currentUser.id) {
+            if (currentUser && !isIncomingFromMe) {
               setUnreadCounts((prev) => ({
                 ...prev,
                 [newMessage.channel]: (prev[newMessage.channel] || 0) + 1,
@@ -480,9 +490,9 @@ export default function ChatPage() {
             }
           }
 
-          if (currentUser && newMessage.sender_id !== currentUser.id) {
+          if (currentUser && !isIncomingFromMe) {
             sendDesktopNotification(
-              `Messaggio da ${senderProfile?.full_name || 'Team'} in #${newMessage.channel}`,
+              `Messaggio da ${incomingMeta.senderName || senderProfile?.full_name || 'Team'} in #${newMessage.channel}`,
               { body: newMessage.content || 'Nuovo messaggio o allegato' },
               'chat'
             )
@@ -814,9 +824,15 @@ export default function ChatPage() {
     }
 
     const messageContent = inputMessage.trim()
+    const shouldNotifyByEmail =
+      activeChannel === 'community-studenti' &&
+      (notifyStudentsEmailToggle || /@tutti\b/i.test(messageContent))
     setInputMessage('')
     setPendingFiles([])
     setMentionQuery(null)
+    if (notifyStudentsEmailToggle) {
+      setNotifyStudentsEmailToggle(false)
+    }
 
     // Intercettazione Slash Commands (/task, /lead, /ai)
     if (
@@ -877,6 +893,8 @@ export default function ChatPage() {
       } else if (isPrivateChannel) {
         notifyOptions.isPrivateChannel = true
         notifyOptions.recipientUserIds = privateMemberIds
+      } else if (shouldNotifyByEmail) {
+        notifyOptions.notifyStudentsByEmail = true
       }
 
       notifyChatMessageAction(activeChannel, notifyText, currentUser.full_name, notifyOptions).catch((err) =>
@@ -925,6 +943,8 @@ export default function ChatPage() {
       } else if (isPrivateChannel) {
         notifyOptions.isPrivateChannel = true
         notifyOptions.recipientUserIds = privateMemberIds
+      } else if (activeChannel === 'community-studenti' && /@tutti\b/i.test(replyText)) {
+        notifyOptions.notifyStudentsByEmail = true
       }
 
       notifyChatMessageAction(activeChannel, replyText, currentUser.full_name, notifyOptions).catch((err) =>
@@ -1604,8 +1624,9 @@ export default function ChatPage() {
               </div>
             ) : filteredMainMessages.length > 0 ? (
               filteredMainMessages.map((msg) => {
-                const isMe = msg.sender_id === currentUser?.id
-                const { reactions, files } = extractMessageMeta(msg)
+                const msgMeta = extractMessageMeta(msg)
+                const isMe = msg.sender_id === currentUser?.id && !msgMeta.senderStudentId
+                const { reactions, files } = msgMeta
                 const replies = repliesByParent[msg.id] || []
                 const isThreadOpen = activeThreadId === msg.id
 
@@ -1617,8 +1638,8 @@ export default function ChatPage() {
                     }`}
                   >
                     <Avatar
-                      fallback={msg.sender?.full_name || '?'}
-                      src={msg.sender?.avatar_url || undefined}
+                      fallback={msgMeta.senderName || msg.sender?.full_name || '?'}
+                      src={msgMeta.senderStudentId ? undefined : msg.sender?.avatar_url || undefined}
                       className="h-7 w-7 sm:h-8 sm:w-8 bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 font-semibold text-[10px] sm:text-xs shrink-0 mt-1 border border-blue-200 dark:border-blue-800"
                     />
                     <div className={`flex flex-col flex-1 space-y-1 ${isMe ? 'items-end' : 'items-start'}`}>
@@ -1889,7 +1910,31 @@ export default function ChatPage() {
           )}
 
           {/* Input Bar Principale */}
-          <div className="p-2.5 sm:p-3.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 relative">
+          <div className="p-2.5 sm:p-3.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 relative space-y-2">
+            {activeChannel === 'community-studenti' && userRole !== 'collaborator' && (
+              <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                <button
+                  type="button"
+                  onClick={() => setNotifyStudentsEmailToggle((prev) => !prev)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                    notifyStudentsEmailToggle
+                      ? 'bg-indigo-600 text-white border-indigo-500 shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                  }`}
+                  title="Attiva per inviare un avviso email a tutti gli studenti iscritti con questo messaggio"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  <span>
+                    {notifyStudentsEmailToggle
+                      ? '📧 Avviso Email Iscritti ATTIVO (per questo messaggio)'
+                      : '📧 Avvisa iscritti via Email'}
+                  </span>
+                </button>
+                <span className="text-[10px] text-slate-400">
+                  Zero-Spam: i messaggi ordinari inviano solo Push/Badge. Usa il toggle o <code className="text-indigo-400">@tutti</code> per gli avvisi importanti via Email.
+                </span>
+              </div>
+            )}
             <form
               onSubmit={handleSendMessage}
               className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 sm:p-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner"
@@ -1971,11 +2016,11 @@ export default function ChatPage() {
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 space-y-2">
                 <div className="flex items-center gap-2">
                   <Avatar
-                    fallback={activeThreadParent.sender?.full_name || '?'}
-                    src={activeThreadParent.sender?.avatar_url || undefined}
+                    fallback={extractMessageMeta(activeThreadParent).senderName || activeThreadParent.sender?.full_name || '?'}
+                    src={extractMessageMeta(activeThreadParent).senderStudentId ? undefined : activeThreadParent.sender?.avatar_url || undefined}
                     className="h-6 w-6 text-[10px]"
                   />
-                  {activeThreadParent.sender_id === currentUser?.id ? (
+                  {activeThreadParent.sender_id === currentUser?.id && !extractMessageMeta(activeThreadParent).senderStudentId ? (
                     <span className="text-xs font-bold text-slate-900 dark:text-white">
                       Tu
                     </span>
@@ -2044,13 +2089,14 @@ export default function ChatPage() {
               {/* Elenco Risposte del Thread */}
               {activeThreadReplies.length > 0 ? (
                 activeThreadReplies.map((reply) => {
-                  const isMe = reply.sender_id === currentUser?.id
-                  const { reactions: replyReactions } = extractMessageMeta(reply)
+                  const replyMeta = extractMessageMeta(reply)
+                  const isMe = reply.sender_id === currentUser?.id && !replyMeta.senderStudentId
+                  const { reactions: replyReactions } = replyMeta
                   return (
                     <div key={reply.id} className="flex items-start gap-2.5">
                       <Avatar
-                        fallback={reply.sender?.full_name || '?'}
-                        src={reply.sender?.avatar_url || undefined}
+                        fallback={replyMeta.senderName || reply.sender?.full_name || '?'}
+                        src={replyMeta.senderStudentId ? undefined : reply.sender?.avatar_url || undefined}
                         className="h-6 w-6 text-[10px] shrink-0 mt-0.5"
                       />
                       <div className="flex flex-col flex-1 space-y-1 min-w-0">

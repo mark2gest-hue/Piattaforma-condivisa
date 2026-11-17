@@ -21,7 +21,7 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const pathname = usePathname()
-  const isFullBleedChat = pathname?.startsWith('/chat')
+  const isFullBleedChat = pathname?.startsWith('/chat') || pathname?.startsWith('/assistenza')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarPinned, setIsSidebarPinned] = useState(false)
 

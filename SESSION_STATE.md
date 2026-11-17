@@ -1,7 +1,21 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-16 23:20
+Ultimo aggiornamento: 2026-11-17 12:58
 Stato corrente:
+- **Fase 5 Chat & Assistenza Nativa COMPLETATA & DEPLOYATA (`v2.3.0 • Build #119`)**:
+  - **Migrazione SQL ([supabase/migrations/20261117123000_chat_phase5_support_inbox.sql](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/supabase/migrations/20261117123000_chat_phase5_support_inbox.sql))**:
+    - Nuove tabelle `public.support_tickets` e `public.support_messages` con indici, RLS per il team interno (esclusi `collaborator`) e abilitazione a `supabase_realtime`.
+    - Estensione `public.push_subscriptions.user_id` a tipo `TEXT` per supportare anche sottoscrizioni studente `student-<id>`.
+  - **Backend Assistenza & Auto-Routing ([src/app/actions/support.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/support.ts))**:
+    - Persistenza duale resiliente (Supabase + `.support-tickets.json`), auto-routing automatico per categoria (`tecnico` -> Marco/Stefano, `didattica` -> docente, `commerciale` -> Lorenzo), azioni studente (`createSupportTicketAction`, `getStudentSupportTicketsAction`, `replyStudentSupportTicketAction`, `markStudentTicketReadAction`) e azioni staff (`getTeamSupportTicketsAction`, `replyTeamSupportTicketAction`, `updateSupportTicketStatusAction`, `reassignSupportTicketAction`).
+  - **Inbox Assistenza Nativa per il Team ([src/app/(dashboard)/assistenza/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/assistenza/page.tsx))**:
+    - Vista a 2 colonne full-height (`100dvh`) collegata in Sidebar (`Assistenza`) e blindata nel Middleware per `collaborator`.
+    - Switch *I miei / Tutti*, filtri per stato (`Aperto`, `In attesa`, `Risolto`) e categoria, ricerca, riassegnazione 1-click, link diretto `💬 Apri DM in Chat`, aggiornamento Realtime e risposta rapida con push + email automatica allo studente.
+  - **Rimozione Integrale Telegram & Sistema Notifiche Studenti a 3 Livelli ([src/app/actions/notifications.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/notifications.ts), [src/app/actions/chat.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/chat.ts), [src/app/(dashboard)/chat/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/chat/page.tsx))**:
+    - Rimossa la chiamata `sendTelegramMessage` da `notifyChatMessageAction`; rimossi i link Telegram (`t.me/+...` e `@Corsi_Masterclass_bot`) da `/corsi`.
+    - **Livello 1 (Web Push Studenti)**: `saveStudentPushSubscriptionAction` per `student-<id>` e pulsante `🔔 Attiva Notifiche` in `/corsi`.
+    - **Livello 2 (Email Zero-Spam)**: toggle `📧 Avvisa iscritti via Email` e trigger `@tutti` in `#community-studenti`; inoltro email automatico su DM verso studenti e su risposte ai ticket `/assistenza`.
+    - **Livello 3 (Badge Rossi in `/corsi`)**: pulsanti nativi `💬 Canale Studenti` (`StudentCommunityModal.tsx`) e `🛟 Assistenza 1-a-1` (`StudentSupportModal.tsx`) con contatori `N nuovi` in tempo reale, più pulsante rapido nel banner B2B e sui singoli moduli.
 - **Roster Partecipanti Canale ("Chi c'è dentro"), Canale `#community-studenti` & DM 1-a-1 al Click sul Nome COMPLETATI (`v2.3.0 • Build #118`)**:
   - `src/app/actions/chat.ts`:
     - Aggiornato `SYSTEM_CHANNEL_NAMES = ['generale', 'community-studenti']`.
@@ -75,12 +89,12 @@ Stato corrente:
   - Nuove Server Action (`getVapidPublicKeyAction`, `savePushSubscriptionAction`, `sendTestPushNotificationAction`) e invio concorrente push + telegram in `notifyChatMessageAction`.
   - Layout `/chat` full-bleed ergonomico (`src/components/layout/dashboard-shell.tsx` a `h-[calc(100dvh-4rem)]`, sidebar canali fissa a 250px su desktop, drawer 100dvh su mobile, safe-area inset su iPhone/iPad e pulsante interattivo Web Push nel Channel Header).
   - Esclusione deterministica di `manifest.json` e `sw.js` dal Middleware Next.js e Supabase per prevenire redirect 307 in produzione.
-- **ROADMAP ALLINEAMENTO CHAT & WORKSPACE A SLACK (Fasi 4-5)**:
+- **ROADMAP ALLINEAMENTO CHAT & WORKSPACE A SLACK (Fasi 1-5)**:
   - *Fase 1*: ✅ COMPLETATA & DEPLOYATA (Build #112)
   - *Fase 2*: ✅ COMPLETATA & DEPLOYATA (Build #113)
   - *Fase 3*: ✅ COMPLETATA & DEPLOYATA (Build #115)
-  - *Fase 4*: Slash command (`/task`, `/lead`, `/ai`) e Webhook in entrata `/api/webhooks/chat` (HMAC) da `n8n` / Stripe / VPS.
-  - *Fase 5*: **Inbox Assistenza Nativa (Studenti & Aziende B2B)**: tabelle `support_tickets` + `support_messages` (Supabase Realtime + RLS), auto-routing per categoria (`Tecnico/Piattaforma` -> Marco/Stefano, `Didattica/Moduli` -> docente, `Commerciale/B2B` -> Lorenzo) con `assigned_to` automatico, widget "Chiedi Assistenza" in `/corsi` e pagine B2B con contesto automatico (utente, corso, modulo, azienda), gestione diretta a 2 colonne in `/assistenza` (stati Aperto/In attesa/Risolto, filtro "I miei ticket" vs "Tutti", riassegnazione 1-click), notifiche Web Push mirate al solo assegnatario e avviso email automatico allo studente offline (sostituendo il giro Telegram senza installare Chatwoot).
+  - *Fase 4*: ✅ COMPLETATA & DEPLOYATA (Build #117)
+  - *Fase 5*: ✅ COMPLETATA & DEPLOYATA (Build #119 — migrazione DB applicata, deploy su VPS2 online)
 - **CRM Commerciale Stile Torch / GoHighLevel (`/clienti`) & Pagina Pubblica Prenotazione (`/prenota`) COMPLETATI (`ba65bc7`)**:
   - **Pipeline Vendite in `/clienti` (`src/app/(dashboard)/clienti/page.tsx`)**: 3 KPI Cards commerciali (`Pipeline in Trattativa €`, `Fatturato Acquisito Vinto €`, `Call & Proposte Calde`), switch vista `[ 💰 Pipeline Vendite | 📋 Lista Contatti ]`, Kanban a 4 fasi (`Nuovo Lead`, `Call Fissata`, `Proposta / Preventivo`, `Cliente Vinto`) con valore economico `€`, frecce di avanzamento rapido (`←`/`→`) persistite in `notes` (`[STAGE:...|VAL:...]`) e bottone WhatsApp 1-click (`wa.me`).
   - **Booking Pubblico `/prenota` (`src/app/prenota/page.tsx` + `src/lib/supabase/middleware.ts`)**: Pagina pubblica `https://aiutiamoci.cloud/prenota` accessibile senza login (HTTP 200 OK) per aziende B2B e corsisti Academy, sincronizzata con le disponibilità reali del team.

@@ -82,5 +82,6 @@ scripts/render_masterclass_ref.sh
 .vapid-keys.json
 .chat-channels.json
 .chat-collaborators.json
+.support-tickets.json
 
 

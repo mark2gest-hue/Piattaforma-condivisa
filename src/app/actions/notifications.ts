@@ -2,6 +2,8 @@
 
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { sendTelegramMessage, escapeHtml } from '@/lib/telegram'
+import { sendSharedEmail } from '@/app/(dashboard)/posta/actions'
+import { resolveStudentIdentityByCode } from '@/app/actions/support'
 import {
   getOrCreateVapidKeys,
   saveUserPushSubscription,
@@ -90,6 +92,89 @@ export async function notifyFileUploadAction(fileName: string, isFolder: boolean
   }
 }
 
+async function resolveStudentEmailByChatId(studentChatId: string): Promise<{ name: string; email: string } | null> {
+  if (!studentChatId.startsWith('student-')) return null
+  const rawId = studentChatId.slice('student-'.length)
+  if (!rawId) return null
+
+  const admin = createAdminClient()
+
+  try {
+    const { data: codeRow } = await (admin.from('student_codes') as any)
+      .select('student_name, student_email')
+      .eq('id', rawId)
+      .maybeSingle()
+
+    if (codeRow?.student_email) {
+      return {
+        name: (codeRow.student_name || 'Studente').trim(),
+        email: codeRow.student_email.trim().toLowerCase(),
+      }
+    }
+  } catch {
+    // Ignora se non trovato o formato UUID diverso
+  }
+
+  try {
+    const { data: regRow } = await (admin.from('course_registrations') as any)
+      .select('name, email')
+      .eq('id', rawId)
+      .maybeSingle()
+
+    if (regRow?.email) {
+      return {
+        name: (regRow.name || 'Studente').trim(),
+        email: regRow.email.trim().toLowerCase(),
+      }
+    }
+  } catch {
+    // Ignora
+  }
+
+  return null
+}
+
+async function getAllActiveStudentEmails(): Promise<Array<{ name: string; email: string }>> {
+  const admin = createAdminClient()
+  const emailMap = new Map<string, string>()
+
+  const { data: teamProfiles } = await (admin.from('profiles') as any).select('email')
+  const teamEmails = new Set(
+    (Array.isArray(teamProfiles) ? teamProfiles : [])
+      .map((p) => p.email?.trim().toLowerCase())
+      .filter(Boolean)
+  )
+
+  const { data: codesData } = await (admin.from('student_codes') as any)
+    .select('student_name, student_email, is_active')
+    .eq('is_active', true)
+
+  if (Array.isArray(codesData)) {
+    for (const row of codesData) {
+      const email = (row.student_email || '').trim().toLowerCase()
+      if (email && email.includes('@') && !email.endsWith('.local') && !teamEmails.has(email) && !emailMap.has(email)) {
+        emailMap.set(email, (row.student_name || 'Studente').trim())
+      }
+    }
+  }
+
+  const { data: regData } = await (admin.from('course_registrations') as any)
+    .select('name, email, approved, status')
+
+  if (Array.isArray(regData)) {
+    for (const row of regData) {
+      if (row.approved === true || row.status === 'approved') {
+        const email = (row.email || '').trim().toLowerCase()
+        if (email && email.includes('@') && !email.endsWith('.local') && !teamEmails.has(email) && !emailMap.has(email)) {
+          emailMap.set(email, (row.name || 'Studente').trim())
+        }
+      }
+    }
+  }
+
+  return Array.from(emailMap.entries()).map(([email, name]) => ({ email, name }))
+}
+
 export async function notifyChatMessageAction(
   channel: string,
   content: string,
@@ -100,10 +185,12 @@ export async function notifyChatMessageAction(
     recipientUserIds?: string[]
     isDirectMessage?: boolean
     isPrivateChannel?: boolean
+    notifyStudentsByEmail?: boolean
   }
 ) {
   try {
     let senderUserId: string | undefined
+    let isInternalStaffSender = false
     let userName = senderName
 
     try {
@@ -111,6 +198,16 @@ export async function notifyChatMessageAction(
       const { data: { user } } = await client.auth.getUser()
       if (user) {
         senderUserId = user.id
+        const admin = createAdminClient()
+        const { data: prof } = await (admin.from('profiles') as any)
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+        const role =
+          user.user_metadata?.role === 'collaborator'
+            ? 'collaborator'
+            : prof?.role || user.user_metadata?.role || 'member'
+        isInternalStaffSender = role !== 'collaborator'
       }
     } catch {
       // Ignora errore lettura sessione utente
@@ -119,21 +216,6 @@ export async function notifyChatMessageAction(
     if (!userName) {
       userName = await getCurrentUserProfileName()
     }
-    const channelLabel = channel.startsWith('dm:') ? 'DM Privato' : `#${channel}`
-
-    const isConfidential = Boolean(options?.isDirectMessage || options?.isPrivateChannel)
-
-    const telegramTitle = options?.mentionedNames && options.mentionedNames.length > 0
-      ? `🔔 <b>Menzione in Chat (${escapeHtml(channelLabel)})</b>`
-      : options?.isThreadReply
-      ? `💬 <b>Risposta al Thread in Chat (${escapeHtml(channelLabel)})</b>`
-      : `💬 <b>Nuovo Messaggio in Chat (${escapeHtml(channelLabel)})</b>`
-
-    const telegramMessage =
-      `${telegramTitle}\n\n` +
-      `👤 <b>Da:</b> ${escapeHtml(userName)}\n` +
-      `📝 <b>Messaggio:</b> <i>"${escapeHtml(content)}"</i>\n\n` +
-      `🔗 <a href="https://aiutiamoci.cloud/chat">Apri la Chat su Aiutiamoci</a>`
 
     // Titolo Web Push personalizzato per menzioni, DM, canali privati o risposte a thread
     let pushTitle = `💬 #${channel} — ${userName}`
@@ -147,46 +229,103 @@ export async function notifyChatMessageAction(
       pushTitle = `💬 Risposta al thread in #${channel} — ${userName}`
     }
 
-    // Esecuzione concorrente: invio Web Push (filtrate per destinatari se DM o canale privato) + invio Telegram (solo per canali pubblici)
-    const [telegramResult, pushResult] = await Promise.allSettled([
-      isConfidential ? Promise.resolve({ success: true, skipped: true }) : sendTelegramMessage(telegramMessage),
+    const isCommunityChannel = channel === 'community-studenti'
+    const hasMentionTutti =
+      (options?.mentionedNames || []).some((m) => m.toLowerCase() === 'tutti') ||
+      /@tutti\b/i.test(content)
+
+    // Esecuzione concorrente: Web Push nativa VAPID + Email automatica intelligente (Zero Telegram)
+    const [pushResult, emailResult] = await Promise.allSettled([
       (async () => {
         let recipients = await getAllPushSubscriptions(senderUserId)
 
-        // Se sono specificati destinatari mirati (es. DM 1-a-1 o membri canale privato)
         if (options?.recipientUserIds && options.recipientUserIds.length > 0) {
           recipients = recipients.filter(
             (sub) => sub.user_id && options.recipientUserIds!.includes(sub.user_id)
+          )
+        } else if (!isCommunityChannel) {
+          // Zero-Leak: sui canali interni del team non inviamo mai push a sottoscrizioni student-*
+          recipients = recipients.filter(
+            (sub) => !sub.user_id || !sub.user_id.startsWith('student-')
           )
         }
 
         if (recipients.length === 0) return { delivered: 0 }
 
-        const pushPayload = {
-          title: pushTitle,
-          body: content,
-          url: `/chat?channel=${encodeURIComponent(channel)}`,
-          tag: `chat-${channel}`,
-        }
-
         const outcomes = await Promise.allSettled(
-          recipients.map((sub) => sendWebPushNotification(sub, pushPayload))
+          recipients.map((sub) => {
+            const isStudentSub = Boolean(sub.user_id && sub.user_id.startsWith('student-'))
+            const targetUrl = isStudentSub
+              ? options?.isDirectMessage
+                ? '/corsi?chat=dm'
+                : '/corsi?community=1'
+              : `/chat?channel=${encodeURIComponent(channel)}`
+
+            return sendWebPushNotification(sub, {
+              title: pushTitle,
+              body: content.slice(0, 180),
+              url: targetUrl,
+              tag: `chat-${channel}`,
+            })
+          })
         )
         return { delivered: outcomes.length }
       })(),
-    ])
+      (async () => {
+        if (!isInternalStaffSender) return { sent: 0 }
 
-    if (telegramResult.status === 'rejected' || (telegramResult.status === 'fulfilled' && !telegramResult.value.success)) {
-      console.warn(
-        '[notifyChatMessageAction] Telegram send failed:',
-        (telegramResult as any).value?.error || (telegramResult as any).reason
-      )
-    }
+        // Caso A: #community-studenti con @tutti o toggle Email esplicito attivo
+        if (isCommunityChannel && (options?.notifyStudentsByEmail || hasMentionTutti)) {
+          const students = await getAllActiveStudentEmails()
+          if (students.length === 0) return { sent: 0 }
+
+          const preview = content.length > 600 ? `${content.slice(0, 600)}...` : content
+          const outcomes = await Promise.allSettled(
+            students.map((st) =>
+              sendSharedEmail({
+                to: st.email,
+                subject: `📢 Avviso importante in #community-studenti — ${userName}`,
+                body: `Ciao ${st.name},\n\n${userName} ha pubblicato un avviso importante nel canale #community-studenti su AIutiamoci Academy:\n\n"${preview}"\n\n👉 Leggi e rispondi direttamente nell'Area Corsisti:\nhttps://aiutiamoci.cloud/corsi?community=1\n\nA presto,\nTeam AIutiamoci`,
+              })
+            )
+          )
+          return { sent: outcomes.length }
+        }
+
+        // Caso B: DM 1-a-1 verso uno studente (student-<id>)
+        if (options?.isDirectMessage && channel.startsWith('dm:')) {
+          const studentTargetId =
+            (options.recipientUserIds || []).find((id) => id.startsWith('student-')) ||
+            channel
+              .replace('dm:', '')
+              .split('_')
+              .find((id) => id.startsWith('student-'))
+
+          if (!studentTargetId) return { sent: 0 }
+
+          const studentInfo = await resolveStudentEmailByChatId(studentTargetId)
+          if (!studentInfo || !studentInfo.email.includes('@') || studentInfo.email.endsWith('.local')) {
+            return { sent: 0 }
+          }
+
+          const preview = content.length > 600 ? `${content.slice(0, 600)}...` : content
+          await sendSharedEmail({
+            to: studentInfo.email,
+            subject: `💬 Nuovo messaggio privato da ${userName} su AIutiamoci Academy`,
+            body: `Ciao ${studentInfo.name},\n\nhai ricevuto un nuovo messaggio privato 1-a-1 da ${userName}:\n\n"${preview}"\n\n👉 Rispondi direttamente dalla tua Area Corsisti:\nhttps://aiutiamoci.cloud/corsi?chat=dm\n\nA presto,\nTeam AIutiamoci`,
+          })
+          return { sent: 1 }
+        }
+
+        return { sent: 0 }
+      })(),
+    ])
 
     return {
       success: true,
-      telegram: telegramResult.status === 'fulfilled' ? telegramResult.value : null,
+      telegram: { success: true, skipped: true },
       push: pushResult.status === 'fulfilled' ? pushResult.value : null,
+      email: emailResult.status === 'fulfilled' ? emailResult.value : null,
     }
   } catch (err: any) {
     console.error('Errore notifyChatMessageAction:', err)
@@ -234,6 +373,42 @@ export async function savePushSubscriptionAction(sub: {
     return { success: true }
   } catch (error: any) {
     console.error('Errore savePushSubscriptionAction:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Livello 1 Notifiche Studenti: salva sottoscrizione Web Push per uno studente attivo ('student-<id>').
+ */
+export async function saveStudentPushSubscriptionAction(input: {
+  studentCode: string
+  sub: {
+    endpoint: string
+    keys: { p256dh: string; auth: string }
+    userAgent?: string
+  }
+}) {
+  try {
+    if (!input.sub?.endpoint || !input.sub?.keys?.p256dh || !input.sub?.keys?.auth) {
+      return { success: false, error: 'Parametri sottoscrizione mancanti o non validi' }
+    }
+
+    const identity = await resolveStudentIdentityByCode(input.studentCode)
+    if (!identity) {
+      return { success: false, error: 'Codice studente non valido o non attivo' }
+    }
+
+    await saveUserPushSubscription({
+      user_id: identity.studentId,
+      endpoint: input.sub.endpoint,
+      p256dh: input.sub.keys.p256dh,
+      auth: input.sub.keys.auth,
+      user_agent: input.sub.userAgent,
+    })
+
+    return { success: true, studentId: identity.studentId }
+  } catch (error: any) {
+    console.error('Errore saveStudentPushSubscriptionAction:', error)
     return { success: false, error: error.message }
   }
 }

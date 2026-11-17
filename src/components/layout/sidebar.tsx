@@ -10,6 +10,7 @@ import {
   Calendar as CalendarIcon,
   Mail,
   MessageSquare,
+  LifeBuoy,
   Video,
   GraduationCap,
   Award,
@@ -94,6 +95,13 @@ export function Sidebar({
           href: '/chat',
           icon: MessageSquare,
           badge: null,
+        },
+        {
+          title: 'Assistenza',
+          subtitle: 'Ticket Studenti & B2B',
+          href: '/assistenza',
+          icon: LifeBuoy,
+          badge: 'Inbox',
         },
         {
           title: 'Videocall',

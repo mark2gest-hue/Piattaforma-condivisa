@@ -78,7 +78,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/workshop-agenti') ||
     pathname.startsWith('/corsi') ||
     pathname.startsWith('/zona-compiti') ||
-    pathname.startsWith('/convert')
+    pathname.startsWith('/convert') ||
+    pathname.startsWith('/assistenza')
 
   if (user && isInternalOnlyRoute) {
     let userRole = user.user_metadata?.role

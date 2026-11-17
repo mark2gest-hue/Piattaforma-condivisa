@@ -43,13 +43,29 @@ import {
   Sun,
   Moon,
   ChevronDown,
+  MessageCircle,
+  LifeBuoy,
+  Bell,
+  BellRing,
 } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
-import { playNotificationSound } from '@/lib/notifications'
+import {
+  playNotificationSound,
+  getWebPushStatus,
+  registerWebPushSubscription,
+} from '@/lib/notifications'
+import {
+  getVapidPublicKeyAction,
+  saveStudentPushSubscriptionAction,
+} from '@/app/actions/notifications'
+import { getStudentCommunityChatAction } from '@/app/actions/chat'
+import { getStudentSupportTicketsAction } from '@/app/actions/support'
+import { StudentCommunityModal } from '@/components/corsi/StudentCommunityModal'
+import { StudentSupportModal } from '@/components/corsi/StudentSupportModal'
 import { sendSharedEmail } from '../posta/actions'
 import { encodeReferralCode } from '@/lib/referral-mask'
 import {
@@ -707,6 +723,17 @@ function CorsiInnerContent() {
   const [isTeamMember, setIsTeamMember] = useState<boolean>(false)
   const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false)
   const [authChecked, setAuthChecked] = useState<boolean>(false)
+
+  // Fase 5: Community Studenti (#community-studenti), Assistenza 1-a-1 & Notifiche 3 Livelli
+  const [isCommunityModalOpen, setIsCommunityModalOpen] = useState<boolean>(false)
+  const [communityInitialView, setCommunityInitialView] = useState<'community' | 'dm'>('community')
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState<boolean>(false)
+  const [supportInitialTicketId, setSupportInitialTicketId] = useState<string | null>(null)
+  const [supportInitialCreateMode, setSupportInitialCreateMode] = useState<boolean>(false)
+  const [unreadCommunityCount, setUnreadCommunityCount] = useState<number>(0)
+  const [unreadSupportCount, setUnreadSupportCount] = useState<number>(0)
+  const [studentPushStatus, setStudentPushStatus] = useState<'loading' | 'unsupported' | 'denied' | 'subscribed' | 'prompt'>('loading')
+  const [isEnablingStudentPush, setIsEnablingStudentPush] = useState<boolean>(false)
 
   // Subtab Registro: 'registrations' | 'active' | 'pro_students' | 'waitlist' | 'b2b_cohorts'
   const [studentSubTab, setStudentSubTab] = useState<'registrations' | 'active' | 'pro_students' | 'waitlist' | 'b2b_cohorts'>('registrations')
@@ -1562,7 +1589,7 @@ function CorsiInnerContent() {
     setIsBulkImporting(false)
   }
 
-  // Auto-verifica Codice da URL ?code=AI-START-XXXX e gestione tab=login
+  // Auto-verifica Codice da URL ?code=AI-START-XXXX e gestione tab=login / deep link Fase 5
   useEffect(() => {
     const tab = searchParams?.get('tab')
     if (tab === 'login') {
@@ -1572,7 +1599,134 @@ function CorsiInnerContent() {
     if (urlCode) {
       verifyAndSetCode(urlCode)
     }
+    const communityParam = searchParams?.get('community')
+    const chatParam = searchParams?.get('chat')
+    const supportParam = searchParams?.get('support')
+
+    if (chatParam === 'dm') {
+      setCommunityInitialView('dm')
+      setIsCommunityModalOpen(true)
+    } else if (communityParam === '1') {
+      setCommunityInitialView('community')
+      setIsCommunityModalOpen(true)
+    }
+
+    if (supportParam) {
+      setSupportInitialTicketId(supportParam)
+      setSupportInitialCreateMode(false)
+      setIsSupportModalOpen(true)
+    }
   }, [searchParams])
+
+  // Controllo stato Web Push studente e polling badge rossi (Livello 1 & Livello 3)
+  useEffect(() => {
+    getWebPushStatus()
+      .then((status) => setStudentPushStatus(status))
+      .catch(() => setStudentPushStatus('unsupported'))
+  }, [])
+
+  const effectivePortalStudentCode = activeStudent?.code || (isTeamMember ? 'TEAM-PREVIEW' : '')
+
+  const refreshStudentBadges = async () => {
+    if (!effectivePortalStudentCode) return
+    try {
+      const [commRes, suppRes] = await Promise.allSettled([
+        getStudentCommunityChatAction(effectivePortalStudentCode),
+        getStudentSupportTicketsAction(effectivePortalStudentCode),
+      ])
+
+      if (commRes.status === 'fulfilled' && commRes.value.success) {
+        const stId = commRes.value.student?.id || ''
+        const key = `aiutiamoci_student_community_last_read_${effectivePortalStudentCode.toUpperCase()}`
+        let lastReadTs = 0
+        try {
+          const saved = localStorage.getItem(key)
+          if (saved) lastReadTs = new Date(saved).getTime() || 0
+        } catch {}
+
+        const allMsgs = [
+          ...(commRes.value.communityMessages || []),
+          ...(commRes.value.dmMessages || []),
+        ]
+
+        const newCount = allMsgs.filter((m: any) => {
+          const att = Array.isArray(m.attachments) ? m.attachments : []
+          const meta = att.find((a: any) => a && a.type === '__chat_meta__')
+          const isOwn =
+            (meta?.sender_student_id && meta.sender_student_id === stId) ||
+            (!meta?.sender_student_id && m.sender_id === stId)
+          if (isOwn) return false
+          if (!lastReadTs) return true
+          return new Date(m.created_at).getTime() > lastReadTs
+        }).length
+
+        setUnreadCommunityCount(newCount)
+      }
+
+      if (suppRes.status === 'fulfilled' && suppRes.value.success) {
+        setUnreadSupportCount(suppRes.value.unreadCount || 0)
+      }
+    } catch {
+      // Ignora errori di rete transitori
+    }
+  }
+
+  useEffect(() => {
+    if (!effectivePortalStudentCode) return
+    refreshStudentBadges()
+
+    const timer = setInterval(refreshStudentBadges, 30000)
+    const ch = supabase
+      .channel('public:corsi_student_badges')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        () => refreshStudentBadges()
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'support_messages' },
+        () => refreshStudentBadges()
+      )
+      .subscribe()
+
+    return () => {
+      clearInterval(timer)
+      supabase.removeChannel(ch)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectivePortalStudentCode])
+
+  const handleEnableStudentPush = async () => {
+    if (!activeStudent?.code) return
+    try {
+      setIsEnablingStudentPush(true)
+      const resKey = await getVapidPublicKeyAction()
+      if (!resKey.success || !resKey.publicKey) {
+        alert('Impossibile recuperare la chiave notifiche push.')
+        return
+      }
+      const sub = await registerWebPushSubscription(resKey.publicKey)
+      const saveRes = await saveStudentPushSubscriptionAction({
+        studentCode: activeStudent.code,
+        sub,
+      })
+      if (saveRes.success) {
+        setStudentPushStatus('subscribed')
+        playNotificationSound('chat')
+      } else {
+        alert(saveRes.error || 'Errore attivazione notifiche push')
+      }
+    } catch (err: any) {
+      const current = await getWebPushStatus()
+      setStudentPushStatus(current)
+      if (err?.message) {
+        alert(err.message)
+      }
+    } finally {
+      setIsEnablingStudentPush(false)
+    }
+  }
 
   const verifyAndSetCode = async (codeStr: string) => {
     const cleanCode = codeStr.trim().toUpperCase()
@@ -2186,11 +2340,50 @@ function CorsiInnerContent() {
 
           <div className="flex items-center gap-2">
             {isTeamMember ? (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="purple" className="py-1 px-3 flex items-center gap-1.5 text-xs font-semibold">
                   <Award className="h-3.5 w-3.5" />
                   <span>Docente / Team</span>
                 </Badge>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCommunityInitialView('community')
+                    setIsCommunityModalOpen(true)
+                  }}
+                  className="text-xs h-9 px-3 rounded-xl gap-1.5 border-indigo-500/40 bg-indigo-950/30 hover:bg-indigo-900/50 text-indigo-300 font-semibold shadow-xs cursor-pointer"
+                  title="Anteprima Canale Studenti #community-studenti"
+                >
+                  <MessageCircle className="h-3.5 w-3.5 text-indigo-400" />
+                  <span>Canale Studenti</span>
+                  {unreadCommunityCount > 0 && (
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black leading-tight">
+                      {unreadCommunityCount} nuovi
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSupportInitialCreateMode(false)
+                    setSupportInitialTicketId(null)
+                    setIsSupportModalOpen(true)
+                  }}
+                  className="text-xs h-9 px-3 rounded-xl gap-1.5 border-emerald-500/40 bg-emerald-950/30 hover:bg-emerald-900/50 text-emerald-300 font-semibold shadow-xs cursor-pointer"
+                  title="Anteprima Assistenza 1-a-1 (Studenti & B2B)"
+                >
+                  <LifeBuoy className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Assistenza 1-a-1</span>
+                  {unreadSupportCount > 0 && (
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black leading-tight">
+                      {unreadSupportCount} nuovi
+                    </span>
+                  )}
+                </Button>
                 <Button
                   onClick={() => setIsEnrollModalOpen(true)}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
@@ -2215,16 +2408,74 @@ function CorsiInnerContent() {
                     </span>
                   </Badge>
                 )}
-                <a
-                  href="https://t.me/+QSql9PpGLlMzYmI0"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs h-8 px-3 rounded-xl gap-1.5 border border-sky-500/40 bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 font-semibold shadow-xs inline-flex items-center transition-all shrink-0"
-                  title="Entra nella Community Telegram Ufficiale con il Tutor AI h24"
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCommunityInitialView('community')
+                    setIsCommunityModalOpen(true)
+                  }}
+                  className="text-xs h-8 px-3 rounded-xl gap-1.5 border-indigo-500/40 bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 font-semibold shadow-xs cursor-pointer shrink-0"
+                  title="Apri #community-studenti e i Messaggi Diretti con i Docenti"
                 >
-                  <Send className="h-3.5 w-3.5 text-sky-400" />
-                  <span>Community Telegram & Tutor AI</span>
-                </a>
+                  <MessageCircle className="h-3.5 w-3.5 text-indigo-400" />
+                  <span>Canale Studenti</span>
+                  {unreadCommunityCount > 0 && (
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black leading-tight animate-pulse">
+                      {unreadCommunityCount} nuovi
+                    </span>
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSupportInitialCreateMode(false)
+                    setSupportInitialTicketId(null)
+                    setIsSupportModalOpen(true)
+                  }}
+                  className="text-xs h-8 px-3 rounded-xl gap-1.5 border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 font-semibold shadow-xs cursor-pointer shrink-0"
+                  title="Apri Assistenza 1-a-1 dedicata con il Team AIutiamoci"
+                >
+                  <LifeBuoy className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Assistenza 1-a-1</span>
+                  {unreadSupportCount > 0 && (
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black leading-tight animate-pulse">
+                      {unreadSupportCount} nuovi
+                    </span>
+                  )}
+                </Button>
+
+                {studentPushStatus === 'subscribed' ? (
+                  <Badge
+                    variant="success"
+                    className="h-8 px-2.5 text-[11px] flex items-center gap-1 rounded-xl shrink-0"
+                    title="Notifiche Web Push attive su questo dispositivo"
+                  >
+                    <BellRing className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Notifiche Attive</span>
+                  </Badge>
+                ) : studentPushStatus === 'prompt' ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isEnablingStudentPush}
+                    onClick={handleEnableStudentPush}
+                    className="text-xs h-8 px-2.5 rounded-xl gap-1.5 border-sky-500/40 bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 font-semibold shadow-xs cursor-pointer shrink-0"
+                    title="Attiva le notifiche push per ricevere risposte e avvisi in tempo reale"
+                  >
+                    {isEnablingStudentPush ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Bell className="h-3.5 w-3.5 text-sky-400" />
+                    )}
+                    <span>Attiva Notifiche</span>
+                  </Button>
+                ) : null}
 
                 <Button
                   variant="outline"
@@ -2601,12 +2852,27 @@ function CorsiInnerContent() {
                     Ambiente di apprendimento riservato ai dipendenti e collaboratori di {activeCorporateCohort.company_name}.
                   </p>
                 </div>
-                {corporateCustomLessons.length > 0 && (
-                  <Badge className="bg-emerald-600 text-white font-bold text-xs px-3 py-1 gap-1 shrink-0">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>{corporateCustomLessons.length} Video/Moduli Personalizzati</span>
-                  </Badge>
-                )}
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  {corporateCustomLessons.length > 0 && (
+                    <Badge className="bg-emerald-600 text-white font-bold text-xs px-3 py-1 gap-1 shrink-0">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>{corporateCustomLessons.length} Video/Moduli Personalizzati</span>
+                    </Badge>
+                  )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setSupportInitialTicketId(null)
+                      setSupportInitialCreateMode(true)
+                      setIsSupportModalOpen(true)
+                    }}
+                    className="h-8 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    <LifeBuoy className="h-3.5 w-3.5" />
+                    <span>Chiedi Assistenza B2B</span>
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -2838,13 +3104,29 @@ function CorsiInnerContent() {
                   <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
                     {/* Header Titolo e Info Modulo */}
                     <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="purple" className="text-[10px] uppercase font-mono px-2.5 py-0.5">
-                          Modulo {currentActive.id} di {activeList.length}
-                        </Badge>
-                        <span className="text-xs text-slate-400 font-mono font-medium">
-                          Durata: {currentActive.duration}
-                        </span>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="purple" className="text-[10px] uppercase font-mono px-2.5 py-0.5">
+                            Modulo {currentActive.id} di {activeList.length}
+                          </Badge>
+                          <span className="text-xs text-slate-400 font-mono font-medium">
+                            Durata: {currentActive.duration}
+                          </span>
+                        </div>
+                        {effectivePortalStudentCode && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSupportInitialTicketId(null)
+                              setSupportInitialCreateMode(true)
+                              setIsSupportModalOpen(true)
+                            }}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[11px] font-semibold transition-all cursor-pointer"
+                          >
+                            <LifeBuoy className="h-3.5 w-3.5" />
+                            <span>Chiedi Assistenza su questo Modulo</span>
+                          </button>
+                        )}
                       </div>
                       <h3 className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">
                         {currentActive.title}
@@ -3357,16 +3639,19 @@ function CorsiInnerContent() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <a
-                    href="https://t.me/Corsi_Masterclass_bot"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[10px] font-bold transition-all"
-                    title="Apri il Tutor AI h24 su Telegram (@Corsi_Masterclass_bot)"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSupportInitialTicketId(null)
+                      setSupportInitialCreateMode(true)
+                      setIsSupportModalOpen(true)
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-bold transition-all cursor-pointer"
+                    title="Apri Assistenza 1-a-1 dedicata con il Team AIutiamoci"
                   >
-                    <Send className="h-3 w-3" />
-                    <span>Tutor Telegram</span>
-                  </a>
+                    <LifeBuoy className="h-3 w-3" />
+                    <span>Assistenza 1-a-1</span>
+                  </button>
                   <Badge variant="success" className="text-[9px] uppercase">Online 24/7</Badge>
                 </div>
               </div>
@@ -6872,16 +7157,16 @@ function CorsiInnerContent() {
                   </p>
                 </div>
 
-                {/* Step 3: Tutor AI */}
+                {/* Step 3: Tutor AI, Community & Assistenza */}
                 <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
                       3
                     </div>
-                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">🤖 Assistente @AI & Telegram</h5>
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">🤖 Assistente @AI, Community & Supporto</h5>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Nella colonna a destra puoi chattare in diretta con l'assistente @AI o usare il bot h24 su Telegram per dubbi sui prompt e casi reali.
+                    Nella colonna a destra puoi chattare con l&apos;assistente @AI, mentre in alto trovi il <strong>Canale Studenti</strong> (#community-studenti) e l&apos;<strong>Assistenza 1-a-1</strong> diretta con i docenti.
                   </p>
                 </div>
 
@@ -6943,6 +7228,43 @@ function CorsiInnerContent() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Fase 5: Modale Canale Studenti (#community-studenti & DM Docenti 1-a-1) */}
+      {effectivePortalStudentCode && (
+        <StudentCommunityModal
+          isOpen={isCommunityModalOpen}
+          onClose={() => {
+            setIsCommunityModalOpen(false)
+            refreshStudentBadges()
+          }}
+          studentCode={effectivePortalStudentCode}
+          studentName={activeStudent?.name || 'Docente (Preview)'}
+          initialView={communityInitialView}
+          onUnreadCountChange={(cnt) => setUnreadCommunityCount(cnt)}
+        />
+      )}
+
+      {/* Fase 5: Modale Assistenza 1-a-1 (Studenti & Aziende B2B) */}
+      {effectivePortalStudentCode && (
+        <StudentSupportModal
+          isOpen={isSupportModalOpen}
+          onClose={() => {
+            setIsSupportModalOpen(false)
+            setSupportInitialCreateMode(false)
+            setSupportInitialTicketId(null)
+            refreshStudentBadges()
+          }}
+          studentCode={effectivePortalStudentCode}
+          studentName={activeStudent?.name || 'Docente (Preview)'}
+          courseId={selectedCourseId}
+          lessonId={(selectedCourseId === 'ai-pro' ? activeLessonPro : activeLesson).id}
+          lessonTitle={(selectedCourseId === 'ai-pro' ? activeLessonPro : activeLesson).title}
+          companyName={activeCorporateCohort?.company_name || null}
+          initialTicketId={supportInitialTicketId}
+          initialCreateMode={supportInitialCreateMode}
+          onUnreadCountChange={(cnt) => setUnreadSupportCount(cnt)}
+        />
       )}
     </div>
   )
