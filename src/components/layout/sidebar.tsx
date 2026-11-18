@@ -28,6 +28,7 @@ import {
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { BuildVersionBadge } from '@/components/layout/build-version-badge'
+import { getOpenSupportTicketsCountAction } from '@/app/actions/support'
 
 interface SidebarProps {
   isOpenMobile?: boolean
@@ -44,6 +45,7 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname()
   const [unreadEmailCount, setUnreadEmailCount] = useState<number>(0)
+  const [openSupportTicketsCount, setOpenSupportTicketsCount] = useState<number>(0)
   const [isHovered, setIsHovered] = useState<boolean>(false)
   const isExpanded = isPinned || isHovered
   const [teamCount, setTeamCount] = useState<number>(3)
@@ -102,7 +104,9 @@ export function Sidebar({
           subtitle: 'Ticket Studenti & B2B',
           href: '/assistenza',
           icon: LifeBuoy,
-          badge: 'Inbox',
+          badge: openSupportTicketsCount > 0
+            ? `${openSupportTicketsCount} ${openSupportTicketsCount === 1 ? 'Aperto' : 'Aperti'}`
+            : 'Inbox',
         },
         {
           title: 'Videocall',
@@ -241,9 +245,21 @@ export function Sidebar({
     }
   }, [pathname])
 
+  const fetchOpenSupportTickets = async () => {
+    try {
+      const res = await getOpenSupportTicketsCountAction()
+      if (res.success) {
+        setOpenSupportTicketsCount(res.openCount)
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   useEffect(() => {
     fetchUnreadEmails()
     fetchTeamMembers()
+    fetchOpenSupportTickets()
 
     const checkUserSlug = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -272,7 +288,7 @@ export function Sidebar({
     }
     checkUserSlug()
 
-    // Realtime subscription per nuove email e modifiche profilo team
+    // Realtime subscription per nuove email, ticket assistenza e modifiche profilo team
     const channel = supabase
       .channel('sidebar-realtime')
       .on(
@@ -285,12 +301,25 @@ export function Sidebar({
         { event: '*', schema: 'public', table: 'profiles' },
         () => fetchTeamMembers()
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_tickets' },
+        () => fetchOpenSupportTickets()
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
   }, [])
+
+  useEffect(() => {
+    if (currentUserRole === 'collaborator') {
+      setOpenSupportTicketsCount(0)
+      return
+    }
+    fetchOpenSupportTickets()
+  }, [pathname, currentUserRole])
 
   const fetchUnreadEmails = async () => {
     const { count } = await (supabase as any)
@@ -323,6 +352,9 @@ export function Sidebar({
     }
   }
 
+  const operativitaUnread =
+    currentUserRole === 'collaborator' ? 0 : unreadEmailCount + openSupportTicketsCount
+
   const renderSidebarInner = (expanded: boolean) => (
     <div className="flex-1 flex flex-col justify-between px-2.5 py-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-800">
       {/* SE LA SIDEBAR È COLLASSATA (expanded = false): Mostra le 4 Macro-Icone in colonna */}
@@ -331,7 +363,7 @@ export function Sidebar({
           {visibleNavGroups.map((group) => {
             const GroupIcon = group.icon
             const isGroupActive = group.id === activeGroupId
-            const hasUnread = group.id === 'operativita' && unreadEmailCount > 0
+            const hasUnread = group.id === 'operativita' && operativitaUnread > 0
 
             return (
               <button
@@ -377,7 +409,7 @@ export function Sidebar({
             const GroupIcon = group.icon
             const isGroupOpen = openGroupId === group.id
             const isGroupActive = group.id === activeGroupId
-            const hasUnread = group.id === 'operativita' && unreadEmailCount > 0
+            const hasUnread = group.id === 'operativita' && operativitaUnread > 0
 
             return (
               <div
@@ -426,7 +458,7 @@ export function Sidebar({
                   <div className="flex items-center gap-1.5 shrink-0 ml-2">
                     {hasUnread && (
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse">
-                        {unreadEmailCount}
+                        {operativitaUnread}
                       </span>
                     )}
                     <ChevronDown
@@ -507,7 +539,10 @@ export function Sidebar({
                               <span
                                 className={cn(
                                   'text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap shrink-0 text-center ml-2',
-                                  item.badge === 'Live'
+                                  (item.href === '/assistenza' && openSupportTicketsCount > 0) ||
+                                    (item.href === '/posta' && unreadEmailCount > 0)
+                                    ? 'bg-rose-600 text-white border border-rose-400/50 shadow-xs animate-pulse'
+                                    : item.badge === 'Live'
                                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse'
                                     : isActive
                                     ? 'bg-white text-blue-600 shadow-xs'

@@ -1064,3 +1064,57 @@ export async function reassignSupportTicketAction(input: {
     return { success: false, error: err?.message }
   }
 }
+
+/**
+ * Conteggio leggero ticket aperti (totali e assegnati al membro corrente) per badge Sidebar e Chat.
+ */
+export async function getOpenSupportTicketsCountAction(): Promise<{
+  success: boolean
+  openCount: number
+  myOpenCount: number
+}> {
+  try {
+    let staff: Awaited<ReturnType<typeof requireInternalTeamMember>>
+    try {
+      staff = await requireInternalTeamMember()
+    } catch {
+      return { success: true, openCount: 0, myOpenCount: 0 }
+    }
+
+    const byId = new Map<string, { status: string; assigned_to?: string | null }>()
+
+    for (const t of readLocalTickets()) {
+      byId.set(t.id, { status: t.status, assigned_to: t.assigned_to || null })
+    }
+
+    try {
+      const admin = createAdminClient()
+      const { data: rows } = await (admin.from('support_tickets') as any)
+        .select('id, status, assigned_to')
+      if (Array.isArray(rows)) {
+        for (const r of rows) {
+          if (r?.id) {
+            byId.set(r.id, { status: r.status || 'open', assigned_to: r.assigned_to || null })
+          }
+        }
+      }
+    } catch {
+      // Tabella non ancora accessibile sul DB remoto
+    }
+
+    let openCount = 0
+    let myOpenCount = 0
+    for (const item of byId.values()) {
+      if (item.status === 'open') {
+        openCount += 1
+        if (item.assigned_to === staff.id) {
+          myOpenCount += 1
+        }
+      }
+    }
+
+    return { success: true, openCount, myOpenCount }
+  } catch {
+    return { success: true, openCount: 0, myOpenCount: 0 }
+  }
+}

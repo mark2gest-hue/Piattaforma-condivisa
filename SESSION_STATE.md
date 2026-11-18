@@ -1,7 +1,10 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-18 14:25
+Ultimo aggiornamento: 2026-11-18 14:44
 Stato corrente:
+- **Inbox Assistenza & Sidebar — Bollino Rosso Ticket Aperti in Tempo Reale (`v2.3.0 • Build #134`)**:
+  - In [src/app/actions/support.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/support.ts): aggiunta `getOpenSupportTicketsCountAction()` (query leggera + fallback `.support-tickets.json`) con calcolo `openCount` e `myOpenCount` riservato al team interno.
+  - In [src/app/(dashboard)/chat/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/chat/page.tsx) e [src/components/layout/sidebar.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/components/layout/sidebar.tsx): aggiunto badge rosso pulsante con conteggio ticket aperti su `Inbox Assistenza` (colonna sinistra + pallino sul `<Menu />` mobile in `/chat`) e sulla voce `Assistenza` + macro-gruppo `CRM & Operatività` in Sidebar (`operativitaUnread`), aggiornati via Realtime (`support_tickets`) e cambio rotta.
 - **Area Studenti `/corsi` — Apertura Completa `#community-studenti` & DM Docenti (`v2.3.0 • Build #133`)**:
   - In [src/app/actions/chat.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/chat.ts): estratti helper condivisi `normalizeTeacherDisplayName`, `resolveStudentOrPreviewActor` e `validateStudentTargetChannel`; aggiunta `createStudentChatUploadUrlAction` (signed upload su `team-files/chat-attachments/` max 15 MB con whitelist estensioni sicure e blocco file attivi); estesa `sendStudentCommunityMessageAction` con `uploadedFiles` sanificati e push dedicate per vocali/allegati.
   - In [src/components/corsi/StudentCommunityModal.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/components/corsi/StudentCommunityModal.tsx): visibili tutte le risposte/thread inline con box citazione `↪ In risposta a`, rendering completo immagini (con lightbox `Esc`), audio (`StudentVoicePlayer` `1x/1.5x/2x`), documenti scaricabili, azioni `Rispondi` e `Copia`, upload file/screenshot (`📎`, Paste, Drag&Drop) e messaggi vocali `MediaRecorder` con cleanup automatico.

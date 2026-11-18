@@ -69,6 +69,7 @@ import {
   CustomChannelItem,
   EnrolledStudentChatMember,
 } from '@/app/actions/chat'
+import { getOpenSupportTicketsCountAction } from '@/app/actions/support'
 
 type MessageWithSender = Message & { sender?: Profile }
 
@@ -382,6 +383,7 @@ export default function ChatPage() {
 
   // Phase 2 States: Badge non letti & Thread laterale & Autocomplete @menzioni
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({})
+  const [openSupportTicketsCount, setOpenSupportTicketsCount] = useState<number>(0)
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
   const [threadInputMessage, setThreadInputMessage] = useState('')
   const [isSendingThreadReply, setIsSendingThreadReply] = useState(false)
@@ -598,6 +600,45 @@ export default function ChatPage() {
 
     initChat()
   }, [activeChannel])
+
+  // Contatore ticket assistenza aperti (solo team interno) con Realtime + polling fallback 30s
+  useEffect(() => {
+    if (!currentUser || userRole === 'collaborator') {
+      setOpenSupportTicketsCount(0)
+      return
+    }
+
+    let cancelled = false
+    const refreshTicketsCount = async () => {
+      try {
+        const res = await getOpenSupportTicketsCountAction()
+        if (!cancelled && res.success) {
+          setOpenSupportTicketsCount(res.openCount)
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    refreshTicketsCount()
+
+    const ticketsChannel = supabase
+      .channel('chat_support_tickets_count')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'support_tickets' },
+        () => refreshTicketsCount()
+      )
+      .subscribe()
+
+    const fallbackInterval = setInterval(refreshTicketsCount, 30000)
+
+    return () => {
+      cancelled = true
+      clearInterval(fallbackInterval)
+      supabase.removeChannel(ticketsChannel)
+    }
+  }, [currentUser?.id, userRole])
 
   // Setup Supabase Realtime Subscription (ascolta tutti i canali per non letti e update reazioni)
   useEffect(() => {
@@ -1656,9 +1697,15 @@ export default function ChatPage() {
                   <LifeBuoy className="h-4 w-4 text-emerald-500 shrink-0" />
                   <span className="truncate">Inbox Assistenza</span>
                 </span>
-                <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 whitespace-nowrap shrink-0">
-                  Ticket
-                </span>
+                {openSupportTicketsCount > 0 ? (
+                  <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-rose-600 text-white shadow-xs animate-pulse whitespace-nowrap shrink-0">
+                    {openSupportTicketsCount} {openSupportTicketsCount === 1 ? 'APERTO' : 'APERTI'}
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 whitespace-nowrap shrink-0">
+                    Ticket
+                  </span>
+                )}
               </Link>
             </div>
           )}
@@ -1853,10 +1900,13 @@ export default function ChatPage() {
               <button
                 type="button"
                 onClick={() => setShowMobileChannels(true)}
-                className="md:hidden inline-flex items-center justify-center h-8 w-8 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 shrink-0"
+                className="relative md:hidden inline-flex items-center justify-center h-8 w-8 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 shrink-0"
                 title="Scegli canale"
               >
                 <Menu className="h-4 w-4" />
+                {openSupportTicketsCount > 0 && userRole !== 'collaborator' && (
+                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-rose-600 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
+                )}
               </button>
 
               <div className="min-w-0 flex-1">
