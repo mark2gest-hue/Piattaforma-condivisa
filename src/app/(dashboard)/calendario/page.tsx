@@ -76,6 +76,15 @@ const PRESET_MEET_ROOMS = [
   },
 ]
 
+function getDaysFromToday(dateStr: string): number {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return 0
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const target = new Date(y, m - 1, d)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+}
+
 export default function CalendarioPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -256,6 +265,21 @@ export default function CalendarioPage() {
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!eventTitle.trim()) return
+
+    if (eventCategory !== 'notice') {
+      const diffDays = getDaysFromToday(selectedDateStr)
+      if (diffDays > 30) {
+        const ok = window.confirm(
+          `Attenzione: stai creando l'evento "${eventTitle.trim()}" per la data ${selectedDateStr} (tra ${diffDays} giorni)${sendEmailInvite ? ' con INVIO EMAIL attivo ai destinatari' : ''}.\n\nConfermi che la data ${selectedDateStr} è corretta?`
+        )
+        if (!ok) return
+      } else if (diffDays < 0) {
+        const ok = window.confirm(
+          `Attenzione: stai creando l'evento "${eventTitle.trim()}" per la data ${selectedDateStr} (${Math.abs(diffDays)} giorni fa)${sendEmailInvite ? ' con INVIO EMAIL attivo ai destinatari' : ''}.\n\nConfermi che la data ${selectedDateStr} è corretta?`
+        )
+        if (!ok) return
+      }
+    }
 
     try {
       const { data: userData } = await supabase.auth.getUser()
@@ -526,7 +550,14 @@ export default function CalendarioPage() {
           </div>
 
           <Button
-            onClick={() => setIsEventModalOpen(true)}
+            onClick={() => {
+              const now = new Date()
+              setCurrentDate(now)
+              setSelectedDateStr(
+                `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+              )
+              setIsEventModalOpen(true)
+            }}
             className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl cursor-pointer"
           >
             <PlusCircle className="h-4 w-4" />
@@ -848,6 +879,24 @@ export default function CalendarioPage() {
                       onChange={(e) => setSelectedDateStr(e.target.value)}
                       className="text-xs dark:bg-slate-800 dark:border-slate-700"
                     />
+                    {(() => {
+                      const diffDays = getDaysFromToday(selectedDateStr)
+                      if (diffDays > 30) {
+                        return (
+                          <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-md px-2 py-1">
+                            ⚠️ Data lontana: verifica l&apos;anno e il mese prima di inviare gli inviti
+                          </p>
+                        )
+                      }
+                      if (diffDays < 0) {
+                        return (
+                          <p className="text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-md px-2 py-1">
+                            ⚠️ Data nel passato ({Math.abs(diffDays)} giorni fa): verifica prima di procedere
+                          </p>
+                        )
+                      }
+                      return null
+                    })()}
                   </div>
 
                   <div className="space-y-1.5">
