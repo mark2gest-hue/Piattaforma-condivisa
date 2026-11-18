@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { BuildVersionBadge } from '@/components/layout/build-version-badge'
 import { getOpenSupportTicketsCountAction } from '@/app/actions/support'
+import { getChatUnreadSummaryAction } from '@/app/actions/chat'
 
 interface SidebarProps {
   isOpenMobile?: boolean
@@ -46,6 +47,7 @@ export function Sidebar({
   const pathname = usePathname()
   const [unreadEmailCount, setUnreadEmailCount] = useState<number>(0)
   const [openSupportTicketsCount, setOpenSupportTicketsCount] = useState<number>(0)
+  const [unreadChatCount, setUnreadChatCount] = useState<number>(0)
   const [isHovered, setIsHovered] = useState<boolean>(false)
   const isExpanded = isPinned || isHovered
   const [teamCount, setTeamCount] = useState<number>(3)
@@ -97,7 +99,9 @@ export function Sidebar({
           subtitle: 'Messaggi Team',
           href: '/chat',
           icon: MessageSquare,
-          badge: null,
+          badge: unreadChatCount > 0
+            ? `${unreadChatCount} ${unreadChatCount === 1 ? 'Nuovo' : 'Nuovi'}`
+            : null,
         },
         {
           title: 'Assistenza',
@@ -256,10 +260,37 @@ export function Sidebar({
     }
   }
 
+  const fetchUnreadChat = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
+        setUnreadChatCount(0)
+        return
+      }
+      let lastReadMap: Record<string, string> = {}
+      try {
+        lastReadMap = JSON.parse(
+          localStorage.getItem(`aiutiamoci_chat_last_read_${user.id}`) || '{}'
+        )
+      } catch {
+        lastReadMap = {}
+      }
+      const res = await getChatUnreadSummaryAction(lastReadMap)
+      if (res.success) {
+        setUnreadChatCount(res.totalUnread)
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   useEffect(() => {
     fetchUnreadEmails()
     fetchTeamMembers()
     fetchOpenSupportTickets()
+    fetchUnreadChat()
 
     const checkUserSlug = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -288,7 +319,12 @@ export function Sidebar({
     }
     checkUserSlug()
 
-    // Realtime subscription per nuove email, ticket assistenza e modifiche profilo team
+    const handleChatReadEvent = () => {
+      fetchUnreadChat()
+    }
+    window.addEventListener('aiutiamoci:chat-read', handleChatReadEvent)
+
+    // Realtime subscription per nuove email, ticket assistenza, chat e modifiche profilo team
     const channel = supabase
       .channel('sidebar-realtime')
       .on(
@@ -306,14 +342,21 @@ export function Sidebar({
         { event: '*', schema: 'public', table: 'support_tickets' },
         () => fetchOpenSupportTickets()
       )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        () => fetchUnreadChat()
+      )
       .subscribe()
 
     return () => {
+      window.removeEventListener('aiutiamoci:chat-read', handleChatReadEvent)
       supabase.removeChannel(channel)
     }
   }, [])
 
   useEffect(() => {
+    fetchUnreadChat()
     if (currentUserRole === 'collaborator') {
       setOpenSupportTicketsCount(0)
       return
@@ -353,7 +396,9 @@ export function Sidebar({
   }
 
   const operativitaUnread =
-    currentUserRole === 'collaborator' ? 0 : unreadEmailCount + openSupportTicketsCount
+    currentUserRole === 'collaborator'
+      ? unreadChatCount
+      : unreadEmailCount + openSupportTicketsCount + unreadChatCount
 
   const renderSidebarInner = (expanded: boolean) => (
     <div className="flex-1 flex flex-col justify-between px-2.5 py-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-800">
@@ -540,7 +585,8 @@ export function Sidebar({
                                 className={cn(
                                   'text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap shrink-0 text-center ml-2',
                                   (item.href === '/assistenza' && openSupportTicketsCount > 0) ||
-                                    (item.href === '/posta' && unreadEmailCount > 0)
+                                    (item.href === '/posta' && unreadEmailCount > 0) ||
+                                    (item.href === '/chat' && unreadChatCount > 0)
                                     ? 'bg-rose-600 text-white border border-rose-400/50 shadow-xs animate-pulse'
                                     : item.badge === 'Live'
                                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse'

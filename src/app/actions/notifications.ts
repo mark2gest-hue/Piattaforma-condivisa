@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { sendTelegramMessage, escapeHtml } from '@/lib/telegram'
 import { sendSharedEmail } from '@/app/(dashboard)/posta/actions'
 import { resolveStudentIdentityByCode } from '@/app/actions/support'
+import { getCollaboratorIdsAction, getCustomChannelByNameAction } from '@/app/actions/chat'
 import {
   getOrCreateVapidKeys,
   saveUserPushSubscription,
@@ -238,16 +239,34 @@ export async function notifyChatMessageAction(
     const [pushResult, emailResult] = await Promise.allSettled([
       (async () => {
         let recipients = await getAllPushSubscriptions(senderUserId)
+        const [collabList, customCh] = await Promise.all([
+          getCollaboratorIdsAction(),
+          getCustomChannelByNameAction(channel),
+        ])
+        const collabIds = new Set(collabList)
 
         if (options?.recipientUserIds && options.recipientUserIds.length > 0) {
           recipients = recipients.filter(
             (sub) => sub.user_id && options.recipientUserIds!.includes(sub.user_id)
           )
-        } else if (!isCommunityChannel) {
-          // Zero-Leak: sui canali interni del team non inviamo mai push a sottoscrizioni student-*
+        } else if (isCommunityChannel) {
+          // Zero-Leak: su #community-studenti escludiamo tutti i collaboratori esterni
           recipients = recipients.filter(
-            (sub) => !sub.user_id || !sub.user_id.startsWith('student-')
+            (sub) => !sub.user_id || !collabIds.has(sub.user_id)
           )
+        } else {
+          // Zero-Leak: escludi student-* e ammetti collaborator solo se membro esplicito del canale custom
+          recipients = recipients.filter((sub) => {
+            if (sub.user_id && sub.user_id.startsWith('student-')) return false
+            if (sub.user_id && collabIds.has(sub.user_id)) {
+              return Boolean(
+                customCh &&
+                  Array.isArray(customCh.memberIds) &&
+                  customCh.memberIds.includes(sub.user_id)
+              )
+            }
+            return true
+          })
         }
 
         if (recipients.length === 0) return { delivered: 0 }

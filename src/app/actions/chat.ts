@@ -154,6 +154,218 @@ export async function toggleMessageReactionAction(messageId: string, emoji: stri
 }
 
 /**
+ * Helper interno per caricare ruolo effettivo e canali consentiti all'utente.
+ */
+async function loadAllowedChannelsForUser(
+  admin: any,
+  userId: string,
+  userMetadataRole?: string
+): Promise<{
+  effectiveRole: string
+  allowedChannels: CustomChannelItem[]
+  localCollaborators: string[]
+}> {
+  const { data: profile } = await (admin.from('profiles') as any)
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle()
+
+  const localCollaborators = readLocalCollaboratorIds()
+  const isCollaborator =
+    userMetadataRole === 'collaborator' ||
+    localCollaborators.includes(userId) ||
+    profile?.role === 'collaborator'
+
+  const effectiveRole = isCollaborator
+    ? 'collaborator'
+    : profile?.role || userMetadataRole || 'member'
+
+  const channelsMap = new Map<string, CustomChannelItem>()
+
+  // 1. Lettura dal fallback locale
+  for (const ch of readLocalCustomChannels()) {
+    if (ch.name) channelsMap.set(ch.name, ch)
+  }
+
+  // 2. Lettura da tabella Supabase (se migrata)
+  try {
+    const { data } = await (admin.from('chat_channels') as any).select('*')
+    if (Array.isArray(data)) {
+      for (const row of data) {
+        channelsMap.set(row.name, {
+          id: row.id,
+          name: row.name,
+          desc: row.description || '',
+          isPrivate: Boolean(row.is_private),
+          memberIds: Array.isArray(row.member_ids) ? row.member_ids : [],
+          createdBy: row.created_by,
+          createdAt: row.created_at,
+        })
+      }
+    }
+  } catch {
+    // Tabella non ancora disponibile sul DB remoto
+  }
+
+  const allCustom = Array.from(channelsMap.values()).filter((ch) => ch.name !== 'generale')
+
+  let allowedChannels: CustomChannelItem[] = []
+  if (effectiveRole === 'collaborator') {
+    // Isolamento rigido per guest/collaborator: solo canali in cui è esplicitamente presente
+    allowedChannels = allCustom.filter((ch) => ch.memberIds && ch.memberIds.includes(userId))
+  } else {
+    // Membro interno del team
+    allowedChannels = allCustom.filter((ch) => {
+      if (!ch.isPrivate) return true
+      return (
+        (ch.memberIds && ch.memberIds.includes(userId)) ||
+        ch.createdBy === userId ||
+        effectiveRole === 'dev' ||
+        effectiveRole === 'admin'
+      )
+    })
+  }
+
+  return { effectiveRole, allowedChannels, localCollaborators }
+}
+
+/**
+ * Restituisce tutti gli ID utente con ruolo collaborator (file locale + profiles).
+ */
+export async function getCollaboratorIdsAction(): Promise<string[]> {
+  const ids = new Set<string>(readLocalCollaboratorIds())
+  try {
+    const admin = createAdminClient()
+    const { data } = await (admin.from('profiles') as any)
+      .select('id')
+      .eq('role', 'collaborator')
+    if (Array.isArray(data)) {
+      for (const row of data) {
+        if (row?.id) ids.add(row.id)
+      }
+    }
+  } catch {
+    // Fallback su store locale
+  }
+  return Array.from(ids)
+}
+
+/**
+ * Recupera un singolo canale custom per nome (locale + Supabase).
+ */
+export async function getCustomChannelByNameAction(
+  channelName: string
+): Promise<CustomChannelItem | null> {
+  const cleanName = (channelName || '').trim().toLowerCase()
+  if (!cleanName) return null
+
+  let found: CustomChannelItem | null =
+    readLocalCustomChannels().find((c) => c.name === cleanName) || null
+
+  try {
+    const admin = createAdminClient()
+    const { data: row } = await (admin.from('chat_channels') as any)
+      .select('*')
+      .eq('name', cleanName)
+      .maybeSingle()
+
+    if (row) {
+      found = {
+        id: row.id,
+        name: row.name,
+        desc: row.description || '',
+        isPrivate: Boolean(row.is_private),
+        memberIds: Array.isArray(row.member_ids) ? row.member_ids : [],
+        createdBy: row.created_by,
+        createdAt: row.created_at,
+      }
+    }
+  } catch {
+    // Tabella non ancora migrata sul DB remoto
+  }
+
+  return found
+}
+
+/**
+ * Conteggio reale dei messaggi non letti per canale/DM rispetto ai timestamp last_read.
+ */
+export async function getChatUnreadSummaryAction(
+  lastReadByChannel?: Record<string, string>
+): Promise<{ success: boolean; byChannel: Record<string, number>; totalUnread: number }> {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: true, byChannel: {}, totalUnread: 0 }
+    }
+
+    const admin = createAdminClient()
+    const { effectiveRole, allowedChannels } = await loadAllowedChannelsForUser(
+      admin,
+      user.id,
+      user.user_metadata?.role
+    )
+
+    const allowedPublicSet = new Set<string>(allowedChannels.map((c) => c.name))
+    if (effectiveRole !== 'collaborator') {
+      allowedPublicSet.add('community-studenti')
+    }
+
+    const isDmAllowed = (chName: string): boolean => {
+      if (!chName.startsWith('dm:')) return false
+      const parts = chName.slice(3).split('_')
+      if (parts.length !== 2 || !parts.includes(user.id)) return false
+      if (effectiveRole === 'collaborator' && parts.some((p) => p.startsWith('student-'))) {
+        return false
+      }
+      return true
+    }
+
+    const { data: recentMessages } = await (admin.from('messages') as any)
+      .select('id, channel, sender_id, attachments, created_at')
+      .order('created_at', { ascending: false })
+      .limit(400)
+
+    const userCreatedMs = user.created_at ? new Date(user.created_at).getTime() : 0
+    const defaultSinceMs = Math.max(
+      Date.now() - 48 * 3600 * 1000,
+      Number.isFinite(userCreatedMs) ? userCreatedMs : 0
+    )
+
+    const byChannel: Record<string, number> = {}
+    for (const m of Array.isArray(recentMessages) ? recentMessages : []) {
+      if (!m?.channel || !m?.created_at) continue
+      if (!allowedPublicSet.has(m.channel) && !isDmAllowed(m.channel)) continue
+
+      const att = Array.isArray(m.attachments) ? m.attachments : []
+      const meta = att.find((a: any) => a && a.type === '__chat_meta__')
+      if (m.sender_id === user.id && !meta?.sender_student_id) continue
+
+      const msgMs = new Date(m.created_at).getTime()
+      if (!Number.isFinite(msgMs)) continue
+
+      const rawLastRead = lastReadByChannel?.[m.channel]
+      const parsedLastRead = rawLastRead ? new Date(rawLastRead).getTime() : NaN
+      const sinceMs = Number.isFinite(parsedLastRead) ? parsedLastRead : defaultSinceMs
+
+      if (msgMs > sinceMs) {
+        byChannel[m.channel] = (byChannel[m.channel] || 0) + 1
+      }
+    }
+
+    const totalUnread = Object.values(byChannel).reduce((sum, n) => sum + n, 0)
+    return { success: true, byChannel, totalUnread }
+  } catch (err) {
+    console.warn('[getChatUnreadSummaryAction] Warning:', err)
+    return { success: false, byChannel: {}, totalUnread: 0 }
+  }
+}
+
+/**
  * Recupera i canali custom/privati filtrati in base al ruolo dell'utente:
  * - Se collaborator: SOLO i canali a cui è invitato (memberIds).
  * - Se membro del team: tutti i canali pubblici e i canali privati di cui fa parte o creatore/admin.
@@ -170,66 +382,11 @@ export async function getCustomChannelsAction() {
     }
 
     const admin = createAdminClient()
-    const { data: profile } = await (admin.from('profiles') as any)
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    const localCollaborators = readLocalCollaboratorIds()
-    const isCollaborator =
-      user.user_metadata?.role === 'collaborator' ||
-      localCollaborators.includes(user.id) ||
-      profile?.role === 'collaborator'
-
-    const effectiveRole = isCollaborator
-      ? 'collaborator'
-      : profile?.role || user.user_metadata?.role || 'member'
-
-    const channelsMap = new Map<string, CustomChannelItem>()
-
-    // 1. Lettura dal fallback locale
-    for (const ch of readLocalCustomChannels()) {
-      if (ch.name) channelsMap.set(ch.name, ch)
-    }
-
-    // 2. Lettura da tabella Supabase (se migrata)
-    try {
-      const { data } = await (admin.from('chat_channels') as any).select('*')
-      if (Array.isArray(data)) {
-        for (const row of data) {
-          channelsMap.set(row.name, {
-            id: row.id,
-            name: row.name,
-            desc: row.description || '',
-            isPrivate: Boolean(row.is_private),
-            memberIds: Array.isArray(row.member_ids) ? row.member_ids : [],
-            createdBy: row.created_by,
-            createdAt: row.created_at,
-          })
-        }
-      }
-    } catch {
-      // Tabella non ancora disponibile sul DB remoto
-    }
-
-    const allCustom = Array.from(channelsMap.values()).filter((ch) => ch.name !== 'generale')
-
-    let allowed: CustomChannelItem[] = []
-    if (effectiveRole === 'collaborator') {
-      // Isolamento rigido per guest/collaborator: solo canali in cui è esplicitamente presente
-      allowed = allCustom.filter((ch) => ch.memberIds && ch.memberIds.includes(user.id))
-    } else {
-      // Membro interno del team
-      allowed = allCustom.filter((ch) => {
-        if (!ch.isPrivate) return true
-        return (
-          (ch.memberIds && ch.memberIds.includes(user.id)) ||
-          ch.createdBy === user.id ||
-          effectiveRole === 'dev' ||
-          effectiveRole === 'admin'
-        )
-      })
-    }
+    const {
+      effectiveRole,
+      allowedChannels: allowed,
+      localCollaborators,
+    } = await loadAllowedChannelsForUser(admin, user.id, user.user_metadata?.role)
 
     // 3. Recupero studenti iscritti attivi (riservato al team, oscurato per collaborator)
     let enrolledStudents: EnrolledStudentChatMember[] = []
@@ -1034,16 +1191,23 @@ const ALLOWED_UPLOAD_EXTENSIONS = new Set([
 ])
 
 function normalizeTeacherDisplayName(fullName?: string | null, email?: string | null): string {
-  const lower = (fullName || '').toLowerCase()
-  const mail = (email || '').toLowerCase()
-  if (lower.includes('gerelmo') || mail.includes('gerelmo')) return 'Marco'
-  if (lower.includes('lorenzolodi') || mail.includes('lorenzo')) return 'Lorenzo'
+  const lower = (fullName || '').trim().toLowerCase()
+  const mail = (email || '').trim().toLowerCase()
+  if (lower === 'marco' || lower.includes('gerelmo') || mail.includes('gerelmo')) return 'Marco'
   if (
+    lower === 'lorenzo' ||
+    lower.includes('lorenzolodi') ||
+    lower.includes('lorenzo lodi') ||
+    mail.includes('lorenzolodi')
+  ) {
+    return 'Lorenzo'
+  }
+  if (
+    lower === 'stefano' ||
     lower.includes('malaisi') ||
     lower.includes('maraisi') ||
     mail.includes('malaisi') ||
-    mail.includes('maraisi') ||
-    mail.includes('stefano')
+    mail.includes('maraisi')
   ) {
     return 'Stefano'
   }
@@ -1412,7 +1576,10 @@ export async function sendStudentCommunityMessageAction(input: {
     try {
       const subs = await getAllPushSubscriptions(studentId)
       if (targetChannel === 'community-studenti') {
-        const pushTargets = subs.filter((s) => s.user_id && s.user_id !== studentId)
+        const collabIds = new Set(await getCollaboratorIdsAction())
+        const pushTargets = subs.filter(
+          (s) => s.user_id && s.user_id !== studentId && !collabIds.has(s.user_id)
+        )
         await Promise.allSettled(
           pushTargets.map((sub) => {
             const isStudentSub = sub.user_id?.startsWith('student-')

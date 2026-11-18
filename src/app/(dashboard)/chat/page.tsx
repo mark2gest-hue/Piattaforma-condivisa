@@ -65,6 +65,7 @@ import {
   inviteCollaboratorAction,
   updateChannelMembersAction,
   executeSlashCommandAction,
+  getChatUnreadSummaryAction,
   ChatMetadataItem,
   CustomChannelItem,
   EnrolledStudentChatMember,
@@ -202,13 +203,35 @@ function renderMessageContent(content: string, isMe: boolean) {
   )
 }
 
-function normalizeTeamDisplayName(fullName?: string | null, email?: string | null): string {
+function normalizeTeamDisplayName(
+  fullName?: string | null,
+  email?: string | null,
+  role?: string | null
+): string {
   const raw = (fullName || '').trim()
+  if (role === 'collaborator') {
+    return raw || (email ? email.split('@')[0] : 'Collaboratore')
+  }
   const lower = raw.toLowerCase()
   const mail = (email || '').toLowerCase()
-  if (lower.includes('gerelmo') || mail.includes('gerelmo')) return 'Marco'
-  if (lower.includes('lorenzolodi') || mail.includes('lorenzo')) return 'Lorenzo'
-  if (lower.includes('malaisi') || lower.includes('maraisi') || mail.includes('malaisi') || mail.includes('maraisi') || mail.includes('stefano')) return 'Stefano'
+  if (lower === 'marco' || lower.includes('gerelmo') || mail.includes('gerelmo')) return 'Marco'
+  if (
+    lower === 'lorenzo' ||
+    lower.includes('lorenzolodi') ||
+    lower.includes('lorenzo lodi') ||
+    mail.includes('lorenzolodi')
+  ) {
+    return 'Lorenzo'
+  }
+  if (
+    lower === 'stefano' ||
+    lower.includes('malaisi') ||
+    lower.includes('maraisi') ||
+    mail.includes('malaisi') ||
+    mail.includes('maraisi')
+  ) {
+    return 'Stefano'
+  }
   return raw || (email ? email.split('@')[0] : 'Team')
 }
 
@@ -514,9 +537,10 @@ export default function ChatPage() {
   }, [])
 
   // Persistenza e azzeramento letture canale
-  const markChannelAsRead = (ch: string) => {
-    if (!currentUser) return
-    const key = `aiutiamoci_chat_last_read_${currentUser.id}`
+  const markChannelAsRead = (ch: string, explicitUserId?: string) => {
+    const uid = explicitUserId || currentUser?.id
+    if (!uid) return
+    const key = `aiutiamoci_chat_last_read_${uid}`
     try {
       const existing = JSON.parse(localStorage.getItem(key) || '{}')
       existing[ch] = new Date().toISOString()
@@ -525,6 +549,9 @@ export default function ChatPage() {
       console.warn('Errore salvataggio last_read:', e)
     }
     setUnreadCounts((prev) => ({ ...prev, [ch]: 0 }))
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('aiutiamoci:chat-read'))
+    }
   }
 
   // Fetch initial user, team members, and messages for channel
@@ -537,32 +564,20 @@ export default function ChatPage() {
         data: { user },
       } = await supabase.auth.getUser()
       let effectiveRole = 'member'
+      let loadedProfile: any = null
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single()
+        loadedProfile = profile
         effectiveRole =
           user.user_metadata?.role === 'collaborator'
             ? 'collaborator'
             : profile?.role || user.user_metadata?.role || 'member'
-        if (profile) {
-          setCurrentUser({
-            ...profile,
-            full_name: normalizeTeamDisplayName(profile.full_name, profile.email || user.email),
-          })
-        }
         setUserRole(effectiveRole)
       }
-
-      const { data: profiles } = await supabase.from('profiles').select('*')
-      let initialMembers: Profile[] = profiles
-        ? profiles.filter(isRealChatProfile).map((p: any) => ({
-            ...p,
-            full_name: normalizeTeamDisplayName(p.full_name, p.email),
-          }))
-        : []
 
       const customRes = await loadCustomChannels()
       const allowedChannels: CustomChannelItem[] = customRes?.channels || []
@@ -570,31 +585,82 @@ export default function ChatPage() {
       setUserRole(finalRole)
 
       const collabIds: string[] = (customRes as any)?.collaboratorIds || []
-      if (collabIds.length > 0) {
-        initialMembers = initialMembers.map((m) =>
-          collabIds.includes(m.id) ? { ...m, role: 'collaborator' as any } : m
-        )
+
+      if (user && loadedProfile) {
+        setCurrentUser({
+          ...loadedProfile,
+          role: finalRole as any,
+          full_name: normalizeTeamDisplayName(
+            loadedProfile.full_name,
+            loadedProfile.email || user.email,
+            finalRole
+          ),
+        })
       }
+
+      const { data: profiles } = await supabase.from('profiles').select('*')
+      const initialMembers: Profile[] = profiles
+        ? profiles.filter(isRealChatProfile).map((p: any) => {
+            const memberRole =
+              collabIds.includes(p.id) || p.role === 'collaborator'
+                ? 'collaborator'
+                : p.role
+            return {
+              ...p,
+              role: memberRole as any,
+              full_name: normalizeTeamDisplayName(p.full_name, p.email, memberRole),
+            }
+          })
+        : []
       setTeamMembers(initialMembers)
 
       let targetChannel = activeChannel
+      let hasAssignedChannel = true
       if (finalRole === 'collaborator') {
         const allowedNames = allowedChannels.map((c) => c.name)
-        if (!allowedNames.includes(activeChannel)) {
+        if (!allowedNames.includes(activeChannel) && !activeChannel.startsWith('dm:')) {
           if (allowedChannels.length > 0) {
             targetChannel = allowedChannels[0].name
             setActiveChannel(targetChannel)
           } else {
-            // Nessun canale ancora assegnato al collaboratore
+            hasAssignedChannel = false
             setMessages([])
-            setLoading(false)
-            return
           }
         }
       }
 
-      await fetchMessages(targetChannel)
-      markChannelAsRead(targetChannel)
+      if (hasAssignedChannel) {
+        await fetchMessages(targetChannel)
+      }
+
+      if (user) {
+        if (hasAssignedChannel) {
+          markChannelAsRead(targetChannel, user.id)
+        }
+        try {
+          let lastReadMap: Record<string, string> = {}
+          try {
+            lastReadMap = JSON.parse(
+              localStorage.getItem(`aiutiamoci_chat_last_read_${user.id}`) || '{}'
+            )
+          } catch {
+            lastReadMap = {}
+          }
+          if (hasAssignedChannel) {
+            lastReadMap[targetChannel] = new Date().toISOString()
+          }
+          const summaryRes = await getChatUnreadSummaryAction(lastReadMap)
+          if (summaryRes.success) {
+            setUnreadCounts({
+              ...summaryRes.byChannel,
+              ...(hasAssignedChannel ? { [targetChannel]: 0 } : {}),
+            })
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       setLoading(false)
     }
 
@@ -653,6 +719,21 @@ export default function ChatPage() {
         },
         (payload) => {
           const newMessage = payload.new as Message
+
+          if (userRole === 'collaborator') {
+            const isAllowedCustom = customChannels.some((c) => c.name === newMessage.channel)
+            const dmParts = newMessage.channel.startsWith('dm:')
+              ? newMessage.channel.slice(3).split('_')
+              : []
+            const isAllowedDm = Boolean(
+              currentUser &&
+                dmParts.length === 2 &&
+                dmParts.includes(currentUser.id) &&
+                !dmParts.some((p) => p.startsWith('student-'))
+            )
+            if (!isAllowedCustom && !isAllowedDm) return
+          }
+
           const senderProfile = teamMembers.find((p) => p.id === newMessage.sender_id)
 
           const messageWithSender: MessageWithSender = {
@@ -717,7 +798,7 @@ export default function ChatPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [activeChannel, teamMembers, currentUser])
+  }, [activeChannel, teamMembers, currentUser, userRole, customChannels])
 
   const fetchMessages = async (channelName: string) => {
     const { data, error } = await supabase
@@ -1771,7 +1852,7 @@ export default function ChatPage() {
 
                     <div className="flex items-center gap-1 shrink-0 ml-1">
                       {unread > 0 && !isActive && (
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500 text-white animate-pulse">
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-xs animate-pulse">
                           {unread}
                         </span>
                       )}
@@ -1810,62 +1891,130 @@ export default function ChatPage() {
               <Users className="h-3.5 w-3.5" />
             </div>
             <div className="space-y-1 text-xs">
-              {teamMembers.map((member) => {
-                const isMe = member.id === currentUser?.id
-                const dmChannelId = currentUser
-                  ? `dm:${[currentUser.id, member.id].sort().join('_')}`
-                  : ''
-                const isActive = activeChannel === dmChannelId
-                const unread = unreadCounts[dmChannelId] || 0
-
-                return (
-                  <button
-                    key={member.id}
-                    type="button"
-                    disabled={isMe}
-                    onClick={() => {
-                      if (!isMe && dmChannelId) {
-                        setActiveChannel(dmChannelId)
-                        setShowMobileChannels(false)
-                        setActiveThreadId(null)
-                        markChannelAsRead(dmChannelId)
-                      }
-                    }}
-                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg border transition-all text-left ${
-                      isActive
-                        ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
-                        : isMe
-                        ? 'opacity-60 bg-transparent border-transparent'
-                        : 'bg-white dark:bg-slate-800/80 border-slate-200/60 dark:border-slate-700/60 hover:border-blue-400 text-slate-800 dark:text-slate-200 shadow-xs'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span
-                        className={`h-2 w-2 rounded-full shrink-0 ${
-                          member.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
-                        }`}
-                      />
-                      <span className="font-semibold truncate max-w-[110px]">
-                        {member.full_name} {isMe ? '(Tu)' : ''}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1 shrink-0">
-                      {unread > 0 && !isActive && (
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-blue-500 text-white animate-pulse">
-                          {unread}
-                        </span>
-                      )}
-                      <Badge
-                        variant={member.role === 'dev' ? 'purple' : member.role === 'admin' ? 'destructive' : 'info'}
-                        className="text-[9px] px-1 py-0 uppercase"
-                      >
-                        {member.role}
-                      </Badge>
-                    </div>
-                  </button>
+              {(() => {
+                const sharedCollabMemberIds = new Set(
+                  customChannels.flatMap((c) => c.memberIds || [])
                 )
-              })}
+                const visibleDmMembers =
+                  userRole === 'collaborator'
+                    ? teamMembers.filter(
+                        (m) =>
+                          m.id === currentUser?.id ||
+                          m.role !== 'collaborator' ||
+                          sharedCollabMemberIds.has(m.id)
+                      )
+                    : teamMembers
+
+                return visibleDmMembers.map((member) => {
+                  const isMe = member.id === currentUser?.id
+                  const dmChannelId = currentUser
+                    ? `dm:${[currentUser.id, member.id].sort().join('_')}`
+                    : ''
+                  const isActive = activeChannel === dmChannelId
+                  const unread = unreadCounts[dmChannelId] || 0
+
+                  return (
+                    <button
+                      key={member.id}
+                      type="button"
+                      disabled={isMe}
+                      onClick={() => {
+                        if (!isMe && dmChannelId) {
+                          setActiveChannel(dmChannelId)
+                          setShowMobileChannels(false)
+                          setActiveThreadId(null)
+                          markChannelAsRead(dmChannelId)
+                        }
+                      }}
+                      className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg border transition-all text-left ${
+                        isActive
+                          ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                          : isMe
+                          ? 'opacity-60 bg-transparent border-transparent'
+                          : 'bg-white dark:bg-slate-800/80 border-slate-200/60 dark:border-slate-700/60 hover:border-blue-400 text-slate-800 dark:text-slate-200 shadow-xs'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className={`h-2 w-2 rounded-full shrink-0 ${
+                            member.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                          }`}
+                        />
+                        <span className="font-semibold truncate max-w-[110px]">
+                          {member.full_name} {isMe ? '(Tu)' : ''}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        {unread > 0 && !isActive && (
+                          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-xs animate-pulse">
+                            {unread}
+                          </span>
+                        )}
+                        <Badge
+                          variant={member.role === 'dev' ? 'purple' : member.role === 'admin' ? 'destructive' : 'info'}
+                          className="text-[9px] px-1 py-0 uppercase"
+                        >
+                          {member.role}
+                        </Badge>
+                      </div>
+                    </button>
+                  )
+                })
+              })()}
+
+              {userRole !== 'collaborator' &&
+                currentUser &&
+                enrolledStudents
+                  .filter((st) => {
+                    const dmId = `dm:${[currentUser.id, st.id].sort().join('_')}`
+                    return (unreadCounts[dmId] || 0) > 0 || activeChannel === dmId
+                  })
+                  .map((st) => {
+                    const dmChannelId = `dm:${[currentUser.id, st.id].sort().join('_')}`
+                    const isActive = activeChannel === dmChannelId
+                    const unread = unreadCounts[dmChannelId] || 0
+
+                    return (
+                      <button
+                        key={st.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveChannel(dmChannelId)
+                          setShowMobileChannels(false)
+                          setActiveThreadId(null)
+                          markChannelAsRead(dmChannelId)
+                        }}
+                        className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg border transition-all text-left ${
+                          isActive
+                            ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                            : 'bg-white dark:bg-slate-800/80 border-slate-200/60 dark:border-slate-700/60 hover:border-blue-400 text-slate-800 dark:text-slate-200 shadow-xs'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className={`h-2 w-2 rounded-full shrink-0 ${
+                              st.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                            }`}
+                          />
+                          <span className="font-semibold truncate max-w-[110px]">
+                            {st.full_name}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {unread > 0 && !isActive && (
+                            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-xs animate-pulse">
+                              {unread}
+                            </span>
+                          )}
+                          <Badge variant="purple" className="text-[9px] px-1 py-0 uppercase">
+                            STUDENTE
+                          </Badge>
+                        </div>
+                      </button>
+                    )
+                  })}
             </div>
           </div>
         </div>
@@ -1904,7 +2053,8 @@ export default function ChatPage() {
                 title="Scegli canale"
               >
                 <Menu className="h-4 w-4" />
-                {openSupportTicketsCount > 0 && userRole !== 'collaborator' && (
+                {((openSupportTicketsCount > 0 && userRole !== 'collaborator') ||
+                  Object.entries(unreadCounts).some(([ch, cnt]) => ch !== activeChannel && cnt > 0)) && (
                   <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-rose-600 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
                 )}
               </button>

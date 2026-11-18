@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getAllPushSubscriptions, sendWebPushNotification } from '@/lib/web-push'
+import { getCollaboratorIdsAction, getCustomChannelByNameAction } from '@/app/actions/chat'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -118,9 +119,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 6. Invio Web Push istantaneo (non bloccante)
+    // 6. Invio Web Push istantaneo (non bloccante, con isolamento Zero-Leak per collaborator e student-*)
     try {
-      const subscriptions = await getAllPushSubscriptions()
+      const [subscriptions, collabList, customCh] = await Promise.all([
+        getAllPushSubscriptions(),
+        getCollaboratorIdsAction(),
+        getCustomChannelByNameAction(channel),
+      ])
+      const collabIds = new Set(collabList)
+      const allowedSubscriptions = subscriptions.filter((sub) => {
+        if (sub.user_id?.startsWith('student-')) return false
+        if (sub.user_id && collabIds.has(sub.user_id)) {
+          return Boolean(
+            customCh &&
+              Array.isArray(customCh.memberIds) &&
+              customCh.memberIds.includes(sub.user_id)
+          )
+        }
+        return true
+      })
+
       const pushTitle = title || `🔔 Aggiornamento ${source}`
       const pushPayload = {
         title: pushTitle,
@@ -130,7 +148,7 @@ export async function POST(request: NextRequest) {
       }
 
       await Promise.allSettled(
-        subscriptions.map((sub) => sendWebPushNotification(sub, pushPayload))
+        allowedSubscriptions.map((sub) => sendWebPushNotification(sub, pushPayload))
       )
     } catch (pushErr) {
       console.warn('[webhook/chat] Invio Web Push non bloccante fallito:', pushErr)
