@@ -981,6 +981,155 @@ export interface StudentCommunityTeacher {
   avatar_url?: string | null
 }
 
+const MAX_STUDENT_UPLOAD_BYTES = 15 * 1024 * 1024 // 15 MB
+
+const BLOCKED_UPLOAD_EXTENSIONS = new Set([
+  'html',
+  'htm',
+  'svg',
+  'js',
+  'mjs',
+  'cjs',
+  'exe',
+  'bat',
+  'cmd',
+  'sh',
+  'php',
+  'phtml',
+])
+
+const BLOCKED_UPLOAD_MIMES = new Set([
+  'text/html',
+  'image/svg+xml',
+  'application/javascript',
+  'text/javascript',
+  'application/x-msdownload',
+  'application/x-sh',
+])
+
+const ALLOWED_UPLOAD_EXTENSIONS = new Set([
+  'jpg',
+  'jpeg',
+  'png',
+  'webp',
+  'gif',
+  'pdf',
+  'doc',
+  'docx',
+  'xls',
+  'xlsx',
+  'ppt',
+  'pptx',
+  'txt',
+  'csv',
+  'md',
+  'zip',
+  'webm',
+  'ogg',
+  'mp3',
+  'm4a',
+  'mp4',
+  'wav',
+  'aac',
+])
+
+function normalizeTeacherDisplayName(fullName?: string | null, email?: string | null): string {
+  const lower = (fullName || '').toLowerCase()
+  const mail = (email || '').toLowerCase()
+  if (lower.includes('gerelmo') || mail.includes('gerelmo')) return 'Marco'
+  if (lower.includes('lorenzolodi') || mail.includes('lorenzo')) return 'Lorenzo'
+  if (
+    lower.includes('malaisi') ||
+    lower.includes('maraisi') ||
+    mail.includes('malaisi') ||
+    mail.includes('maraisi') ||
+    mail.includes('stefano')
+  ) {
+    return 'Stefano'
+  }
+  return fullName || 'Docente AIutiamoci'
+}
+
+type StudentOrPreviewActorResult =
+  | {
+      ok: true
+      isTeamPreview: boolean
+      actorId: string
+      actorName: string
+      actorEmail: string
+    }
+  | { ok: false; error: string }
+
+async function resolveStudentOrPreviewActor(
+  admin: any,
+  studentCode: string
+): Promise<StudentOrPreviewActorResult> {
+  if (studentCode === 'TEAM-PREVIEW') {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return { ok: false, error: 'Non autorizzato' }
+    }
+    const { data: prof } = await (admin.from('profiles') as any)
+      .select('full_name, email, role')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (user.user_metadata?.role === 'collaborator' || prof?.role === 'collaborator') {
+      return { ok: false, error: 'Accesso negato' }
+    }
+    return {
+      ok: true,
+      isTeamPreview: true,
+      actorId: user.id,
+      actorName: prof?.full_name || user.user_metadata?.full_name || 'Team',
+      actorEmail: prof?.email || user.email || '',
+    }
+  }
+
+  const identity = await resolveStudentIdentityByCode(studentCode)
+  if (!identity) {
+    return { ok: false, error: 'Codice studente non valido o non attivo' }
+  }
+  return {
+    ok: true,
+    isTeamPreview: false,
+    actorId: identity.studentId,
+    actorName: identity.name,
+    actorEmail: identity.email,
+  }
+}
+
+function validateStudentTargetChannel(
+  targetChannel: string,
+  studentId: string
+): { ok: true; dmTeacherId: string | null } | { ok: false; error: string } {
+  if (targetChannel === 'community-studenti') {
+    return { ok: true, dmTeacherId: null }
+  }
+  if (!targetChannel.startsWith('dm:')) {
+    return { ok: false, error: 'Canale non consentito per gli studenti' }
+  }
+  const participants = targetChannel.replace('dm:', '').split('_')
+  if (!participants.includes(studentId) || participants.length !== 2) {
+    return { ok: false, error: 'Conversazione diretta non autorizzata' }
+  }
+  const dmTeacherId = participants.find((id) => id !== studentId) || null
+  if (!dmTeacherId) {
+    return { ok: false, error: 'Destinatario DM non valido' }
+  }
+  return { ok: true, dmTeacherId }
+}
+
+function isAllowedUploadFile(fileName: string, contentType: string): boolean {
+  const baseMime = (contentType || '').split(';')[0].trim().toLowerCase()
+  const ext = (fileName.split('.').pop() || '').trim().toLowerCase()
+  if (!ext || BLOCKED_UPLOAD_EXTENSIONS.has(ext)) return false
+  if (baseMime && BLOCKED_UPLOAD_MIMES.has(baseMime)) return false
+  return ALLOWED_UPLOAD_EXTENSIONS.has(ext)
+}
+
 /**
  * Recupera i messaggi di #community-studenti, gli eventuali DM 1-a-1 dello studente
  * con i docenti del team e l'elenco docenti disponibili.
@@ -988,62 +1137,58 @@ export interface StudentCommunityTeacher {
 export async function getStudentCommunityChatAction(studentCode: string) {
   try {
     const admin = createAdminClient()
-    let studentId = ''
-    let studentName = ''
-    let studentEmail = ''
-
-    if (studentCode === 'TEAM-PREVIEW') {
-      const supabase = await createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        return { success: false, error: 'Non autorizzato', communityMessages: [], dmMessages: [], teamTeachers: [] }
+    const actor = await resolveStudentOrPreviewActor(admin, studentCode)
+    if (!actor.ok) {
+      return {
+        success: false,
+        error: actor.error,
+        communityMessages: [],
+        dmMessages: [],
+        teamTeachers: [],
       }
-      const { data: prof } = await (admin.from('profiles') as any)
-        .select('full_name, email, role')
-        .eq('id', user.id)
-        .maybeSingle()
-      if (user.user_metadata?.role === 'collaborator' || prof?.role === 'collaborator') {
-        return { success: false, error: 'Accesso negato', communityMessages: [], dmMessages: [], teamTeachers: [] }
-      }
-      studentId = user.id
-      studentName = prof?.full_name || user.user_metadata?.full_name || 'Team'
-      studentEmail = prof?.email || user.email || ''
-    } else {
-      const identity = await resolveStudentIdentityByCode(studentCode)
-      if (!identity) {
-        return {
-          success: false,
-          error: 'Codice studente non valido o non attivo',
-          communityMessages: [],
-          dmMessages: [],
-          teamTeachers: [],
-        }
-      }
-      studentId = identity.studentId
-      studentName = identity.name
-      studentEmail = identity.email
     }
+
+    const { actorId: studentId, actorName: studentName, actorEmail: studentEmail } = actor
+
+    const normalizeMessageSenders = (rows: any[]) =>
+      rows.map((m) => {
+        const att = Array.isArray(m.attachments) ? m.attachments : []
+        const meta = att.find((a: any) => a && a.type === '__chat_meta__')
+        if (!m.sender) return m
+        if (meta?.sender_student_id) {
+          return { ...m, sender: null }
+        }
+        return {
+          ...m,
+          sender: {
+            id: m.sender.id,
+            full_name: normalizeTeacherDisplayName(m.sender.full_name, m.sender.email),
+            role: m.sender.role,
+            avatar_url: m.sender.avatar_url,
+          },
+        }
+      })
 
     // 1. Messaggi del canale pubblico #community-studenti (ultimi 100 in ordine cronologico)
     const { data: commData } = await (admin.from('messages') as any)
-      .select('id, channel, content, attachments, sender_id, is_system, created_at, sender:profiles(id, full_name, role, avatar_url)')
+      .select('id, channel, content, attachments, sender_id, is_system, created_at, sender:profiles(id, full_name, email, role, avatar_url)')
       .eq('channel', 'community-studenti')
       .order('created_at', { ascending: false })
       .limit(100)
 
-    const communityMessages = Array.isArray(commData) ? [...commData].reverse() : []
+    const communityMessages = normalizeMessageSenders(
+      Array.isArray(commData) ? [...commData].reverse() : []
+    )
 
     // 2. Messaggi Diretti (DM 1-a-1) dove partecipa questo studente (o questo utente preview)
     const { data: dmData } = await (admin.from('messages') as any)
-      .select('id, channel, content, attachments, sender_id, is_system, created_at, sender:profiles(id, full_name, role, avatar_url)')
+      .select('id, channel, content, attachments, sender_id, is_system, created_at, sender:profiles(id, full_name, email, role, avatar_url)')
       .like('channel', 'dm:%')
       .ilike('channel', `%${studentId}%`)
       .order('created_at', { ascending: true })
       .limit(200)
 
-    const dmMessages = Array.isArray(dmData) ? dmData : []
+    const dmMessages = normalizeMessageSenders(Array.isArray(dmData) ? dmData : [])
 
     // 3. Elenco docenti/team interni (esclusi agenti, account test e collaboratori esterni)
     const { data: profiles } = await (admin.from('profiles') as any)
@@ -1057,25 +1202,12 @@ export async function getStudentCommunityChatAction(studentCode: string) {
         const e = (p.email || '').toLowerCase()
         return !n.includes('nemotron') && !n.includes('pentest') && !e.includes('nemotron') && !e.includes('pentest')
       })
-      .map((p) => {
-        const lower = (p.full_name || '').toLowerCase()
-        const mail = (p.email || '').toLowerCase()
-        const cleanName =
-          lower.includes('gerelmo') || mail.includes('gerelmo')
-            ? 'Marco'
-            : lower.includes('lorenzolodi') || mail.includes('lorenzo')
-            ? 'Lorenzo'
-            : lower.includes('malaisi') || lower.includes('maraisi') || mail.includes('malaisi') || mail.includes('maraisi')
-            ? 'Stefano'
-            : p.full_name || 'Docente AIutiamoci'
-
-        return {
-          id: p.id,
-          full_name: cleanName,
-          role: p.role || 'member',
-          avatar_url: p.avatar_url || null,
-        }
-      })
+      .map((p) => ({
+        id: p.id,
+        full_name: normalizeTeacherDisplayName(p.full_name, p.email),
+        role: p.role || 'member',
+        avatar_url: p.avatar_url || null,
+      }))
 
     return {
       success: true,
@@ -1102,6 +1234,65 @@ export async function getStudentCommunityChatAction(studentCode: string) {
 }
 
 /**
+ * Genera un URL firmato di upload per allegati/vocali studente su #community-studenti o DM docenti.
+ */
+export async function createStudentChatUploadUrlAction(input: {
+  studentCode: string
+  fileName: string
+  contentType: string
+  fileSize: number
+  targetChannel?: string
+}) {
+  try {
+    const admin = createAdminClient()
+    const actor = await resolveStudentOrPreviewActor(admin, input.studentCode)
+    if (!actor.ok) {
+      return { success: false, error: actor.error }
+    }
+
+    const targetChannel = (input.targetChannel || 'community-studenti').trim()
+    const chCheck = validateStudentTargetChannel(targetChannel, actor.actorId)
+    if (!chCheck.ok) {
+      return { success: false, error: chCheck.error }
+    }
+
+    if (!Number.isFinite(input.fileSize) || input.fileSize <= 0 || input.fileSize > MAX_STUDENT_UPLOAD_BYTES) {
+      return { success: false, error: 'Dimensione file non valida (massimo 15 MB).' }
+    }
+
+    const rawName = (input.fileName || '').trim()
+    if (!isAllowedUploadFile(rawName, input.contentType || '')) {
+      return { success: false, error: 'Tipo o estensione file non consentita.' }
+    }
+
+    const cleanName = rawName.replace(/[^a-zA-Z0-9._-]/g, '_') || 'allegato'
+    const safeChannel = targetChannel.replace(/[^a-zA-Z0-9:_-]/g, '_')
+    const storagePath = `chat-attachments/${safeChannel}/${Date.now()}_${cleanName}`
+
+    const { data: signedData, error: signedErr } = await admin.storage
+      .from('team-files')
+      .createSignedUploadUrl(storagePath)
+
+    if (signedErr || !signedData?.token || !signedData?.signedUrl) {
+      return { success: false, error: signedErr?.message || 'Impossibile generare URL di upload.' }
+    }
+
+    const { data: publicData } = admin.storage.from('team-files').getPublicUrl(storagePath)
+
+    return {
+      success: true,
+      path: storagePath,
+      token: signedData.token,
+      signedUrl: signedData.signedUrl,
+      publicUrl: publicData.publicUrl,
+    }
+  } catch (err: any) {
+    console.error('[createStudentChatUploadUrlAction] Error:', err)
+    return { success: false, error: err?.message || 'Errore preparazione upload' }
+  }
+}
+
+/**
  * Invia un messaggio da parte dello studente su #community-studenti oppure in DM 1-a-1 verso un docente.
  */
 export async function sendStudentCommunityMessageAction(input: {
@@ -1109,65 +1300,52 @@ export async function sendStudentCommunityMessageAction(input: {
   content: string
   targetChannel?: string
   parentId?: string
+  uploadedFiles?: Array<{ name: string; url: string; size: number; type: string }>
 }) {
   try {
     const content = (input.content || '').trim()
-    if (!content) {
-      return { success: false, error: 'Scrivi un messaggio prima di inviare.' }
+    const baseStoragePrefix = `${(process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/+$/, '')}/storage/v1/object/public/team-files/chat-attachments/`
+
+    const sanitizedFiles = (Array.isArray(input.uploadedFiles) ? input.uploadedFiles : [])
+      .slice(0, 5)
+      .filter((f) => {
+        if (!f || typeof f.url !== 'string' || typeof f.name !== 'string') return false
+        if (!baseStoragePrefix.startsWith('http') || !f.url.startsWith(baseStoragePrefix)) return false
+        if (!Number.isFinite(f.size) || f.size <= 0 || f.size > MAX_STUDENT_UPLOAD_BYTES) return false
+        return isAllowedUploadFile(f.name, f.type || '')
+      })
+      .map((f) => ({
+        name: f.name.trim(),
+        url: f.url.trim(),
+        size: f.size,
+        type: (f.type || 'application/octet-stream').trim(),
+      }))
+
+    if (!content && sanitizedFiles.length === 0) {
+      return { success: false, error: 'Scrivi un messaggio o allega un file prima di inviare.' }
     }
 
     const admin = createAdminClient()
     const targetChannel = (input.targetChannel || 'community-studenti').trim()
 
-    let studentId = ''
-    let studentName = ''
-    let studentEmail = ''
-    let isTeamPreview = false
-
-    if (input.studentCode === 'TEAM-PREVIEW') {
-      const supabase = await createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        return { success: false, error: 'Non autorizzato' }
-      }
-      const { data: prof } = await (admin.from('profiles') as any)
-        .select('full_name, email, role')
-        .eq('id', user.id)
-        .maybeSingle()
-      if (user.user_metadata?.role === 'collaborator' || prof?.role === 'collaborator') {
-        return { success: false, error: 'Accesso negato' }
-      }
-      isTeamPreview = true
-      studentId = user.id
-      studentName = prof?.full_name || user.user_metadata?.full_name || 'Team'
-      studentEmail = prof?.email || user.email || ''
-    } else {
-      const identity = await resolveStudentIdentityByCode(input.studentCode)
-      if (!identity) {
-        return { success: false, error: 'Codice studente non valido o non attivo' }
-      }
-      studentId = identity.studentId
-      studentName = identity.name
-      studentEmail = identity.email
+    const actor = await resolveStudentOrPreviewActor(admin, input.studentCode)
+    if (!actor.ok) {
+      return { success: false, error: actor.error }
     }
+
+    const {
+      isTeamPreview,
+      actorId: studentId,
+      actorName: studentName,
+      actorEmail: studentEmail,
+    } = actor
 
     // Verifica rigida canale consentito (solo #community-studenti o DM personale con docente)
-    let dmTeacherId: string | null = null
-    if (targetChannel !== 'community-studenti') {
-      if (!targetChannel.startsWith('dm:')) {
-        return { success: false, error: 'Canale non consentito per gli studenti' }
-      }
-      const participants = targetChannel.replace('dm:', '').split('_')
-      if (!participants.includes(studentId) || participants.length !== 2) {
-        return { success: false, error: 'Conversazione diretta non autorizzata' }
-      }
-      dmTeacherId = participants.find((id) => id !== studentId) || null
-      if (!dmTeacherId) {
-        return { success: false, error: 'Destinatario DM non valido' }
-      }
+    const chCheck = validateStudentTargetChannel(targetChannel, studentId)
+    if (!chCheck.ok) {
+      return { success: false, error: chCheck.error }
     }
+    const { dmTeacherId } = chCheck
 
     // Risoluzione profilo di sistema per vincolo FK sender_id -> profiles(id)
     let senderProfileId = isTeamPreview ? studentId : ''
@@ -1184,9 +1362,9 @@ export async function sendStudentCommunityMessageAction(input: {
       senderProfileId = systemProfile.id
     }
 
-    const attachments: ChatMetadataItem[] = []
+    const metaItems: ChatMetadataItem[] = []
     if (!isTeamPreview) {
-      attachments.push({
+      metaItems.push({
         type: '__chat_meta__',
         parent_id: input.parentId || null,
         sender_name: `${studentName} (Studente)`,
@@ -1194,11 +1372,13 @@ export async function sendStudentCommunityMessageAction(input: {
         sender_student_id: studentId,
       })
     } else if (input.parentId) {
-      attachments.push({
+      metaItems.push({
         type: '__chat_meta__',
         parent_id: input.parentId,
       })
     }
+
+    const attachments: any[] = [...sanitizedFiles, ...metaItems]
 
     const { data: inserted, error: insertErr } = await (admin.from('messages') as any)
       .insert({
@@ -1215,6 +1395,19 @@ export async function sendStudentCommunityMessageAction(input: {
       return { success: false, error: insertErr.message }
     }
 
+    const firstFile = sanitizedFiles[0]
+    const firstFileMime = (firstFile?.type || '').split(';')[0].trim().toLowerCase()
+    const isFirstAudio =
+      Boolean(firstFile) &&
+      (firstFileMime.startsWith('audio/') ||
+        (!firstFileMime.startsWith('video/') &&
+          /\.(webm|ogg|mp3|m4a|wav|aac)$/i.test(firstFile.name || '')))
+    const pushBody = content
+      ? content.slice(0, 160)
+      : isFirstAudio
+      ? '🎙️ Messaggio vocale'
+      : `📎 Allegato: ${firstFile.name}`
+
     // Notifiche Web Push mirate (Zero Telegram)
     try {
       const subs = await getAllPushSubscriptions(studentId)
@@ -1225,7 +1418,7 @@ export async function sendStudentCommunityMessageAction(input: {
             const isStudentSub = sub.user_id?.startsWith('student-')
             return sendWebPushNotification(sub, {
               title: `💬 #community-studenti — ${studentName}`,
-              body: content.slice(0, 160),
+              body: pushBody,
               url: isStudentSub ? '/corsi?community=1' : '/chat?channel=community-studenti',
               tag: 'chat-community-studenti',
             })
@@ -1237,7 +1430,7 @@ export async function sendStudentCommunityMessageAction(input: {
           teacherTargets.map((sub) =>
             sendWebPushNotification(sub, {
               title: `💬 Messaggio privato da ${studentName} (Studente)`,
-              body: content.slice(0, 160),
+              body: pushBody,
               url: `/chat?channel=${encodeURIComponent(targetChannel)}`,
               tag: `chat-${targetChannel}`,
             })
