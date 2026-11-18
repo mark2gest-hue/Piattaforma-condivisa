@@ -1848,46 +1848,42 @@ export default function ChatPage() {
             </div>
           )}
           {/* Channel Header */}
-          <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur shrink-0 z-10 gap-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="p-2.5 sm:p-3.5 border-b border-slate-200 dark:border-slate-800 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur shrink-0 z-10">
+            <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
               <button
+                type="button"
                 onClick={() => setShowMobileChannels(true)}
-                className="md:hidden p-1.5 -ml-1 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+                className="md:hidden inline-flex items-center justify-center h-8 w-8 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 shrink-0"
                 title="Scegli canale"
               >
-                <Menu className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <Menu className="h-4 w-4" />
               </button>
 
               <div className="min-w-0 flex-1">
-                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
-                  {isDirectMessage ? (
-                    <>
-                      <MessageCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span className="truncate">DM: {dmPartner?.full_name || 'Conversazione Diretta'}</span>
-                    </>
-                  ) : isPrivateChannel ? (
-                    <>
-                      <Lock className="h-4 w-4 text-amber-500 shrink-0" />
-                      <span className="truncate">{currentChannelObj.name}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Hash className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                      <span className="truncate">{currentChannelObj.name}</span>
-                    </>
-                  )}
-                </h2>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 truncate">
-                    {isDirectMessage
-                      ? 'Messaggio Diretto Privato 1-a-1 • Notifiche personali'
-                      : currentChannelObj.desc}
-                  </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5 min-w-0 truncate">
+                    {isDirectMessage ? (
+                      <>
+                        <MessageCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span className="truncate">DM: {dmPartner?.full_name || 'Conversazione Diretta'}</span>
+                      </>
+                    ) : isPrivateChannel ? (
+                      <>
+                        <Lock className="h-4 w-4 text-amber-500 shrink-0" />
+                        <span className="truncate">{currentChannelObj.name}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Hash className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                        <span className="truncate">{currentChannelObj.name}</span>
+                      </>
+                    )}
+                  </h2>
                   {!isDirectMessage && (
                     <button
                       type="button"
                       onClick={() => setShowParticipantsModal(true)}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline bg-blue-50/70 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800/60 cursor-pointer transition-colors"
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline bg-blue-50/70 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800/60 cursor-pointer transition-colors shrink-0 whitespace-nowrap"
                       title="Visualizza chi è presente in questo canale e scrivi in privato"
                     >
                       <Users className="h-3 w-3 shrink-0" />
@@ -1906,11 +1902,16 @@ export default function ChatPage() {
                     </button>
                   )}
                 </div>
+                <p className="hidden sm:block text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                  {isDirectMessage
+                    ? 'Messaggio Diretto Privato 1-a-1 • Notifiche personali'
+                    : currentChannelObj.desc}
+                </p>
               </div>
             </div>
 
             {/* Right Header Actions: Huddle Live, Gestione Membri, Ricerca, Web Push & Realtime Badge */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap xl:justify-end shrink-0">
               {/* Tasti Stanza Live Voce / Video */}
               <Button
                 type="button"

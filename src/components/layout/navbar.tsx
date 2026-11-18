@@ -287,9 +287,9 @@ export function Navbar({
 
   return (
     <>
-      <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-4 md:px-8 backdrop-blur shadow-xs transition-colors duration-200">
+      <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-2.5 sm:px-4 md:px-8 backdrop-blur shadow-xs transition-colors duration-200">
         {/* Mobile Toggle & Context */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           {onToggleMobileMenu && (
             <button
               type="button"
@@ -304,7 +304,7 @@ export function Navbar({
           )}
 
           <div className="flex items-center gap-2">
-            <span className="md:hidden font-bold text-sm tracking-tight text-blue-600 dark:text-blue-400">Team Hub</span>
+            <span className="md:hidden font-bold text-sm tracking-tight text-blue-600 dark:text-blue-400 whitespace-nowrap shrink-0">Team Hub</span>
             <Badge variant="outline" className="hidden sm:flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700">
               <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
               <span>Workspace Condiviso</span>
@@ -332,7 +332,7 @@ export function Navbar({
         </div>
 
         {/* Right User & Actions */}
-        <div className="flex items-center gap-3 relative">
+        <div className="flex items-center gap-1 sm:gap-2.5 relative shrink-0">
           {/* Theme Toggle */}
           <ThemeToggle />
 
@@ -343,7 +343,7 @@ export function Navbar({
               setIsForcedPasswordChange(false)
               setIsPasswordModalOpen(true)
             }}
-            className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
             title="Cambia Password Personale"
           >
             <KeyRound className="h-5 w-5" />
@@ -356,7 +356,7 @@ export function Navbar({
               setIsNotificationsOpen(!isNotificationsOpen)
               requestNotificationPermission()
             }}
-            className="relative p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            className="relative p-1.5 sm:p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
             title="Centro Notifiche"
           >
             <Bell className="h-5 w-5" />
@@ -435,7 +435,7 @@ export function Navbar({
           )}
 
           {/* User Card & Logout */}
-          <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 pl-1.5 sm:pl-2.5 border-l border-slate-200 dark:border-slate-800">
             <Avatar
               src={currentUser.avatarUrl}
               fallback={currentUser.name}
