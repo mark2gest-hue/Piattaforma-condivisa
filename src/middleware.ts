@@ -15,9 +15,9 @@ export const config = {
      * - _next/image (image optimization files)
      * - api/version (build version polling, unauthenticated)
      * - favicon.ico (favicon file)
-     * - manifest.json & sw.js (PWA assets)
+     * - manifest.json, manifest-student.json & sw.js (PWA assets)
      * - static documents and assets (.pdf, .svg, .png, .jpg, .jpeg, .gif, .webp, .mp4, .txt, .xml)
      */
-    '/((?!_next/static|_next/image|api/version|favicon.ico|manifest\\.json|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf|mp4|txt|xml)$).*)',
+    '/((?!_next/static|_next/image|api/version|favicon.ico|manifest\\.json|manifest-student\\.json|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf|mp4|txt|xml)$).*)',
   ],
 }

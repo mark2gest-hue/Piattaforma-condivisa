@@ -52,7 +52,7 @@ export async function updateSession(request: NextRequest) {
   const isServiziAiRoute = pathname.startsWith('/servizi-ai')
   const isAcademyRoute = pathname.startsWith('/academy') || pathname.startsWith('/accademy')
   const isPrenotaRoute = pathname.startsWith('/prenota')
-  const isPwaAsset = pathname === '/manifest.json' || pathname === '/sw.js'
+  const isPwaAsset = pathname === '/manifest.json' || pathname === '/manifest-student.json' || pathname === '/sw.js'
   const isRootRoute = pathname === '/'
 
   // Rotte pubbliche accessibili a studenti e visitatori (senza richiedere login amministratore Supabase Auth)
