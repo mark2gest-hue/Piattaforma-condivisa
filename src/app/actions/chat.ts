@@ -154,32 +154,9 @@ export async function toggleMessageReactionAction(messageId: string, emoji: stri
 }
 
 /**
- * Helper interno per caricare ruolo effettivo e canali consentiti all'utente.
+ * Unifica i canali custom da .chat-channels.json e public.chat_channels (escluso #generale).
  */
-async function loadAllowedChannelsForUser(
-  admin: any,
-  userId: string,
-  userMetadataRole?: string
-): Promise<{
-  effectiveRole: string
-  allowedChannels: CustomChannelItem[]
-  localCollaborators: string[]
-}> {
-  const { data: profile } = await (admin.from('profiles') as any)
-    .select('role')
-    .eq('id', userId)
-    .maybeSingle()
-
-  const localCollaborators = readLocalCollaboratorIds()
-  const isCollaborator =
-    userMetadataRole === 'collaborator' ||
-    localCollaborators.includes(userId) ||
-    profile?.role === 'collaborator'
-
-  const effectiveRole = isCollaborator
-    ? 'collaborator'
-    : profile?.role || userMetadataRole || 'member'
-
+async function readAllCustomChannelsMerged(admin: any): Promise<CustomChannelItem[]> {
   const channelsMap = new Map<string, CustomChannelItem>()
 
   // 1. Lettura dal fallback locale
@@ -207,7 +184,37 @@ async function loadAllowedChannelsForUser(
     // Tabella non ancora disponibile sul DB remoto
   }
 
-  const allCustom = Array.from(channelsMap.values()).filter((ch) => ch.name !== 'generale')
+  return Array.from(channelsMap.values()).filter((ch) => ch.name !== 'generale')
+}
+
+/**
+ * Helper interno per caricare ruolo effettivo e canali consentiti all'utente.
+ */
+async function loadAllowedChannelsForUser(
+  admin: any,
+  userId: string,
+  userMetadataRole?: string
+): Promise<{
+  effectiveRole: string
+  allowedChannels: CustomChannelItem[]
+  localCollaborators: string[]
+}> {
+  const { data: profile } = await (admin.from('profiles') as any)
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle()
+
+  const localCollaborators = readLocalCollaboratorIds()
+  const isCollaborator =
+    userMetadataRole === 'collaborator' ||
+    localCollaborators.includes(userId) ||
+    profile?.role === 'collaborator'
+
+  const effectiveRole = isCollaborator
+    ? 'collaborator'
+    : profile?.role || userMetadataRole || 'member'
+
+  const allCustom = await readAllCustomChannelsMerged(admin)
 
   let allowedChannels: CustomChannelItem[] = []
   if (effectiveRole === 'collaborator') {
@@ -846,8 +853,7 @@ export async function updateChannelMembersAction(input: {
       }
     }
 
-    const currentChannels = readLocalCustomChannels()
-    const target = currentChannels.find((c) => c.name === input.channelName)
+    const target = await getCustomChannelByNameAction(input.channelName)
     if (!target) {
       return { success: false, error: 'Canale non trovato' }
     }
@@ -865,18 +871,26 @@ export async function updateChannelMembersAction(input: {
     }
 
     const members = Array.from(new Set([...(input.memberIds || []), target.createdBy || user.id]))
-    target.memberIds = members
+    const updatedTarget: CustomChannelItem = { ...target, memberIds: members }
+
+    const currentChannels = readLocalCustomChannels()
+    const existingIdx = currentChannels.findIndex((c) => c.name === updatedTarget.name)
+    if (existingIdx >= 0) {
+      currentChannels[existingIdx] = updatedTarget
+    } else {
+      currentChannels.push(updatedTarget)
+    }
     writeLocalCustomChannels(currentChannels)
 
     try {
       await (admin.from('chat_channels') as any)
         .update({ member_ids: members })
-        .eq('name', input.channelName)
+        .eq('name', updatedTarget.name)
     } catch (err) {
       console.warn('[updateChannelMembersAction] Fallback su store locale:', err)
     }
 
-    return { success: true, channel: target }
+    return { success: true, channel: updatedTarget }
   } catch (err: any) {
     console.error('[updateChannelMembersAction] Error:', err)
     return { success: false, error: err.message }
@@ -1265,25 +1279,41 @@ async function resolveStudentOrPreviewActor(
   }
 }
 
-function validateStudentTargetChannel(
+async function validateStudentTargetChannel(
   targetChannel: string,
-  studentId: string
-): { ok: true; dmTeacherId: string | null } | { ok: false; error: string } {
+  studentId: string,
+  isTeamPreview = false
+): Promise<
+  | { ok: true; dmTeacherId: string | null; customChannel: CustomChannelItem | null }
+  | { ok: false; error: string }
+> {
   if (targetChannel === 'community-studenti') {
-    return { ok: true, dmTeacherId: null }
+    return { ok: true, dmTeacherId: null, customChannel: null }
   }
-  if (!targetChannel.startsWith('dm:')) {
-    return { ok: false, error: 'Canale non consentito per gli studenti' }
+  if (targetChannel.startsWith('dm:')) {
+    const participants = targetChannel.replace('dm:', '').split('_')
+    if (!participants.includes(studentId) || participants.length !== 2) {
+      return { ok: false, error: 'Conversazione diretta non autorizzata' }
+    }
+    const dmTeacherId = participants.find((id) => id !== studentId) || null
+    if (!dmTeacherId) {
+      return { ok: false, error: 'Destinatario DM non valido' }
+    }
+    return { ok: true, dmTeacherId, customChannel: null }
   }
-  const participants = targetChannel.replace('dm:', '').split('_')
-  if (!participants.includes(studentId) || participants.length !== 2) {
-    return { ok: false, error: 'Conversazione diretta non autorizzata' }
+
+  const customCh = await getCustomChannelByNameAction(targetChannel)
+  const members = Array.isArray(customCh?.memberIds) ? customCh.memberIds : []
+  const isAuthorized =
+    Boolean(customCh) &&
+    (members.includes(studentId) ||
+      (isTeamPreview && members.some((id) => id.startsWith('student-'))))
+
+  if (isAuthorized && customCh) {
+    return { ok: true, dmTeacherId: null, customChannel: customCh }
   }
-  const dmTeacherId = participants.find((id) => id !== studentId) || null
-  if (!dmTeacherId) {
-    return { ok: false, error: 'Destinatario DM non valido' }
-  }
-  return { ok: true, dmTeacherId }
+
+  return { ok: false, error: 'Canale non consentito per gli studenti' }
 }
 
 function isAllowedUploadFile(fileName: string, contentType: string): boolean {
@@ -1309,10 +1339,17 @@ export async function getStudentCommunityChatAction(studentCode: string) {
         communityMessages: [],
         dmMessages: [],
         teamTeachers: [],
+        studentChannels: [],
+        studentChannelMessages: [],
       }
     }
 
-    const { actorId: studentId, actorName: studentName, actorEmail: studentEmail } = actor
+    const {
+      isTeamPreview,
+      actorId: studentId,
+      actorName: studentName,
+      actorEmail: studentEmail,
+    } = actor
 
     const normalizeMessageSenders = (rows: any[]) =>
       rows.map((m) => {
@@ -1354,6 +1391,39 @@ export async function getStudentCommunityChatAction(studentCode: string) {
 
     const dmMessages = normalizeMessageSenders(Array.isArray(dmData) ? dmData : [])
 
+    // 2b. Canali privati custom a cui partecipa lo studente (o preview team con studenti)
+    const allCustomChannels = await readAllCustomChannelsMerged(admin)
+    const studentChannelsRaw = allCustomChannels.filter((ch) => {
+      const members = Array.isArray(ch.memberIds) ? ch.memberIds : []
+      if (isTeamPreview) {
+        return members.some((id) => id.startsWith('student-'))
+      }
+      return members.includes(studentId)
+    })
+
+    let studentChannelMessages: any[] = []
+    if (studentChannelsRaw.length > 0) {
+      const { data: customMsgsData } = await (admin.from('messages') as any)
+        .select('id, channel, content, attachments, sender_id, is_system, created_at, sender:profiles(id, full_name, email, role, avatar_url)')
+        .in(
+          'channel',
+          studentChannelsRaw.map((c) => c.name)
+        )
+        .order('created_at', { ascending: false })
+        .limit(200)
+
+      studentChannelMessages = normalizeMessageSenders(
+        Array.isArray(customMsgsData) ? [...customMsgsData].reverse() : []
+      )
+    }
+
+    const studentChannels = studentChannelsRaw.map((c) => ({
+      id: c.id,
+      name: c.name,
+      desc: c.desc,
+      isPrivate: c.isPrivate,
+    }))
+
     // 3. Elenco docenti/team interni (esclusi agenti, account test e collaboratori esterni)
     const { data: profiles } = await (admin.from('profiles') as any)
       .select('id, full_name, email, role, avatar_url, is_agent')
@@ -1384,6 +1454,8 @@ export async function getStudentCommunityChatAction(studentCode: string) {
       communityMessages,
       dmMessages,
       teamTeachers,
+      studentChannels,
+      studentChannelMessages,
     }
   } catch (err: any) {
     console.error('[getStudentCommunityChatAction] Error:', err)
@@ -1393,6 +1465,8 @@ export async function getStudentCommunityChatAction(studentCode: string) {
       communityMessages: [],
       dmMessages: [],
       teamTeachers: [],
+      studentChannels: [],
+      studentChannelMessages: [],
     }
   }
 }
@@ -1415,7 +1489,11 @@ export async function createStudentChatUploadUrlAction(input: {
     }
 
     const targetChannel = (input.targetChannel || 'community-studenti').trim()
-    const chCheck = validateStudentTargetChannel(targetChannel, actor.actorId)
+    const chCheck = await validateStudentTargetChannel(
+      targetChannel,
+      actor.actorId,
+      actor.isTeamPreview
+    )
     if (!chCheck.ok) {
       return { success: false, error: chCheck.error }
     }
@@ -1504,12 +1582,12 @@ export async function sendStudentCommunityMessageAction(input: {
       actorEmail: studentEmail,
     } = actor
 
-    // Verifica rigida canale consentito (solo #community-studenti o DM personale con docente)
-    const chCheck = validateStudentTargetChannel(targetChannel, studentId)
+    // Verifica rigida canale consentito (solo #community-studenti, canale custom con studente o DM personale con docente)
+    const chCheck = await validateStudentTargetChannel(targetChannel, studentId, isTeamPreview)
     if (!chCheck.ok) {
       return { success: false, error: chCheck.error }
     }
-    const { dmTeacherId } = chCheck
+    const { dmTeacherId, customChannel } = chCheck
 
     // Risoluzione profilo di sistema per vincolo FK sender_id -> profiles(id)
     let senderProfileId = isTeamPreview ? studentId : ''
@@ -1588,6 +1666,27 @@ export async function sendStudentCommunityMessageAction(input: {
               body: pushBody,
               url: isStudentSub ? '/corsi?community=1' : '/chat?channel=community-studenti',
               tag: 'chat-community-studenti',
+            })
+          })
+        )
+      } else if (customChannel) {
+        const allowedRecipients = new Set<string>([
+          ...(customChannel.memberIds || []),
+          ...(customChannel.createdBy ? [customChannel.createdBy] : []),
+        ])
+        const customTargets = subs.filter(
+          (s) => s.user_id && s.user_id !== studentId && allowedRecipients.has(s.user_id)
+        )
+        await Promise.allSettled(
+          customTargets.map((sub) => {
+            const isStudentSub = sub.user_id?.startsWith('student-')
+            return sendWebPushNotification(sub, {
+              title: `🔒 #${targetChannel} — ${studentName}`,
+              body: pushBody,
+              url: isStudentSub
+                ? `/corsi?channel=${encodeURIComponent(targetChannel)}`
+                : `/chat?channel=${encodeURIComponent(targetChannel)}`,
+              tag: `chat-${targetChannel}`,
             })
           })
         )

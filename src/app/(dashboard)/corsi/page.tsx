@@ -727,6 +727,7 @@ function CorsiInnerContent() {
   // Fase 5: Community Studenti (#community-studenti), Assistenza 1-a-1 & Notifiche 3 Livelli
   const [isCommunityModalOpen, setIsCommunityModalOpen] = useState<boolean>(false)
   const [communityInitialView, setCommunityInitialView] = useState<'community' | 'dm'>('community')
+  const [communityInitialChannel, setCommunityInitialChannel] = useState<string | null>(null)
   const [isSupportModalOpen, setIsSupportModalOpen] = useState<boolean>(false)
   const [supportInitialTicketId, setSupportInitialTicketId] = useState<string | null>(null)
   const [supportInitialCreateMode, setSupportInitialCreateMode] = useState<boolean>(false)
@@ -1601,9 +1602,13 @@ function CorsiInnerContent() {
     }
     const communityParam = searchParams?.get('community')
     const chatParam = searchParams?.get('chat')
+    const channelParam = searchParams?.get('channel')
     const supportParam = searchParams?.get('support')
 
-    if (chatParam === 'dm') {
+    if (channelParam) {
+      setCommunityInitialChannel(channelParam)
+      setIsCommunityModalOpen(true)
+    } else if (chatParam === 'dm') {
       setCommunityInitialView('dm')
       setIsCommunityModalOpen(true)
     } else if (communityParam === '1') {
@@ -1647,6 +1652,7 @@ function CorsiInnerContent() {
         const allMsgs = [
           ...(commRes.value.communityMessages || []),
           ...(commRes.value.dmMessages || []),
+          ...((commRes.value as any).studentChannelMessages || []),
         ]
 
         const newCount = allMsgs.filter((m: any) => {
@@ -7249,11 +7255,13 @@ function CorsiInnerContent() {
           isOpen={isCommunityModalOpen}
           onClose={() => {
             setIsCommunityModalOpen(false)
+            setCommunityInitialChannel(null)
             refreshStudentBadges()
           }}
           studentCode={effectivePortalStudentCode}
           studentName={activeStudent?.name || 'Docente (Preview)'}
           initialView={communityInitialView}
+          initialChannel={communityInitialChannel}
           onUnreadCountChange={(cnt) => setUnreadCommunityCount(cnt)}
         />
       )}

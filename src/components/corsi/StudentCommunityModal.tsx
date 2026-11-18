@@ -21,6 +21,7 @@ import {
   Copy,
   Check,
   UploadCloud,
+  Lock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -40,6 +41,7 @@ interface StudentCommunityModalProps {
   studentCode: string
   studentName: string
   initialView?: 'community' | 'dm'
+  initialChannel?: string | null
   onUnreadCountChange?: (count: number) => void
 }
 
@@ -196,14 +198,20 @@ export function StudentCommunityModal({
   studentCode,
   studentName,
   initialView = 'community',
+  initialChannel = null,
   onUnreadCountChange,
 }: StudentCommunityModalProps) {
-  const [viewMode, setViewMode] = useState<'community' | 'dm'>(initialView)
+  const [viewMode, setViewMode] = useState<'community' | 'custom' | 'dm'>(initialView)
   const [loading, setLoading] = useState(false)
   const [sending, setSending] = useState(false)
   const [studentId, setStudentId] = useState<string>('')
   const [communityMessages, setCommunityMessages] = useState<any[]>([])
   const [dmMessages, setDmMessages] = useState<any[]>([])
+  const [studentChannels, setStudentChannels] = useState<
+    Array<{ id: string; name: string; desc: string; isPrivate: boolean }>
+  >([])
+  const [studentChannelMessages, setStudentChannelMessages] = useState<any[]>([])
+  const [selectedCustomChannel, setSelectedCustomChannel] = useState<string | null>(null)
   const [teamTeachers, setTeamTeachers] = useState<StudentCommunityTeacher[]>([])
   const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null)
   const [inputText, setInputText] = useState('')
@@ -229,8 +237,10 @@ export function StudentCommunityModal({
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
-    setViewMode(initialView)
-  }, [initialView])
+    if (!initialChannel) {
+      setViewMode(initialView)
+    }
+  }, [initialView, initialChannel])
 
   const markReadNow = () => {
     try {
@@ -250,10 +260,18 @@ export function StudentCommunityModal({
       setCommunityMessages(res.communityMessages || [])
       setDmMessages(res.dmMessages || [])
       setTeamTeachers(res.teamTeachers || [])
+      const chList = (res as any).studentChannels || []
+      setStudentChannels(chList)
+      setStudentChannelMessages((res as any).studentChannelMessages || [])
       if (res.student?.id) setStudentId(res.student.id)
 
       if (!selectedTeacherId && res.teamTeachers && res.teamTeachers.length > 0) {
         setSelectedTeacherId(res.teamTeachers[0].id)
+      }
+
+      if (initialChannel && chList.some((c: any) => c.name === initialChannel)) {
+        setViewMode('custom')
+        setSelectedCustomChannel(initialChannel)
       }
 
       if (isOpen) {
@@ -309,8 +327,15 @@ export function StudentCommunityModal({
   }, [previewImageUrl])
 
   useEffect(() => {
+    if (initialChannel && studentChannels.some((c) => c.name === initialChannel)) {
+      setViewMode('custom')
+      setSelectedCustomChannel(initialChannel)
+    }
+  }, [initialChannel, studentChannels])
+
+  useEffect(() => {
     setReplyingTo(null)
-  }, [viewMode, selectedTeacherId])
+  }, [viewMode, selectedTeacherId, selectedCustomChannel])
 
   const activeDmChannel = useMemo(() => {
     if (!studentId || !selectedTeacherId) return ''
@@ -318,10 +343,19 @@ export function StudentCommunityModal({
   }, [studentId, selectedTeacherId])
 
   const visibleMessages = useMemo(() => {
-    return viewMode === 'community'
-      ? communityMessages
-      : dmMessages.filter((m) => m.channel === activeDmChannel)
-  }, [viewMode, communityMessages, dmMessages, activeDmChannel])
+    if (viewMode === 'community') return communityMessages
+    if (viewMode === 'custom') {
+      return studentChannelMessages.filter((m) => m.channel === selectedCustomChannel)
+    }
+    return dmMessages.filter((m) => m.channel === activeDmChannel)
+  }, [
+    viewMode,
+    communityMessages,
+    studentChannelMessages,
+    selectedCustomChannel,
+    dmMessages,
+    activeDmChannel,
+  ])
 
   const messagesById = useMemo(() => {
     const map = new Map<string, any>()
@@ -335,7 +369,7 @@ export function StudentCommunityModal({
     if (isOpen && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [isOpen, viewMode, selectedTeacherId, visibleMessages.length])
+  }, [isOpen, viewMode, selectedTeacherId, selectedCustomChannel, visibleMessages.length])
 
   const getMessageAuthorLabel = (msg: any) => {
     const meta = extractStudentMsgMeta(msg)
@@ -505,6 +539,7 @@ export function StudentCommunityModal({
   const startVoiceRecording = async () => {
     if (sending || isSendingVoice || isRecordingVoice) return
     if (viewMode === 'dm' && !activeDmChannel) return
+    if (viewMode === 'custom' && !selectedCustomChannel) return
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       alert('Registrazione vocale non supportata su questo browser.')
       return
@@ -568,7 +603,12 @@ export function StudentCommunityModal({
           type: mimeType,
         })
 
-        const targetChannel = viewMode === 'community' ? 'community-studenti' : activeDmChannel
+        const targetChannel =
+          viewMode === 'community'
+            ? 'community-studenti'
+            : viewMode === 'custom'
+            ? selectedCustomChannel || ''
+            : activeDmChannel
         if (!targetChannel) return
 
         setIsSendingVoice(true)
@@ -626,9 +666,14 @@ export function StudentCommunityModal({
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     if ((!inputText.trim() && pendingFiles.length === 0) || sending || isSendingVoice) return
-    if (viewMode === 'dm' && !activeDmChannel) return
+    const targetChannel =
+      viewMode === 'community'
+        ? 'community-studenti'
+        : viewMode === 'custom'
+        ? selectedCustomChannel || ''
+        : activeDmChannel
+    if (!targetChannel) return
 
-    const targetChannel = viewMode === 'community' ? 'community-studenti' : activeDmChannel
     setSending(true)
     const text = inputText.trim()
     const filesToSend = [...pendingFiles]
@@ -663,6 +708,8 @@ export function StudentCommunityModal({
   if (!isOpen) return null
 
   const selectedTeacher = teamTeachers.find((t) => t.id === selectedTeacherId) || null
+  const activeCustomChannelObj =
+    studentChannels.find((c) => c.name === selectedCustomChannel) || null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
@@ -731,6 +778,29 @@ export function StudentCommunityModal({
             <Hash className="h-3.5 w-3.5" />
             <span>#community-studenti ({communityMessages.length})</span>
           </button>
+
+          {studentChannels.map((ch) => {
+            const isSelected = viewMode === 'custom' && selectedCustomChannel === ch.name
+            const msgCount = studentChannelMessages.filter((m) => m.channel === ch.name).length
+            return (
+              <button
+                key={ch.id}
+                type="button"
+                onClick={() => {
+                  setViewMode('custom')
+                  setSelectedCustomChannel(ch.name)
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                  isSelected
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <Lock className="h-3.5 w-3.5" />
+                <span>#{ch.name} ({msgCount})</span>
+              </button>
+            )
+          })}
 
           <button
             type="button"
@@ -815,6 +885,20 @@ export function StudentCommunityModal({
               </div>
             )}
 
+            {viewMode === 'custom' && activeCustomChannelObj && (
+              <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-amber-50/60 dark:bg-amber-950/20 text-xs flex items-center gap-2 shrink-0">
+                <Lock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                <span className="font-bold text-slate-800 dark:text-slate-100">
+                  #{activeCustomChannelObj.name}
+                </span>
+                {activeCustomChannelObj.desc && (
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                    — {activeCustomChannelObj.desc}
+                  </span>
+                )}
+              </div>
+            )}
+
             <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0">
               {loading ? (
                 <div className="h-full flex items-center justify-center">
@@ -826,6 +910,8 @@ export function StudentCommunityModal({
                   <p>
                     {viewMode === 'community'
                       ? 'Nessun messaggio in #community-studenti. Scrivi il primo saluto o una domanda!'
+                      : viewMode === 'custom'
+                      ? `Nessun messaggio in #${selectedCustomChannel || 'canale'}. Scrivi il primo messaggio!`
                       : `Inizia una chat privata 1-a-1 con ${selectedTeacher?.full_name || 'un docente'}.`}
                   </p>
                 </div>
@@ -1100,6 +1186,8 @@ export function StudentCommunityModal({
                         ? 'Aggiungi una didascalia...'
                         : viewMode === 'community'
                         ? 'Scrivi o incolla/trascina file in #community-studenti...'
+                        : viewMode === 'custom'
+                        ? `Scrivi o incolla/trascina file in #${selectedCustomChannel || 'canale'}...`
                         : `Scrivi o incolla file a ${selectedTeacher?.full_name || 'docente'}...`
                     }
                     className="text-xs h-10 dark:bg-slate-800 dark:border-slate-700 min-w-0 flex-1"

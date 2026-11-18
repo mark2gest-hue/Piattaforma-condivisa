@@ -327,6 +327,94 @@ function VoiceAudioPlayer({ att, isMe }: { att: ChatAttachment; isMe: boolean })
   )
 }
 
+function StudentMemberPicker({
+  students,
+  selectedIds,
+  onToggleId,
+  search,
+  onSearchChange,
+}: {
+  students: EnrolledStudentChatMember[]
+  selectedIds: string[]
+  onToggleId: (id: string) => void
+  search: string
+  onSearchChange: (val: string) => void
+}) {
+  const q = search.trim().toLowerCase()
+  const filtered = students
+    .filter((st) => {
+      if (!q) return true
+      return (
+        st.full_name.toLowerCase().includes(q) ||
+        (st.email || '').toLowerCase().includes(q) ||
+        (st.code || '').toLowerCase().includes(q)
+      )
+    })
+    .sort((a, b) => {
+      const aSel = selectedIds.includes(a.id) ? 0 : 1
+      const bSel = selectedIds.includes(b.id) ? 0 : 1
+      if (aSel !== bSel) return aSel - bSel
+      return a.full_name.localeCompare(b.full_name, 'it', { sensitivity: 'base' })
+    })
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+        Studenti / Corsisti ({selectedIds.filter((id) => id.startsWith('student-')).length} selezionati)
+      </label>
+      <div className="flex items-center bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs">
+        <Search className="h-3.5 w-3.5 text-slate-400 mr-1.5 shrink-0" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Cerca studente per nome, email o codice..."
+          className="flex-1 bg-transparent focus:outline-none text-slate-900 dark:text-white"
+        />
+      </div>
+      <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 p-2 space-y-1 bg-slate-50/50 dark:bg-slate-800/50">
+        {filtered.length === 0 ? (
+          <p className="text-[11px] text-slate-400 text-center py-2">
+            Nessuno studente trovato.
+          </p>
+        ) : (
+          filtered.map((st) => {
+            const isChecked = selectedIds.includes(st.id)
+            return (
+              <label
+                key={st.id}
+                className="flex items-center justify-between gap-2 p-1.5 rounded-lg text-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => onToggleId(st.id)}
+                    className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <span className="text-slate-800 dark:text-slate-200 font-medium truncate block">
+                      {st.full_name}
+                    </span>
+                    {st.code && (
+                      <span className="text-[10px] font-mono text-slate-400 block truncate">
+                        {st.code}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Badge variant="purple" className="text-[9px] px-1.5 py-0 uppercase shrink-0">
+                  STUDENTE
+                </Badge>
+              </label>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function ChatPage() {
   const [activeChannel, setActiveChannel] = useState('community-studenti')
   const [messages, setMessages] = useState<MessageWithSender[]>([])
@@ -370,6 +458,7 @@ export default function ChatPage() {
   const [enrolledStudents, setEnrolledStudents] = useState<EnrolledStudentChatMember[]>([])
   const [showParticipantsModal, setShowParticipantsModal] = useState(false)
   const [participantSearchQuery, setParticipantSearchQuery] = useState('')
+  const [studentPickerSearch, setStudentPickerSearch] = useState('')
 
   // Channel Search Query (Fase 3)
   const [searchQuery, setSearchQuery] = useState('')
@@ -1224,6 +1313,10 @@ export default function ChatPage() {
   const currentCustomChannel = customChannels.find((c) => c.name === activeChannel)
   const isPrivateChannel = Boolean(currentCustomChannel?.isPrivate)
   const privateMemberIds = currentCustomChannel?.memberIds || []
+  const hasStudentParticipants =
+    userRole !== 'collaborator' &&
+    (activeChannel === 'community-studenti' ||
+      privateMemberIds.some((id) => id.startsWith('student-')))
 
   // Calcolo Partecipanti Canale ("Chi c'è dentro")
   const currentChannelParticipants: ChannelParticipant[] = useMemo(() => {
@@ -1280,7 +1373,7 @@ export default function ChatPage() {
     }
 
     if (isPrivateChannel) {
-      return teamMembers
+      const teamPart: ChannelParticipant[] = teamMembers
         .filter(
           (m) =>
             privateMemberIds.includes(m.id) ||
@@ -1293,6 +1386,26 @@ export default function ChatPage() {
           role: m.role || 'member',
           is_active: m.is_active,
         }))
+
+      const studentPart: ChannelParticipant[] =
+        userRole !== 'collaborator'
+          ? enrolledStudents
+              .filter((s) => privateMemberIds.includes(s.id))
+              .map((s) => ({
+                id: s.id,
+                full_name: s.full_name,
+                email: s.email,
+                role: 'student',
+                is_active: s.is_active,
+                code: s.code,
+              }))
+          : []
+
+      const map = new Map<string, ChannelParticipant>()
+      for (const p of [...teamPart, ...studentPart]) {
+        map.set(p.id, p)
+      }
+      return Array.from(map.values())
     }
 
     // Canale pubblico custom: tutti i membri interni del team
@@ -1348,7 +1461,7 @@ export default function ChatPage() {
 
     const messageContent = inputMessage.trim()
     const shouldNotifyByEmail =
-      activeChannel === 'community-studenti' &&
+      hasStudentParticipants &&
       (notifyStudentsEmailToggle || /@tutti\b/i.test(messageContent))
     setInputMessage('')
     setPendingFiles([])
@@ -1416,6 +1529,9 @@ export default function ChatPage() {
       } else if (isPrivateChannel) {
         notifyOptions.isPrivateChannel = true
         notifyOptions.recipientUserIds = privateMemberIds
+        if (shouldNotifyByEmail) {
+          notifyOptions.notifyStudentsByEmail = true
+        }
       } else if (shouldNotifyByEmail) {
         notifyOptions.notifyStudentsByEmail = true
       }
@@ -1466,7 +1582,10 @@ export default function ChatPage() {
       } else if (isPrivateChannel) {
         notifyOptions.isPrivateChannel = true
         notifyOptions.recipientUserIds = privateMemberIds
-      } else if (activeChannel === 'community-studenti' && /@tutti\b/i.test(replyText)) {
+        if (hasStudentParticipants && /@tutti\b/i.test(replyText)) {
+          notifyOptions.notifyStudentsByEmail = true
+        }
+      } else if (hasStudentParticipants && /@tutti\b/i.test(replyText)) {
         notifyOptions.notifyStudentsByEmail = true
       }
 
@@ -1495,6 +1614,7 @@ export default function ChatPage() {
       await loadCustomChannels()
       setActiveChannel(res.channel.name)
       setShowCreateChannelModal(false)
+      setStudentPickerSearch('')
       setNewChannelName('')
       setNewChannelDesc('')
       setNewChannelIsPrivate(false)
@@ -1575,6 +1695,7 @@ export default function ChatPage() {
       })
       if (res.success) {
         await loadCustomChannels()
+        setStudentPickerSearch('')
         setShowManageMembersModal(false)
       } else {
         alert(res.error || 'Errore salvataggio membri')
@@ -1801,7 +1922,10 @@ export default function ChatPage() {
                 {userRole !== 'collaborator' && (
                   <button
                     type="button"
-                    onClick={() => setShowCreateChannelModal(true)}
+                    onClick={() => {
+                      setStudentPickerSearch('')
+                      setShowCreateChannelModal(true)
+                    }}
                     className="p-1 rounded-md text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     title="Crea nuovo canale"
                   >
@@ -2156,6 +2280,7 @@ export default function ChatPage() {
                     const currentChannelItem = customChannels.find((c) => c.name === activeChannel)
                     setManageMemberIds(currentChannelItem?.memberIds || [])
                     setManageCollabResult(null)
+                    setStudentPickerSearch('')
                     setShowManageMembersModal(true)
                   }}
                   className="text-xs h-8 px-2.5 gap-1.5 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 shadow-xs cursor-pointer"
@@ -2638,7 +2763,7 @@ export default function ChatPage() {
 
           {/* Input Bar Principale */}
           <div className="p-2.5 sm:p-3.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 relative space-y-2">
-            {activeChannel === 'community-studenti' && userRole !== 'collaborator' && (
+            {hasStudentParticipants && (
               <div className="flex flex-wrap items-center justify-between gap-2 px-1">
                 <button
                   type="button"
@@ -3129,6 +3254,20 @@ export default function ChatPage() {
                       )
                     })}
                   </div>
+
+                  {enrolledStudents.length > 0 && (
+                    <StudentMemberPicker
+                      students={enrolledStudents}
+                      selectedIds={newChannelMemberIds}
+                      onToggleId={(stId) =>
+                        setNewChannelMemberIds((prev) =>
+                          prev.includes(stId) ? prev.filter((id) => id !== stId) : [...prev, stId]
+                        )
+                      }
+                      search={studentPickerSearch}
+                      onSearchChange={setStudentPickerSearch}
+                    />
+                  )}
                 </div>
               )}
 
@@ -3348,6 +3487,20 @@ export default function ChatPage() {
                   )
                 })}
               </div>
+
+              {enrolledStudents.length > 0 && (
+                <StudentMemberPicker
+                  students={enrolledStudents}
+                  selectedIds={manageMemberIds}
+                  onToggleId={(stId) =>
+                    setManageMemberIds((prev) =>
+                      prev.includes(stId) ? prev.filter((id) => id !== stId) : [...prev, stId]
+                    )
+                  }
+                  search={studentPickerSearch}
+                  onSearchChange={setStudentPickerSearch}
+                />
+              )}
             </div>
 
             {/* Box Invito Collaboratore Esterno al Volo in questo canale */}

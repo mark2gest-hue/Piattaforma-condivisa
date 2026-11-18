@@ -234,15 +234,13 @@ export async function notifyChatMessageAction(
     const hasMentionTutti =
       (options?.mentionedNames || []).some((m) => m.toLowerCase() === 'tutti') ||
       /@tutti\b/i.test(content)
+    const customCh = await getCustomChannelByNameAction(channel)
 
     // Esecuzione concorrente: Web Push nativa VAPID + Email automatica intelligente (Zero Telegram)
     const [pushResult, emailResult] = await Promise.allSettled([
       (async () => {
         let recipients = await getAllPushSubscriptions(senderUserId)
-        const [collabList, customCh] = await Promise.all([
-          getCollaboratorIdsAction(),
-          getCustomChannelByNameAction(channel),
-        ])
+        const collabList = await getCollaboratorIdsAction()
         const collabIds = new Set(collabList)
 
         if (options?.recipientUserIds && options.recipientUserIds.length > 0) {
@@ -277,7 +275,9 @@ export async function notifyChatMessageAction(
             const targetUrl = isStudentSub
               ? options?.isDirectMessage
                 ? '/corsi?chat=dm'
-                : '/corsi?community=1'
+                : isCommunityChannel
+                ? '/corsi?community=1'
+                : `/corsi?channel=${encodeURIComponent(channel)}`
               : `/chat?channel=${encodeURIComponent(channel)}`
 
             return sendWebPushNotification(sub, {
@@ -305,6 +305,43 @@ export async function notifyChatMessageAction(
                 to: st.email,
                 subject: `📢 Avviso importante in #community-studenti — ${userName}`,
                 body: `Ciao ${st.name},\n\n${userName} ha pubblicato un avviso importante nel canale #community-studenti su AIutiamoci Academy:\n\n"${preview}"\n\n👉 Leggi e rispondi direttamente nell'Area Corsisti:\nhttps://aiutiamoci.cloud/corsi?community=1\n\nA presto,\nTeam AIutiamoci`,
+              })
+            )
+          )
+          return { sent: outcomes.length }
+        }
+
+        // Caso A2: Canale privato con studenti selezionati e @tutti o toggle Email attivo
+        if (
+          !isCommunityChannel &&
+          !options?.isDirectMessage &&
+          (options?.notifyStudentsByEmail || hasMentionTutti)
+        ) {
+          const studentIds = Array.from(
+            new Set([
+              ...((options?.recipientUserIds || []).filter((id) => id.startsWith('student-'))),
+              ...((customCh?.memberIds || []).filter((id) => id.startsWith('student-'))),
+            ])
+          )
+          if (studentIds.length === 0) return { sent: 0 }
+
+          const resolved = await Promise.all(studentIds.map((id) => resolveStudentEmailByChatId(id)))
+          const uniqueByEmail = new Map<string, { name: string; email: string }>()
+          for (const st of resolved) {
+            if (st && st.email.includes('@') && !st.email.endsWith('.local') && !uniqueByEmail.has(st.email)) {
+              uniqueByEmail.set(st.email, st)
+            }
+          }
+          if (uniqueByEmail.size === 0) return { sent: 0 }
+
+          const preview = content.length > 600 ? `${content.slice(0, 600)}...` : content
+          const channelUrl = `https://aiutiamoci.cloud/corsi?channel=${encodeURIComponent(channel)}`
+          const outcomes = await Promise.allSettled(
+            Array.from(uniqueByEmail.values()).map((st) =>
+              sendSharedEmail({
+                to: st.email,
+                subject: `📢 Nuovo messaggio in #${channel} — ${userName}`,
+                body: `Ciao ${st.name},\n\n${userName} ha pubblicato un avviso importante nel canale riservato #${channel} su AIutiamoci Academy:\n\n"${preview}"\n\n👉 Leggi e rispondi direttamente nell'Area Corsisti:\n${channelUrl}\n\nA presto,\nTeam AIutiamoci`,
               })
             )
           )
