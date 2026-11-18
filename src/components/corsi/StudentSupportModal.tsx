@@ -129,10 +129,12 @@ export function StudentSupportModal({
   }, [isOpen, selectedTicket?.id, mode])
 
   useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [selectedTicket?.id, selectedTicket?.messages?.length])
+    if (!isOpen || loading || mode !== 'list') return
+    const timer = setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+    }, 60)
+    return () => clearTimeout(timer)
+  }, [isOpen, loading, mode, selectedTicket?.id, selectedTicket?.messages?.length])
 
   const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault()

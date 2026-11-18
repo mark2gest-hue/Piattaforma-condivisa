@@ -226,6 +226,7 @@ export function StudentCommunityModal({
   const [isSendingVoice, setIsSendingVoice] = useState(false)
 
   const bottomRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textInputRef = useRef<HTMLInputElement>(null)
   const dragCounterRef = useRef(0)
@@ -366,10 +367,18 @@ export function StudentCommunityModal({
   }, [visibleMessages])
 
   useEffect(() => {
-    if (isOpen && bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' })
+    if (!isOpen || loading) return
+    const scrollNow = () => {
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      } else if (bottomRef.current) {
+        bottomRef.current.scrollIntoView({ behavior: 'auto' })
+      }
     }
-  }, [isOpen, viewMode, selectedTeacherId, selectedCustomChannel, visibleMessages.length])
+    scrollNow()
+    const timer = setTimeout(scrollNow, 80)
+    return () => clearTimeout(timer)
+  }, [isOpen, loading, viewMode, selectedTeacherId, selectedCustomChannel, visibleMessages.length])
 
   const getMessageAuthorLabel = (msg: any) => {
     const meta = extractStudentMsgMeta(msg)
@@ -899,7 +908,10 @@ export function StudentCommunityModal({
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0">
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0"
+            >
               {loading ? (
                 <div className="h-full flex items-center justify-center">
                   <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />

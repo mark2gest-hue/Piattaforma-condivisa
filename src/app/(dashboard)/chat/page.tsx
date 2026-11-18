@@ -521,9 +521,11 @@ export default function ChatPage() {
   }
 
   useEffect(() => {
-    const timer = setTimeout(() => scrollToBottom('smooth'), 100)
+    if (loading) return
+    scrollToBottom('auto')
+    const timer = setTimeout(() => scrollToBottom('auto'), 80)
     return () => clearTimeout(timer)
-  }, [messages, activeChannel])
+  }, [messages, activeChannel, loading])
 
   // Cleanup registrazione vocale al cambio canale o unmount
   useEffect(() => {

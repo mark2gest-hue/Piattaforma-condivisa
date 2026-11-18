@@ -40,6 +40,54 @@ const COLLABORATORS_LOCAL_FILE = path.join(process.cwd(), '.chat-collaborators.j
 
 const SYSTEM_CHANNEL_NAMES = ['community-studenti']
 
+const CHAT_RETENTION_DAYS = 90
+const CHAT_RETENTION_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000 // 6 ore
+let lastChatRetentionCleanupMs = 0
+
+async function purgeExpiredChatMessages(admin: any): Promise<void> {
+  const now = Date.now()
+  if (now - lastChatRetentionCleanupMs < CHAT_RETENTION_CHECK_INTERVAL_MS) return
+  lastChatRetentionCleanupMs = now
+
+  try {
+    const cutoffIso = new Date(now - CHAT_RETENTION_DAYS * 24 * 60 * 60 * 1000).toISOString()
+    const { data: expiredRows, error: fetchErr } = await (admin.from('messages') as any)
+      .select('id, attachments')
+      .lt('created_at', cutoffIso)
+      .limit(500)
+
+    if (fetchErr || !Array.isArray(expiredRows) || expiredRows.length === 0) return
+
+    const storageMarker = '/storage/v1/object/public/team-files/'
+    const storagePathsToDelete: string[] = []
+
+    for (const row of expiredRows) {
+      const attList = Array.isArray(row.attachments) ? row.attachments : []
+      for (const item of attList) {
+        if (!item || item.type === '__chat_meta__' || typeof item.url !== 'string') continue
+        const markerIdx = item.url.indexOf(storageMarker)
+        if (markerIdx >= 0) {
+          const relPath = decodeURIComponent(item.url.slice(markerIdx + storageMarker.length).split('?')[0])
+          if (relPath.startsWith('chat-attachments/')) {
+            storagePathsToDelete.push(relPath)
+          }
+        }
+      }
+    }
+
+    if (storagePathsToDelete.length > 0) {
+      await admin.storage.from('team-files').remove(Array.from(new Set(storagePathsToDelete)))
+    }
+
+    const expiredIds = expiredRows.map((r: any) => r.id).filter(Boolean)
+    if (expiredIds.length > 0) {
+      await (admin.from('messages') as any).delete().in('id', expiredIds)
+    }
+  } catch (err) {
+    console.warn('[purgeExpiredChatMessages] Warning:', err)
+  }
+}
+
 function readLocalCollaboratorIds(): string[] {
   try {
     if (!fs.existsSync(COLLABORATORS_LOCAL_FILE)) return []
@@ -389,6 +437,7 @@ export async function getCustomChannelsAction() {
     }
 
     const admin = createAdminClient()
+    void purgeExpiredChatMessages(admin)
     const {
       effectiveRole,
       allowedChannels: allowed,
@@ -1331,6 +1380,7 @@ function isAllowedUploadFile(fileName: string, contentType: string): boolean {
 export async function getStudentCommunityChatAction(studentCode: string) {
   try {
     const admin = createAdminClient()
+    void purgeExpiredChatMessages(admin)
     const actor = await resolveStudentOrPreviewActor(admin, studentCode)
     if (!actor.ok) {
       return {
