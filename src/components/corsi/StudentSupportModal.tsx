@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { formatDate } from '@/lib/utils'
+import { renderChatText } from '@/lib/chat-text'
 import {
   createSupportTicketAction,
   getStudentSupportTicketsAction,
@@ -495,7 +496,11 @@ export function StudentSupportModal({
                                 : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-xs'
                             }`}
                           >
-                            {msg.content}
+                            {renderChatText(msg.content, {
+                              isMe: isMine,
+                              accent: 'indigo',
+                              highlightMentions: false,
+                            })}
                           </div>
                         </div>
                       )

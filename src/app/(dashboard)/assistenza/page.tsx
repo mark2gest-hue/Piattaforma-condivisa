@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils'
+import { renderChatText } from '@/lib/chat-text'
 import {
   getTeamSupportTicketsAction,
   replyTeamSupportTicketAction,
@@ -621,7 +622,11 @@ function AssistenzaInner() {
                           : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-xs'
                       }`}
                     >
-                      {msg.content}
+                      {renderChatText(msg.content, {
+                        isMe: isStaff,
+                        accent: 'indigo',
+                        highlightMentions: false,
+                      })}
                     </div>
                   </div>
                 )

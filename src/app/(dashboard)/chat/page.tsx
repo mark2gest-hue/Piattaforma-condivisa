@@ -44,6 +44,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { formatDate, formatBytes } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { renderChatText } from '@/lib/chat-text'
 import { Message, Profile } from '@/types/index'
 import {
   requestNotificationPermission,
@@ -175,32 +176,10 @@ function extractMentions(text: string): string[] {
 }
 
 /**
- * Renderizza il testo del messaggio evidenziando le @menzioni come pill.
+ * Renderizza il testo del messaggio evidenziando link cliccabili e @menzioni.
  */
 function renderMessageContent(content: string, isMe: boolean) {
-  if (!content) return null
-  const parts = content.split(/(@[a-zA-Z0-9À-ÿ_]+)/g)
-  return (
-    <span>
-      {parts.map((part, idx) => {
-        if (part.startsWith('@')) {
-          return (
-            <span
-              key={idx}
-              className={`inline-flex items-center px-1.5 py-0.2 mx-0.5 rounded-md font-semibold text-[11px] sm:text-xs transition-colors ${
-                isMe
-                  ? 'bg-blue-700 text-white shadow-xs'
-                  : 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-              }`}
-            >
-              {part}
-            </span>
-          )
-        }
-        return <span key={idx}>{part}</span>
-      })}
-    </span>
-  )
+  return renderChatText(content, { isMe, accent: 'blue', highlightMentions: true })
 }
 
 function normalizeTeamDisplayName(

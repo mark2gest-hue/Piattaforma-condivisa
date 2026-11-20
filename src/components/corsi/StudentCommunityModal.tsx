@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { formatDate, formatBytes } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { renderChatText } from '@/lib/chat-text'
 import {
   getStudentCommunityChatAction,
   sendStudentCommunityMessageAction,
@@ -91,28 +92,7 @@ function formatVoiceDuration(totalSeconds: number): string {
 }
 
 function renderStudentMessageText(content: string, isMine: boolean) {
-  if (!content) return null
-  const parts = content.split(/(@[a-zA-Z0-9À-ÿ_]+)/g)
-  return (
-    <span>
-      {parts.map((part, idx) =>
-        part.startsWith('@') ? (
-          <span
-            key={idx}
-            className={`inline-flex items-center px-1.5 py-0.2 mx-0.5 rounded-md font-semibold text-[11px] sm:text-xs ${
-              isMine
-                ? 'bg-indigo-700 text-white'
-                : 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
-            }`}
-          >
-            {part}
-          </span>
-        ) : (
-          <span key={idx}>{part}</span>
-        )
-      )}
-    </span>
-  )
+  return renderChatText(content, { isMe: isMine, accent: 'indigo', highlightMentions: true })
 }
 
 function StudentVoicePlayer({ att, isMine }: { att: ChatAttachmentItem; isMine: boolean }) {
