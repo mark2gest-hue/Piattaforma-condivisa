@@ -336,6 +336,16 @@ export function Navbar({
           {/* Theme Toggle */}
           <ThemeToggle />
 
+          {/* 2FA TOTP Security Link */}
+          <Link
+            href="/mfa"
+            className="inline-flex items-center gap-1 px-2 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            title="Configura Autenticazione a Due Fattori (2FA)"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">2FA</span>
+          </Link>
+
           {/* Change Password Button */}
           <button
             type="button"

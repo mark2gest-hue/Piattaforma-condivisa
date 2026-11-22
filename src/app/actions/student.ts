@@ -2,6 +2,7 @@
 
 import { Resend } from 'resend'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/supabase/auth-guards'
 import { sendSharedEmail } from '@/app/(dashboard)/posta/actions'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -1056,7 +1057,7 @@ export async function toggleStudentExamUnlockAction(studentCode: string, isUnloc
 
 export async function deleteStudentCodeAction(id: string) {
   try {
-    await requireAuthUser()
+    await requireAdmin()
     const supabaseAdmin = createAdminClient()
     const { error } = await supabaseAdmin
       .from('student_codes')
@@ -1072,7 +1073,7 @@ export async function deleteStudentCodeAction(id: string) {
 
 export async function deleteCourseRegistrationAction(registrationId: string) {
   try {
-    await requireAuthUser()
+    await requireAdmin()
     const supabaseAdmin = createAdminClient()
     const { error } = await supabaseAdmin
       .from('course_registrations')
@@ -1146,7 +1147,7 @@ export async function checkStudentRegistrationByEmailAction(email: string) {
  */
 export async function cleanDuplicateRegistrationsAction() {
   try {
-    await requireAuthUser()
+    await requireAdmin()
     const supabaseAdmin = createAdminClient()
 
     // 1. Carica registrazioni, studenti attivi e clienti

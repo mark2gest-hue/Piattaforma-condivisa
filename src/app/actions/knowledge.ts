@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { createAdminClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/supabase/auth-guards'
 import { KnowledgeItem, DEFAULT_KNOWLEDGE_ITEMS } from '@/lib/knowledge-data'
 
 export type { KnowledgeItem }
@@ -105,6 +106,7 @@ export async function createKnowledgeItemAction(payload: {
 // 3. Elimina un Knowledge Item
 export async function deleteKnowledgeItemAction(id: string) {
   try {
+    await requireAdmin()
     const supabase = createAdminClient()
     const { error } = await supabase.from('knowledge_items').delete().eq('id', id)
     if (error) return { success: false, error: error.message }

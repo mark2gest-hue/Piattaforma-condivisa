@@ -181,10 +181,24 @@ export default function ClientiRubricaPage() {
   const [formStage, setFormStage] = useState<PipelineStage>('nuovo_lead')
   const [formDealValue, setFormDealValue] = useState<string | number>(199)
 
+  const [isAdmin, setIsAdmin] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
     fetchClients()
+    const checkRole = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data: profile } = await (supabase.from('profiles') as any)
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        const role = profile?.role || user.user_metadata?.role
+        setIsAdmin(role === 'admin' || role === 'dev')
+      } catch {}
+    }
+    checkRole()
   }, [])
 
   const fetchClients = async () => {
@@ -760,14 +774,16 @@ export default function ClientiRubricaPage() {
                               >
                                 <Edit2 className="h-3 w-3" />
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteClient(client.id, fullName)}
-                                className="h-7 w-7 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-all cursor-pointer"
-                                title="Elimina"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
+                              {isAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteClient(client.id, fullName)}
+                                  className="h-7 w-7 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-all cursor-pointer"
+                                  title="Elimina"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -945,14 +961,16 @@ export default function ClientiRubricaPage() {
                             </button>
 
                             {/* Elimina */}
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteClient(client.id, fullName)}
-                              className="h-8 w-8 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-all cursor-pointer"
-                              title="Elimina Contatto"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteClient(client.id, fullName)}
+                                className="h-8 w-8 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-all cursor-pointer"
+                                title="Elimina Contatto"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

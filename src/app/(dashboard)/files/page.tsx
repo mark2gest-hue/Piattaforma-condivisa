@@ -110,10 +110,24 @@ export default function FilesManagerPage() {
   const [isCreatingTaskFromAi, setIsCreatingTaskFromAi] = useState(false)
   const [taskCreatedSuccess, setTaskCreatedSuccess] = useState(false)
 
+  const [isAdmin, setIsAdmin] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
     fetchFiles()
+    const checkRole = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data: profile } = await (supabase.from('profiles') as any)
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        const role = profile?.role || user.user_metadata?.role
+        setIsAdmin(role === 'admin' || role === 'dev')
+      } catch {}
+    }
+    checkRole()
   }, [])
 
   const fetchFiles = async () => {
@@ -884,15 +898,17 @@ export default function FilesManagerPage() {
                             <FolderInput className="h-3.5 w-3.5" />
                           </Button>
 
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                            title="Elimina Cartella"
-                            onClick={() => handleDeleteItem(folder)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                              title="Elimina Cartella"
+                              onClick={() => handleDeleteItem(folder)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -974,15 +990,17 @@ export default function FilesManagerPage() {
                             <Download className="h-4 w-4" />
                           </Button>
 
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                            title="Elimina"
-                            onClick={() => handleDeleteItem(f)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                              title="Elimina"
+                              onClick={() => handleDeleteItem(f)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

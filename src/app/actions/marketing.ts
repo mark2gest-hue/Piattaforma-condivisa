@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/supabase/auth-guards'
 import { callGemini } from './ai'
 import { autoIndexToSecondBrain, getKnowledgeItemsAction } from './knowledge'
 import { LESSON_SUMMARIES } from '@/lib/course-data'
@@ -766,6 +767,7 @@ export async function publishPostViaN8nAction(formData: {
 // 6. Elimina campagna marketing
 export async function deleteMarketingCampaignAction(campaignId: string) {
   try {
+    await requireAdmin()
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {

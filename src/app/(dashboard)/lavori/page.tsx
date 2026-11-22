@@ -97,6 +97,7 @@ function SortableTaskItem({
   onExecuteAgent,
   onOpenReview,
   isExecutingAgent,
+  canDelete,
 }: {
   task: TaskWithRelations
   onEdit: (task: TaskWithRelations) => void
@@ -105,6 +106,7 @@ function SortableTaskItem({
   onExecuteAgent?: (task: TaskWithRelations) => void
   onOpenReview?: (task: TaskWithRelations) => void
   isExecutingAgent?: boolean
+  canDelete?: boolean
 }) {
   const {
     attributes,
@@ -153,16 +155,18 @@ function SortableTaskItem({
                   >
                     <Edit2 className="h-3 w-3" />
                   </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onDelete(task.id, task.title)
-                    }}
-                    className="p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
-                    title="Elimina Compito"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  {canDelete && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDelete(task.id, task.title)
+                      }}
+                      className="p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                      title="Elimina Compito"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -346,6 +350,7 @@ export default function KanbanBoardPage() {
   const [mainView, setMainView] = useState<'kanban' | 'projects'>('kanban')
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('all')
   const [currentUserName, setCurrentUserName] = useState<string>('Marco')
+  const [isAdmin, setIsAdmin] = useState(false)
 
   // Task Modal State
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
@@ -416,6 +421,9 @@ export default function KanbanBoardPage() {
         .select('*')
         .eq('id', user.id)
         .single()
+
+      const resolvedRole = (profile as any)?.role || user.user_metadata?.role
+      setIsAdmin(resolvedRole === 'admin' || resolvedRole === 'dev')
 
       if ((profile as any)?.full_name?.trim()) {
         setCurrentUserName(profile.full_name.trim().split(' ')[0])
@@ -951,6 +959,7 @@ export default function KanbanBoardPage() {
                           onExecuteAgent={handleExecuteAgent}
                           onOpenReview={handleOpenReviewModal}
                           executingTaskId={executingTaskId}
+                          canDelete={isAdmin}
                         />
 
                         {/* Add Task Button at bottom of column */}
@@ -1056,15 +1065,17 @@ export default function KanbanBoardPage() {
                         >
                           <Edit2 className="h-3.5 w-3.5" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteProject(proj.id, proj.title)}
-                          className="h-7 w-7 p-0 text-slate-400 hover:text-red-600"
-                          title="Elimina Ambito"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        {isAdmin && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteProject(proj.id, proj.title)}
+                            className="h-7 w-7 p-0 text-slate-400 hover:text-red-600"
+                            title="Elimina Ambito"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1503,6 +1514,7 @@ function SortableColumn({
   onExecuteAgent,
   onOpenReview,
   executingTaskId,
+  canDelete,
 }: {
   colId: TaskStatus
   tasks: TaskWithRelations[]
@@ -1512,6 +1524,7 @@ function SortableColumn({
   onExecuteAgent?: (task: TaskWithRelations) => void
   onOpenReview?: (task: TaskWithRelations) => void
   executingTaskId?: string | null
+  canDelete?: boolean
 }) {
   const { setNodeRef } = useDroppable({
     id: colId,
@@ -1536,6 +1549,7 @@ function SortableColumn({
               onExecuteAgent={onExecuteAgent}
               onOpenReview={onOpenReview}
               isExecutingAgent={executingTaskId === task.id}
+              canDelete={canDelete}
             />
           ))}
         </SortableContext>

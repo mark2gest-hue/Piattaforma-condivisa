@@ -189,10 +189,24 @@ export default function CalendarioPage() {
     setIsDbPickerOpen(false)
   }
 
+  const [isAdmin, setIsAdmin] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
     fetchTasksForCalendar()
+    const checkRole = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data: profile } = await (supabase.from('profiles') as any)
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        const role = profile?.role || user.user_metadata?.role
+        setIsAdmin(role === 'admin' || role === 'dev')
+      } catch {}
+    }
+    checkRole()
   }, [])
 
   const fetchTasksForCalendar = async () => {
@@ -730,15 +744,17 @@ export default function CalendarioPage() {
                       <span className="font-bold text-slate-900 dark:text-white truncate">{ev.title}</span>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {getCategoryBadge(ev.category)}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteEvent(ev.id)}
-                          className="h-6 w-6 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                          title="Elimina Evento"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteEvent(ev.id)}
+                            className="h-6 w-6 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                            title="Elimina Evento"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </div>
 

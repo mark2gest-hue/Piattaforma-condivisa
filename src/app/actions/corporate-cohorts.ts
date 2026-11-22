@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient, createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/supabase/auth-guards'
 import { revalidatePath } from 'next/cache'
 
 export interface CorporateCohort {
@@ -266,7 +267,7 @@ export async function saveCorporateCustomLessonAction(formData: {
  */
 export async function deleteCorporateCustomLessonAction(lessonId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAuthAdmin()
+    await requireAdmin()
     const supabaseAdmin = createAdminClient()
 
     const { error } = await supabaseAdmin
