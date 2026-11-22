@@ -40,7 +40,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
-  const isAuthRoute = pathname.startsWith('/login')
+  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/mfa')
   const isApiRoute = pathname.startsWith('/api')
   const isCorsiRoute = pathname.startsWith('/corsi')
   const isDispenseRoute = pathname.startsWith('/dispense')
@@ -59,12 +59,59 @@ export async function updateSession(request: NextRequest) {
   // NOTA BENE: /cervello è blindato e riservato ESCLUSIVAMENTE al team autenticato (contiene note interne e log)
   const isPublicRoute = isRootRoute || isAcademyRoute || isCorsiRoute || isDispenseRoute || isCorsoBaseRoute || isServiziAiRoute || isZonaCompitiRoute || isGraziaRoute || isAuthRoute || isApiRoute || isN8nScreencastRoute || isPrenotaRoute || isPwaAsset
 
+  // Se l'utente non è autenticato su /mfa in produzione, reindirizza a /login
+  if (!user && pathname.startsWith('/mfa') && process.env.NODE_ENV === 'production') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
   // Se l'utente non è autenticato come membro del team e cerca di accedere a rotte riservate (/lavori, /posta, /chat, /files...),
   // viene reindirizzato a /login (solo in produzione per evitare loop di cookie bloccati nelle webview IDE)
   if (!user && !isPublicRoute && process.env.NODE_ENV === 'production') {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
+  }
+
+  let cachedProfile: { role?: string | null; is_agent?: boolean | null } | null = null
+  const getProfileInfo = async () => {
+    if (cachedProfile !== null || !user) return cachedProfile
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, is_agent')
+        .eq('id', user.id)
+        .single()
+      cachedProfile = (profile as any) || {}
+    } catch {
+      cachedProfile = {}
+    }
+    return cachedProfile
+  }
+
+  // Enforcement 2FA TOTP per utenti umani del team su rotte non pubbliche
+  if (user && !isPublicRoute && !pathname.startsWith('/mfa') && !pathname.startsWith('/login') && !isApiRoute) {
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    const requireMfa =
+      process.env.REQUIRE_TEAM_MFA === 'true' ||
+      process.env.NEXT_PUBLIC_REQUIRE_TEAM_MFA === 'true'
+
+    if (aalData && aalData.currentLevel !== 'aal2') {
+      if (aalData.nextLevel === 'aal2') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/mfa'
+        return NextResponse.redirect(url)
+      }
+      if (requireMfa) {
+        const profile = await getProfileInfo()
+        if (profile?.is_agent !== true) {
+          const url = request.nextUrl.clone()
+          url.pathname = '/mfa'
+          return NextResponse.redirect(url)
+        }
+      }
+    }
   }
 
   // Isolamento Zero-Leak per Collaboratori Esterni (Guest / Collaborator):
@@ -82,17 +129,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/assistenza')
 
   if (user && isInternalOnlyRoute) {
-    let userRole = user.user_metadata?.role
-    if (!userRole) {
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-        userRole = (profile as any)?.role
-      } catch {}
-    }
+    const profile = await getProfileInfo()
+    const userRole = profile?.role || user.user_metadata?.role
 
     if (userRole === 'collaborator') {
       const url = request.nextUrl.clone()

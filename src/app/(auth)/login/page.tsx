@@ -48,10 +48,17 @@ export default function LoginPage() {
       return
     }
 
+    // Controllo MFA TOTP: redirect a /mfa se l'utente ha già 2FA attiva o se la 2FA è richiesta per il team
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    const requireTeamMfa = process.env.NEXT_PUBLIC_REQUIRE_TEAM_MFA === 'true'
+    const shouldRedirectToMfa =
+      aalData?.currentLevel !== 'aal2' &&
+      (aalData?.nextLevel === 'aal2' || requireTeamMfa)
+
     // Login riuscito -> avvia l'animazione di chiusura fluida (fold/shrink) prima del redirect
     setIsClosing(true)
     setTimeout(() => {
-      window.location.href = '/lavori'
+      window.location.href = shouldRedirectToMfa ? '/mfa' : '/lavori'
     }, 600)
   }
 

@@ -2,6 +2,7 @@
 
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/supabase/auth-guards'
 import { autoIndexToSecondBrain } from '@/app/actions/knowledge'
 import { sendEmailWithFallback } from '@/lib/email-sender'
 
@@ -180,6 +181,7 @@ export async function restoreFromTrashBulk(emailIds: string[]) {
  */
 export async function permanentlyDeleteEmails(emailIds: string[]): Promise<{ success: boolean; count?: number; error?: string }> {
   try {
+    await requireAdmin()
     if (!emailIds || emailIds.length === 0) return { success: true, count: 0 }
     const supabase = await createClient()
 

@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/server'
+import { requireAdmin, requireTeamMember } from '@/lib/supabase/auth-guards'
 import { TaskStatus, TaskPriority } from '@/types/database.types'
 import { sendTelegramMessage, escapeHtml } from '@/lib/telegram'
 import { getCurrentUserProfileName } from './notifications'
@@ -59,6 +60,7 @@ export async function createTaskAction(
   input: CreateTaskInput
 ): Promise<{ success: boolean; task?: any; error?: string }> {
   try {
+    await requireTeamMember()
     const supabase = createAdminClient()
     const cleanTitle = input.title.trim()
     if (!cleanTitle) {
@@ -111,6 +113,7 @@ export async function createTaskAction(
 
 export async function updateTaskStatusAction(taskId: string, status: TaskStatus, position?: number) {
   try {
+    await requireTeamMember()
     const supabase = createAdminClient()
 
     // Recupera lo stato attuale del task prima dell'aggiornamento
@@ -192,6 +195,7 @@ export async function updateTaskDetailsAction(
   }
 ): Promise<{ success: boolean; task?: any; error?: string }> {
   try {
+    await requireTeamMember()
     const supabase = createAdminClient()
     const updateData: any = {}
     if (payload.title) updateData.title = payload.title.trim()
@@ -221,6 +225,7 @@ export async function updateTaskDetailsAction(
 
 export async function deleteTaskAction(taskId: string) {
   try {
+    await requireAdmin()
     const supabase = createAdminClient()
     const { error } = await supabase
       .from('tasks')
@@ -242,6 +247,7 @@ export async function createProjectAction(
   description?: string
 ): Promise<{ success: boolean; project?: any; error?: string }> {
   try {
+    await requireTeamMember()
     const supabase = createAdminClient()
     const cleanTitle = title.trim()
     if (!cleanTitle) {
@@ -282,6 +288,7 @@ export async function updateProjectAction(
   payload: { title?: string; description?: string; status?: string; category?: string }
 ): Promise<{ success: boolean; project?: any; error?: string }> {
   try {
+    await requireTeamMember()
     const supabase = createAdminClient()
     const updateData: any = {}
     if (payload.title) updateData.title = payload.title.trim()
@@ -308,6 +315,7 @@ export async function updateProjectAction(
 
 export async function deleteProjectAction(projectId: string) {
   try {
+    await requireAdmin()
     const supabase = createAdminClient()
 
     // Dissocia i task collegati impostando project_id = null
