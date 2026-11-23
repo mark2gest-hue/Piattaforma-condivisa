@@ -72,7 +72,7 @@ import { useRouter } from 'next/navigation'
 
 type EmailWithSender = Email & { senderProfile?: Profile }
 type FolderFilter = 'inbox' | 'sent' | 'unread' | 'archived' | 'trash' | 'all' | string
-type AccountFilter = 'all' | 'impresa@aiutiamoci.cloud' | 'info@aiutiamoci.cloud' | 'team@aiutiamoci.cloud' | 'pagamenti@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mark2.cloud' | 'support@mark2.cloud'
+type AccountFilter = 'all' | 'impresa@aiutiamoci.cloud' | 'info@aiutiamoci.cloud' | 'commerciale@aiutiamoci.cloud' | 'pagamenti@aiutiamoci.cloud' | 'assistenza@aiutiamoci.cloud' | 'info@mark2.cloud' | 'support@mark2.cloud'
 
 function getToArray(to_address: any): string[] {
   if (!to_address) return []
@@ -1128,7 +1128,7 @@ export default function PostaCondivisaPage() {
                   <option value="all">✉️ Tutte le caselle ({emails.length})</option>
                   <option value="impresa@aiutiamoci.cloud">impresa@aiutiamoci.cloud</option>
                   <option value="info@aiutiamoci.cloud">info@aiutiamoci.cloud</option>
-                  <option value="team@aiutiamoci.cloud">team@aiutiamoci.cloud</option>
+                  <option value="commerciale@aiutiamoci.cloud">commerciale@aiutiamoci.cloud</option>
                   <option value="pagamenti@aiutiamoci.cloud">pagamenti@aiutiamoci.cloud</option>
                   <option value="assistenza@aiutiamoci.cloud">assistenza@aiutiamoci.cloud</option>
                   <option value="info@mark2.cloud">info@mark2.cloud</option>
