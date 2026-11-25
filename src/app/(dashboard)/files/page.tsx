@@ -31,7 +31,6 @@ import {
   ArrowDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { formatBytes, formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -703,37 +702,57 @@ export default function FilesManagerPage() {
 
   const renderSortIndicator = (field: 'name' | 'size' | 'created_at') => {
     if (sortBy !== field) {
-      return <ArrowUpDown className="h-3 w-3 text-slate-400 opacity-60 group-hover:opacity-100 ml-1 inline-block" />
+      return <ArrowUpDown className="h-3 w-3 text-zinc-400 opacity-60 group-hover:opacity-100 ml-1 inline-block" />
     }
     return sortOrder === 'asc' ? (
-      <ArrowUp className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 font-bold ml-1 inline-block" />
+      <ArrowUp className="h-3 w-3 text-[#6366f1] ml-1 inline-block" />
     ) : (
-      <ArrowDown className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 font-bold ml-1 inline-block" />
+      <ArrowDown className="h-3 w-3 text-[#6366f1] ml-1 inline-block" />
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <FolderOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+    <div className="h-full flex flex-col overflow-hidden bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5]">
+      {/* Command Bar */}
+      <div className="min-h-[52px] px-5 py-2 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114] flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <FolderOpen className="h-4 w-4 text-[#6366f1] shrink-0" />
+          <h1 className="text-sm font-semibold tracking-tight text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)] truncate">
             File & Risorse Condivise
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Gestione cartelle, file ed risorse con Supabase Storage e permessi RLS.
-          </p>
+          <span className="hidden sm:inline-block text-[11px] font-[family-name:var(--font-mono)] text-zinc-500 dark:text-zinc-400 border-l border-[#e5e3dc] dark:border-white/[0.08] pl-3">
+            {currentLevelItems.length} elementi
+          </span>
         </div>
 
-        {/* Action Buttons: Nuova Cartella + Carica File */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative w-48 sm:w-64">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cerca file o cartelle..."
+              className="w-full h-8 pl-8 pr-7 text-xs rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
           <Button
             onClick={() => setIsFolderModalOpen(true)}
             variant="outline"
-            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-xs font-semibold h-10 px-4 rounded-xl shadow-xs"
+            size="sm"
+            className="h-8 px-3 text-xs font-medium rounded-md border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] flex items-center gap-1.5 cursor-pointer"
           >
-            <FolderPlus className="h-4 w-4 text-amber-500" />
+            <FolderPlus className="h-3.5 w-3.5 text-amber-500" />
             <span>Nuova Cartella</span>
           </Button>
 
@@ -745,16 +764,16 @@ export default function FilesManagerPage() {
               disabled={uploading}
               className="hidden"
             />
-            <span className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs h-10 shadow-xs transition-colors">
+            <span className="h-8 px-3 rounded-md bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] flex items-center gap-1.5 font-medium text-xs transition-colors">
               {uploading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Caricamento...
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Caricamento...</span>
                 </>
               ) : (
                 <>
-                  <UploadCloud className="h-4 w-4" />
-                  Carica File Reale
+                  <UploadCloud className="h-3.5 w-3.5" />
+                  <span>Carica File</span>
                 </>
               )}
             </span>
@@ -762,276 +781,267 @@ export default function FilesManagerPage() {
         </div>
       </div>
 
-      {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-1 text-xs bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-x-auto">
-        <Home className="h-4 w-4 text-slate-400 shrink-0" />
-        {breadcrumbs.map((crumb, idx) => {
-          const isLast = idx === breadcrumbs.length - 1
-          return (
-            <div key={crumb.id || 'root'} className="flex items-center gap-1 shrink-0">
-              {idx > 0 && <ChevronRight className="h-3.5 w-3.5 text-slate-400" />}
-              <button
-                onClick={() => handleNavigateBreadcrumb(idx)}
-                disabled={isLast}
-                className={`font-semibold hover:underline transition-colors ${isLast
-                    ? 'text-slate-900 dark:text-white font-bold cursor-default'
-                    : 'text-blue-600 dark:text-blue-400'
+      {/* Path Breadcrumb Strip */}
+      <div className="min-h-[40px] px-5 py-1.5 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] flex items-center justify-between gap-4 shrink-0 overflow-x-auto">
+        <div className="flex items-center gap-1.5 text-xs min-w-0">
+          <Home className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+          {breadcrumbs.map((crumb, idx) => {
+            const isLast = idx === breadcrumbs.length - 1
+            return (
+              <div key={crumb.id || 'root'} className="flex items-center gap-1.5 shrink-0">
+                {idx > 0 && <ChevronRight className="h-3 w-3 text-zinc-400" />}
+                <button
+                  type="button"
+                  onClick={() => handleNavigateBreadcrumb(idx)}
+                  disabled={isLast}
+                  className={`font-medium transition-colors ${
+                    isLast
+                      ? 'text-[#111113] dark:text-[#f4f4f5] font-semibold cursor-default'
+                      : 'text-[#6366f1] hover:underline cursor-pointer'
                   }`}
-              >
-                {crumb.name}
-              </button>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Search & Stats Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 px-2">
-          Elementi in questa sezione: <strong className="text-slate-900 dark:text-white ml-1">{currentLevelItems.length}</strong>
+                >
+                  {crumb.name}
+                </button>
+              </div>
+            )
+          })}
         </div>
 
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cerca file o cartelle..."
-            className="w-full h-8 pl-9 pr-3 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        <span className="text-[11px] font-[family-name:var(--font-mono)] text-zinc-500 dark:text-zinc-400 shrink-0">
+          {currentFolders.length} cartelle · {currentFiles.length} file
+        </span>
       </div>
 
-      {/* Table List (Folders & Files) */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+      {/* Drive Area Full-Bleed */}
+      <div className="flex-1 min-h-0 overflow-y-auto bg-[#ffffff] dark:bg-[#111114]">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none">
-                <th
-                  onClick={() => handleToggleSort('name')}
-                  className="py-3 px-4 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-colors group"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Nome Elemento</span>
-                    {renderSortIndicator('name')}
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleToggleSort('size')}
-                  className="py-3 px-4 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-colors group"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Tipo / Dimensione</span>
-                    {renderSortIndicator('size')}
-                  </div>
-                </th>
-                <th className="py-3 px-4">Creato Da</th>
-                <th
-                  onClick={() => handleToggleSort('created_at')}
-                  className="py-3 px-4 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-colors group"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Data</span>
-                    {renderSortIndicator('created_at')}
-                  </div>
-                </th>
-                <th className="py-3 px-4 text-right">Azioni</th>
+          <thead className="sticky top-0 z-10">
+            <tr className="border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[10px] font-[family-name:var(--font-mono)] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider select-none">
+              <th
+                onClick={() => handleToggleSort('name')}
+                className="py-2.5 px-5 cursor-pointer hover:bg-[#e5e3dc]/40 dark:hover:bg-white/[0.04] transition-colors group"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Nome Elemento</span>
+                  {renderSortIndicator('name')}
+                </div>
+              </th>
+              <th
+                onClick={() => handleToggleSort('size')}
+                className="py-2.5 px-4 cursor-pointer hover:bg-[#e5e3dc]/40 dark:hover:bg-white/[0.04] transition-colors group"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Dimensione</span>
+                  {renderSortIndicator('size')}
+                </div>
+              </th>
+              <th className="py-2.5 px-4">Creato Da</th>
+              <th
+                onClick={() => handleToggleSort('created_at')}
+                className="py-2.5 px-4 cursor-pointer hover:bg-[#e5e3dc]/40 dark:hover:bg-white/[0.04] transition-colors group"
+              >
+                <div className="flex items-center gap-1">
+                  <span>Data</span>
+                  {renderSortIndicator('created_at')}
+                </div>
+              </th>
+              <th className="py-2.5 px-5 text-right">Azioni</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#e5e3dc] dark:divide-white/[0.08] text-xs text-[#111113] dark:text-zinc-300">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="py-16 text-center">
+                  <Loader2 className="h-5 w-5 text-[#6366f1] animate-spin mx-auto" />
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-300">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center">
-                    <Loader2 className="h-6 w-6 text-blue-600 animate-spin mx-auto" />
-                  </td>
-                </tr>
-              ) : currentLevelItems.length > 0 ? (
-                <>
-                  {/* Rendering Cartelle */}
-                  {currentFolders.map((folder) => (
-                    <tr
-                      key={folder.id}
-                      onClick={() => handleOpenFolder(folder)}
-                      className="hover:bg-amber-50/50 dark:hover:bg-amber-950/20 cursor-pointer transition-colors group"
-                    >
-                      <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                        <div className="flex items-center gap-2.5">
-                          {getFileIcon('folder')}
-                          <span className="truncate max-w-xs group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                            {folder.name}
-                          </span>
-                          <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-200 bg-amber-50">
-                            Cartella
-                          </Badge>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-400 font-mono">
-                        —
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300 font-medium">
-                        {folder.uploader?.full_name || 'Membro del Team'}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">
-                        {formatDate(folder.created_at)}
-                      </td>
-                      <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
+            ) : currentLevelItems.length > 0 ? (
+              <>
+                {/* Rendering Cartelle */}
+                {currentFolders.map((folder) => (
+                  <tr
+                    key={folder.id}
+                    onClick={() => handleOpenFolder(folder)}
+                    className="hover:bg-[#f7f6f3] dark:hover:bg-white/[0.03] cursor-pointer transition-colors group"
+                  >
+                    <td className="py-3 px-5 font-medium text-[#111113] dark:text-[#f4f4f5]">
+                      <div className="flex items-center gap-2.5">
+                        {getFileIcon('folder')}
+                        <span className="truncate max-w-xs group-hover:text-[#6366f1] transition-colors">
+                          {folder.name}
+                        </span>
+                        <span className="text-[10px] font-[family-name:var(--font-mono)] px-1.5 py-0.5 rounded border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-zinc-500 dark:text-zinc-400">
+                          Cartella
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-zinc-400 font-[family-name:var(--font-mono)]">
+                      —
+                    </td>
+                    <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">
+                      {folder.uploader?.full_name || 'Membro del Team'}
+                    </td>
+                    <td className="py-3 px-4 text-zinc-500 dark:text-zinc-400 font-[family-name:var(--font-mono)] text-[11px]">
+                      {formatDate(folder.created_at)}
+                    </td>
+                    <td className="py-3 px-5 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-zinc-500 hover:text-amber-500"
+                          title="Rinomina Cartella"
+                          onClick={() => handleOpenRenameModal(folder)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-zinc-500 hover:text-[#6366f1]"
+                          title="Sposta Cartella"
+                          onClick={() => handleOpenMoveModal(folder)}
+                        >
+                          <FolderInput className="h-3.5 w-3.5" />
+                        </Button>
+
+                        {isAdmin && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400"
-                            title="Rinomina Cartella"
-                            onClick={() => handleOpenRenameModal(folder)}
+                            className="h-7 w-7 text-zinc-400 hover:text-red-500"
+                            title="Elimina Cartella"
+                            onClick={() => handleDeleteItem(folder)}
                           >
-                            <Pencil className="h-3.5 w-3.5" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
 
+                {/* Rendering File */}
+                {currentFiles.map((f) => (
+                  <tr
+                    key={f.id}
+                    onClick={() => handlePreviewFile(f)}
+                    className="hover:bg-[#f7f6f3] dark:hover:bg-white/[0.03] cursor-pointer transition-colors group"
+                  >
+                    <td className="py-3 px-5 font-medium text-[#111113] dark:text-[#f4f4f5]">
+                      <div className="flex items-center gap-2.5">
+                        {getFileIcon(f.mime_type)}
+                        <span className="truncate max-w-xs group-hover:text-[#6366f1] transition-colors">
+                          {f.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-zinc-500 dark:text-zinc-400 font-[family-name:var(--font-mono)] text-[11px]">
+                      {formatBytes(f.size_bytes)}
+                    </td>
+                    <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">
+                      {f.uploader?.full_name || 'Membro del Team'}
+                    </td>
+                    <td className="py-3 px-4 text-zinc-500 dark:text-zinc-400 font-[family-name:var(--font-mono)] text-[11px]">
+                      {formatDate(f.created_at)}
+                    </td>
+                    <td className="py-3 px-5 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-[#6366f1] hover:bg-[#6366f1]/10"
+                          title="Sintetizza / Analizza con AI"
+                          onClick={() => handleStartAiAnalysis(f)}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-zinc-500 hover:text-[#6366f1]"
+                          title="Visualizza / Anteprima"
+                          onClick={() => handlePreviewFile(f)}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-zinc-500 hover:text-amber-500"
+                          title="Rinomina File"
+                          onClick={() => handleOpenRenameModal(f)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-zinc-500 hover:text-[#6366f1]"
+                          title="Sposta File"
+                          onClick={() => handleOpenMoveModal(f)}
+                        >
+                          <FolderInput className="h-3.5 w-3.5" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-zinc-500 hover:text-emerald-500"
+                          title="Scarica"
+                          onClick={() => handleDownloadFile(f)}
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </Button>
+
+                        {isAdmin && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
-                            title="Sposta Cartella"
-                            onClick={() => handleOpenMoveModal(folder)}
+                            className="h-7 w-7 text-zinc-400 hover:text-red-500"
+                            title="Elimina"
+                            onClick={() => handleDeleteItem(f)}
                           >
-                            <FolderInput className="h-3.5 w-3.5" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
-
-                          {isAdmin && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                              title="Elimina Cartella"
-                              onClick={() => handleDeleteItem(folder)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-
-                  {/* Rendering File */}
-                  {currentFiles.map((f) => (
-                    <tr
-                      key={f.id}
-                      onClick={() => handlePreviewFile(f)}
-                      className="hover:bg-blue-50/50 dark:hover:bg-blue-950/20 cursor-pointer transition-colors group"
-                    >
-                      <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">
-                        <div className="flex items-center gap-2.5">
-                          {getFileIcon(f.mime_type)}
-                          <span className="truncate max-w-xs group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors font-medium">
-                            {f.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 font-mono">
-                        {formatBytes(f.size_bytes)}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300 font-medium">
-                        {f.uploader?.full_name || 'Membro del Team'}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">
-                        {formatDate(f.created_at)}
-                      </td>
-                      <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-purple-600 hover:text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30"
-                            title="Sintetizza / Analizza con AI"
-                            onClick={() => handleStartAiAnalysis(f)}
-                          >
-                            <Sparkles className="h-4 w-4" />
-                          </Button>
-
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
-                            title="Visualizza / Anteprima"
-                            onClick={() => handlePreviewFile(f)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-slate-500 hover:text-amber-600 dark:hover:text-amber-400"
-                            title="Rinomina File"
-                            onClick={() => handleOpenRenameModal(f)}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"
-                            title="Sposta File"
-                            onClick={() => handleOpenMoveModal(f)}
-                          >
-                            <FolderInput className="h-3.5 w-3.5" />
-                          </Button>
-
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400"
-                            title="Scarica"
-                            onClick={() => handleDownloadFile(f)}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-
-                          {isAdmin && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                              title="Elimina"
-                              onClick={() => handleDeleteItem(f)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </>
-              ) : (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-xs text-slate-400">
-                    Questa sezione è vuota. Crea una cartella o carica un file con i pulsanti in alto!
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </>
+            ) : null}
+          </tbody>
+        </table>
         </div>
+        {!loading && currentFolders.length === 0 && currentFiles.length === 0 && (
+          <div className="px-5 py-14 text-center max-w-full text-xs text-zinc-500 dark:text-zinc-400">
+            Questa sezione è vuota. Crea una cartella o carica un file dalla barra superiore.
+          </div>
+        )}
       </div>
 
       {/* Modal Nuova Cartella */}
       {isFolderModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-4">
+          <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg w-full max-w-sm border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
               <div className="flex items-center gap-2">
-                <FolderPlus className="h-5 w-5 text-amber-500" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuova Cartella</h3>
+                <FolderPlus className="h-4 w-4 text-[#6366f1]" />
+                <h3 className="font-semibold text-sm text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
+                  Nuova Cartella
+                </h3>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsFolderModalOpen(false)}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="h-7 w-7 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -1039,22 +1049,31 @@ export default function FilesManagerPage() {
 
             <form onSubmit={handleCreateFolder} className="p-5 space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Nome Cartella *</label>
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">Nome Cartella *</label>
                 <Input
                   autoFocus
                   required
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
                   placeholder="Es. Corsi 2026, Agenti AI, Documenti Clienti"
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                  className="text-xs h-9 bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <Button type="button" variant="outline" onClick={() => setIsFolderModalOpen(false)}>
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e5e3dc] dark:border-white/[0.08]">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsFolderModalOpen(false)}
+                  className="h-8 text-xs border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417]"
+                >
                   Annulla
                 </Button>
-                <Button type="submit" disabled={isCreatingFolder} className="bg-amber-600 hover:bg-amber-700 text-white">
+                <Button
+                  type="submit"
+                  disabled={isCreatingFolder}
+                  className="h-8 text-xs bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium"
+                >
                   {isCreatingFolder ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
@@ -1072,12 +1091,12 @@ export default function FilesManagerPage() {
 
       {/* Modal Rinomina Elemento (Cartella o File) */}
       {isRenameModalOpen && itemToRename && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-4">
+          <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg w-full max-w-sm border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
               <div className="flex items-center gap-2">
-                <Pencil className="h-4 w-4 text-amber-500" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                <Pencil className="h-4 w-4 text-[#6366f1]" />
+                <h3 className="font-semibold text-sm text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
                   Rinomina {itemToRename.mime_type === 'folder' ? 'Cartella' : 'File'}
                 </h3>
               </div>
@@ -1088,7 +1107,7 @@ export default function FilesManagerPage() {
                   setIsRenameModalOpen(false)
                   setItemToRename(null)
                 }}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="h-7 w-7 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -1096,7 +1115,7 @@ export default function FilesManagerPage() {
 
             <form onSubmit={handleRenameItem} className="p-5 space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">
                   Nuovo Nome *
                 </label>
                 <Input
@@ -1105,11 +1124,11 @@ export default function FilesManagerPage() {
                   value={newRenameName}
                   onChange={(e) => setNewRenameName(e.target.value)}
                   placeholder="Inserisci il nuovo nome"
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                  className="text-xs h-9 bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e5e3dc] dark:border-white/[0.08]">
                 <Button
                   type="button"
                   variant="outline"
@@ -1117,13 +1136,14 @@ export default function FilesManagerPage() {
                     setIsRenameModalOpen(false)
                     setItemToRename(null)
                   }}
+                  className="h-8 text-xs border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417]"
                 >
                   Annulla
                 </Button>
                 <Button
                   type="submit"
                   disabled={isRenaming || !newRenameName.trim() || newRenameName.trim() === itemToRename.name}
-                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                  className="h-8 text-xs bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium"
                 >
                   {isRenaming ? (
                     <>
@@ -1142,12 +1162,12 @@ export default function FilesManagerPage() {
 
       {/* Modal Sposta Elemento (Cartella o File) */}
       {isMoveModalOpen && itemToMove && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-4">
+          <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg w-full max-w-sm border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
               <div className="flex items-center gap-2">
-                <FolderInput className="h-4 w-4 text-blue-500" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                <FolderInput className="h-4 w-4 text-[#6366f1]" />
+                <h3 className="font-semibold text-sm text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
                   Sposta {itemToMove.mime_type === 'folder' ? 'Cartella' : 'File'}
                 </h3>
               </div>
@@ -1158,7 +1178,7 @@ export default function FilesManagerPage() {
                   setIsMoveModalOpen(false)
                   setItemToMove(null)
                 }}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="h-7 w-7 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -1166,43 +1186,41 @@ export default function FilesManagerPage() {
 
             <form onSubmit={handleMoveItem} className="p-5 space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">
                   Elemento selezionato:
                 </label>
-                <div className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium text-slate-800 dark:text-slate-200 truncate flex items-center gap-2">
+                <div className="p-2.5 rounded-md bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] font-medium text-[#111113] dark:text-[#f4f4f5] truncate flex items-center gap-2">
                   {getFileIcon(itemToMove.mime_type)}
                   <span className="truncate">{itemToMove.name}</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">
                   Seleziona Destinazione *
                 </label>
                 <select
                   value={targetDestinationId}
                   onChange={(e) => setTargetDestinationId(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-9 px-3 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] text-xs focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
                 >
-                  <option value="root">📁 Archivio Principale (Root)</option>
+                  <option value="root">Archivio Principale (Root)</option>
                   {files
                     .filter((f) => {
                       if (f.mime_type !== 'folder') return false
-                      // Non può essere spostata dentro se stessa
                       if (f.id === itemToMove.id) return false
-                      // Non può essere spostata dentro una cartella che è figlia di se stessa
                       if (itemToMove.mime_type === 'folder' && f.storage_path.startsWith(`${itemToMove.id}/`)) return false
                       return true
                     })
                     .map((folder) => (
                       <option key={folder.id} value={folder.id}>
-                        📂 {folder.name}
+                        {folder.name}
                       </option>
                     ))}
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e5e3dc] dark:border-white/[0.08]">
                 <Button
                   type="button"
                   variant="outline"
@@ -1210,13 +1228,14 @@ export default function FilesManagerPage() {
                     setIsMoveModalOpen(false)
                     setItemToMove(null)
                   }}
+                  className="h-8 text-xs border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417]"
                 >
                   Annulla
                 </Button>
                 <Button
                   type="submit"
                   disabled={isMoving}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="h-8 text-xs bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium"
                 >
                   {isMoving ? (
                     <>
@@ -1235,31 +1254,31 @@ export default function FilesManagerPage() {
 
       {/* Modal Anteprima File senza scaricare */}
       {previewFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-5xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+          <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg w-full max-w-5xl border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden flex flex-col max-h-[92vh]">
 
             {/* Modal Header */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-              <div className="flex items-center gap-3">
+            <div className="px-5 py-3.5 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
+              <div className="flex items-center gap-3 min-w-0">
                 {getFileIcon(previewFile.mime_type)}
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate max-w-md">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-sm text-[#111113] dark:text-[#f4f4f5] truncate max-w-md font-[family-name:var(--font-jakarta)]">
                     {previewFile.name}
                   </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {formatBytes(previewFile.size_bytes)} • Caricato da {previewFile.uploader?.full_name || 'Team'}
+                  <p className="text-[11px] font-[family-name:var(--font-mono)] text-zinc-500 dark:text-zinc-400">
+                    {formatBytes(previewFile.size_bytes)} · Caricato da {previewFile.uploader?.full_name || 'Team'}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleStartAiAnalysis(previewFile)}
-                  className="text-xs gap-1.5 h-8 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-100 font-semibold"
+                  className="text-xs gap-1.5 h-8 bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/30 hover:bg-[#6366f1]/15 font-medium"
                 >
-                  <Sparkles className="h-3.5 w-3.5 text-purple-600" />
+                  <Sparkles className="h-3.5 w-3.5" />
                   Sintetizza con AI
                 </Button>
 
@@ -1268,7 +1287,7 @@ export default function FilesManagerPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => window.open(previewUrl, '_blank')}
-                    className="text-xs gap-1.5 h-8 bg-white dark:bg-slate-800 font-semibold text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                    className="text-xs gap-1.5 h-8 bg-[#ffffff] dark:bg-[#141417] font-medium text-[#111113] dark:text-[#f4f4f5] border-[#e5e3dc] dark:border-white/[0.08]"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                     Apri a Schermo Intero
@@ -1278,7 +1297,7 @@ export default function FilesManagerPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setPreviewFile(null)}
-                  className="h-8 w-8 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                  className="h-8 w-8 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -1286,10 +1305,10 @@ export default function FilesManagerPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-4 flex-1 overflow-auto flex items-center justify-center min-h-[400px] bg-slate-100 dark:bg-slate-950">
+            <div className="p-4 flex-1 overflow-auto flex items-center justify-center min-h-[400px] bg-[#f7f6f3] dark:bg-[#0d0d0f]">
               {previewLoading ? (
-                <div className="flex flex-col items-center gap-2 text-slate-400">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <div className="flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400">
+                  <Loader2 className="h-7 w-7 animate-spin text-[#6366f1]" />
                   <span className="text-xs">Generazione anteprima in corso...</span>
                 </div>
               ) : previewUrl ? (
@@ -1297,30 +1316,30 @@ export default function FilesManagerPage() {
                   <img
                     src={previewUrl}
                     alt={previewFile.name}
-                    className="max-h-[70vh] w-auto max-w-full rounded-lg shadow-md object-contain"
+                    className="max-h-[70vh] w-auto max-w-full rounded-md border border-[#e5e3dc] dark:border-white/[0.08] object-contain"
                   />
                 ) : previewFile.mime_type.includes('pdf') ? (
                   <iframe
                     src={previewUrl}
                     title={previewFile.name}
-                    className="w-full h-[72vh] rounded-xl border border-slate-200 dark:border-slate-800 shadow-md bg-white"
+                    className="w-full h-[72vh] rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-white"
                   />
                 ) : isDocxFile(previewFile) ? (
-                  <div className="w-full h-[72vh] flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 shadow-md bg-white overflow-hidden">
+                  <div className="w-full h-[72vh] flex flex-col rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-white overflow-hidden">
                     {docxRendering && (
-                      <div className="flex items-center justify-center p-8 gap-2 text-slate-500">
-                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                      <div className="flex items-center justify-center p-8 gap-2 text-zinc-500">
+                        <Loader2 className="h-5 w-5 animate-spin text-[#6366f1]" />
                         <span className="text-xs">Formattazione documento Word in corso...</span>
                       </div>
                     )}
                     {docxError && (
                       <div className="p-6 text-center text-red-500 text-xs">
                         <p className="font-semibold mb-1">Non è stato possibile renderizzare il documento Word direttamente a schermo.</p>
-                        <p className="text-slate-400 mb-3">{docxError}</p>
+                        <p className="text-zinc-500 mb-3">{docxError}</p>
                         <Button
                           size="sm"
                           onClick={() => window.open(previewUrl, '_blank')}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5"
+                          className="bg-[#111113] text-white text-xs gap-1.5"
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
                           Scarica / Apri Documento
@@ -1329,19 +1348,19 @@ export default function FilesManagerPage() {
                     )}
                     <div
                       ref={docxContainerRef}
-                      className="flex-1 overflow-auto p-4 bg-slate-50 text-slate-900"
+                      className="flex-1 overflow-auto p-4 bg-[#f7f6f3] text-[#111113]"
                     />
                   </div>
                 ) : isTextFile(previewFile) ? (
-                  <div className="w-full h-[75vh] flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 shadow-md bg-white dark:bg-slate-900 overflow-hidden">
+                  <div className="w-full h-[75vh] flex flex-col rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114] overflow-hidden">
                     {/* Header barra strumenti Markdown */}
-                    <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700/60 text-xs">
+                    <div className="flex items-center justify-between px-4 py-2 bg-[#f7f6f3] dark:bg-[#141417] border-b border-[#e5e3dc] dark:border-white/[0.08] text-xs">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-mono text-[10px] uppercase">
+                        <span className="px-2 py-0.5 rounded border border-[#6366f1]/30 bg-[#6366f1]/10 text-[#6366f1] font-[family-name:var(--font-mono)] text-[10px] uppercase">
                           {previewFile.name.endsWith('.md') ? 'MARKDOWN DOCUMENT' : 'PLAIN TEXT'}
-                        </Badge>
-                        <span className="text-slate-400 dark:text-slate-500">•</span>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        </span>
+                        <span className="text-zinc-400">·</span>
+                        <span className="text-[11px] font-[family-name:var(--font-mono)] text-zinc-500 dark:text-zinc-400">
                           {formatBytes(previewFile.size_bytes)}
                         </span>
                       </div>
@@ -1352,7 +1371,7 @@ export default function FilesManagerPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setMarkdownRawView(!markdownRawView)}
-                            className="h-7 text-xs px-2.5 font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
+                            className="h-7 text-xs px-2.5 font-medium text-zinc-600 dark:text-zinc-300 hover:text-[#6366f1]"
                           >
                             <FileCode className="h-3.5 w-3.5 mr-1" />
                             {markdownRawView ? 'Vista Renderizzata' : 'Sorgente Markdown'}
@@ -1368,12 +1387,12 @@ export default function FilesManagerPage() {
                               setTimeout(() => setMarkdownCopied(false), 2000)
                             }
                           }}
-                          className="h-7 text-xs px-2.5 font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
+                          className="h-7 text-xs px-2.5 font-medium text-zinc-600 dark:text-zinc-300 hover:text-[#6366f1]"
                         >
                           {markdownCopied ? (
                             <>
                               <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-500" />
-                              <span className="text-emerald-500">Copiato!</span>
+                              <span className="text-emerald-500">Copiato</span>
                             </>
                           ) : (
                             <>
@@ -1386,52 +1405,52 @@ export default function FilesManagerPage() {
                     </div>
 
                     {/* Contenitore Testo / Markdown */}
-                    <div className="flex-1 overflow-auto p-6 md:p-8 bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="flex-1 overflow-auto p-6 md:p-8 bg-[#f7f6f3] dark:bg-[#0d0d0f]">
                       {markdownLoading ? (
-                        <div className="flex flex-col items-center justify-center h-full p-8 gap-2 text-slate-500">
-                          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                        <div className="flex flex-col items-center justify-center h-full p-8 gap-2 text-zinc-500">
+                          <Loader2 className="h-5 w-5 animate-spin text-[#6366f1]" />
                           <span className="text-xs">Caricamento documento in corso...</span>
                         </div>
                       ) : markdownContent ? (
                         markdownRawView ? (
-                          <pre className="text-xs font-mono whitespace-pre-wrap break-words text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-inner">
+                          <pre className="text-xs font-[family-name:var(--font-mono)] whitespace-pre-wrap break-words text-[#111113] dark:text-zinc-200 bg-[#ffffff] dark:bg-[#111114] p-4 rounded-md border border-[#e5e3dc] dark:border-white/[0.08]">
                             {markdownContent}
                           </pre>
                         ) : (
-                          <div className="max-w-4xl mx-auto bg-white dark:bg-slate-950 p-6 md:p-10 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm text-slate-800 dark:text-slate-100 text-sm leading-relaxed space-y-4 font-sans">
+                          <div className="max-w-4xl mx-auto bg-[#ffffff] dark:bg-[#111114] p-6 md:p-10 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] text-[#111113] dark:text-zinc-200 text-sm leading-relaxed space-y-4">
                             {markdownContent.split('\n\n').map((block, idx) => {
                               const trimmed = block.trim()
                               if (trimmed.startsWith('# ')) {
                                 return (
-                                  <h1 key={idx} className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2 pt-2">
+                                  <h1 key={idx} className="text-2xl font-bold tracking-tight text-[#111113] dark:text-[#f4f4f5] border-b border-[#e5e3dc] dark:border-white/[0.08] pb-2 pt-2 font-[family-name:var(--font-jakarta)]">
                                     {trimmed.replace(/^#\s+/, '')}
                                   </h1>
                                 )
                               }
                               if (trimmed.startsWith('## ')) {
                                 return (
-                                  <h2 key={idx} className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100/60 dark:border-slate-800/60 pb-1.5 pt-3">
+                                  <h2 key={idx} className="text-lg font-semibold text-[#111113] dark:text-[#f4f4f5] border-b border-[#e5e3dc] dark:border-white/[0.08] pb-1.5 pt-3 font-[family-name:var(--font-jakarta)]">
                                     {trimmed.replace(/^##\s+/, '')}
                                   </h2>
                                 )
                               }
                               if (trimmed.startsWith('### ')) {
                                 return (
-                                  <h3 key={idx} className="text-base font-semibold text-slate-800 dark:text-slate-200 pt-2">
+                                  <h3 key={idx} className="text-base font-semibold text-[#111113] dark:text-zinc-200 pt-2">
                                     {trimmed.replace(/^###\s+/, '')}
                                   </h3>
                                 )
                               }
                               if (trimmed.startsWith('> ')) {
                                 return (
-                                  <blockquote key={idx} className="border-l-4 border-blue-500/80 bg-blue-50/50 dark:bg-blue-950/30 p-3 rounded-r-lg text-xs italic text-slate-700 dark:text-slate-300 my-2">
+                                  <blockquote key={idx} className="border-l-2 border-[#6366f1] bg-[#f7f6f3] dark:bg-[#141417] p-3 text-xs italic text-zinc-700 dark:text-zinc-300 my-2">
                                     {trimmed.replace(/^>\s+/, '')}
                                   </blockquote>
                                 )
                               }
                               if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
                                 return (
-                                  <ul key={idx} className="list-disc pl-5 space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                                  <ul key={idx} className="list-disc pl-5 space-y-1.5 text-xs text-zinc-700 dark:text-zinc-300">
                                     {trimmed.split('\n').map((li, lIdx) => (
                                       <li key={lIdx}>{li.replace(/^[-*]\s+/, '')}</li>
                                     ))}
@@ -1442,13 +1461,13 @@ export default function FilesManagerPage() {
                                 const lines = trimmed.split('\n')
                                 const code = lines.slice(1, -1).join('\n')
                                 return (
-                                  <pre key={idx} className="bg-slate-900 text-slate-100 p-3.5 rounded-lg text-xs font-mono overflow-x-auto my-2 border border-slate-800">
+                                  <pre key={idx} className="bg-[#0d0d0f] text-[#f4f4f5] p-3.5 rounded-md text-xs font-[family-name:var(--font-mono)] overflow-x-auto my-2 border border-white/[0.08]">
                                     <code>{code}</code>
                                   </pre>
                                 )
                               }
                               return (
-                                <p key={idx} className="text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line">
+                                <p key={idx} className="text-xs leading-relaxed text-zinc-700 dark:text-zinc-300 whitespace-pre-line">
                                   {trimmed}
                                 </p>
                               )
@@ -1456,32 +1475,32 @@ export default function FilesManagerPage() {
                           </div>
                         )
                       ) : (
-                        <div className="text-center p-8 text-slate-400 text-xs">
+                        <div className="text-center p-8 text-zinc-400 text-xs">
                           Documento vuoto o nessun testo disponibile.
                         </div>
                       )}
                     </div>
                   </div>
                 ) : previewFile.mime_type.includes('video') ? (
-                  <video src={previewUrl} controls className="w-full max-h-[70vh] rounded-lg shadow-md" />
+                  <video src={previewUrl} controls className="w-full max-h-[70vh] rounded-md border border-[#e5e3dc] dark:border-white/[0.08]" />
                 ) : previewFile.mime_type.includes('audio') ? (
                   <audio src={previewUrl} controls className="w-full p-4" />
                 ) : (
                   <div className="text-center space-y-4 p-8 max-w-sm">
-                    <div className="h-16 w-16 rounded-2xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
+                    <div className="h-12 w-12 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] flex items-center justify-center mx-auto">
                       {getFileIcon(previewFile.mime_type)}
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                      <p className="text-sm font-semibold text-[#111113] dark:text-[#f4f4f5]">
                         Anteprima integrata non disponibile per questo formato
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
                         Puoi aprire il file direttamente in una scheda del browser senza scaricarlo sul computer.
                       </p>
                     </div>
                     <Button
                       onClick={() => window.open(previewUrl, '_blank')}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-2"
+                      className="bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] text-xs gap-2"
                     >
                       <ExternalLink className="h-4 w-4" />
                       Visualizza nel Browser
@@ -1489,7 +1508,7 @@ export default function FilesManagerPage() {
                   </div>
                 )
               ) : (
-                <div className="text-xs text-red-400">
+                <div className="text-xs text-red-500">
                   Impossibile caricare l’anteprima del file.
                 </div>
               )}
@@ -1501,19 +1520,21 @@ export default function FilesManagerPage() {
       {/* Modal Analisi Documentale AI (Nemotron NIM) */}
       {isAiModalOpen && selectedFileForAi && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-purple-200 dark:border-purple-900/60 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg w-full max-w-2xl border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden flex flex-col max-h-[90vh]">
             {/* Header */}
-            <div className="p-4 border-b border-purple-100 dark:border-purple-900/40 bg-purple-50/50 dark:bg-purple-950/20 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs">
+            <div className="px-5 py-3.5 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-8 w-8 rounded-md bg-[#6366f1] text-white flex items-center justify-center shrink-0">
                   <Bot className="h-4 w-4" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-sm text-[#111113] dark:text-[#f4f4f5] flex items-center gap-2 font-[family-name:var(--font-jakarta)]">
                     Analisi Documentale Nemotron AI
-                    <Badge variant="purple" className="text-[9px]">550B NIM</Badge>
+                    <span className="text-[10px] font-[family-name:var(--font-mono)] px-1.5 py-0.5 rounded border border-[#6366f1]/30 bg-[#6366f1]/10 text-[#6366f1]">
+                      550B NIM
+                    </span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-sm">
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate max-w-sm">
                     {selectedFileForAi.name}
                   </p>
                 </div>
@@ -1523,7 +1544,7 @@ export default function FilesManagerPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsAiModalOpen(false)}
-                className="h-8 w-8 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="h-8 w-8 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -1533,12 +1554,12 @@ export default function FilesManagerPage() {
             <div className="p-5 overflow-y-auto space-y-4 text-xs">
               {aiAnalyzing ? (
                 <div className="py-16 flex flex-col items-center justify-center text-center space-y-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                  <Loader2 className="h-7 w-7 animate-spin text-[#6366f1]" />
                   <div>
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                    <p className="text-sm font-semibold text-[#111113] dark:text-[#f4f4f5]">
                       Nemotron sta analizzando il documento...
                     </p>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                       Estrazione concetti, punti salienti e proposte operative per il team.
                     </p>
                   </div>
@@ -1546,26 +1567,26 @@ export default function FilesManagerPage() {
               ) : aiAnalysisResult ? (
                 <div className="space-y-4">
                   {/* Sintesi */}
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                  <div className="p-4 rounded-md bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] space-y-1.5">
+                    <span className="text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-[#6366f1] flex items-center gap-1.5">
                       <Sparkles className="h-3.5 w-3.5" />
                       Sintesi Esecutiva
                     </span>
-                    <p className="text-xs leading-relaxed text-slate-800 dark:text-slate-200">
+                    <p className="text-xs leading-relaxed text-[#111113] dark:text-zinc-200">
                       {aiAnalysisResult.summary}
                     </p>
                   </div>
 
                   {/* Punti Chiave */}
                   {aiAnalysisResult.keyPoints.length > 0 && (
-                    <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        📌 Punti Salienti & Dati Rilevanti
+                    <div className="p-4 rounded-md bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08] space-y-2">
+                      <span className="text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        Punti Salienti & Dati Rilevanti
                       </span>
                       <ul className="space-y-1.5">
                         {aiAnalysisResult.keyPoints.map((pt, i) => (
-                          <li key={i} className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
-                            <span className="h-1.5 w-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0" />
+                          <li key={i} className="flex items-start gap-2 text-zinc-700 dark:text-zinc-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#6366f1] mt-1.5 shrink-0" />
                             <span className="leading-normal">{pt}</span>
                           </li>
                         ))}
@@ -1574,19 +1595,21 @@ export default function FilesManagerPage() {
                   )}
 
                   {/* Proposta Compito per /lavori */}
-                  <div className="p-4 rounded-xl bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-800/50 space-y-2">
+                  <div className="p-4 rounded-md bg-[#6366f1]/[0.05] dark:bg-[#6366f1]/[0.08] border border-[#6366f1]/25 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                      <span className="text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-[#6366f1] flex items-center gap-1.5">
                         <ListPlus className="h-3.5 w-3.5" />
                         Compito Consigliato per il Team
                       </span>
-                      <Badge variant="purple" className="text-[9px]">Priorità Alta</Badge>
+                      <span className="text-[10px] font-[family-name:var(--font-mono)] px-1.5 py-0.5 rounded border border-[#6366f1]/30 bg-[#6366f1]/10 text-[#6366f1]">
+                        Priorità Alta
+                      </span>
                     </div>
-                    <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-purple-100 dark:border-purple-900/40">
-                      <h4 className="font-bold text-slate-900 dark:text-white text-xs">
+                    <div className="bg-[#ffffff] dark:bg-[#111114] p-3 rounded-md border border-[#e5e3dc] dark:border-white/[0.08]">
+                      <h4 className="font-semibold text-[#111113] dark:text-[#f4f4f5] text-xs">
                         {aiAnalysisResult.suggestedTaskTitle}
                       </h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
                         {aiAnalysisResult.suggestedTaskDesc}
                       </p>
                     </div>
@@ -1597,7 +1620,7 @@ export default function FilesManagerPage() {
 
             {/* Footer */}
             {aiAnalysisResult && (
-              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between">
+              <div className="px-5 py-3.5 border-t border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] flex items-center justify-between">
                 <Button
                   variant="outline"
                   size="sm"
@@ -1605,14 +1628,14 @@ export default function FilesManagerPage() {
                     navigator.clipboard.writeText(`${aiAnalysisResult.summary}\n\n${aiAnalysisResult.keyPoints.join('\n')}`)
                     alert('Sintesi copiata negli appunti!')
                   }}
-                  className="text-xs gap-1.5"
+                  className="h-8 text-xs gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114]"
                 >
                   <Copy className="h-3.5 w-3.5" />
                   Copia Sintesi
                 </Button>
 
                 {taskCreatedSuccess ? (
-                  <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-xs bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-lg border border-emerald-200">
+                  <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium text-xs bg-emerald-500/10 px-3 py-1.5 rounded-md border border-emerald-500/25">
                     <CheckCircle2 className="h-4 w-4" />
                     Compito creato su /lavori!
                   </div>
@@ -1621,7 +1644,7 @@ export default function FilesManagerPage() {
                     size="sm"
                     disabled={isCreatingTaskFromAi}
                     onClick={handleCreateTaskFromAi}
-                    className="bg-purple-600 hover:bg-purple-700 text-white text-xs gap-1.5 shadow-xs font-semibold"
+                    className="h-8 bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] text-xs gap-1.5 font-medium cursor-pointer"
                   >
                     {isCreatingTaskFromAi ? (
                       <>

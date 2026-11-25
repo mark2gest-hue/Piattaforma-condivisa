@@ -245,17 +245,17 @@ function VoiceAudioPlayer({ att, isMe }: { att: ChatAttachment; isMe: boolean })
 
   return (
     <div
-      className={`p-2.5 rounded-xl border shadow-xs flex flex-col gap-2 min-w-[230px] sm:min-w-[280px] ${
+      className={`p-2.5 rounded-lg border flex flex-col gap-2 min-w-[230px] sm:min-w-[280px] ${
         isMe
-          ? 'bg-blue-700/85 border-blue-500/60 text-white'
-          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100'
+          ? 'bg-[#6366f1] border-[#6366f1] text-white'
+          : 'bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] text-[#111113] dark:text-[#f4f4f5]'
       }`}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <div
-            className={`p-1.5 rounded-lg shrink-0 ${
-              isMe ? 'bg-blue-500/30 text-white' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+            className={`p-1.5 rounded-md shrink-0 ${
+              isMe ? 'bg-white/20 text-white' : 'bg-[#6366f1]/10 text-[#6366f1]'
             }`}
           >
             <Volume2 className="h-4 w-4" />
@@ -269,10 +269,10 @@ function VoiceAudioPlayer({ att, isMe }: { att: ChatAttachment; isMe: boolean })
           <button
             type="button"
             onClick={cycleSpeed}
-            className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
+            className={`px-1.5 py-0.5 rounded-sm text-[10px] font-bold border transition-colors cursor-pointer ${
               isMe
-                ? 'bg-blue-600/80 hover:bg-blue-600 border-blue-400/50 text-white'
-                : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200'
+                ? 'bg-white/15 hover:bg-white/25 border-white/25 text-white'
+                : 'bg-white dark:bg-[#18181c] hover:bg-zinc-100 dark:hover:bg-[#222228] border-[#e5e3dc] dark:border-white/[0.08] text-zinc-700 dark:text-zinc-200'
             }`}
             title="Cambia velocità riproduzione"
           >
@@ -283,7 +283,7 @@ function VoiceAudioPlayer({ att, isMe }: { att: ChatAttachment; isMe: boolean })
             target="_blank"
             rel="noopener noreferrer"
             download={att.name}
-            className="p-1 rounded hover:opacity-80 transition-opacity"
+            className="p-1 rounded-sm hover:opacity-80 transition-opacity"
             title="Scarica audio"
           >
             <Download className="h-3.5 w-3.5" />
@@ -338,22 +338,22 @@ function StudentMemberPicker({
 
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+      <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
         Studenti / Corsisti ({selectedIds.filter((id) => id.startsWith('student-')).length} selezionati)
       </label>
-      <div className="flex items-center bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs">
-        <Search className="h-3.5 w-3.5 text-slate-400 mr-1.5 shrink-0" />
+      <div className="flex items-center bg-[#f7f6f3] dark:bg-[#0d0d0f] rounded-md border border-[#e5e3dc] dark:border-white/[0.1] px-2.5 py-1.5 text-xs">
+        <Search className="h-3.5 w-3.5 text-zinc-400 mr-1.5 shrink-0" />
         <input
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Cerca studente per nome, email o codice..."
-          className="flex-1 bg-transparent focus:outline-none text-slate-900 dark:text-white"
+          className="flex-1 bg-transparent focus:outline-none text-[#111113] dark:text-[#f4f4f5]"
         />
       </div>
-      <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 p-2 space-y-1 bg-slate-50/50 dark:bg-slate-800/50">
+      <div className="max-h-40 overflow-y-auto rounded-md border border-[#e5e3dc] dark:border-white/[0.08] p-2 space-y-1 bg-[#f7f6f3] dark:bg-[#0d0d0f]">
         {filtered.length === 0 ? (
-          <p className="text-[11px] text-slate-400 text-center py-2">
+          <p className="text-[11px] text-zinc-400 text-center py-2">
             Nessuno studente trovato.
           </p>
         ) : (
@@ -362,21 +362,21 @@ function StudentMemberPicker({
             return (
               <label
                 key={st.id}
-                className="flex items-center justify-between gap-2 p-1.5 rounded-lg text-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="flex items-center justify-between gap-2 p-1.5 rounded-sm text-xs cursor-pointer hover:bg-black/[0.04] dark:hover:bg-white/[0.05]"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <input
                     type="checkbox"
                     checked={isChecked}
                     onChange={() => onToggleId(st.id)}
-                    className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 shrink-0"
+                    className="h-3.5 w-3.5 rounded border-[#e5e3dc] text-[#6366f1] focus:ring-[#6366f1] shrink-0"
                   />
                   <div className="min-w-0">
-                    <span className="text-slate-800 dark:text-slate-200 font-medium truncate block">
+                    <span className="text-[#111113] dark:text-[#f4f4f5] font-medium truncate block">
                       {st.full_name}
                     </span>
                     {st.code && (
-                      <span className="text-[10px] font-mono text-slate-400 block truncate">
+                      <span className="text-[10px] font-mono text-zinc-400 block truncate">
                         {st.code}
                       </span>
                     )}
@@ -1839,7 +1839,7 @@ export default function ChatPage() {
   ].filter((c) => !mentionQuery || c.name.toLowerCase().includes(mentionQuery))
 
   return (
-    <div className="flex flex-col h-full w-full min-h-0 overflow-hidden bg-white dark:bg-slate-900">
+    <div className="flex flex-col h-full w-full min-h-0 overflow-hidden bg-white dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5]">
       {/* Hidden File Input for Attachments */}
       <input
         type="file"
@@ -1855,7 +1855,7 @@ export default function ChatPage() {
         {/* Mobile Drawer Backdrop */}
         {showMobileChannels && (
           <div
-            className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs md:hidden"
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden"
             onClick={() => setShowMobileChannels(false)}
           />
         )}
@@ -1863,8 +1863,8 @@ export default function ChatPage() {
         {/* Left: Channels & DM List */}
         <div
           className={`
-            fixed inset-y-0 left-0 z-50 w-72 h-[100dvh] bg-white dark:bg-slate-900 p-4 flex flex-col shadow-2xl transition-transform duration-200 ease-in-out
-            md:static md:z-auto md:w-[240px] lg:w-[250px] md:h-full md:shadow-none md:translate-x-0 md:flex md:shrink-0 md:border-r border-slate-200 dark:border-slate-800 md:bg-slate-50/50 md:dark:bg-slate-900/60 overflow-hidden min-h-0
+            fixed inset-y-0 left-0 z-50 w-72 h-[100dvh] bg-[#fafaf8] dark:bg-[#111114] p-3.5 flex flex-col shadow-2xl transition-transform duration-200 ease-in-out
+            md:static md:z-auto md:w-[240px] lg:w-[250px] md:h-full md:shadow-none md:translate-x-0 md:flex md:shrink-0 md:border-r border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden min-h-0
             ${showMobileChannels ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           `}
         >
@@ -1874,18 +1874,24 @@ export default function ChatPage() {
               <Link
                 href="/assistenza"
                 onClick={() => setShowMobileChannels(false)}
-                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 transition-all shadow-xs"
+                className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-md text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 transition-colors"
               >
                 <span className="flex items-center gap-2 min-w-0">
-                  <LifeBuoy className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <LifeBuoy className="h-3.5 w-3.5 text-[#10b981] shrink-0" />
                   <span className="truncate">Inbox Assistenza</span>
                 </span>
                 {openSupportTicketsCount > 0 ? (
-                  <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-rose-600 text-white shadow-xs animate-pulse whitespace-nowrap shrink-0">
+                  <span
+                    className="text-[9px] uppercase px-1.5 py-0.5 rounded-sm bg-rose-600 text-white whitespace-nowrap shrink-0"
+                    style={{ fontFamily: 'var(--font-mono), monospace' }}
+                  >
                     {openSupportTicketsCount} {openSupportTicketsCount === 1 ? 'APERTO' : 'APERTI'}
                   </span>
                 ) : (
-                  <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 whitespace-nowrap shrink-0">
+                  <span
+                    className="text-[9px] uppercase px-1.5 py-0.5 rounded-sm bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 whitespace-nowrap shrink-0"
+                    style={{ fontFamily: 'var(--font-mono), monospace' }}
+                  >
                     Ticket
                   </span>
                 )}
@@ -1894,9 +1900,12 @@ export default function ChatPage() {
           )}
 
           {/* Canali Tematici */}
-          <div className="shrink-0 space-y-3">
+          <div className="shrink-0 space-y-2">
             <div className="flex items-center justify-between px-2">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <div
+                className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
+                style={{ fontFamily: 'var(--font-mono), monospace' }}
+              >
                 Canali {userRole === 'collaborator' ? 'Assegnati' : 'Tematici'}
               </div>
               <div className="flex items-center gap-1">
@@ -1907,7 +1916,7 @@ export default function ChatPage() {
                       setStudentPickerSearch('')
                       setShowCreateChannelModal(true)
                     }}
-                    className="p-1 rounded-md text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="p-1 rounded-sm text-zinc-400 hover:text-[#6366f1] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors cursor-pointer"
                     title="Crea nuovo canale"
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -1915,7 +1924,7 @@ export default function ChatPage() {
                 )}
                 <button
                   onClick={() => setShowMobileChannels(false)}
-                  className="md:hidden p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="md:hidden p-1 rounded-sm text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
                   aria-label="Chiudi menu canali"
                 >
                   <X className="h-4 w-4" />
@@ -1923,7 +1932,7 @@ export default function ChatPage() {
               </div>
             </div>
 
-            <div className="space-y-1 max-h-[40vh] overflow-y-auto">
+            <div className="space-y-0.5 max-h-[40vh] overflow-y-auto">
               {displayChannels.map((ch) => {
                 const isActive = activeChannel === ch.name
                 const Icon = ch.icon
@@ -1935,10 +1944,10 @@ export default function ChatPage() {
                 return (
                   <div
                     key={ch.id}
-                    className={`group/ch flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                    className={`group/ch flex items-center justify-between px-2.5 py-1.5 rounded-sm text-xs transition-colors border-l-2 ${
                       isActive
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
+                        ? 'bg-[#6366f1]/12 text-[#111113] dark:text-[#f4f4f5] border-l-[#6366f1] font-semibold'
+                        : 'border-l-transparent text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.05] hover:text-[#111113] dark:hover:text-[#f4f4f5] font-medium'
                     }`}
                   >
                     <button
@@ -1949,15 +1958,22 @@ export default function ChatPage() {
                         setActiveThreadId(null)
                         markChannelAsRead(ch.name)
                       }}
-                      className="flex items-center gap-2 min-w-0 flex-1 text-left"
+                      className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
                     >
-                      <Icon className="h-3.5 w-3.5 shrink-0" />
+                      <Icon
+                        className={`h-3.5 w-3.5 shrink-0 ${
+                          isActive ? 'text-[#6366f1]' : 'text-zinc-400'
+                        }`}
+                      />
                       <span className="truncate">{ch.name}</span>
                     </button>
 
                     <div className="flex items-center gap-1 shrink-0 ml-1">
                       {unread > 0 && !isActive && (
-                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-xs animate-pulse">
+                        <span
+                          className="px-1.5 py-0.2 rounded-sm text-[10px] font-bold bg-rose-600 text-white"
+                          style={{ fontFamily: 'var(--font-mono), monospace' }}
+                        >
                           {unread}
                         </span>
                       )}
@@ -1968,9 +1984,7 @@ export default function ChatPage() {
                             e.stopPropagation()
                             handleDeleteChannel(ch.name)
                           }}
-                          className={`opacity-0 group-hover/ch:opacity-100 p-1 rounded hover:text-red-400 transition-opacity ${
-                            isActive ? 'text-white/80' : 'text-slate-400'
-                          }`}
+                          className="opacity-0 group-hover/ch:opacity-100 p-1 rounded-sm text-zinc-400 hover:text-rose-500 transition-opacity cursor-pointer"
                           title="Elimina canale"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -1982,7 +1996,7 @@ export default function ChatPage() {
               })}
 
               {displayChannels.length === 0 && (
-                <div className="px-2 py-2 text-[11px] text-slate-400 text-center">
+                <div className="px-2 py-2 text-[11px] text-zinc-400 text-center">
                   Nessun canale assegnato.
                 </div>
               )}
@@ -1990,12 +2004,15 @@ export default function ChatPage() {
           </div>
 
           {/* Messaggi Diretti (DM 1-a-1) */}
-          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 flex-1 min-h-0 overflow-y-auto space-y-3">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 flex items-center justify-between">
+          <div className="mt-4 pt-4 border-t border-[#e5e3dc] dark:border-white/[0.08] flex-1 min-h-0 overflow-y-auto space-y-2">
+            <div
+              className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 px-2 flex items-center justify-between"
+              style={{ fontFamily: 'var(--font-mono), monospace' }}
+            >
               <span>Messaggi Diretti</span>
-              <Users className="h-3.5 w-3.5" />
+              <Users className="h-3 w-3" />
             </div>
-            <div className="space-y-1 text-xs">
+            <div className="space-y-0.5 text-xs">
               {(() => {
                 const sharedCollabMemberIds = new Set(
                   customChannels.flatMap((c) => c.memberIds || [])
@@ -2031,37 +2048,40 @@ export default function ChatPage() {
                           markChannelAsRead(dmChannelId)
                         }
                       }}
-                      className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg border transition-all text-left ${
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm transition-colors text-left border-l-2 ${
                         isActive
-                          ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                          ? 'bg-[#6366f1]/12 text-[#111113] dark:text-[#f4f4f5] border-l-[#6366f1] font-semibold'
                           : isMe
-                          ? 'opacity-60 bg-transparent border-transparent'
-                          : 'bg-white dark:bg-slate-800/80 border-slate-200/60 dark:border-slate-700/60 hover:border-blue-400 text-slate-800 dark:text-slate-200 shadow-xs'
+                            ? 'opacity-55 border-l-transparent cursor-default'
+                            : 'border-l-transparent text-zinc-700 dark:text-zinc-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.05] cursor-pointer'
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <span
                           className={`h-2 w-2 rounded-full shrink-0 ${
-                            member.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                            member.is_active ? 'bg-[#10b981]' : 'bg-zinc-300 dark:bg-zinc-600'
                           }`}
                         />
-                        <span className="font-semibold truncate max-w-[110px]">
+                        <span className="truncate max-w-[115px]">
                           {member.full_name} {isMe ? '(Tu)' : ''}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-1 shrink-0">
                         {unread > 0 && !isActive && (
-                          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-xs animate-pulse">
+                          <span
+                            className="px-1.5 py-0.2 rounded-sm text-[10px] font-bold bg-rose-600 text-white"
+                            style={{ fontFamily: 'var(--font-mono), monospace' }}
+                          >
                             {unread}
                           </span>
                         )}
-                        <Badge
-                          variant={member.role === 'dev' ? 'purple' : member.role === 'admin' ? 'destructive' : 'info'}
-                          className="text-[9px] px-1 py-0 uppercase"
+                        <span
+                          className="text-[9px] uppercase text-zinc-400 dark:text-zinc-500"
+                          style={{ fontFamily: 'var(--font-mono), monospace' }}
                         >
                           {member.role}
-                        </Badge>
+                        </span>
                       </div>
                     </button>
                   )
@@ -2090,32 +2110,36 @@ export default function ChatPage() {
                           setActiveThreadId(null)
                           markChannelAsRead(dmChannelId)
                         }}
-                        className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg border transition-all text-left ${
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-sm transition-colors text-left border-l-2 cursor-pointer ${
                           isActive
-                            ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
-                            : 'bg-white dark:bg-slate-800/80 border-slate-200/60 dark:border-slate-700/60 hover:border-blue-400 text-slate-800 dark:text-slate-200 shadow-xs'
+                            ? 'bg-[#6366f1]/12 text-[#111113] dark:text-[#f4f4f5] border-l-[#6366f1] font-semibold'
+                            : 'border-l-transparent text-zinc-700 dark:text-zinc-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.05]'
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span
                             className={`h-2 w-2 rounded-full shrink-0 ${
-                              st.is_active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                              st.is_active ? 'bg-[#10b981]' : 'bg-zinc-300 dark:bg-zinc-600'
                             }`}
                           />
-                          <span className="font-semibold truncate max-w-[110px]">
-                            {st.full_name}
-                          </span>
+                          <span className="truncate max-w-[115px]">{st.full_name}</span>
                         </div>
 
                         <div className="flex items-center gap-1 shrink-0">
                           {unread > 0 && !isActive && (
-                            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-xs animate-pulse">
+                            <span
+                              className="px-1.5 py-0.2 rounded-sm text-[10px] font-bold bg-rose-600 text-white"
+                              style={{ fontFamily: 'var(--font-mono), monospace' }}
+                            >
                               {unread}
                             </span>
                           )}
-                          <Badge variant="purple" className="text-[9px] px-1 py-0 uppercase">
-                            STUDENTE
-                          </Badge>
+                          <span
+                            className="text-[9px] uppercase text-[#6366f1]"
+                            style={{ fontFamily: 'var(--font-mono), monospace' }}
+                          >
+                            STUD
+                          </span>
                         </div>
                       </button>
                     )
@@ -2126,7 +2150,7 @@ export default function ChatPage() {
 
         {/* Center: Main Message Stream */}
         <div
-          className="flex-1 min-w-0 h-full flex flex-col bg-slate-50/20 dark:bg-slate-950/40 relative overflow-hidden"
+          className="flex-1 min-w-0 h-full flex flex-col bg-white dark:bg-[#0d0d0f] relative overflow-hidden"
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -2134,13 +2158,13 @@ export default function ChatPage() {
           onPaste={handlePasteFiles}
         >
           {isDraggingOver && (
-            <div className="absolute inset-0 z-30 bg-blue-600/10 dark:bg-blue-500/15 backdrop-blur-xs border-2 border-dashed border-blue-500 flex flex-col items-center justify-center pointer-events-none p-6 text-center">
-              <div className="p-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-blue-200 dark:border-blue-800 shadow-xl flex flex-col items-center gap-2 max-w-sm">
-                <UploadCloud className="h-10 w-10 text-blue-600 dark:text-blue-400 animate-bounce" />
-                <p className="text-sm font-bold text-slate-900 dark:text-white">
+            <div className="absolute inset-0 z-30 bg-[#6366f1]/10 backdrop-blur-xs border-2 border-dashed border-[#6366f1] flex flex-col items-center justify-center pointer-events-none p-6 text-center">
+              <div className="p-4 rounded-lg bg-white dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.1] shadow-xl flex flex-col items-center gap-2 max-w-sm">
+                <UploadCloud className="h-9 w-9 text-[#6366f1]" />
+                <p className="text-sm font-bold text-[#111113] dark:text-[#f4f4f5]">
                   Rilascia per allegare
                 </p>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
                   {isDirectMessage
                     ? `Rilascia qui immagini, screenshot o documenti per allegarli in DM con ${dmPartner?.full_name || 'questo membro'}`
                     : `Rilascia qui immagini, screenshot o documenti per allegarli in #${activeChannel}`}
@@ -2148,29 +2172,35 @@ export default function ChatPage() {
               </div>
             </div>
           )}
+
           {/* Channel Header */}
-          <div className="p-2.5 sm:p-3.5 border-b border-slate-200 dark:border-slate-800 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur shrink-0 z-10">
-            <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+          <div className="min-h-[52px] px-4 py-2 border-b border-[#e5e3dc] dark:border-white/[0.08] flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2 bg-white dark:bg-[#0d0d0f] shrink-0 z-10">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
               <button
                 type="button"
                 onClick={() => setShowMobileChannels(true)}
-                className="relative md:hidden inline-flex items-center justify-center h-8 w-8 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 shrink-0"
+                className="relative md:hidden inline-flex items-center justify-center h-8 w-8 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] shrink-0"
                 title="Scegli canale"
               >
                 <Menu className="h-4 w-4" />
                 {((openSupportTicketsCount > 0 && userRole !== 'collaborator') ||
                   Object.entries(unreadCounts).some(([ch, cnt]) => ch !== activeChannel && cnt > 0)) && (
-                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-rose-600 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-rose-600 ring-2 ring-white dark:ring-[#0d0d0f]" />
                 )}
               </button>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5 min-w-0 truncate">
+                  <h2
+                    className="text-sm sm:text-[15px] font-bold text-[#111113] dark:text-[#f4f4f5] flex items-center gap-1.5 min-w-0 truncate"
+                    style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                  >
                     {isDirectMessage ? (
                       <>
-                        <MessageCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                        <span className="truncate">DM: {dmPartner?.full_name || 'Conversazione Diretta'}</span>
+                        <MessageCircle className="h-4 w-4 text-[#10b981] shrink-0" />
+                        <span className="truncate">
+                          DM: {dmPartner?.full_name || 'Conversazione Diretta'}
+                        </span>
                       </>
                     ) : isPrivateChannel ? (
                       <>
@@ -2179,22 +2209,23 @@ export default function ChatPage() {
                       </>
                     ) : (
                       <>
-                        <Hash className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                        <Hash className="h-4 w-4 text-[#6366f1] shrink-0" />
                         <span className="truncate">{currentChannelObj.name}</span>
                       </>
                     )}
                   </h2>
+
                   {!isDirectMessage && (
                     <button
                       type="button"
                       onClick={() => setShowParticipantsModal(true)}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline bg-blue-50/70 dark:bg-blue-950/40 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800/60 cursor-pointer transition-colors shrink-0 whitespace-nowrap"
+                      className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-300 hover:text-[#6366f1] bg-[#f7f6f3] dark:bg-[#141417] px-2 py-0.5 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] cursor-pointer transition-colors shrink-0 whitespace-nowrap"
                       title="Visualizza chi è presente in questo canale e scrivi in privato"
                     >
-                      <Users className="h-3 w-3 shrink-0" />
+                      <Users className="h-3 w-3 shrink-0 text-[#6366f1]" />
                       <span>{currentChannelParticipants.length} presenti</span>
                       {currentChannelParticipants.length > 0 && (
-                        <span className="hidden lg:inline text-slate-400 font-normal">
+                        <span className="hidden lg:inline text-zinc-400 font-normal">
                           (
                           {currentChannelParticipants
                             .slice(0, 3)
@@ -2207,7 +2238,7 @@ export default function ChatPage() {
                     </button>
                   )}
                 </div>
-                <p className="hidden sm:block text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                <p className="hidden sm:block text-[11px] text-zinc-400 dark:text-zinc-500 truncate mt-0.5">
                   {isDirectMessage
                     ? 'Messaggio Diretto Privato 1-a-1 • Notifiche personali'
                     : currentChannelObj.desc}
@@ -2215,48 +2246,41 @@ export default function ChatPage() {
               </div>
             </div>
 
-            {/* Right Header Actions: Huddle Live, Gestione Membri, Ricerca, Web Push & Realtime Badge */}
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap xl:justify-end shrink-0">
-              {/* Tasti Stanza Live Voce / Video */}
-              <Button
+            {/* Right Header Actions */}
+            <div className="flex items-center gap-1.5 flex-wrap xl:justify-end shrink-0">
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 disabled={!currentUser}
                 onClick={() => setHuddleRequest({ mode: 'audio', seq: Date.now() })}
-                className={`text-xs h-8 px-2.5 gap-1.5 shadow-xs cursor-pointer transition-colors ${
+                className={`h-8 px-2.5 rounded-md border text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer transition-colors ${
                   isInHuddle
-                    ? 'border-emerald-400 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
-                    : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'border-emerald-500/40 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10'
+                    : 'border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#141417] text-zinc-700 dark:text-zinc-300 hover:border-[#6366f1]'
                 }`}
                 title="Avvia o unisciti alla stanza vocale live"
               >
                 <Headphones className="h-3.5 w-3.5" />
                 <span className="hidden lg:inline">Vocale</span>
-              </Button>
-              <Button
+              </button>
+
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 disabled={!currentUser}
                 onClick={() => setHuddleRequest({ mode: 'video', seq: Date.now() })}
-                className={`text-xs h-8 px-2.5 gap-1.5 shadow-xs cursor-pointer transition-colors ${
+                className={`h-8 px-2.5 rounded-md border text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer transition-colors ${
                   isInHuddle
-                    ? 'border-emerald-400 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
-                    : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'border-emerald-500/40 text-emerald-700 dark:text-emerald-300 bg-emerald-500/10'
+                    : 'border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#141417] text-zinc-700 dark:text-zinc-300 hover:border-[#6366f1]'
                 }`}
                 title="Avvia o unisciti alla videochiamata / condivisione schermo"
               >
                 <Video className="h-3.5 w-3.5" />
                 <span className="hidden lg:inline">Video</span>
-              </Button>
+              </button>
 
-              {/* Gestione Membri Canale Privato / Custom (Riservato Team) */}
               {(isPrivateChannel || currentChannelObj.isCustom) && userRole !== 'collaborator' && (
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => {
                     const currentChannelItem = customChannels.find((c) => c.name === activeChannel)
                     setManageMemberIds(currentChannelItem?.memberIds || [])
@@ -2264,26 +2288,26 @@ export default function ChatPage() {
                     setStudentPickerSearch('')
                     setShowManageMembersModal(true)
                   }}
-                  className="text-xs h-8 px-2.5 gap-1.5 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 shadow-xs cursor-pointer"
+                  className="h-8 px-2.5 rounded-md border border-amber-500/30 text-amber-600 dark:text-amber-300 bg-amber-500/10 text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer"
                   title="Gestisci i membri autorizzati di questo canale privato"
                 >
-                  <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                  <Lock className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Gestisci</span>
-                </Button>
+                </button>
               )}
 
               {/* Barra di Ricerca Interna */}
               <div className="relative flex items-center">
                 {isSearchOpen ? (
-                  <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-2 py-1 border border-slate-300 dark:border-slate-700 animate-in fade-in duration-150">
-                    <Search className="h-3.5 w-3.5 text-slate-400 shrink-0 mr-1.5" />
+                  <div className="flex items-center bg-[#f7f6f3] dark:bg-[#141417] rounded-md px-2 h-8 border border-[#e5e3dc] dark:border-white/[0.08]">
+                    <Search className="h-3.5 w-3.5 text-zinc-400 shrink-0 mr-1.5" />
                     <input
                       type="text"
                       autoFocus
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Cerca nei messaggi..."
-                      className="bg-transparent text-xs text-slate-900 dark:text-white focus:outline-none w-32 sm:w-44"
+                      className="bg-transparent text-xs text-[#111113] dark:text-[#f4f4f5] focus:outline-none w-32 sm:w-44"
                     />
                     <button
                       type="button"
@@ -2291,7 +2315,7 @@ export default function ChatPage() {
                         setSearchQuery('')
                         setIsSearchOpen(false)
                       }}
-                      className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      className="p-0.5 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -2300,67 +2324,61 @@ export default function ChatPage() {
                   <button
                     type="button"
                     onClick={() => setIsSearchOpen(true)}
-                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-xs"
+                    className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#141417] text-zinc-500 hover:text-[#6366f1] transition-colors cursor-pointer"
                     title="Cerca messaggi nel canale"
                   >
-                    <Search className="h-4 w-4" />
+                    <Search className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
 
               {/* Bottone Notifiche Push */}
               {pushStatus === 'subscribed' ? (
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   disabled={isSendingTestPush}
                   onClick={handleSendTestPush}
-                  className="text-xs h-8 px-2.5 gap-1.5 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors shadow-xs"
+                  className="h-8 px-2.5 rounded-md border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                   title="Notifiche Web Push attive. Clicca per inviare una notifica test su questo dispositivo."
                 >
                   {isSendingTestPush ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : testPushSent ? (
-                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    <Check className="h-3.5 w-3.5" />
                   ) : (
-                    <BellRing className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <BellRing className="h-3.5 w-3.5" />
                   )}
                   <span className="hidden sm:inline">
-                    {testPushSent ? 'Notifica Inviata!' : isSendingTestPush ? 'Invio test...' : 'Push Attive · Test'}
+                    {testPushSent ? 'Inviata' : isSendingTestPush ? 'Invio...' : 'Push OK'}
                   </span>
-                  <span className="sm:hidden">{testPushSent ? 'Inviata!' : 'Push OK'}</span>
-                </Button>
+                </button>
               ) : pushStatus === 'prompt' ? (
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={handleEnablePush}
-                  className="text-xs h-8 px-2.5 gap-1.5 border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 bg-blue-50/70 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors shadow-xs"
-                  title="Attiva le notifiche Web Push per ricevere avvisi istantanei su questo dispositivo."
+                  className="h-8 px-2.5 rounded-md border border-[#6366f1]/30 text-[#6366f1] bg-[#6366f1]/10 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Attiva le notifiche Web Push"
                 >
-                  <Bell className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <Bell className="h-3.5 w-3.5" />
                   <span>Attiva Push</span>
-                </Button>
+                </button>
               ) : pushStatus === 'denied' ? (
                 <span
-                  className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 py-1 rounded bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800"
-                  title="I permessi per le notifiche sono bloccati nelle impostazioni del browser"
+                  className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1 px-2 h-8 rounded-md bg-amber-500/10 border border-amber-500/25"
+                  title="Permessi notifiche bloccati nel browser"
                 >
                   <Bell className="h-3 w-3" />
                   <span className="hidden sm:inline">Push bloccate</span>
                 </span>
               ) : null}
 
-              <Badge
-                variant="success"
-                className="py-0.5 sm:py-1 px-2.5 sm:px-3 text-[11px] sm:text-xs flex items-center gap-1.5 w-fit"
+              <span
+                className="h-8 px-2.5 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[10px] font-semibold text-zinc-600 dark:text-zinc-300 inline-flex items-center gap-1.5"
+                style={{ fontFamily: 'var(--font-mono), monospace' }}
               >
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="hidden sm:inline">Realtime Connesso</span>
-                <span className="sm:hidden">Realtime</span>
-              </Badge>
+                <span className="h-1.5 w-1.5 rounded-full bg-[#10b981]" />
+                <span className="hidden sm:inline">REALTIME</span>
+              </span>
             </div>
           </div>
 
@@ -2390,8 +2408,8 @@ export default function ChatPage() {
                 }
                 const label =
                   mode === 'video'
-                    ? '📹 Ha avviato una videochiamata live nella chat'
-                    : '🎧 Ha avviato una stanza vocale live nella chat'
+                    ? 'Ha avviato una videochiamata live nella chat'
+                    : 'Ha avviato una stanza vocale live nella chat'
                 notifyChatMessageAction(activeChannel, label, currentUser.full_name, notifyOptions).catch(
                   (err) => console.error('Huddle notify error:', err)
                 )
@@ -2401,28 +2419,28 @@ export default function ChatPage() {
 
           {/* Banner Risultati Ricerca attiva */}
           {searchQuery.trim() && (
-            <div className="px-4 py-2 bg-blue-50/80 dark:bg-blue-950/40 border-b border-blue-200/60 dark:border-blue-800/60 flex items-center justify-between text-xs text-blue-800 dark:text-blue-300">
+            <div className="px-4 py-2 bg-[#f7f6f3] dark:bg-[#141417] border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between text-xs text-[#111113] dark:text-[#f4f4f5]">
               <span>
                 Filtro ricerca: <strong>&ldquo;{searchQuery}&rdquo;</strong> ({filteredMainMessages.length} risultati)
               </span>
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="text-xs font-semibold underline hover:text-blue-900 dark:hover:text-white"
+                className="text-xs font-semibold text-[#6366f1] hover:underline cursor-pointer"
               >
                 Azzera
               </button>
             </div>
           )}
 
-          {/* Messages List (Timeline principale dei messaggi radice) */}
+          {/* Messages List */}
           <div
             ref={chatContainerRef}
-            className="p-3 sm:p-4 space-y-3 sm:space-y-4 flex-1 overflow-y-auto min-h-0 overscroll-contain"
+            className="p-3 sm:p-5 space-y-3.5 flex-1 overflow-y-auto min-h-0 overscroll-contain bg-white dark:bg-[#0d0d0f]"
           >
             {loading ? (
               <div className="h-full flex items-center justify-center">
-                <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                <Loader2 className="h-5 w-5 text-[#6366f1] animate-spin" />
               </div>
             ) : filteredMainMessages.length > 0 ? (
               filteredMainMessages.map((msg) => {
@@ -2436,18 +2454,18 @@ export default function ChatPage() {
                   <div
                     key={msg.id}
                     className={`group flex items-start gap-2.5 sm:gap-3 ${isMe ? 'flex-row-reverse' : ''} ${
-                      isThreadOpen ? 'bg-blue-50/40 dark:bg-blue-950/20 p-2 rounded-2xl -mx-2 transition-colors' : ''
+                      isThreadOpen ? 'bg-[#f7f6f3] dark:bg-[#141417] p-2 rounded-md -mx-2 transition-colors' : ''
                     }`}
                   >
                     <Avatar
                       fallback={msgMeta.senderName || msg.sender?.full_name || '?'}
                       src={msgMeta.senderStudentId ? undefined : msg.sender?.avatar_url || undefined}
-                      className="h-7 w-7 sm:h-8 sm:w-8 bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 font-semibold text-[10px] sm:text-xs shrink-0 mt-1 border border-blue-200 dark:border-blue-800"
+                      className="h-7 w-7 sm:h-8 sm:w-8 bg-[#f7f6f3] dark:bg-[#18181c] text-[#111113] dark:text-[#f4f4f5] font-semibold text-[10px] sm:text-xs shrink-0 mt-1 border border-[#e5e3dc] dark:border-white/[0.08]"
                     />
                     <div className={`flex flex-col flex-1 space-y-1 ${isMe ? 'items-end' : 'items-start'}`}>
                       <div className={`flex items-center gap-1.5 sm:gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
                         {isMe ? (
-                          <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white">
+                          <span className="text-[11px] sm:text-xs font-semibold text-[#111113] dark:text-[#f4f4f5]">
                             Tu
                           </span>
                         ) : (
@@ -2458,7 +2476,7 @@ export default function ChatPage() {
                                 extractMessageMeta(msg).senderStudentId || msg.sender_id
                               )
                             }
-                            className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors text-left flex items-center gap-1 group/author cursor-pointer"
+                            className="text-[11px] sm:text-xs font-semibold text-[#111113] dark:text-[#f4f4f5] hover:text-[#6366f1] hover:underline transition-colors text-left flex items-center gap-1 group/author cursor-pointer"
                             title={`Clicca per scrivere in privato a ${
                               extractMessageMeta(msg).senderName ||
                               msg.sender?.full_name ||
@@ -2470,19 +2488,24 @@ export default function ChatPage() {
                                 msg.sender?.full_name ||
                                 'Utente Sconosciuto'}
                             </span>
-                            <MessageCircle className="h-2.5 w-2.5 opacity-0 group-hover/author:opacity-100 text-blue-500 transition-opacity" />
+                            <MessageCircle className="h-2.5 w-2.5 opacity-0 group-hover/author:opacity-100 text-[#6366f1] transition-opacity" />
                           </button>
                         )}
-                        <span className="text-[9px] sm:text-[10px] text-slate-400">{formatDate(msg.created_at)}</span>
+                        <span
+                          className="text-[9px] sm:text-[10px] text-zinc-400 dark:text-zinc-500"
+                          style={{ fontFamily: 'var(--font-mono), monospace' }}
+                        >
+                          {formatDate(msg.created_at)}
+                        </span>
                       </div>
 
                       {/* Text Bubble */}
                       {msg.content && (
                         <div
-                          className={`text-xs sm:text-sm p-2.5 sm:p-3 rounded-2xl shadow-xs leading-relaxed max-w-[88%] sm:max-w-[85%] break-words whitespace-pre-wrap select-text ${
+                          className={`text-xs sm:text-sm p-2.5 sm:p-3 rounded-lg leading-relaxed max-w-[88%] sm:max-w-[85%] break-words whitespace-pre-wrap select-text ${
                             isMe
-                              ? 'bg-blue-600 text-white rounded-tr-xs'
-                              : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700/80 rounded-tl-xs'
+                              ? 'bg-[#6366f1] text-white rounded-tr-xs'
+                              : 'bg-[#f7f6f3] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] border border-[#e5e3dc] dark:border-white/[0.08] rounded-tl-xs'
                           }`}
                         >
                           {renderMessageContent(msg.content, isMe)}
@@ -2501,19 +2524,19 @@ export default function ChatPage() {
                               (!att.type?.startsWith('video/') &&
                                 /\.(webm|ogg|mp3|m4a|wav|aac)$/i.test(att.name || ''))
                             return (
-                              <div key={attIdx} className="overflow-hidden rounded-xl">
+                              <div key={attIdx} className="overflow-hidden rounded-lg">
                                 {isImg ? (
                                   <div
-                                    className="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-black/5 dark:bg-black/30"
+                                    className="relative group cursor-pointer overflow-hidden rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] bg-black/5 dark:bg-black/30"
                                     onClick={() => setPreviewModalUrl(att.url)}
                                   >
                                     <img
                                       src={att.url}
                                       alt={att.name || 'Immagine allegata'}
-                                      className="max-h-64 max-w-full rounded-xl object-cover group-hover:scale-102 transition-transform duration-200"
+                                      className="max-h-64 max-w-full rounded-lg object-cover group-hover:scale-102 transition-transform duration-200"
                                       loading="lazy"
                                     />
-                                    <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl text-white text-xs font-semibold gap-1.5 backdrop-blur-xs">
+                                    <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg text-white text-xs font-semibold gap-1.5 backdrop-blur-xs">
                                       <Eye className="h-4 w-4" />
                                       <span>Ingrandisci</span>
                                     </div>
@@ -2526,21 +2549,29 @@ export default function ChatPage() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     download={att.name}
-                                    className={`flex items-center justify-between p-2.5 rounded-xl border transition-colors ${
+                                    className={`flex items-center justify-between p-2.5 rounded-lg border transition-colors ${
                                       isMe
-                                        ? 'bg-blue-700/80 hover:bg-blue-700 border-blue-500/50 text-white shadow-xs'
-                                        : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 shadow-xs'
+                                        ? 'bg-[#6366f1] hover:bg-[#4f46e5] border-[#6366f1] text-white'
+                                        : 'bg-[#f7f6f3] dark:bg-[#141417] hover:bg-zinc-100 dark:hover:bg-[#1b1b20] border-[#e5e3dc] dark:border-white/[0.08] text-[#111113] dark:text-[#f4f4f5]'
                                     }`}
                                   >
                                     <div className="flex items-center gap-2.5 min-w-0">
-                                      <div className="p-2 rounded-lg bg-blue-500/20 text-blue-500 dark:text-blue-400 shrink-0">
+                                      <div
+                                        className={`p-2 rounded-md shrink-0 ${
+                                          isMe
+                                            ? 'bg-white/20 text-white'
+                                            : 'bg-[#6366f1]/10 text-[#6366f1]'
+                                        }`}
+                                      >
                                         <FileText className="h-4 w-4" />
                                       </div>
                                       <div className="flex flex-col min-w-0 text-left">
                                         <span className="text-xs font-semibold truncate max-w-[180px] sm:max-w-[260px]">
                                           {att.name}
                                         </span>
-                                        <span className="text-[10px] opacity-75">{formatBytes(att.size || 0)}</span>
+                                        <span className="text-[10px] opacity-75">
+                                          {formatBytes(att.size || 0)}
+                                        </span>
                                       </div>
                                     </div>
                                     <Download className="h-4 w-4 opacity-75 shrink-0 ml-2" />
@@ -2553,8 +2584,11 @@ export default function ChatPage() {
                       )}
 
                       {/* Reazioni & Azioni Rapide */}
-                      <div className={`flex flex-wrap items-center gap-1.5 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                        {/* Pill delle reazioni esistenti */}
+                      <div
+                        className={`flex flex-wrap items-center gap-1.5 mt-1 ${
+                          isMe ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
                         {Object.entries(reactions).map(([emoji, userIds]) => {
                           const hasReacted = currentUser && userIds.includes(currentUser.id)
                           return (
@@ -2562,10 +2596,10 @@ export default function ChatPage() {
                               key={emoji}
                               type="button"
                               onClick={() => handleToggleReaction(msg.id, emoji)}
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors ${
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border transition-colors cursor-pointer ${
                                 hasReacted
-                                  ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 shadow-xs'
-                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                  ? 'bg-[#6366f1]/15 border-[#6366f1]/40 text-[#6366f1]'
+                                  : 'bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] text-zinc-600 dark:text-zinc-300'
                               }`}
                               title={`Reagito da ${userIds.length} utente/i`}
                             >
@@ -2575,14 +2609,13 @@ export default function ChatPage() {
                           )
                         })}
 
-                        {/* Barra Reazioni Rapide + Tasto Rispondi */}
                         <div className="flex items-center gap-0.5 opacity-60 hover:opacity-100 transition-opacity">
                           {QUICK_REACTIONS.map((emoji) => (
                             <button
                               key={emoji}
                               type="button"
                               onClick={() => handleToggleReaction(msg.id, emoji)}
-                              className="h-6 w-6 rounded-md hover:bg-slate-200/60 dark:hover:bg-slate-800 text-xs flex items-center justify-center transition-transform hover:scale-120"
+                              className="h-6 w-6 rounded-sm hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-xs flex items-center justify-center transition-transform hover:scale-115 cursor-pointer"
                               title={`Reagisci con ${emoji}`}
                             >
                               {emoji}
@@ -2592,7 +2625,7 @@ export default function ChatPage() {
                           <button
                             type="button"
                             onClick={() => setActiveThreadId(msg.id)}
-                            className="h-6 px-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950/60 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-medium flex items-center gap-1 transition-colors"
+                            className="h-6 px-1.5 rounded-sm hover:bg-[#6366f1]/10 text-zinc-500 hover:text-[#6366f1] text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
                             title="Rispondi nel thread"
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
@@ -2603,10 +2636,10 @@ export default function ChatPage() {
                             <button
                               type="button"
                               onClick={() => handleCopyMessage(msg.id, msg.content)}
-                              className={`h-6 px-1.5 rounded-md text-[11px] font-medium flex items-center gap-1 transition-colors ${
+                              className={`h-6 px-1.5 rounded-sm text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer ${
                                 copiedMessageId === msg.id
-                                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
-                                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                                  ? 'bg-emerald-500/10 text-[#10b981]'
+                                  : 'hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-zinc-500 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
                               }`}
                               title="Copia testo messaggio"
                             >
@@ -2626,18 +2659,18 @@ export default function ChatPage() {
                         </div>
                       </div>
 
-                      {/* Link "X risposte • Vedi thread" */}
+                      {/* Link Thread */}
                       {replies.length > 0 && (
                         <button
                           type="button"
                           onClick={() => setActiveThreadId(msg.id)}
-                          className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200/60 dark:border-blue-800/60 transition-colors shadow-xs w-fit"
+                          className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold text-[#6366f1] bg-[#6366f1]/10 hover:bg-[#6366f1]/15 border border-[#6366f1]/25 transition-colors w-fit cursor-pointer"
                         >
                           <MessageCircle className="h-3.5 w-3.5" />
                           <span>
                             {replies.length} {replies.length === 1 ? 'risposta' : 'risposte'}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-normal">• Vedi thread</span>
+                          <span className="text-[10px] text-zinc-400 font-normal">• Vedi thread</span>
                         </button>
                       )}
                     </div>
@@ -2645,39 +2678,41 @@ export default function ChatPage() {
                 )
               })
             ) : (
-              <div className="h-full flex items-center justify-center text-xs text-slate-400">
+              <div className="h-full flex items-center justify-center text-xs text-zinc-400">
                 {searchQuery.trim()
                   ? `Nessun messaggio trovato per "${searchQuery}".`
                   : isDirectMessage
-                  ? `Inizia la conversazione privata con ${dmPartner?.full_name || 'questo membro'}.`
-                  : `Nessun messaggio in #${activeChannel}. Inizia la conversazione!`}
+                    ? `Inizia la conversazione privata con ${dmPartner?.full_name || 'questo membro'}.`
+                    : `Nessun messaggio in #${activeChannel}. Inizia la conversazione!`}
               </div>
             )}
           </div>
 
           {/* Pending Files Preview Strip */}
           {pendingFiles.length > 0 && (
-            <div className="p-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 flex items-center gap-2 overflow-x-auto">
+            <div className="p-2.5 border-t border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] flex items-center gap-2 overflow-x-auto">
               {pendingFiles.map((file, idx) => {
                 const isImg = file.type.startsWith('image/')
                 return (
                   <div
                     key={idx}
-                    className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-xl text-xs shrink-0 shadow-xs"
+                    className="flex items-center gap-1.5 bg-white dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08] px-2.5 py-1.5 rounded-md text-xs shrink-0"
                   >
                     {isImg ? (
-                      <ImageIcon className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                      <ImageIcon className="h-3.5 w-3.5 text-[#6366f1] shrink-0" />
                     ) : (
                       <FileText className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                     )}
-                    <span className="truncate max-w-[120px] font-medium text-slate-800 dark:text-slate-200">
+                    <span className="truncate max-w-[120px] font-medium text-[#111113] dark:text-[#f4f4f5]">
                       {file.name}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">({formatBytes(file.size)})</span>
+                    <span className="text-[10px] text-zinc-400 font-mono">
+                      ({formatBytes(file.size)})
+                    </span>
                     <button
                       type="button"
                       onClick={() => handleRemovePendingFile(idx)}
-                      className="p-0.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ml-1"
+                      className="p-0.5 rounded-sm text-zinc-400 hover:text-rose-500 ml-1 cursor-pointer"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -2689,8 +2724,8 @@ export default function ChatPage() {
 
           {/* Autocomplete Popup Menzioni per Input Principale */}
           {mentionQuery !== null && mentionTarget === 'main' && mentionCandidates.length > 0 && (
-            <div className="absolute bottom-16 left-4 z-30 w-64 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden py-1 max-h-48 overflow-y-auto animate-in fade-in slide-in-from-bottom-2 duration-150">
-              <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 border-b border-slate-100 dark:border-slate-700/60">
+            <div className="absolute bottom-16 left-4 z-30 w-64 bg-white dark:bg-[#141417] rounded-lg border border-[#e5e3dc] dark:border-white/[0.1] shadow-xl overflow-hidden py-1 max-h-48 overflow-y-auto">
+              <div className="px-3 py-1 text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1 border-b border-[#e5e3dc] dark:border-white/[0.08]">
                 <AtSign className="h-3 w-3" />
                 <span>Menziona membro</span>
               </div>
@@ -2699,83 +2734,92 @@ export default function ChatPage() {
                   key={c.id}
                   type="button"
                   onClick={() => handleSelectMention(c.name)}
-                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 dark:hover:bg-slate-700 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-[#f7f6f3] dark:hover:bg-[#1f1f24] flex items-center justify-between transition-colors cursor-pointer"
                 >
-                  <span className="font-medium text-slate-800 dark:text-slate-200">@{c.name}</span>
-                  <span className="text-[10px] text-slate-400 uppercase">{c.role}</span>
+                  <span className="font-medium text-[#111113] dark:text-[#f4f4f5]">@{c.name}</span>
+                  <span className="text-[10px] text-zinc-400 uppercase">{c.role}</span>
                 </button>
               ))}
             </div>
           )}
 
           {/* Autocomplete Popup Comandi Slash */}
-          {inputMessage.startsWith('/') && !inputMessage.includes(' ') && matchingSlashCommands.length > 0 && (
-            <div className="absolute bottom-16 left-4 z-30 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden py-1 max-h-56 overflow-y-auto animate-in fade-in slide-in-from-bottom-2 duration-150">
-              <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-700/60">
-                <Terminal className="h-3 w-3 text-blue-500" />
-                <span>Comandi Rapidi (Slash Commands)</span>
-              </div>
-              <div className="divide-y divide-slate-100 dark:divide-slate-700/40">
-                {matchingSlashCommands.map((cmd) => {
-                  const CmdIcon = cmd.icon
-                  return (
-                    <button
-                      key={cmd.command}
-                      type="button"
-                      onClick={() => handleSelectSlashCommand(cmd.command)}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-blue-50 dark:hover:bg-slate-700/80 flex items-start gap-2.5 transition-colors group"
-                    >
-                      <div className="p-1 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors mt-0.5">
-                        <CmdIcon className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{cmd.command}</span>
-                          <span className="text-[10px] text-slate-400 font-mono truncate">{cmd.example}</span>
+          {inputMessage.startsWith('/') &&
+            !inputMessage.includes(' ') &&
+            matchingSlashCommands.length > 0 && (
+              <div className="absolute bottom-16 left-4 z-30 w-80 sm:w-96 bg-white dark:bg-[#141417] rounded-lg border border-[#e5e3dc] dark:border-white/[0.1] shadow-xl overflow-hidden py-1 max-h-56 overflow-y-auto">
+                <div className="px-3 py-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-[#e5e3dc] dark:border-white/[0.08]">
+                  <Terminal className="h-3 w-3 text-[#6366f1]" />
+                  <span>Comandi Rapidi (Slash Commands)</span>
+                </div>
+                <div className="divide-y divide-[#e5e3dc] dark:divide-white/[0.06]">
+                  {matchingSlashCommands.map((cmd) => {
+                    const CmdIcon = cmd.icon
+                    return (
+                      <button
+                        key={cmd.command}
+                        type="button"
+                        onClick={() => handleSelectSlashCommand(cmd.command)}
+                        className="w-full text-left px-3 py-2 text-xs hover:bg-[#f7f6f3] dark:hover:bg-[#1f1f24] flex items-start gap-2.5 transition-colors group cursor-pointer"
+                      >
+                        <div className="p-1 rounded-sm bg-[#6366f1]/10 text-[#6366f1] group-hover:bg-[#6366f1] group-hover:text-white transition-colors mt-0.5">
+                          <CmdIcon className="h-3.5 w-3.5" />
                         </div>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">{cmd.description}</p>
-                      </div>
-                    </button>
-                  )
-                })}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-[#6366f1]">
+                              {cmd.command}
+                            </span>
+                            <span className="text-[10px] text-zinc-400 font-mono truncate">
+                              {cmd.example}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-zinc-600 dark:text-zinc-300 mt-0.5">
+                            {cmd.description}
+                          </p>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Input Bar Principale */}
-          <div className="p-2.5 sm:p-3.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 relative space-y-2">
+          <div className="p-2.5 sm:p-3.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-white dark:bg-[#0d0d0f] border-t border-[#e5e3dc] dark:border-white/[0.08] shrink-0 relative space-y-2">
             {hasStudentParticipants && (
               <div className="flex flex-wrap items-center justify-between gap-2 px-1">
                 <button
                   type="button"
                   onClick={() => setNotifyStudentsEmailToggle((prev) => !prev)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors cursor-pointer ${
                     notifyStudentsEmailToggle
-                      ? 'bg-indigo-600 text-white border-indigo-500 shadow-xs'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                      ? 'bg-[#6366f1] text-white border-[#6366f1]'
+                      : 'bg-[#f7f6f3] dark:bg-[#141417] text-zinc-600 dark:text-zinc-300 border-[#e5e3dc] dark:border-white/[0.08] hover:border-[#6366f1]'
                   }`}
                   title="Attiva per inviare un avviso email a tutti gli studenti iscritti con questo messaggio"
                 >
                   <Mail className="h-3.5 w-3.5" />
                   <span>
                     {notifyStudentsEmailToggle
-                      ? '📧 Avviso Email Iscritti ATTIVO (per questo messaggio)'
-                      : '📧 Avvisa iscritti via Email'}
+                      ? 'Avviso Email Iscritti ATTIVO'
+                      : 'Avvisa iscritti via Email'}
                   </span>
                 </button>
-                <span className="text-[10px] text-slate-400">
-                  Zero-Spam: i messaggi ordinari inviano solo Push/Badge. Usa il toggle o <code className="text-indigo-400">@tutti</code> per gli avvisi importanti via Email.
+                <span className="text-[10px] text-zinc-400">
+                  Zero-Spam: i messaggi ordinari inviano solo Push/Badge. Usa il toggle o{' '}
+                  <code className="text-[#6366f1]">@tutti</code> per gli avvisi importanti via Email.
                 </span>
               </div>
             )}
             <form
               onSubmit={handleSendMessage}
-              className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-slate-800 p-1.5 sm:p-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner"
+              className="flex items-center gap-1.5 sm:gap-2 bg-[#f7f6f3] dark:bg-[#141417] p-1.5 sm:p-2 rounded-md border border-[#e5e3dc] dark:border-white/[0.08]"
             >
               {isRecordingVoice ? (
                 <>
                   <div className="flex-1 flex items-center gap-2.5 px-2 min-w-0">
-                    <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-rose-500 shrink-0" />
                     <span className="text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400 truncate">
                       Registrazione vocale {formatVoiceDuration(recordingSeconds)}
                     </span>
@@ -2785,7 +2829,7 @@ export default function ChatPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => stopVoiceRecording(false)}
-                    className="h-8 px-2.5 text-xs text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 gap-1 shrink-0"
+                    className="h-8 px-2.5 text-xs text-zinc-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 gap-1 shrink-0"
                     title="Annulla registrazione"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -2795,7 +2839,7 @@ export default function ChatPage() {
                     type="button"
                     size="sm"
                     onClick={() => stopVoiceRecording(true)}
-                    className="bg-rose-600 hover:bg-rose-700 text-white text-xs h-8 sm:h-9 px-3 sm:px-4 gap-1.5 shadow-xs rounded-lg shrink-0"
+                    className="bg-rose-600 hover:bg-rose-700 text-white text-xs h-8 sm:h-9 px-3 sm:px-4 gap-1.5 rounded-md shrink-0 border-0"
                     title="Invia messaggio vocale"
                   >
                     <Send className="h-3.5 w-3.5" />
@@ -2811,7 +2855,7 @@ export default function ChatPage() {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading || isSendingVoice || !currentUser}
                     title="Allega foto o documenti"
-                    className="h-8 w-8 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 shrink-0"
+                    className="h-8 w-8 text-zinc-400 hover:text-[#6366f1] shrink-0"
                   >
                     <Paperclip className="h-4 w-4" />
                   </Button>
@@ -2822,7 +2866,7 @@ export default function ChatPage() {
                     onClick={startVoiceRecording}
                     disabled={isUploading || isSendingVoice || !currentUser}
                     title="Registra messaggio vocale"
-                    className="h-8 w-8 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 shrink-0"
+                    className="h-8 w-8 text-zinc-400 hover:text-rose-500 shrink-0"
                   >
                     {isSendingVoice ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -2840,10 +2884,10 @@ export default function ChatPage() {
                       pendingFiles.length > 0
                         ? 'Aggiungi una didascalia...'
                         : isDirectMessage
-                        ? `Scrivi a ${dmPartner?.full_name || 'membro'}... (incolla o trascina file)`
-                        : `Scrivi in #${activeChannel}... (incolla o trascina file, @ per menzionare)`
+                          ? `Scrivi a ${dmPartner?.full_name || 'membro'}... (incolla o trascina file)`
+                          : `Scrivi in #${activeChannel}... (incolla o trascina file, @ per menzionare)`
                     }
-                    className="flex-1 text-xs sm:text-sm focus:outline-none bg-transparent px-2 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 min-w-0"
+                    className="flex-1 text-xs sm:text-sm focus:outline-none bg-transparent px-2 text-[#111113] dark:text-[#f4f4f5] placeholder:text-zinc-400 dark:placeholder:text-zinc-500 min-w-0"
                     disabled={!currentUser || isUploading}
                   />
                   <Button
@@ -2855,7 +2899,7 @@ export default function ChatPage() {
                       isUploading ||
                       isSendingVoice
                     }
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 sm:h-9 px-3 sm:px-4 gap-1.5 shadow-xs rounded-lg shrink-0"
+                    className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] text-xs font-semibold h-8 px-3 sm:px-4 gap-1.5 rounded-md shrink-0 border-0 cursor-pointer"
                   >
                     {isUploading ? (
                       <>
@@ -2875,22 +2919,27 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Right: Thread Lateral Panel (360px desktop, full drawer mobile) */}
+        {/* Right: Thread Lateral Panel */}
         {activeThreadParent && (
-          <div className="fixed inset-0 z-40 md:static md:z-auto w-full md:w-[360px] lg:w-[380px] shrink-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full shadow-2xl md:shadow-none animate-in slide-in-from-right-4 duration-200">
+          <div className="fixed inset-0 z-40 md:static md:z-auto w-full md:w-[360px] lg:w-[380px] shrink-0 border-l border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#111114] flex flex-col h-full shadow-2xl md:shadow-none">
             {/* Thread Header */}
-            <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur shrink-0">
+            <div className="min-h-[52px] px-4 py-2 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-white dark:bg-[#141417] shrink-0">
               <div className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Thread</h3>
-                <span className="text-xs text-slate-400">
+                <MessageCircle className="h-4 w-4 text-[#6366f1]" />
+                <h3
+                  className="text-sm font-bold text-[#111113] dark:text-[#f4f4f5]"
+                  style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                >
+                  Thread
+                </h3>
+                <span className="text-xs text-zinc-400">
                   {isDirectMessage ? 'DM' : `#${activeChannel}`}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveThreadId(null)}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold flex items-center gap-1 transition-colors border border-slate-200 dark:border-slate-700"
+                className="px-2 py-1 rounded-sm bg-[#f7f6f3] dark:bg-[#18181c] hover:text-rose-500 text-zinc-600 dark:text-zinc-300 text-xs font-semibold flex items-center gap-1 transition-colors border border-[#e5e3dc] dark:border-white/[0.08] cursor-pointer"
                 title="Chiudi thread (Esc)"
               >
                 <X className="h-3.5 w-3.5" />
@@ -2901,17 +2950,24 @@ export default function ChatPage() {
             {/* Thread Scrollable Content */}
             <div ref={threadContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 min-h-0">
               {/* Messaggio Padre Originale */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 space-y-2">
+              <div className="p-3 rounded-md bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] space-y-2">
                 <div className="flex items-center gap-2">
                   <Avatar
-                    fallback={extractMessageMeta(activeThreadParent).senderName || activeThreadParent.sender?.full_name || '?'}
-                    src={extractMessageMeta(activeThreadParent).senderStudentId ? undefined : activeThreadParent.sender?.avatar_url || undefined}
+                    fallback={
+                      extractMessageMeta(activeThreadParent).senderName ||
+                      activeThreadParent.sender?.full_name ||
+                      '?'
+                    }
+                    src={
+                      extractMessageMeta(activeThreadParent).senderStudentId
+                        ? undefined
+                        : activeThreadParent.sender?.avatar_url || undefined
+                    }
                     className="h-6 w-6 text-[10px]"
                   />
-                  {activeThreadParent.sender_id === currentUser?.id && !extractMessageMeta(activeThreadParent).senderStudentId ? (
-                    <span className="text-xs font-bold text-slate-900 dark:text-white">
-                      Tu
-                    </span>
+                  {activeThreadParent.sender_id === currentUser?.id &&
+                  !extractMessageMeta(activeThreadParent).senderStudentId ? (
+                    <span className="text-xs font-bold text-[#111113] dark:text-[#f4f4f5]">Tu</span>
                   ) : (
                     <button
                       type="button"
@@ -2921,7 +2977,7 @@ export default function ChatPage() {
                             activeThreadParent.sender_id
                         )
                       }
-                      className="text-xs font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors text-left flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-bold text-[#111113] dark:text-[#f4f4f5] hover:text-[#6366f1] hover:underline transition-colors text-left flex items-center gap-1 cursor-pointer"
                       title="Scrivi in privato"
                     >
                       <span>
@@ -2931,32 +2987,36 @@ export default function ChatPage() {
                       </span>
                     </button>
                   )}
-                  <span className="text-[10px] text-slate-400 ml-auto">
+                  <span
+                    className="text-[10px] text-zinc-400 ml-auto"
+                    style={{ fontFamily: 'var(--font-mono), monospace' }}
+                  >
                     {formatDate(activeThreadParent.created_at)}
                   </span>
                 </div>
-                <div className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed break-words">
+                <div className="text-xs text-[#111113] dark:text-zinc-200 leading-relaxed break-words">
                   {renderMessageContent(activeThreadParent.content, false)}
                 </div>
-                {/* Reazioni padre */}
                 <div className="flex flex-wrap items-center gap-1 pt-1">
-                  {Object.entries(extractMessageMeta(activeThreadParent).reactions).map(([emoji, userIds]) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => handleToggleReaction(activeThreadParent.id, emoji)}
-                      className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                    >
-                      <span>{emoji}</span>
-                      <span className="font-semibold">{userIds.length}</span>
-                    </button>
-                  ))}
+                  {Object.entries(extractMessageMeta(activeThreadParent).reactions).map(
+                    ([emoji, userIds]) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => handleToggleReaction(activeThreadParent.id, emoji)}
+                        className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#18181c] text-zinc-700 dark:text-zinc-300"
+                      >
+                        <span>{emoji}</span>
+                        <span className="font-semibold">{userIds.length}</span>
+                      </button>
+                    )
+                  )}
                   {QUICK_REACTIONS.map((emoji) => (
                     <button
                       key={emoji}
                       type="button"
                       onClick={() => handleToggleReaction(activeThreadParent.id, emoji)}
-                      className="h-5 w-5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[11px] flex items-center justify-center"
+                      className="h-5 w-5 rounded-sm hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-[11px] flex items-center justify-center cursor-pointer"
                     >
                       {emoji}
                     </button>
@@ -2966,12 +3026,15 @@ export default function ChatPage() {
 
               {/* Separatore Risposte */}
               <div className="flex items-center gap-2 my-2">
-                <div className="h-px bg-slate-200 dark:border-slate-800 flex-1" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div className="h-px bg-[#e5e3dc] dark:bg-white/[0.08] flex-1" />
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+                  style={{ fontFamily: 'var(--font-mono), monospace' }}
+                >
                   {activeThreadReplies.length}{' '}
                   {activeThreadReplies.length === 1 ? 'Risposta' : 'Risposte'}
                 </span>
-                <div className="h-px bg-slate-200 dark:border-slate-800 flex-1" />
+                <div className="h-px bg-[#e5e3dc] dark:bg-white/[0.08] flex-1" />
               </div>
 
               {/* Elenco Risposte del Thread */}
@@ -2984,13 +3047,17 @@ export default function ChatPage() {
                     <div key={reply.id} className="flex items-start gap-2.5">
                       <Avatar
                         fallback={replyMeta.senderName || reply.sender?.full_name || '?'}
-                        src={replyMeta.senderStudentId ? undefined : reply.sender?.avatar_url || undefined}
+                        src={
+                          replyMeta.senderStudentId
+                            ? undefined
+                            : reply.sender?.avatar_url || undefined
+                        }
                         className="h-6 w-6 text-[10px] shrink-0 mt-0.5"
                       />
                       <div className="flex flex-col flex-1 space-y-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           {isMe ? (
-                            <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                            <span className="text-xs font-bold text-[#111113] dark:text-[#f4f4f5] truncate">
                               Tu
                             </span>
                           ) : (
@@ -3001,7 +3068,7 @@ export default function ChatPage() {
                                   extractMessageMeta(reply).senderStudentId || reply.sender_id
                                 )
                               }
-                              className="text-xs font-bold text-slate-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors text-left flex items-center gap-1 cursor-pointer"
+                              className="text-xs font-bold text-[#111113] dark:text-[#f4f4f5] truncate hover:text-[#6366f1] hover:underline transition-colors text-left flex items-center gap-1 cursor-pointer"
                               title="Scrivi in privato"
                             >
                               <span>
@@ -3011,26 +3078,30 @@ export default function ChatPage() {
                               </span>
                             </button>
                           )}
-                          <span className="text-[9px] text-slate-400">{formatDate(reply.created_at)}</span>
+                          <span
+                            className="text-[9px] text-zinc-400"
+                            style={{ fontFamily: 'var(--font-mono), monospace' }}
+                          >
+                            {formatDate(reply.created_at)}
+                          </span>
                         </div>
                         <div
-                          className={`text-xs p-2 rounded-xl shadow-xs leading-relaxed break-words whitespace-pre-wrap select-text ${
+                          className={`text-xs p-2.5 rounded-lg leading-relaxed break-words whitespace-pre-wrap select-text ${
                             isMe
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700'
+                              ? 'bg-[#6366f1] text-white'
+                              : 'bg-[#f7f6f3] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] border border-[#e5e3dc] dark:border-white/[0.08]'
                           }`}
                         >
                           {renderMessageContent(reply.content, isMe)}
                         </div>
 
-                        {/* Reazioni risposta */}
                         <div className="flex flex-wrap items-center gap-1 pt-0.5">
                           {Object.entries(replyReactions).map(([emoji, userIds]) => (
                             <button
                               key={emoji}
                               type="button"
                               onClick={() => handleToggleReaction(reply.id, emoji)}
-                              className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                              className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417]"
                             >
                               <span>{emoji}</span>
                               <span className="font-semibold">{userIds.length}</span>
@@ -3041,7 +3112,7 @@ export default function ChatPage() {
                               key={emoji}
                               type="button"
                               onClick={() => handleToggleReaction(reply.id, emoji)}
-                              className="h-5 w-5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[10px] flex items-center justify-center"
+                              className="h-5 w-5 rounded-sm hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-[10px] flex items-center justify-center cursor-pointer"
                             >
                               {emoji}
                             </button>
@@ -3052,7 +3123,7 @@ export default function ChatPage() {
                   )
                 })
               ) : (
-                <div className="text-center py-6 text-xs text-slate-400">
+                <div className="text-center py-6 text-xs text-zinc-400">
                   Nessuna risposta in questo thread. Sii il primo a rispondere!
                 </div>
               )}
@@ -3060,8 +3131,8 @@ export default function ChatPage() {
 
             {/* Autocomplete Popup Menzioni per Thread */}
             {mentionQuery !== null && mentionTarget === 'thread' && mentionCandidates.length > 0 && (
-              <div className="absolute bottom-16 right-4 z-30 w-64 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden py-1 max-h-44 overflow-y-auto animate-in fade-in slide-in-from-bottom-2 duration-150">
-                <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 border-b border-slate-100 dark:border-slate-700/60">
+              <div className="absolute bottom-16 right-4 z-30 w-64 bg-white dark:bg-[#141417] rounded-lg border border-[#e5e3dc] dark:border-white/[0.1] shadow-xl overflow-hidden py-1 max-h-44 overflow-y-auto">
+                <div className="px-3 py-1 text-[10px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1 border-b border-[#e5e3dc] dark:border-white/[0.08]">
                   <AtSign className="h-3 w-3" />
                   <span>Menziona membro</span>
                 </div>
@@ -3070,17 +3141,17 @@ export default function ChatPage() {
                     key={c.id}
                     type="button"
                     onClick={() => handleSelectMention(c.name)}
-                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 dark:hover:bg-slate-700 flex items-center justify-between transition-colors"
+                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-[#f7f6f3] dark:hover:bg-[#1f1f24] flex items-center justify-between transition-colors cursor-pointer"
                   >
-                    <span className="font-medium text-slate-800 dark:text-slate-200">@{c.name}</span>
-                    <span className="text-[10px] text-slate-400 uppercase">{c.role}</span>
+                    <span className="font-medium text-[#111113] dark:text-[#f4f4f5]">@{c.name}</span>
+                    <span className="text-[10px] text-zinc-400 uppercase">{c.role}</span>
                   </button>
                 ))}
               </div>
             )}
 
             {/* Thread Input Form */}
-            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+            <div className="p-3 border-t border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#141417] shrink-0">
               <form onSubmit={handleSendThreadReply} className="flex items-center gap-2">
                 <input
                   ref={threadInputRef}
@@ -3088,14 +3159,14 @@ export default function ChatPage() {
                   value={threadInputMessage}
                   onChange={(e) => handleInputChangeWithMentions(e.target.value, 'thread')}
                   placeholder="Rispondi al thread... (@ per menzionare)"
-                  className="flex-1 text-xs focus:outline-none bg-slate-50 dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 min-w-0"
+                  className="flex-1 text-xs focus:outline-none bg-[#f7f6f3] dark:bg-[#0d0d0f] p-2 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] text-[#111113] dark:text-[#f4f4f5] placeholder:text-zinc-400 min-w-0"
                   disabled={isSendingThreadReply || !currentUser}
                 />
                 <Button
                   type="submit"
                   size="sm"
                   disabled={!threadInputMessage.trim() || isSendingThreadReply || !currentUser}
-                  className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3 rounded-lg shrink-0 text-xs gap-1"
+                  className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] h-8 px-3 rounded-md shrink-0 text-xs gap-1 border-0 cursor-pointer"
                 >
                   {isSendingThreadReply ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -3110,30 +3181,37 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Modal Creazione Nuovo Canale Dinamico / Privato (Fase 3) */}
+      {/* Modal Creazione Nuovo Canale Dinamico / Privato */}
       {showCreateChannelModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setShowCreateChannelModal(false)}
         >
           <div
-            className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4"
+            className="w-full max-w-md bg-white dark:bg-[#141417] rounded-lg border border-[#e5e3dc] dark:border-white/[0.1] shadow-2xl p-5 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e3dc] dark:border-white/[0.08]">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                <div className="p-2 rounded-md bg-[#6366f1]/10 text-[#6366f1]">
                   <Hash className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Crea Nuovo Canale</h3>
-                  <p className="text-[11px] text-slate-400">Organizza conversazioni per progetto o argomento</p>
+                  <h3
+                    className="text-sm font-bold text-[#111113] dark:text-[#f4f4f5]"
+                    style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                  >
+                    Crea Nuovo Canale
+                  </h3>
+                  <p className="text-[11px] text-zinc-400">
+                    Organizza conversazioni per progetto o argomento
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowCreateChannelModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-1 rounded-sm text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -3141,24 +3219,24 @@ export default function ChatPage() {
 
             <form onSubmit={handleCreateChannelSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                   Nome Canale (slug)
                 </label>
-                <div className="flex items-center bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs">
-                  <span className="text-slate-400 font-mono mr-1">#</span>
+                <div className="flex items-center bg-[#f7f6f3] dark:bg-[#0d0d0f] rounded-md border border-[#e5e3dc] dark:border-white/[0.1] px-3 py-2 text-xs">
+                  <span className="text-zinc-400 font-mono mr-1">#</span>
                   <input
                     type="text"
                     required
                     value={newChannelName}
                     onChange={(e) => setNewChannelName(e.target.value)}
                     placeholder="es. progetto-alpha, clienti-vip"
-                    className="flex-1 bg-transparent focus:outline-none text-slate-900 dark:text-white font-mono"
+                    className="flex-1 bg-transparent focus:outline-none text-[#111113] dark:text-[#f4f4f5] font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
                   Descrizione (opzionale)
                 </label>
                 <input
@@ -3166,19 +3244,19 @@ export default function ChatPage() {
                   value={newChannelDesc}
                   onChange={(e) => setNewChannelDesc(e.target.value)}
                   placeholder="Di cosa si parla in questo canale..."
-                  className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs focus:outline-none text-slate-900 dark:text-white"
+                  className="w-full bg-[#f7f6f3] dark:bg-[#0d0d0f] rounded-md border border-[#e5e3dc] dark:border-white/[0.1] px-3 py-2 text-xs focus:outline-none text-[#111113] dark:text-[#f4f4f5]"
                 />
               </div>
 
               {/* Switch Canale Privato */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <div className="p-3 rounded-md bg-[#f7f6f3] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Lock className={`h-4 w-4 ${newChannelIsPrivate ? 'text-amber-500' : 'text-slate-400'}`} />
+                  <Lock className={`h-4 w-4 ${newChannelIsPrivate ? 'text-amber-500' : 'text-zinc-400'}`} />
                   <div>
-                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
+                    <span className="text-xs font-semibold text-[#111113] dark:text-[#f4f4f5] block">
                       Canale Privato
                     </span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[10px] text-zinc-400">
                       {newChannelIsPrivate
                         ? 'Visibile e accessibile solo ai membri selezionati'
                         : 'Aperto a tutti i membri del team'}
@@ -3189,24 +3267,23 @@ export default function ChatPage() {
                   type="checkbox"
                   checked={newChannelIsPrivate}
                   onChange={(e) => setNewChannelIsPrivate(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  className="h-4 w-4 rounded border-[#e5e3dc] text-[#6366f1] focus:ring-[#6366f1] cursor-pointer"
                 />
               </div>
 
-              {/* Seleziona Membri (solo se Privato) */}
               {newChannelIsPrivate && (
-                <div className="space-y-1.5 animate-in fade-in duration-150">
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                     Invita Membri Autorizzati
                   </label>
-                  <div className="max-h-36 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 p-2 space-y-1 bg-slate-50/50 dark:bg-slate-800/50">
+                  <div className="max-h-36 overflow-y-auto rounded-md border border-[#e5e3dc] dark:border-white/[0.08] p-2 space-y-1 bg-[#f7f6f3] dark:bg-[#0d0d0f]">
                     {teamMembers.map((m) => {
                       const isMe = m.id === currentUser?.id
                       const isChecked = isMe || newChannelMemberIds.includes(m.id)
                       return (
                         <label
                           key={m.id}
-                          className={`flex items-center justify-between p-1.5 rounded-lg text-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                          className={`flex items-center justify-between p-1.5 rounded-sm text-xs cursor-pointer hover:bg-black/[0.04] dark:hover:bg-white/[0.05] ${
                             isMe ? 'opacity-70 cursor-not-allowed' : ''
                           }`}
                         >
@@ -3222,9 +3299,9 @@ export default function ChatPage() {
                                   setNewChannelMemberIds((prev) => prev.filter((id) => id !== m.id))
                                 }
                               }}
-                              className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                              className="h-3.5 w-3.5 rounded border-[#e5e3dc] text-[#6366f1] focus:ring-[#6366f1]"
                             />
-                            <span className="text-slate-800 dark:text-slate-200 font-medium">
+                            <span className="text-[#111113] dark:text-[#f4f4f5] font-medium">
                               {m.full_name} {isMe ? '(Tu - Creatore)' : ''}
                             </span>
                           </div>
@@ -3252,30 +3329,30 @@ export default function ChatPage() {
                 </div>
               )}
 
-              {/* Box Espandibile Invito Collaboratore Esterno 1-Click */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+              {/* Box Invito Collaboratore */}
+              <div className="p-3 rounded-md bg-[#f7f6f3] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08] space-y-2">
                 <button
                   type="button"
                   onClick={() => setShowInviteCollabSection(!showInviteCollabSection)}
-                  className="w-full flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                  className="w-full flex items-center justify-between text-xs font-semibold text-[#6366f1] hover:underline cursor-pointer"
                 >
                   <span className="flex items-center gap-1.5">
                     <UserPlus className="h-4 w-4" />
                     <span>+ Crea e Invita Collaboratore Esterno</span>
                   </span>
-                  <span className="text-[10px] text-slate-400 font-normal">
+                  <span className="text-[10px] text-zinc-400 font-normal">
                     {showInviteCollabSection ? 'Chiudi' : 'Espandi'}
                   </span>
                 </button>
 
                 {showInviteCollabSection && (
-                  <div className="pt-2 space-y-2.5 animate-in fade-in duration-150 border-t border-slate-200/60 dark:border-slate-700/60">
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <div className="pt-2 space-y-2.5 border-t border-[#e5e3dc] dark:border-white/[0.08]">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                       Crea un account limitato alla sola chat e aggiungilo subito a questo canale.
                     </p>
 
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-0.5">
+                      <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-300 mb-0.5">
                         Nome Completo *
                       </label>
                       <input
@@ -3283,12 +3360,12 @@ export default function ChatPage() {
                         value={collabFullName}
                         onChange={(e) => setCollabFullName(e.target.value)}
                         placeholder="es. Mario Rossi (Partner)"
-                        className="w-full bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
+                        className="w-full bg-white dark:bg-[#141417] rounded-md border border-[#e5e3dc] dark:border-white/[0.1] px-2.5 py-1.5 text-xs text-[#111113] dark:text-[#f4f4f5] focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-0.5">
+                      <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-300 mb-0.5">
                         Indirizzo Email *
                       </label>
                       <input
@@ -3296,12 +3373,12 @@ export default function ChatPage() {
                         value={collabEmail}
                         onChange={(e) => setCollabEmail(e.target.value)}
                         placeholder="mario.rossi@partner.com"
-                        className="w-full bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
+                        className="w-full bg-white dark:bg-[#141417] rounded-md border border-[#e5e3dc] dark:border-white/[0.1] px-2.5 py-1.5 text-xs text-[#111113] dark:text-[#f4f4f5] focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-0.5">
+                      <label className="block text-[11px] font-medium text-zinc-600 dark:text-zinc-300 mb-0.5">
                         Password Temporanea
                       </label>
                       <input
@@ -3309,10 +3386,10 @@ export default function ChatPage() {
                         value={collabPassword}
                         onChange={(e) => setCollabPassword(e.target.value)}
                         placeholder="Collab!2026!"
-                        className="w-full bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                        className="w-full bg-white dark:bg-[#141417] rounded-md border border-[#e5e3dc] dark:border-white/[0.1] px-2.5 py-1.5 text-xs font-mono text-[#111113] dark:text-[#f4f4f5] focus:outline-none"
                       />
-                      <span className="text-[10px] text-slate-400 mt-0.5 block">
-                        Al primo login l'utente dovrà impostare la propria password personale.
+                      <span className="text-[10px] text-zinc-400 mt-0.5 block">
+                        Al primo login l&apos;utente dovrà impostare la propria password personale.
                       </span>
                     </div>
 
@@ -3322,7 +3399,7 @@ export default function ChatPage() {
                         size="sm"
                         disabled={isInvitingCollab || !collabFullName.trim() || !collabEmail.trim()}
                         onClick={handleInviteCollabInModal}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7 px-3 gap-1 cursor-pointer"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7 px-3 gap-1 cursor-pointer border-0"
                       >
                         {isInvitingCollab ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
@@ -3334,10 +3411,10 @@ export default function ChatPage() {
                     </div>
 
                     {inviteCollabResult && (
-                      <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-200 space-y-2">
+                      <div className="p-2.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-[11px] text-emerald-700 dark:text-emerald-200 space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                            <CheckCircle2 className="h-3.5 w-3.5 text-[#10b981]" />
                             Collaboratore creato e aggiunto!
                           </span>
                           <Button
@@ -3349,13 +3426,13 @@ export default function ChatPage() {
                               setCollabCopied(true)
                               setTimeout(() => setCollabCopied(false), 2000)
                             }}
-                            className="h-6 px-2 text-[10px] text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 flex items-center gap-1 cursor-pointer"
+                            className="h-6 px-2 text-[10px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1 cursor-pointer"
                           >
                             <Copy className="h-3 w-3" />
                             <span>{collabCopied ? 'Copiato!' : 'Copia Messaggio'}</span>
                           </Button>
                         </div>
-                        <pre className="whitespace-pre-wrap font-mono text-[10px] bg-white/70 dark:bg-slate-900/70 p-2 rounded border border-emerald-200/50 dark:border-emerald-800/50">
+                        <pre className="whitespace-pre-wrap font-mono text-[10px] bg-white dark:bg-[#141417] p-2 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08]">
                           {inviteCollabResult.message}
                         </pre>
                       </div>
@@ -3370,7 +3447,7 @@ export default function ChatPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowCreateChannelModal(false)}
-                  className="text-xs h-8"
+                  className="text-xs h-8 border-[#e5e3dc] dark:border-white/[0.1]"
                 >
                   Annulla
                 </Button>
@@ -3378,7 +3455,7 @@ export default function ChatPage() {
                   type="submit"
                   size="sm"
                   disabled={!newChannelName.trim() || isCreatingChannel}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 gap-1.5"
+                  className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] text-xs h-8 gap-1.5 border-0"
                 >
                   {isCreatingChannel ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -3396,23 +3473,26 @@ export default function ChatPage() {
       {/* Modal Gestione Membri del Canale Privato / Custom */}
       {showManageMembersModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setShowManageMembersModal(false)}
         >
           <div
-            className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-lg bg-white dark:bg-[#141417] rounded-lg border border-[#e5e3dc] dark:border-white/[0.1] shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e3dc] dark:border-white/[0.08]">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                <div className="p-2 rounded-md bg-[#6366f1]/10 text-[#6366f1]">
                   <Users className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  <h3
+                    className="text-sm font-bold text-[#111113] dark:text-[#f4f4f5]"
+                    style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                  >
                     Gestione Membri: #{activeChannel}
                   </h3>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-zinc-400">
                     Seleziona chi può visualizzare e scrivere in questo canale
                   </p>
                 </div>
@@ -3420,18 +3500,17 @@ export default function ChatPage() {
               <button
                 type="button"
                 onClick={() => setShowManageMembersModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-1 rounded-sm text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Elenco Membri Attuali con Checkbox */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 Membri Autorizzati ({manageMemberIds.length})
               </label>
-              <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 p-2 space-y-1 bg-slate-50/50 dark:bg-slate-800/50">
+              <div className="max-h-44 overflow-y-auto rounded-md border border-[#e5e3dc] dark:border-white/[0.08] p-2 space-y-1 bg-[#f7f6f3] dark:bg-[#0d0d0f]">
                 {teamMembers.map((m) => {
                   const currentChannelItem = customChannels.find((c) => c.name === activeChannel)
                   const isCreator = currentChannelItem?.createdBy === m.id
@@ -3439,7 +3518,7 @@ export default function ChatPage() {
                   return (
                     <label
                       key={m.id}
-                      className={`flex items-center justify-between p-1.5 rounded-lg text-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                      className={`flex items-center justify-between p-1.5 rounded-sm text-xs cursor-pointer hover:bg-black/[0.04] dark:hover:bg-white/[0.05] ${
                         isCreator ? 'opacity-70 cursor-not-allowed' : ''
                       }`}
                     >
@@ -3455,9 +3534,9 @@ export default function ChatPage() {
                               setManageMemberIds((prev) => prev.filter((id) => id !== m.id))
                             }
                           }}
-                          className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          className="h-3.5 w-3.5 rounded border-[#e5e3dc] text-[#6366f1] focus:ring-[#6366f1]"
                         />
-                        <span className="text-slate-800 dark:text-slate-200 font-medium">
+                        <span className="text-[#111113] dark:text-[#f4f4f5] font-medium">
                           {m.full_name} {isCreator ? '(Creatore)' : ''}
                         </span>
                       </div>
@@ -3484,10 +3563,10 @@ export default function ChatPage() {
               )}
             </div>
 
-            {/* Box Invito Collaboratore Esterno al Volo in questo canale */}
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
-              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <UserPlus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            {/* Box Invito Collaboratore Esterno */}
+            <div className="p-3 rounded-md bg-[#f7f6f3] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08] space-y-2">
+              <span className="text-xs font-semibold text-[#111113] dark:text-[#f4f4f5] flex items-center gap-1.5">
+                <UserPlus className="h-4 w-4 text-[#10b981]" />
                 <span>Invita nuovo Collaboratore in questo canale</span>
               </span>
 
@@ -3498,14 +3577,14 @@ export default function ChatPage() {
                     value={manageCollabFullName}
                     onChange={(e) => setManageCollabFullName(e.target.value)}
                     placeholder="Nome Completo *"
-                    className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
+                    className="bg-white dark:bg-[#141417] rounded-md border border-[#e5e3dc] dark:border-white/[0.1] px-2.5 py-1.5 text-xs text-[#111113] dark:text-[#f4f4f5] focus:outline-none"
                   />
                   <input
                     type="email"
                     value={manageCollabEmail}
                     onChange={(e) => setManageCollabEmail(e.target.value)}
                     placeholder="Email Collaboratore *"
-                    className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
+                    className="bg-white dark:bg-[#141417] rounded-md border border-[#e5e3dc] dark:border-white/[0.1] px-2.5 py-1.5 text-xs text-[#111113] dark:text-[#f4f4f5] focus:outline-none"
                   />
                 </div>
 
@@ -3515,7 +3594,7 @@ export default function ChatPage() {
                     value={manageCollabPassword}
                     onChange={(e) => setManageCollabPassword(e.target.value)}
                     placeholder="Password temporanea"
-                    className="flex-1 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                    className="flex-1 bg-white dark:bg-[#141417] rounded-md border border-[#e5e3dc] dark:border-white/[0.1] px-2.5 py-1.5 text-xs font-mono text-[#111113] dark:text-[#f4f4f5] focus:outline-none"
                   />
                   <Button
                     type="button"
@@ -3526,7 +3605,7 @@ export default function ChatPage() {
                       !manageCollabEmail.trim()
                     }
                     onClick={handleInviteCollabInManage}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8 px-3 shrink-0 cursor-pointer"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8 px-3 shrink-0 cursor-pointer border-0"
                   >
                     {isManageInviting ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -3538,10 +3617,10 @@ export default function ChatPage() {
                 </div>
 
                 {manageCollabResult && (
-                  <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-200 space-y-2">
+                  <div className="p-2.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-[11px] text-emerald-700 dark:text-emerald-200 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-[#10b981]" />
                         Collaboratore creato e inserito nel canale!
                       </span>
                       <Button
@@ -3553,13 +3632,13 @@ export default function ChatPage() {
                           setManageCollabCopied(true)
                           setTimeout(() => setManageCollabCopied(false), 2000)
                         }}
-                        className="h-6 px-2 text-[10px] text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 flex items-center gap-1 cursor-pointer"
+                        className="h-6 px-2 text-[10px] text-emerald-700 dark:text-emerald-300 flex items-center gap-1 cursor-pointer"
                       >
                         <Copy className="h-3 w-3" />
                         <span>{manageCollabCopied ? 'Copiato!' : 'Copia Messaggio'}</span>
                       </Button>
                     </div>
-                    <pre className="whitespace-pre-wrap font-mono text-[10px] bg-white/70 dark:bg-slate-900/70 p-2 rounded border border-emerald-200/50 dark:border-emerald-800/50">
+                    <pre className="whitespace-pre-wrap font-mono text-[10px] bg-white dark:bg-[#141417] p-2 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08]">
                       {manageCollabResult.message}
                     </pre>
                   </div>
@@ -3567,13 +3646,13 @@ export default function ChatPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#e5e3dc] dark:border-white/[0.08]">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setShowManageMembersModal(false)}
-                className="text-xs h-8"
+                className="text-xs h-8 border-[#e5e3dc] dark:border-white/[0.1]"
               >
                 Annulla
               </Button>
@@ -3582,7 +3661,7 @@ export default function ChatPage() {
                 size="sm"
                 disabled={isSavingMembers}
                 onClick={handleSaveManageMembers}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 gap-1.5 cursor-pointer"
+                className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] text-xs h-8 gap-1.5 cursor-pointer border-0"
               >
                 {isSavingMembers ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -3596,65 +3675,66 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* Modal Elenco Partecipanti Canale ("Chi c'è dentro") */}
+      {/* Modal Elenco Partecipanti Canale */}
       {showParticipantsModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setShowParticipantsModal(false)}
         >
           <div
-            className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4 max-h-[85vh] flex flex-col"
+            className="w-full max-w-lg bg-white dark:bg-[#141417] rounded-lg border border-[#e5e3dc] dark:border-white/[0.1] shadow-2xl p-5 space-y-4 max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header Modale */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+            <div className="flex items-center justify-between pb-3 border-b border-[#e5e3dc] dark:border-white/[0.08] shrink-0">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                <div className="p-2 rounded-md bg-[#6366f1]/10 text-[#6366f1]">
                   <Users className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <h3
+                    className="text-sm font-bold text-[#111113] dark:text-[#f4f4f5] flex items-center gap-1.5"
+                    style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                  >
                     <span>Partecipanti</span>
-                    <span className="text-blue-600 dark:text-blue-400">#{activeChannel}</span>
+                    <span className="text-[#6366f1]">#{activeChannel}</span>
                   </h3>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-zinc-400">
                     {currentChannelParticipants.length}{' '}
-                    {currentChannelParticipants.length === 1 ? 'persona presente' : 'persone presenti'} nel canale
+                    {currentChannelParticipants.length === 1 ? 'persona presente' : 'persone presenti'}{' '}
+                    nel canale
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowParticipantsModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-1 rounded-sm text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Barra di Ricerca Partecipanti */}
             <div className="relative shrink-0">
-              <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="h-3.5 w-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={participantSearchQuery}
                 onChange={(e) => setParticipantSearchQuery(e.target.value)}
                 placeholder="Filtra persone per nome o email..."
-                className="w-full pl-9 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full pl-9 pr-8 py-2 rounded-md border border-[#e5e3dc] dark:border-white/[0.1] bg-[#f7f6f3] dark:bg-[#0d0d0f] text-xs text-[#111113] dark:text-[#f4f4f5] placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
               />
               {participantSearchQuery && (
                 <button
                   type="button"
                   onClick={() => setParticipantSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Elenco Partecipanti con Scroll */}
-            <div className="flex-1 overflow-y-auto space-y-1.5 min-h-0 pr-1">
+            <div className="flex-1 overflow-y-auto divide-y divide-[#e5e3dc] dark:divide-white/[0.06] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md min-h-0">
               {currentChannelParticipants
                 .filter((p: ChannelParticipant) => {
                   if (!participantSearchQuery.trim()) return true
@@ -3670,34 +3750,32 @@ export default function ChatPage() {
                   return (
                     <div
                       key={person.id}
-                      className="flex items-center justify-between p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200/50 dark:border-slate-700/50"
+                      className="flex items-center justify-between p-2.5 bg-white dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-[#1a1a1f] transition-colors"
                     >
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <div className="relative shrink-0">
                           <Avatar
                             fallback={person.full_name || '?'}
-                            className="h-8 w-8 text-xs font-semibold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200"
+                            className="h-8 w-8 text-xs font-semibold bg-[#f7f6f3] dark:bg-[#18181c] text-[#111113] dark:text-[#f4f4f5] border border-[#e5e3dc] dark:border-white/[0.08]"
                           />
-                          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" />
+                          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#10b981] ring-2 ring-white dark:ring-[#141417]" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                            <span className="text-xs font-bold text-[#111113] dark:text-[#f4f4f5] truncate">
                               {person.full_name}
                             </span>
                             {isMe && (
-                              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
-                                (Tu)
-                              </span>
+                              <span className="text-[10px] font-semibold text-[#6366f1]">(Tu)</span>
                             )}
                             {person.code && (
-                              <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                              <span className="text-[9px] font-mono px-1 py-0.2 rounded-sm bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25">
                                 {person.code}
                               </span>
                             )}
                           </div>
                           {person.email && (
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                            <p className="text-[10px] text-zinc-400 dark:text-zinc-500 truncate">
                               {person.email}
                             </p>
                           )}
@@ -3709,10 +3787,10 @@ export default function ChatPage() {
                           variant="outline"
                           className={`text-[9px] px-1.5 py-0.2 uppercase font-semibold ${
                             person.role === 'student'
-                              ? 'border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-950/40'
+                              ? 'border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10'
                               : person.role === 'collaborator'
-                              ? 'border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-950/40'
-                              : 'border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-400 bg-blue-50/60 dark:bg-blue-950/40'
+                                ? 'border-amber-500/30 text-amber-700 dark:text-amber-400 bg-amber-500/10'
+                                : 'border-[#6366f1]/30 text-[#6366f1] bg-[#6366f1]/10'
                           }`}
                         >
                           {person.role === 'student' ? 'Studente' : person.role}
@@ -3724,10 +3802,10 @@ export default function ChatPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => openDirectMessageWith(person.id)}
-                            className="h-7 px-2.5 text-xs gap-1 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/60 cursor-pointer"
+                            className="h-7 px-2.5 text-xs gap-1 border-[#e5e3dc] dark:border-white/[0.1] text-[#111113] dark:text-[#f4f4f5] hover:border-[#6366f1] cursor-pointer"
                             title={`Avvia messaggio diretto 1-a-1 con ${person.full_name}`}
                           >
-                            <MessageCircle className="h-3 w-3" />
+                            <MessageCircle className="h-3 w-3 text-[#6366f1]" />
                             <span>Messaggio</span>
                           </Button>
                         )}
@@ -3737,15 +3815,14 @@ export default function ChatPage() {
                 })}
             </div>
 
-            {/* Footer Modale */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 shrink-0">
+            <div className="flex items-center justify-between pt-2 border-t border-[#e5e3dc] dark:border-white/[0.08] text-[11px] text-zinc-400 shrink-0">
               <span>Clicca su &ldquo;Messaggio&rdquo; per aprire una chat 1-a-1 istantanea</span>
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
                 onClick={() => setShowParticipantsModal(false)}
-                className="text-xs h-7 px-3"
+                className="text-xs h-7 px-3 border-[#e5e3dc] dark:border-white/[0.1]"
               >
                 Chiudi
               </Button>
@@ -3757,7 +3834,7 @@ export default function ChatPage() {
       {/* Image Preview Zoom Modal */}
       {previewModalUrl && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setPreviewModalUrl(null)}
         >
           <div
@@ -3766,7 +3843,7 @@ export default function ChatPage() {
           >
             <button
               onClick={() => setPreviewModalUrl(null)}
-              className="absolute -top-10 right-0 p-1.5 rounded-full bg-slate-800 text-white hover:bg-slate-700 transition-colors shadow-lg"
+              className="absolute -top-10 right-0 p-1.5 rounded-full bg-[#18181c] text-white hover:bg-zinc-700 transition-colors shadow-lg cursor-pointer"
               aria-label="Chiudi anteprima"
             >
               <X className="h-5 w-5" />
@@ -3774,7 +3851,7 @@ export default function ChatPage() {
             <img
               src={previewModalUrl}
               alt="Anteprima a schermo intero"
-              className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl border border-slate-700"
+              className="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl border border-white/10"
             />
           </div>
         </div>

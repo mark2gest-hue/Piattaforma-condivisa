@@ -63,15 +63,13 @@ export function Sidebar({
       label: 'CRM & Operatività',
       subtitle: 'Clienti, Lavori, Posta & Call',
       icon: Briefcase,
-      color: 'from-blue-500/20 to-cyan-500/10 text-cyan-400 border-cyan-500/30',
-      activeColor: 'bg-blue-600/90 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]',
       items: [
         {
           title: 'Rubrica & CRM',
           subtitle: 'Anagrafica & Pipeline',
           href: '/clienti',
           icon: Users,
-          badge: 'CRM',
+          badge: null,
         },
         {
           title: 'Lavori',
@@ -110,7 +108,7 @@ export function Sidebar({
           icon: LifeBuoy,
           badge: openSupportTicketsCount > 0
             ? `${openSupportTicketsCount} ${openSupportTicketsCount === 1 ? 'Aperto' : 'Aperti'}`
-            : 'Inbox',
+            : null,
         },
         {
           title: 'Videocall',
@@ -126,29 +124,27 @@ export function Sidebar({
       label: 'Formazione Academy',
       subtitle: 'Corsi, Compiti & Agenti 3D',
       icon: GraduationCap,
-      color: 'from-purple-500/20 to-indigo-500/10 text-purple-400 border-purple-500/30',
-      activeColor: 'bg-purple-600/90 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]',
       items: [
         {
           title: 'Corsi Formativi',
           subtitle: 'Lezioni, Dispense & Registro',
           href: '/corsi',
           icon: GraduationCap,
-          badge: 'Studenti',
+          badge: null,
         },
         {
           title: 'Zona Compiti',
           subtitle: 'Missioni & Attestati',
           href: '/zona-compiti',
           icon: Award,
-          badge: 'Certificati',
+          badge: null,
         },
         {
           title: 'Squadra Agenti AI',
           subtitle: 'Orchestratore & Mira Lab 3D',
           href: '/workshop-agenti',
           icon: Bot,
-          badge: 'Studio AI',
+          badge: null,
         },
       ],
     },
@@ -157,22 +153,20 @@ export function Sidebar({
       label: 'Marketing & Video',
       subtitle: 'Autopilot Social & Video AI',
       icon: Megaphone,
-      color: 'from-amber-500/20 to-orange-500/10 text-amber-400 border-amber-500/30',
-      activeColor: 'bg-amber-600/90 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]',
       items: [
         {
           title: 'Marketing & Social',
           subtitle: 'Lorenzo & Stefano • Autopilot',
           href: '/growth-studio',
           icon: Megaphone,
-          badge: '1-Click',
+          badge: null,
         },
         {
           title: 'Video Studio Factory',
           subtitle: 'Neural Video & HyperFrames',
           href: `https://video.aiutiamoci.cloud/?auth_pin=2026&user=${userNameSlug}`,
           icon: Video,
-          badge: 'Factory',
+          badge: null,
         },
       ],
     },
@@ -181,15 +175,13 @@ export function Sidebar({
       label: 'Risorse & Hub',
       subtitle: 'Secondo Cervello, File & Tool',
       icon: Network,
-      color: 'from-emerald-500/20 to-teal-500/10 text-emerald-400 border-emerald-500/30',
-      activeColor: 'bg-emerald-600/90 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]',
       items: [
         {
           title: 'Secondo Cervello',
           subtitle: 'Prompt & Knowledge Hub',
           href: '/cervello',
           icon: Network,
-          badge: 'Vault',
+          badge: null,
         },
         {
           title: 'File & Documenti',
@@ -203,7 +195,7 @@ export function Sidebar({
           subtitle: 'DocToMark • PDF, Word ⇆ MD',
           href: '/convert/',
           icon: FileCode2,
-          badge: 'Tool',
+          badge: null,
         },
       ],
     },
@@ -401,7 +393,7 @@ export function Sidebar({
       : unreadEmailCount + openSupportTicketsCount + unreadChatCount
 
   const renderSidebarInner = (expanded: boolean) => (
-    <div className="flex-1 flex flex-col justify-between px-2.5 py-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-800">
+    <div className="flex-1 flex flex-col justify-between px-2.5 py-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10">
       {/* SE LA SIDEBAR È COLLASSATA (expanded = false): Mostra le 4 Macro-Icone in colonna */}
       {!expanded ? (
         <div className="flex flex-col items-center gap-3 pt-2">
@@ -423,25 +415,25 @@ export function Sidebar({
                 }}
                 title={`${group.label} • ${group.subtitle}`}
                 className={cn(
-                  'relative flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-200 group',
+                  'relative flex h-11 w-11 items-center justify-center rounded-md transition-colors duration-200 group',
                   isGroupActive
-                    ? 'bg-blue-600/90 text-white shadow-[0_0_18px_rgba(37,99,235,0.45)] border border-blue-400/50'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80 border border-transparent'
+                    ? 'bg-[#1f1f24] text-[#f4f4f5] border border-white/[0.08]'
+                    : 'text-zinc-400 hover:text-[#f4f4f5] hover:bg-[#18181c] border border-transparent'
                 )}
               >
                 <GroupIcon
                   className={cn(
-                    'h-5 w-5 transition-transform duration-200 group-hover:scale-110',
-                    isGroupActive ? 'text-white' : 'text-slate-400 group-hover:text-cyan-300'
+                    'h-5 w-5 transition-colors duration-200',
+                    isGroupActive ? 'text-[#f4f4f5]' : 'text-zinc-400 group-hover:text-[#f4f4f5]'
                   )}
                 />
                 {/* Active Indicator Bar */}
                 {isGroupActive && (
-                  <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-1 h-5 bg-cyan-400 rounded-r shadow-[0_0_8px_#22d3ee]" />
+                  <span className="absolute -left-2.5 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#6366f1] rounded-r" />
                 )}
                 {/* Notification Badge */}
                 {hasUnread && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_6px_#f43f5e] ring-2 ring-slate-900 animate-pulse" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-[#111113]" />
                 )}
               </button>
             )
@@ -449,7 +441,7 @@ export function Sidebar({
         </div>
       ) : (
         /* SE LA SIDEBAR È ESPANSA (expanded = true): Mostra i Macro-Gruppi con Header e Sotto-Voci Fluide */
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {visibleNavGroups.map((group) => {
             const GroupIcon = group.icon
             const isGroupOpen = openGroupId === group.id
@@ -461,26 +453,24 @@ export function Sidebar({
                 key={group.id}
                 onMouseEnter={() => setOpenGroupId(group.id)}
                 className={cn(
-                  'rounded-xl border transition-all duration-200 overflow-hidden',
+                  'rounded-md border transition-colors duration-200 overflow-hidden',
                   isGroupOpen
-                    ? 'bg-slate-950/50 border-slate-700/60 shadow-xs'
-                    : 'bg-transparent border-transparent hover:bg-slate-800/40'
+                    ? 'bg-[#18181c] border-white/[0.08]'
+                    : 'bg-transparent border-transparent hover:bg-[#18181c]/70'
                 )}
               >
                 {/* Header Card di Gruppo */}
                 <button
                   onClick={() => setOpenGroupId(isGroupOpen ? '' : group.id)}
-                  className={cn(
-                    'w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors group cursor-pointer'
-                  )}
+                  className="w-full flex items-center justify-between px-2.5 py-2.5 text-left transition-colors group cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div
                       className={cn(
-                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-all duration-200',
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition-colors duration-200',
                         isGroupActive
-                          ? 'bg-blue-600/30 text-cyan-300 border-blue-500/40 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
-                          : 'bg-slate-800/70 text-slate-400 border-slate-700/50 group-hover:text-slate-200'
+                          ? 'bg-[#6366f1]/15 text-[#6366f1] border-[#6366f1]/35'
+                          : 'bg-[#1f1f24] text-zinc-400 border-white/[0.08] group-hover:text-[#f4f4f5]'
                       )}
                     >
                       <GroupIcon className="h-4 w-4" />
@@ -488,13 +478,13 @@ export function Sidebar({
                     <div className="flex flex-col min-w-0">
                       <span
                         className={cn(
-                          'text-xs font-bold leading-tight truncate',
-                          isGroupActive ? 'text-white' : 'text-slate-200 group-hover:text-white'
+                          'text-xs font-semibold leading-tight truncate',
+                          isGroupActive ? 'text-[#f4f4f5]' : 'text-[#f4f4f5]/85 group-hover:text-[#f4f4f5]'
                         )}
                       >
                         {group.label}
                       </span>
-                      <span className="text-[10px] text-slate-400 leading-tight truncate">
+                      <span className="text-[10px] text-zinc-400 leading-tight truncate">
                         {group.subtitle}
                       </span>
                     </div>
@@ -502,14 +492,17 @@ export function Sidebar({
 
                   <div className="flex items-center gap-1.5 shrink-0 ml-2">
                     {hasUnread && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse">
+                      <span
+                        className="text-[9px] font-semibold px-1.5 py-0.5 rounded-sm bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                        style={{ fontFamily: 'var(--font-mono), monospace' }}
+                      >
                         {operativitaUnread}
                       </span>
                     )}
                     <ChevronDown
                       className={cn(
-                        'h-4 w-4 text-slate-400 transition-transform duration-200',
-                        isGroupOpen ? 'rotate-180 text-cyan-400' : 'text-slate-500 group-hover:text-slate-300'
+                        'h-4 w-4 transition-transform duration-200',
+                        isGroupOpen ? 'rotate-180 text-[#6366f1]' : 'text-zinc-400 group-hover:text-[#f4f4f5]'
                       )}
                     />
                   </div>
@@ -525,7 +518,7 @@ export function Sidebar({
                   )}
                 >
                   <div className="overflow-hidden">
-                    <div className="space-y-1 px-2 pb-2 pt-1 border-t border-slate-800/60 ml-2 mr-2">
+                    <div className="space-y-1 px-2 pb-2 pt-1.5 border-t border-white/[0.08] mx-2">
                       {group.items.map((item) => {
                         const isExternal = item.href.startsWith('http')
                         const isActive =
@@ -544,35 +537,35 @@ export function Sidebar({
                               if (isOpenMobile && onCloseMobile) onCloseMobile()
                             }}
                             className={cn(
-                              'group/item relative flex items-center justify-between rounded-lg px-2.5 py-1.5 transition-all duration-150',
+                              'group/item relative flex items-center justify-between rounded-md px-2.5 py-1.5 transition-colors duration-150 border',
                               isActive
-                                ? 'bg-blue-600/90 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] border border-blue-400/40 font-semibold'
-                                : 'text-slate-300 hover:bg-slate-800/70 hover:text-white border border-transparent'
+                                ? 'bg-[#1f1f24] text-[#f4f4f5] border-white/[0.08] font-semibold'
+                                : 'text-zinc-400 hover:bg-[#1f1f24]/80 hover:text-[#f4f4f5] border-transparent'
                             )}
                           >
-                            {/* Glow bar laterale su voce attiva */}
+                            {/* Barretta netta laterale su voce attiva */}
                             {isActive && (
-                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-cyan-400 rounded-r shadow-[0_0_6px_#22d3ee]" />
+                              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[#6366f1] rounded-r" />
                             )}
 
                             <div className="flex items-center gap-2.5 min-w-0">
                               <ItemIcon
                                 className={cn(
-                                  'h-4 w-4 shrink-0 transition-transform duration-150 group-hover/item:scale-110',
-                                  isActive ? 'text-white' : 'text-slate-400 group-hover/item:text-cyan-300'
+                                  'h-4 w-4 shrink-0 transition-colors duration-150',
+                                  isActive ? 'text-[#6366f1]' : 'text-zinc-400 group-hover/item:text-[#f4f4f5]'
                                 )}
                               />
                               <div className="flex flex-col min-w-0">
-                                <span className="text-xs font-semibold leading-tight text-slate-100 truncate flex items-center gap-1">
+                                <span className="text-xs font-semibold leading-tight text-[#f4f4f5] truncate flex items-center gap-1">
                                   {item.title}
                                   {isExternal && (
-                                    <ExternalLink className="h-3 w-3 text-slate-400 group-hover/item:text-slate-200 inline opacity-70 shrink-0" />
+                                    <ExternalLink className="h-3 w-3 text-zinc-400 group-hover/item:text-[#f4f4f5] inline opacity-75 shrink-0" />
                                   )}
                                 </span>
                                 <span
                                   className={cn(
                                     'text-[10px] leading-tight truncate',
-                                    isActive ? 'text-blue-100' : 'text-slate-400'
+                                    isActive ? 'text-[#f4f4f5]/75' : 'text-zinc-400'
                                   )}
                                 >
                                   {item.subtitle}
@@ -583,17 +576,16 @@ export function Sidebar({
                             {item.badge && (
                               <span
                                 className={cn(
-                                  'text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap shrink-0 text-center ml-2',
+                                  'text-[9px] font-semibold px-1.5 py-0.5 rounded-sm uppercase tracking-wider whitespace-nowrap shrink-0 text-center ml-2 border',
                                   (item.href === '/assistenza' && openSupportTicketsCount > 0) ||
                                     (item.href === '/posta' && unreadEmailCount > 0) ||
                                     (item.href === '/chat' && unreadChatCount > 0)
-                                    ? 'bg-rose-600 text-white border border-rose-400/50 shadow-xs animate-pulse'
+                                    ? 'bg-rose-600 text-white border-rose-400/50'
                                     : item.badge === 'Live'
-                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse'
-                                    : isActive
-                                    ? 'bg-white text-blue-600 shadow-xs'
-                                    : 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
+                                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25'
+                                      : 'bg-[#1f1f24] text-[#f4f4f5] border-white/[0.08]'
                                 )}
+                                style={{ fontFamily: 'var(--font-mono), monospace' }}
                               >
                                 {item.badge}
                               </span>
@@ -611,16 +603,16 @@ export function Sidebar({
       )}
 
       {/* Team & User Footer con Pin e Logout */}
-      <div className="mt-3 pt-3 border-t border-slate-800/80 space-y-2">
+      <div className="mt-3 pt-3 border-t border-white/[0.08] space-y-2">
         {expanded ? (
-          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-800/60 border border-slate-700/50 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between p-2 rounded-md bg-[#18181c] border border-white/[0.08]">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-700 text-slate-200">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#1f1f24] border border-white/[0.08] text-[#f4f4f5]">
                 <Users className="h-4 w-4" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold text-slate-200 truncate">Team ({teamCount})</span>
-                <span className="text-[10px] text-slate-400 truncate">{teamSubtitle}</span>
+                <span className="text-xs font-semibold text-[#f4f4f5] truncate">Team ({teamCount})</span>
+                <span className="text-[10px] text-zinc-400 truncate">{teamSubtitle}</span>
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">
@@ -631,8 +623,8 @@ export function Sidebar({
                   className={cn(
                     'p-1.5 rounded-md transition-colors cursor-pointer',
                     isPinned
-                      ? 'text-cyan-400 bg-cyan-500/15'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+                      ? 'text-[#6366f1] bg-[#6366f1]/15'
+                      : 'text-zinc-400 hover:text-[#f4f4f5] hover:bg-[#1f1f24]'
                   )}
                 >
                   {isPinned ? <Pin className="h-3.5 w-3.5 rotate-45" /> : <PinOff className="h-3.5 w-3.5" />}
@@ -644,7 +636,7 @@ export function Sidebar({
                   window.location.href = '/login'
                 }}
                 title="Disconnetti / Esci"
-                className="p-1.5 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                className="p-1.5 rounded-md text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
               >
                 <LogOut className="h-3.5 w-3.5" />
               </button>
@@ -656,7 +648,7 @@ export function Sidebar({
               <button
                 onClick={onTogglePin}
                 title={isPinned ? 'Sblocca Dock' : 'Fissa Sidebar'}
-                className="p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-2 rounded-md text-zinc-400 hover:text-[#6366f1] hover:bg-[#18181c] transition-colors cursor-pointer"
               >
                 <Pin className="h-4 w-4" />
               </button>
@@ -667,7 +659,7 @@ export function Sidebar({
                 window.location.href = '/login'
               }}
               title="Disconnetti / Esci"
-              className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+              className="p-2 rounded-md text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -675,11 +667,7 @@ export function Sidebar({
         )}
         <BuildVersionBadge
           compact={!expanded}
-          className={
-            !expanded
-              ? 'w-full justify-center px-1.5 bg-slate-800/80 text-slate-300 border-slate-700/70'
-              : 'w-full justify-center bg-slate-800/80 text-slate-300 border-slate-700/70'
-          }
+          className="w-full justify-center px-1.5 bg-[#18181c] text-zinc-400 border-white/[0.08]"
         />
       </div>
     </div>
@@ -687,7 +675,7 @@ export function Sidebar({
 
   return (
     <>
-      {/* Desktop Fluid Neon Dock Sidebar (w-[68px] collassata -> w-72 espansa) */}
+      {/* Desktop Slim Dock Sidebar (w-[68px] collassata -> w-64 espansa, dorsale flush a filo sinistro) */}
       <aside
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => {
@@ -695,37 +683,44 @@ export function Sidebar({
           setOpenGroupId(activeGroupId)
         }}
         className={cn(
-          'hidden md:flex md:flex-col fixed top-3 bottom-3 left-3 z-40',
-          'bg-slate-900/95 backdrop-blur-xl border border-slate-800/90 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.5)]',
+          'hidden md:flex md:flex-col fixed top-0 bottom-0 left-0 z-40',
+          'bg-[#111113] border-r border-white/[0.08]',
           'transition-all duration-300 ease-out',
-          isExpanded
-            ? 'w-72 shadow-[0_15px_40px_rgba(37,99,235,0.15)] ring-1 ring-blue-500/20'
-            : 'w-[68px]'
+          isExpanded ? 'w-64' : 'w-[68px]',
+          isHovered && !isPinned && 'shadow-[12px_0_32px_rgba(0,0,0,0.45)]'
         )}
       >
         {/* Brand Header */}
         <div
           className={cn(
-            'flex items-center h-16 border-b border-slate-800/80 bg-slate-950/40 rounded-t-2xl transition-all duration-200 overflow-hidden',
+            'flex items-center h-14 border-b border-white/[0.08] bg-[#111113] transition-all duration-200 overflow-hidden shrink-0',
             isExpanded ? 'px-4 gap-3' : 'justify-center px-0'
           )}
         >
-          <Link href="/lavori" className="flex items-center gap-3 group">
+          <Link href="/lavori" className="flex items-center gap-3 group min-w-0">
             <img
-              src="/images/logo_icon_dark.png"
-              alt="AI Logo"
+              src="/images/brand/icon-dark.svg"
+              alt="AIutiamoci"
               className="h-8 w-8 object-contain shrink-0 transition-transform group-hover:scale-105"
             />
             {isExpanded && (
-              <div className="flex flex-col animate-in fade-in duration-200 truncate">
-                <span className="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
-                  aiutiamoci{' '}
-                  <span className="text-[9px] uppercase font-semibold px-1.5 py-0.2 bg-blue-500/20 text-blue-400 rounded">
-                    Hub
+              <div className="flex flex-col truncate">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="font-bold text-sm tracking-tight text-[#f4f4f5]"
+                    style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                  >
+                    <span className="text-[#6366f1]">AI</span>utiamoci
                   </span>
-                </span>
-                <span className="text-[10px] text-slate-400 font-medium truncate">
-                  Piattaforma & Corsi AI
+                  <span
+                    className="text-[9px] uppercase tracking-[0.14em] text-zinc-400 border border-white/[0.12] px-1.5 py-0.5 rounded-sm"
+                    style={{ fontFamily: 'var(--font-mono), monospace' }}
+                  >
+                    WORKSPACE
+                  </span>
+                </div>
+                <span className="text-[10px] text-zinc-400 font-medium truncate">
+                  Piattaforma &amp; Corsi AI
                 </span>
               </div>
             )}
@@ -739,26 +734,39 @@ export function Sidebar({
         <div className="fixed inset-0 z-50 md:hidden flex">
           {/* Overlay backdrop */}
           <div
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-black/75 backdrop-blur-xs transition-opacity"
             onClick={onCloseMobile}
           />
           {/* Drawer content */}
-          <aside className="relative flex flex-col w-72 max-w-[85vw] h-full bg-slate-900 text-slate-100 border-r border-slate-800 z-10 shadow-2xl animate-in slide-in-from-left duration-200">
-            <div className="flex items-center justify-between px-5 h-16 border-b border-slate-800/80 bg-slate-950/40">
-              <div className="flex items-center gap-3">
+          <aside className="relative flex flex-col w-64 max-w-[85vw] h-full bg-[#111113] text-[#f4f4f5] border-r border-white/[0.08] z-10 shadow-2xl">
+            <div className="flex items-center justify-between px-4 h-14 border-b border-white/[0.08] bg-[#111113] shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
                 <img
-                  src="/images/logo_icon_dark.png"
-                  alt="AI Logo"
-                  className="h-9 w-9 object-contain shrink-0"
+                  src="/images/brand/icon-dark.svg"
+                  alt="AIutiamoci"
+                  className="h-8 w-8 object-contain shrink-0"
                 />
-                <div className="flex flex-col">
-                  <span className="font-bold text-sm tracking-tight text-white">aiutiamoci</span>
-                  <span className="text-[10px] text-slate-400">Piattaforma Condivisa</span>
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="font-bold text-sm tracking-tight text-[#f4f4f5]"
+                      style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                    >
+                      <span className="text-[#6366f1]">AI</span>utiamoci
+                    </span>
+                    <span
+                      className="text-[9px] uppercase tracking-[0.14em] text-zinc-400"
+                      style={{ fontFamily: 'var(--font-mono), monospace' }}
+                    >
+                      WORKSPACE
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-zinc-400">Piattaforma Condivisa</span>
                 </div>
               </div>
               <button
                 onClick={onCloseMobile}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg bg-slate-800/60 cursor-pointer"
+                className="p-1.5 text-zinc-400 hover:text-[#f4f4f5] rounded-md bg-[#18181c] cursor-pointer"
                 title="Chiudi Menu"
               >
                 <span className="text-lg font-bold leading-none px-1">✕</span>

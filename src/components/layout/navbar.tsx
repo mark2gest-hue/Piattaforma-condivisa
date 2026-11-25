@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {
   Bell,
   Search,
@@ -34,10 +35,26 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { BuildVersionBadge } from '@/components/layout/build-version-badge'
 import { createClient } from '@/lib/supabase/client'
 import { playNotificationSound, requestNotificationPermission } from '@/lib/notifications'
 import { Project } from '@/types/index'
+
+const SECTION_ROUTES: ReadonlyArray<{ prefix: string; title: string }> = [
+  { prefix: '/lavori', title: 'Lavori' },
+  { prefix: '/clienti', title: 'Rubrica & CRM' },
+  { prefix: '/calendario', title: 'Calendario' },
+  { prefix: '/posta', title: 'Posta Condivisa' },
+  { prefix: '/chat', title: 'Chat' },
+  { prefix: '/assistenza', title: 'Assistenza' },
+  { prefix: '/videocall', title: 'Videocall' },
+  { prefix: '/corsi', title: 'Corsi Formativi' },
+  { prefix: '/zona-compiti', title: 'Zona Compiti' },
+  { prefix: '/workshop-agenti', title: 'Squadra Agenti AI' },
+  { prefix: '/growth-studio', title: 'Marketing & Social' },
+  { prefix: '/cervello', title: 'Secondo Cervello' },
+  { prefix: '/files', title: 'File & Documenti' },
+  { prefix: '/convert', title: 'Convertitore AI' },
+]
 
 interface NavbarProps {
   userRole?: string
@@ -63,6 +80,13 @@ export function Navbar({
   avatarUrl = null,
   onToggleMobileMenu,
 }: NavbarProps) {
+  const pathname = usePathname()
+  const activeSectionTitle =
+    SECTION_ROUTES.find(
+      (route) =>
+        pathname === route.prefix || pathname?.startsWith(`${route.prefix}/`)
+    )?.title ?? 'Workspace'
+
   // Current user state
   const [currentUser, setCurrentUser] = useState({
     name: userName,
@@ -287,14 +311,14 @@ export function Navbar({
 
   return (
     <>
-      <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-2.5 sm:px-4 md:px-8 backdrop-blur shadow-xs transition-colors duration-200">
-        {/* Mobile Toggle & Context */}
-        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+      <header className="sticky top-0 z-20 flex h-14 w-full items-center justify-between border-b border-[#e5e3dc] dark:border-white/[0.08] bg-white/95 dark:bg-[#0d0d0f]/95 px-2.5 sm:px-4 md:px-6 backdrop-blur-md transition-colors duration-200 shrink-0">
+        {/* Mobile Toggle & Dynamic Breadcrumb */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onToggleMobileMenu && (
             <button
               type="button"
               onClick={onToggleMobileMenu}
-              className="md:hidden p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+              className="md:hidden p-2 -ml-1 text-zinc-600 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] hover:bg-[#f7f6f3] dark:hover:bg-[#18181c] rounded-md transition-colors"
               title="Apri Menu Navigazione"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -303,14 +327,22 @@ export function Navbar({
             </button>
           )}
 
-          <div className="flex items-center gap-2">
-            <span className="md:hidden font-bold text-sm tracking-tight text-blue-600 dark:text-blue-400 whitespace-nowrap shrink-0">Team Hub</span>
-            <Badge variant="outline" className="hidden sm:flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700">
-              <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-              <span>Workspace Condiviso</span>
-            </Badge>
-            <BuildVersionBadge className="hidden sm:inline-flex shrink-0 whitespace-nowrap" />
-            <BuildVersionBadge compact className="sm:hidden shrink-0 whitespace-nowrap" />
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className="hidden sm:inline text-[11px] uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500 shrink-0"
+              style={{ fontFamily: 'var(--font-mono), monospace' }}
+            >
+              WORKSPACE
+            </span>
+            <span className="hidden sm:inline text-[#e5e3dc] dark:text-white/20 text-xs select-none">
+              /
+            </span>
+            <span
+              className="text-sm sm:text-[15px] font-bold tracking-tight text-[#111113] dark:text-[#f4f4f5] truncate"
+              style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+            >
+              {activeSectionTitle}
+            </span>
           </div>
         </div>
 
@@ -319,27 +351,27 @@ export function Navbar({
           <button
             type="button"
             onClick={() => setIsCommandOpen(true)}
-            className="w-full h-9 pl-3 pr-2 flex items-center justify-between text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 transition-all cursor-pointer shadow-xs"
+            className="w-full h-8 pl-3 pr-2 flex items-center justify-between text-xs rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-zinc-500 dark:text-zinc-400 hover:bg-white dark:hover:bg-[#1a1a1f] hover:border-zinc-300 dark:hover:border-white/20 transition-colors cursor-pointer"
           >
             <span className="flex items-center gap-2 truncate">
-              <Search className="h-4 w-4 text-slate-400 shrink-0" />
+              <Search className="h-3.5 w-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
               <span className="truncate">Cerca pagine, studenti, task o strumenti...</span>
             </span>
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded border border-slate-300 dark:border-slate-600">
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-white dark:bg-[#1f1f24] text-zinc-600 dark:text-[#f4f4f5] rounded-sm border border-[#e5e3dc] dark:border-white/[0.08]">
               ⌘K
             </kbd>
           </button>
         </div>
 
         {/* Right User & Actions */}
-        <div className="flex items-center gap-1 sm:gap-2.5 relative shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 relative shrink-0">
           {/* Theme Toggle */}
           <ThemeToggle />
 
           {/* 2FA TOTP Security Link */}
           <Link
             href="/mfa"
-            className="inline-flex items-center gap-1 px-2 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            className="inline-flex items-center gap-1 px-2 py-1.5 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 hover:text-[#6366f1] dark:hover:text-[#f4f4f5] hover:bg-[#f7f6f3] dark:hover:bg-[#18181c] rounded-md transition-colors"
             title="Configura Autenticazione a Due Fattori (2FA)"
           >
             <ShieldCheck className="h-4 w-4" />
@@ -353,10 +385,10 @@ export function Navbar({
               setIsForcedPasswordChange(false)
               setIsPasswordModalOpen(true)
             }}
-            className="p-1.5 sm:p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] hover:bg-[#f7f6f3] dark:hover:bg-[#18181c] rounded-md transition-colors cursor-pointer"
             title="Cambia Password Personale"
           >
-            <KeyRound className="h-5 w-5" />
+            <KeyRound className="h-4 w-4" />
           </button>
 
           {/* Notifications Bell Button */}
@@ -366,22 +398,22 @@ export function Navbar({
               setIsNotificationsOpen(!isNotificationsOpen)
               requestNotificationPermission()
             }}
-            className="relative p-1.5 sm:p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            className="relative p-1.5 sm:p-2 text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] hover:bg-[#f7f6f3] dark:hover:bg-[#18181c] rounded-md transition-colors cursor-pointer"
             title="Centro Notifiche"
           >
-            <Bell className="h-5 w-5" />
+            <Bell className="h-4 w-4" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-blue-600 ring-2 ring-white dark:ring-slate-900 animate-pulse" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#6366f1] ring-2 ring-white dark:ring-[#0d0d0f]" />
             )}
           </button>
 
           {/* Dropdown Centro Notifiche */}
           {isNotificationsOpen && (
-            <div className="absolute right-0 top-12 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden text-left">
-              <div className="p-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
+            <div className="absolute right-0 top-11 w-80 sm:w-96 bg-white dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] rounded-lg shadow-2xl z-50 overflow-hidden text-left">
+              <div className="p-3.5 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
                 <div className="flex items-center gap-2">
-                  <Bell className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span className="font-bold text-xs text-slate-900 dark:text-white">Centro Notifiche</span>
+                  <Bell className="h-4 w-4 text-[#6366f1]" />
+                  <span className="font-bold text-xs text-[#111113] dark:text-[#f4f4f5]">Centro Notifiche</span>
                   {unreadCount > 0 && (
                     <Badge variant="info" className="text-[9px] px-1.5 py-0">
                       {unreadCount} nuove
@@ -394,7 +426,7 @@ export function Navbar({
                     variant="ghost"
                     size="icon"
                     onClick={testAudioSound}
-                    className="h-7 w-7 text-slate-500 hover:text-blue-600"
+                    className="h-7 w-7 text-zinc-500 hover:text-[#6366f1]"
                     title="Testa Suono Notifica"
                   >
                     <Volume2 className="h-3.5 w-3.5" />
@@ -403,40 +435,40 @@ export function Navbar({
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsNotificationsOpen(false)}
-                    className="h-7 w-7 text-slate-400 hover:text-slate-700"
+                    className="h-7 w-7 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
                   >
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
 
-              <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-80 overflow-y-auto">
+              <div className="divide-y divide-[#e5e3dc] dark:divide-white/[0.08] max-h-80 overflow-y-auto">
                 {notifications.map((n) => (
                   <div
                     key={n.id}
                     className={`p-3 text-xs flex items-start gap-3 transition-colors ${
-                      n.read ? 'opacity-70 bg-white dark:bg-slate-900' : 'bg-blue-50/50 dark:bg-blue-950/30 font-medium'
+                      n.read ? 'opacity-70 bg-white dark:bg-[#141417]' : 'bg-[#6366f1]/5 dark:bg-[#6366f1]/10 font-medium'
                     }`}
                   >
-                    {n.type === 'chat' && <MessageSquare className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />}
-                    {n.type === 'email' && <Mail className="h-4 w-4 text-purple-500 shrink-0 mt-0.5" />}
+                    {n.type === 'chat' && <MessageSquare className="h-4 w-4 text-[#6366f1] shrink-0 mt-0.5" />}
+                    {n.type === 'email' && <Mail className="h-4 w-4 text-[#6366f1] shrink-0 mt-0.5" />}
                     {n.type === 'task' && <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />}
-                    
+
                     <div className="flex-1 space-y-0.5">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900 dark:text-white">{n.title}</span>
-                        <span className="text-[10px] text-slate-400">{n.time}</span>
+                        <span className="font-semibold text-[#111113] dark:text-[#f4f4f5]">{n.title}</span>
+                        <span className="text-[10px] text-zinc-400">{n.time}</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{n.desc}</p>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{n.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="p-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 text-center">
+              <div className="p-2 border-t border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-center">
                 <button
                   onClick={markAllRead}
-                  className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-[11px] font-semibold text-[#6366f1] hover:underline cursor-pointer"
                 >
                   Segna tutte come lette
                 </button>
@@ -445,15 +477,15 @@ export function Navbar({
           )}
 
           {/* User Card & Logout */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 pl-1.5 sm:pl-2.5 border-l border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 pl-1.5 sm:pl-2.5 border-l border-[#e5e3dc] dark:border-white/[0.08]">
             <Avatar
               src={currentUser.avatarUrl}
               fallback={currentUser.name}
-              className="h-8 w-8 bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200 font-semibold border-blue-200 dark:border-blue-800"
+              className="h-7 w-7 bg-[#f7f6f3] dark:bg-[#18181c] text-[#111113] dark:text-[#f4f4f5] font-semibold border border-[#e5e3dc] dark:border-white/[0.08]"
             />
             <div className="hidden md:flex flex-col text-left">
               <div className="flex items-center gap-1.5 leading-none">
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{currentUser.name}</span>
+                <span className="text-xs font-semibold text-[#111113] dark:text-[#f4f4f5]">{currentUser.name}</span>
                 <Badge
                   variant={currentUser.role === 'dev' ? 'purple' : currentUser.role === 'admin' ? 'warning' : currentUser.role === 'collaborator' ? 'outline' : 'info'}
                   className="text-[9px] px-1.5 py-0 uppercase"
@@ -461,7 +493,7 @@ export function Navbar({
                   {currentUser.role}
                 </Badge>
               </div>
-              <span className="text-[11px] text-slate-400 leading-tight mt-0.5">{currentUser.email}</span>
+              <span className="text-[11px] text-zinc-400 dark:text-zinc-400 leading-tight mt-0.5">{currentUser.email}</span>
             </div>
 
             {/* Logout Button */}
@@ -472,7 +504,7 @@ export function Navbar({
                 await supabase.auth.signOut()
                 window.location.href = '/login'
               }}
-              className="ml-1 h-8 px-2.5 text-xs text-red-600 dark:text-red-400 hover:text-white hover:bg-red-600 dark:hover:bg-red-600 border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="ml-1 h-8 px-2.5 rounded-md text-xs text-red-600 dark:text-red-400 hover:text-white hover:bg-red-600 dark:hover:bg-red-600 border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Disconnetti ed esci dalla piattaforma"
             >
               <LogOut className="h-3.5 w-3.5" />
@@ -484,18 +516,18 @@ export function Navbar({
 
       {/* Modal Creazione Rapida Nuova Attività */}
       {isTaskModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 text-left">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 text-left">
+          <div className="bg-white dark:bg-[#141417] rounded-lg shadow-2xl w-full max-w-md border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
+            <div className="p-4 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
               <div className="flex items-center gap-2">
-                <PlusCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuova Attività nel Kanban</h3>
+                <PlusCircle className="h-5 w-5 text-[#6366f1]" />
+                <h3 className="font-bold text-sm text-[#111113] dark:text-[#f4f4f5]">Nuova Attività nel Kanban</h3>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsTaskModalOpen(false)}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="h-7 w-7 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -503,35 +535,35 @@ export function Navbar({
 
             <form onSubmit={handleCreateTask} className="p-5 space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo Attività *</label>
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">Titolo Attività *</label>
                 <Input
                   autoFocus
                   required
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
                   placeholder="Es. Sviluppare agente AI per il supporto"
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                  className="text-xs bg-[#f7f6f3] dark:bg-[#0d0d0f] border-[#e5e3dc] dark:border-white/[0.08]"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Descrizione (Opzionale)</label>
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">Descrizione (Opzionale)</label>
                 <textarea
                   rows={3}
                   value={taskDesc}
                   onChange={(e) => setTaskDesc(e.target.value)}
                   placeholder="Dettagli ed istruzioni per il compito..."
-                  className="w-full text-xs p-2.5 rounded-md border border-input bg-background dark:bg-slate-800 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-xs p-2.5 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] focus:outline-none focus:ring-2 focus:ring-[#6366f1]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Stato Iniziale</label>
+                  <label className="font-semibold text-zinc-700 dark:text-zinc-300">Stato Iniziale</label>
                   <select
                     value={taskStatus}
                     onChange={(e: any) => setTaskStatus(e.target.value)}
-                    className="w-full h-9 rounded-md border border-input bg-background dark:bg-slate-800 dark:border-slate-700 px-2 text-xs"
+                    className="w-full h-9 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] px-2 text-xs text-[#111113] dark:text-[#f4f4f5]"
                   >
                     <option value="todo">Da Fare</option>
                     <option value="in_progress">In Corso</option>
@@ -540,11 +572,11 @@ export function Navbar({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Priorità</label>
+                  <label className="font-semibold text-zinc-700 dark:text-zinc-300">Priorità</label>
                   <select
                     value={taskPriority}
                     onChange={(e: any) => setTaskPriority(e.target.value)}
-                    className="w-full h-9 rounded-md border border-input bg-background dark:bg-slate-800 dark:border-slate-700 px-2 text-xs"
+                    className="w-full h-9 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] px-2 text-xs text-[#111113] dark:text-[#f4f4f5]"
                   >
                     <option value="low">Bassa</option>
                     <option value="medium">Media</option>
@@ -555,11 +587,11 @@ export function Navbar({
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Progetto Collegato</label>
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">Progetto Collegato</label>
                 <select
                   value={selectedProjectId}
                   onChange={(e) => setSelectedProjectId(e.target.value)}
-                  className="w-full h-9 rounded-md border border-input bg-background dark:bg-slate-800 dark:border-slate-700 px-2 text-xs"
+                  className="w-full h-9 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] px-2 text-xs text-[#111113] dark:text-[#f4f4f5]"
                 >
                   <option value="">Nessun progetto specifico</option>
                   {projects.map((p) => (
@@ -568,11 +600,11 @@ export function Navbar({
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e5e3dc] dark:border-white/[0.08]">
                 <Button type="button" variant="outline" onClick={() => setIsTaskModalOpen(false)}>
                   Annulla
                 </Button>
-                <Button type="submit" disabled={isCreatingTask} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button type="submit" disabled={isCreatingTask} className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f]">
                   {isCreatingTask ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
@@ -591,25 +623,25 @@ export function Navbar({
       {/* COMMAND PALETTE MODAL (CMD + K) */}
       {isCommandOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-start justify-center pt-20 p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-start justify-center pt-20 p-4 animate-in fade-in duration-150"
           onClick={() => setIsCommandOpen(false)}
         >
           <div
-            className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+            className="bg-white dark:bg-[#141417] w-full max-w-xl rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Input Cerca */}
-            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-200 dark:border-slate-800">
-              <Search className="h-5 w-5 text-indigo-500 shrink-0" />
+            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#e5e3dc] dark:border-white/[0.08]">
+              <Search className="h-4 w-4 text-[#6366f1] shrink-0" />
               <input
                 type="text"
                 autoFocus
                 value={cmdSearchQuery}
                 onChange={(e) => setCmdSearchQuery(e.target.value)}
                 placeholder="Digita dove vuoi andare o un'azione (es. studenti, video, lavori, agenti)..."
-                className="w-full text-sm bg-transparent outline-none text-slate-900 dark:text-white placeholder:text-slate-400"
+                className="w-full text-sm bg-transparent outline-none text-[#111113] dark:text-[#f4f4f5] placeholder:text-zinc-400"
               />
-              <kbd className="px-2 py-0.5 text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 rounded border border-slate-200 dark:border-slate-700">
+              <kbd className="px-2 py-0.5 text-[10px] font-mono bg-[#f7f6f3] dark:bg-[#18181c] text-zinc-500 dark:text-zinc-400 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08]">
                 ESC
               </kbd>
             </div>
@@ -640,22 +672,22 @@ export function Navbar({
                       key={idx}
                       href={item.href}
                       onClick={() => setIsCommandOpen(false)}
-                      className="flex items-center justify-between p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer"
+                      className="flex items-center justify-between p-2.5 rounded-md hover:bg-[#f7f6f3] dark:hover:bg-[#1f1f24] transition-colors group cursor-pointer"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-950/60 text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center justify-center shrink-0 transition-colors">
+                        <div className="h-8 w-8 rounded-md bg-[#f7f6f3] dark:bg-[#18181c] border border-[#e5e3dc] dark:border-white/[0.08] group-hover:border-[#6366f1]/40 text-zinc-600 dark:text-zinc-300 group-hover:text-[#6366f1] flex items-center justify-center shrink-0 transition-colors">
                           <Icon className="h-4 w-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 truncate">
+                          <p className="font-semibold text-[#111113] dark:text-[#f4f4f5] group-hover:text-[#6366f1] truncate">
                             {item.title}
                           </p>
-                          <p className="text-[11px] text-slate-400 truncate">
+                          <p className="text-[11px] text-zinc-400 truncate">
                             {item.subtitle}
                           </p>
                         </div>
                       </div>
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider bg-[#f7f6f3] dark:bg-[#18181c] border border-[#e5e3dc] dark:border-white/[0.08] text-zinc-500 dark:text-zinc-400 group-hover:bg-[#6366f1] group-hover:text-white group-hover:border-[#6366f1] transition-all">
                         {item.badge}
                       </span>
                     </Link>
@@ -664,9 +696,9 @@ export function Navbar({
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+            <div className="px-4 py-2 border-t border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] flex items-center justify-between text-[11px] text-zinc-400 font-mono">
               <span>Naviga con un clic</span>
-              <span>Aiutiamoci Hub</span>
+              <span>AIutiamoci Hub</span>
             </div>
           </div>
         </div>
@@ -675,19 +707,19 @@ export function Navbar({
       {/* Modal Cambio Password Personale / Forzato */}
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 text-left">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+          <div className="bg-white dark:bg-[#141417] rounded-lg shadow-2xl w-full max-w-md border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
+            <div className="p-4 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-md bg-[#6366f1]/10 text-[#6366f1] flex items-center justify-center shrink-0">
                   <KeyRound className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  <h3 className="font-bold text-sm text-[#111113] dark:text-[#f4f4f5]">
                     {isForcedPasswordChange
                       ? 'Imposta la tua Password Personale'
                       : 'Cambia Password Personale'}
                   </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                     {isForcedPasswordChange
                       ? 'Primo accesso: per sicurezza imposta una password riservata'
                       : 'Aggiorna la tua chiave di accesso all\'account'}
@@ -700,7 +732,7 @@ export function Navbar({
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsPasswordModalOpen(false)}
-                  className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                  className="h-7 w-7 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -709,20 +741,20 @@ export function Navbar({
 
             <form onSubmit={handlePasswordSubmit} className="p-5 space-y-4 text-xs">
               {passwordError && (
-                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300">
+                <div className="p-3 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300">
                   {passwordError}
                 </div>
               )}
 
               {passwordSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                <div className="p-3 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
                   <span>Password aggiornata con successo!</span>
                 </div>
               )}
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">
                   Nuova Password (minimo 8 caratteri) *
                 </label>
                 <div className="relative">
@@ -732,12 +764,12 @@ export function Navbar({
                     value={newPasswordVal}
                     onChange={(e) => setNewPasswordVal(e.target.value)}
                     placeholder="Almeno 8 caratteri sicuri"
-                    className="pr-10 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700"
+                    className="pr-10 bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] border-[#e5e3dc] dark:border-white/[0.08]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswordVal(!showPasswordVal)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
                   >
                     {showPasswordVal ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -745,7 +777,7 @@ export function Navbar({
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">
                   Conferma Nuova Password *
                 </label>
                 <Input
@@ -754,11 +786,11 @@ export function Navbar({
                   value={confirmPasswordVal}
                   onChange={(e) => setConfirmPasswordVal(e.target.value)}
                   placeholder="Ripeti la nuova password"
-                  className="bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700"
+                  className="bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] border-[#e5e3dc] dark:border-white/[0.08]"
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#e5e3dc] dark:border-white/[0.08]">
                 {!isForcedPasswordChange && (
                   <Button
                     type="button"
@@ -772,7 +804,7 @@ export function Navbar({
                 <Button
                   type="submit"
                   disabled={passwordLoading || !newPasswordVal || !confirmPasswordVal}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-1.5 cursor-pointer"
+                  className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] font-semibold flex items-center gap-1.5 cursor-pointer"
                 >
                   {passwordLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>Salva Nuova Password</span>

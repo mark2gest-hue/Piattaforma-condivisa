@@ -916,21 +916,26 @@ export default function PostaCondivisaPage() {
   // Se l'utente non è autenticato con account team Supabase
   if (!loading && !currentUser) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-md w-full p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-5">
-          <div className="h-16 w-16 mx-auto rounded-2xl bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 flex items-center justify-center">
-            <Mail className="h-8 w-8" />
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center bg-[#f7f6f3] dark:bg-[#0d0d0f]">
+        <div className="max-w-md w-full p-8 rounded-lg bg-white dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] shadow-xl space-y-5">
+          <div className="h-14 w-14 mx-auto rounded-md bg-[#6366f1]/10 text-[#6366f1] border border-[#6366f1]/25 flex items-center justify-center">
+            <Mail className="h-7 w-7" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Posta Condivisa del Team</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Questa sezione è riservata ai membri del team per la gestione delle 4 caselle di posta aziendali (aiutiamoci.cloud e mar2.cloud).
+            <h2
+              className="text-lg font-bold text-[#111113] dark:text-[#f4f4f5]"
+              style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+            >
+              Posta Condivisa del Team
+            </h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Questa sezione è riservata ai membri del team per la gestione delle caselle di posta aziendali (aiutiamoci.cloud e mark2.cloud).
             </p>
           </div>
           <div className="pt-2">
             <Button
               onClick={() => router.push('/login')}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs h-10 gap-2 shadow-md"
+              className="w-full bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] font-semibold text-xs h-9 gap-2 rounded-md border-0"
             >
               <span>Accedi con Account Team</span>
               <ArrowRight className="h-4 w-4" />
@@ -942,59 +947,75 @@ export default function PostaCondivisaPage() {
   }
 
   return (
-    <div className="space-y-4 flex flex-col h-[calc(100vh-7.5rem)]">
-      {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
-              <Mail className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                Posta Condivisa
-                <Badge variant="outline" className="text-[11px] font-mono font-medium text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/60">
-                  7 Caselle Aruba
-                </Badge>
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                aiutiamoci.cloud & mark2.cloud con sincronizzazione IMAP diretta e invio Resend.
-              </p>
-            </div>
-          </div>
+    <div className="h-full flex flex-col overflow-hidden bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5]">
+      {/* A) COMMAND BAR */}
+      <div className="min-h-[52px] px-4 sm:px-5 py-2 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#0d0d0f] flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <h1
+            className="text-[15px] font-bold tracking-tight text-[#111113] dark:text-[#f4f4f5] shrink-0"
+            style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+          >
+            Posta Condivisa
+          </h1>
+
+          <span
+            className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[10px] text-zinc-500 dark:text-zinc-400 shrink-0"
+            style={{ fontFamily: 'var(--font-mono), monospace' }}
+          >
+            7 Caselle Aruba
+          </span>
+
+          {syncStatusMsg && (
+            <span className="text-[11px] font-medium text-[#6366f1] bg-[#6366f1]/10 border border-[#6366f1]/25 px-2 py-0.5 rounded-sm truncate max-w-[280px]">
+              {syncStatusMsg}
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {syncStatusMsg && (
-            <div className="text-[11px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800 animate-pulse">
-              {syncStatusMsg}
-            </div>
-          )}
+        <div className="flex flex-wrap items-center gap-2 ml-auto">
+          {/* Ricerca Rapida */}
+          <div className="relative w-44 sm:w-60">
+            <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cerca mittente, oggetto..."
+              className="pl-8 pr-7 h-8 text-xs bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] rounded-md"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
 
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             onClick={handleSyncImap}
             disabled={isSyncingImap}
-            className="text-xs border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 h-9 px-3 gap-1.5 font-medium shadow-xs"
+            className="h-8 px-2.5 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#141417] text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f5] hover:border-[#6366f1]/50 inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-60 shrink-0"
             title="Sincronizza Aruba IMAP"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isSyncingImap ? 'animate-spin text-blue-600' : ''}`} />
-            <span className="hidden sm:inline">{isSyncingImap ? 'Sincronizzazione...' : 'Sincronizza IMAP'}</span>
-          </Button>
+            <RefreshCw className={`h-3.5 w-3.5 ${isSyncingImap ? 'animate-spin text-[#6366f1]' : ''}`} />
+            <span className="hidden sm:inline">{isSyncingImap ? 'Sync...' : 'Sync IMAP'}</span>
+          </button>
 
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             onClick={() => {
-              // Assicura il merge immediato prima di aprire il modale
               try {
                 const saved = localStorage.getItem('piattaforma_imap_accounts')
                 if (saved) {
                   const parsed = JSON.parse(saved)
                   if (Array.isArray(parsed)) {
                     const merged = DEFAULT_IMAP_ACCOUNTS.map((def) => {
-                      const found = parsed.find((p: ArubaMailboxConfig) => p.email?.toLowerCase() === def.email.toLowerCase())
+                      const found = parsed.find(
+                        (p: ArubaMailboxConfig) => p.email?.toLowerCase() === def.email.toLowerCase()
+                      )
                       return found ? { ...def, password: found.password || '' } : def
                     })
                     setImapAccounts(merged)
@@ -1002,130 +1023,139 @@ export default function PostaCondivisaPage() {
                 } else {
                   setImapAccounts(DEFAULT_IMAP_ACCOUNTS)
                 }
-              } catch (e) {
+              } catch {
                 setImapAccounts(DEFAULT_IMAP_ACCOUNTS)
               }
               setIsImapModalOpen(true)
             }}
-            className="text-xs border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 h-9 px-2.5 sm:px-3 gap-1.5"
+            className="h-8 px-2.5 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#141417] text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f5] inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
             title="Configura password e caselle Aruba"
           >
-            <span>⚙️</span>
-            <span className="hidden sm:inline">Password</span>
-          </Button>
+            <ShieldCheck className="h-3.5 w-3.5 text-zinc-400" />
+            <span className="hidden md:inline">Password</span>
+          </button>
 
-          <Button
-            size="sm"
+          <button
+            type="button"
             onClick={() => setIsComposeModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold h-9 px-3 sm:px-4 gap-1.5 shadow-xs shrink-0"
+            className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] h-8 px-3 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
           >
-            <PlusCircle className="h-4 w-4" />
-            <span>Nuova<span className="hidden sm:inline"> Email</span></span>
-          </Button>
+            <PlusCircle className="h-3.5 w-3.5" />
+            <span>Scrivi</span>
+          </button>
         </div>
       </div>
 
-      {/* Main Container */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden min-h-0">
-        {/* Left Column: Folders + Email List (4 cols su 12) */}
-        <div className={`lg:col-span-4 xl:col-span-4 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden bg-slate-50/50 dark:bg-slate-900/50 ${selectedEmail ? 'hidden lg:flex' : 'flex'}`}>
-          {/* Folders / Filter Bar Compatta */}
-          <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-2.5 bg-white dark:bg-slate-900">
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cerca mittente, oggetto o testo..."
-                className="pl-9 text-xs h-8.5 bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-xl"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Folder Tabs a pill compatti (In arrivo, Non lette, Inviate, Archivio) */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-[11px] font-medium text-slate-600 dark:text-slate-300 overflow-x-auto no-scrollbar">
+      {/* B) CORPO 2-PANE FULL-HEIGHT */}
+      <div className="flex-1 min-h-0 flex overflow-hidden">
+        {/* Colonna Lista Email Sinistra */}
+        <div
+          className={`w-full lg:w-[380px] xl:w-[420px] shrink-0 border-r border-[#e5e3dc] dark:border-white/[0.08] flex flex-col h-full overflow-hidden bg-white dark:bg-[#111114] ${
+            selectedEmail ? 'hidden lg:flex' : 'flex'
+          }`}
+        >
+          {/* Filtri & Selettori Caselle/Cartelle */}
+          <div className="border-b border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#111114] shrink-0">
+            {/* Folder Tabs */}
+            <div className="px-3 flex items-center gap-3 border-b border-[#e5e3dc] dark:border-white/[0.08] overflow-x-auto no-scrollbar text-xs">
               <button
+                type="button"
                 onClick={() => setCurrentFilter('inbox')}
-                className={`py-1 px-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${currentFilter === 'inbox'
-                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
-                    : 'hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                className={`h-9 inline-flex items-center gap-1.5 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+                  currentFilter === 'inbox'
+                    ? 'border-[#111113] dark:border-[#f4f4f5] text-[#111113] dark:text-[#f4f4f5] font-semibold'
+                    : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+                }`}
               >
-                <ArrowDownLeft className="h-3 w-3" />
-                <span>In arrivo</span>
+                <span>Ricevute</span>
                 {counts.unread > 0 && (
-                  <span className="px-1.5 py-0.2 bg-blue-600 text-white text-[9px] rounded-full font-bold">
+                  <span
+                    className="px-1.5 py-0.2 bg-[#6366f1] text-white text-[9px] rounded-sm font-semibold tabular-nums"
+                    style={{ fontFamily: 'var(--font-mono), monospace' }}
+                  >
                     {counts.unread}
                   </span>
                 )}
               </button>
 
               <button
+                type="button"
                 onClick={() => setCurrentFilter('unread')}
-                className={`py-1 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${currentFilter === 'unread'
-                    ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs font-semibold'
-                    : 'hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                className={`h-9 inline-flex items-center gap-1 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+                  currentFilter === 'unread'
+                    ? 'border-[#111113] dark:border-[#f4f4f5] text-[#111113] dark:text-[#f4f4f5] font-semibold'
+                    : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+                }`}
               >
                 <span>Non lette</span>
-                <span className="text-[9px] opacity-75">({counts.unread})</span>
+                <span
+                  className="text-[10px] text-zinc-400 tabular-nums"
+                  style={{ fontFamily: 'var(--font-mono), monospace' }}
+                >
+                  {counts.unread}
+                </span>
               </button>
 
               <button
+                type="button"
                 onClick={() => setCurrentFilter('sent')}
-                className={`py-1 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${currentFilter === 'sent'
-                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-semibold'
-                    : 'hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                className={`h-9 inline-flex items-center gap-1 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+                  currentFilter === 'sent'
+                    ? 'border-[#111113] dark:border-[#f4f4f5] text-[#111113] dark:text-[#f4f4f5] font-semibold'
+                    : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+                }`}
               >
                 <span>Inviate</span>
-                <span className="text-[9px] opacity-75">({counts.sent})</span>
+                <span
+                  className="text-[10px] text-zinc-400 tabular-nums"
+                  style={{ fontFamily: 'var(--font-mono), monospace' }}
+                >
+                  {counts.sent}
+                </span>
               </button>
 
               <button
+                type="button"
                 onClick={() => setCurrentFilter('archived')}
-                className={`py-1 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${currentFilter === 'archived'
-                    ? 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-xs font-semibold'
-                    : 'hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                className={`h-9 inline-flex items-center gap-1 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+                  currentFilter === 'archived'
+                    ? 'border-[#111113] dark:border-[#f4f4f5] text-[#111113] dark:text-[#f4f4f5] font-semibold'
+                    : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+                }`}
               >
-                <Archive className="h-3 w-3" />
                 <span>Archivio</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => setCurrentFilter('trash')}
-                className={`py-1 px-2.5 rounded-lg flex items-center justify-center gap-1 transition-all whitespace-nowrap ${currentFilter === 'trash'
-                    ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs font-semibold'
-                    : 'hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                className={`h-9 inline-flex items-center gap-1 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+                  currentFilter === 'trash'
+                    ? 'border-[#111113] dark:border-[#f4f4f5] text-[#111113] dark:text-[#f4f4f5] font-semibold'
+                    : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+                }`}
               >
-                <Trash2 className="h-3 w-3" />
                 <span>Cestino</span>
                 {counts.trash > 0 && (
-                  <span className="text-[9px] opacity-75">({counts.trash})</span>
+                  <span
+                    className="text-[10px] text-zinc-400 tabular-nums"
+                    style={{ fontFamily: 'var(--font-mono), monospace' }}
+                  >
+                    {counts.trash}
+                  </span>
                 )}
               </button>
             </div>
 
-            {/* Selettori compatti su riga singola: Casella Aruba & Cartelle */}
-            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-              {/* Menu a tendina: Account / Casella Aruba */}
+            {/* Selettori Casella Aruba & Cartelle senza emoji hardcoded */}
+            <div className="p-2.5 grid grid-cols-2 gap-2 bg-[#fafaf8] dark:bg-[#141417]">
               <div className="relative">
                 <select
                   value={accountFilter}
                   onChange={(e) => setAccountFilter(e.target.value as AccountFilter)}
-                  className="w-full pl-2.5 pr-6 py-1.5 text-[11px] bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-medium truncate"
+                  className="w-full h-8 pl-2.5 pr-6 text-[11px] bg-white dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md appearance-none focus:outline-none focus:ring-1 focus:ring-[#6366f1] cursor-pointer font-medium truncate"
                 >
-                  <option value="all">✉️ Tutte le caselle ({emails.length})</option>
+                  <option value="all">Tutte le caselle ({emails.length})</option>
                   <option value="impresa@aiutiamoci.cloud">impresa@aiutiamoci.cloud</option>
                   <option value="info@aiutiamoci.cloud">info@aiutiamoci.cloud</option>
                   <option value="commerciale@aiutiamoci.cloud">commerciale@aiutiamoci.cloud</option>
@@ -1134,24 +1164,27 @@ export default function PostaCondivisaPage() {
                   <option value="info@mark2.cloud">info@mark2.cloud</option>
                   <option value="support@mark2.cloud">support@mark2.cloud</option>
                 </select>
-                <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-zinc-400">
                   <ChevronDown className="h-3 w-3" />
                 </div>
               </div>
 
-              {/* Menu a tendina: Cartelle */}
               <div className="relative flex items-center gap-1">
                 <div className="relative flex-1">
                   <select
-                    value={['inbox', 'unread', 'sent', 'archived', 'all'].includes(currentFilter) ? '' : currentFilter}
+                    value={
+                      ['inbox', 'unread', 'sent', 'archived', 'trash', 'all'].includes(currentFilter)
+                        ? ''
+                        : currentFilter
+                    }
                     onChange={(e) => {
                       if (e.target.value) {
                         setCurrentFilter(e.target.value as any)
                       }
                     }}
-                    className="w-full pl-2.5 pr-6 py-1.5 text-[11px] bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg appearance-none focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-medium truncate"
+                    className="w-full h-8 pl-2.5 pr-6 text-[11px] bg-white dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md appearance-none focus:outline-none focus:ring-1 focus:ring-[#6366f1] cursor-pointer font-medium truncate"
                   >
-                    <option value="">📁 Cartelle ({customFolders.length})...</option>
+                    <option value="">Cartelle ({customFolders.length})</option>
                     {customFolders.map((f) => {
                       const countInFolder = counts.folders[f.id] || 0
                       return (
@@ -1161,7 +1194,7 @@ export default function PostaCondivisaPage() {
                       )
                     })}
                   </select>
-                  <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-zinc-400">
                     <ChevronDown className="h-3 w-3" />
                   </div>
                 </div>
@@ -1169,23 +1202,23 @@ export default function PostaCondivisaPage() {
                 <button
                   type="button"
                   onClick={() => setIsNewFolderModalOpen(true)}
-                  className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0"
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#0d0d0f] text-zinc-500 hover:text-[#6366f1] transition-colors shrink-0 cursor-pointer"
                   title="Crea cartella"
                 >
-                  <PlusCircle className="h-3.5 w-3.5" />
+                  <FolderPlus className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Bulk Action Toolbar */}
-          <div className="px-3.5 py-2 bg-slate-50/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 shrink-0">
+          <div className="px-3.5 py-2 bg-[#f7f6f3] dark:bg-[#141417] border-b border-[#e5e3dc] dark:border-white/[0.08] flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-600 dark:text-zinc-400 shrink-0">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleSelectAllToggle}
                 disabled={filteredEmails.length === 0 || loading}
-                className="flex items-center gap-1.5 font-medium hover:text-slate-900 dark:hover:text-white transition-colors disabled:opacity-40"
+                className="flex items-center gap-1.5 font-medium hover:text-[#111113] dark:hover:text-[#f4f4f5] transition-colors disabled:opacity-40 cursor-pointer"
                 title={
                   filteredEmails.length > 0 && filteredEmails.every((em) => selectedEmailIds.has(em.id))
                     ? 'Deseleziona tutte'
@@ -1193,11 +1226,11 @@ export default function PostaCondivisaPage() {
                 }
               >
                 {filteredEmails.length > 0 && filteredEmails.every((em) => selectedEmailIds.has(em.id)) ? (
-                  <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <CheckSquare className="h-3.5 w-3.5 text-[#6366f1]" />
                 ) : (
-                  <Square className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                  <Square className="h-3.5 w-3.5 text-zinc-400" />
                 )}
-                <span>
+                <span className="text-[11px]">
                   {filteredEmails.length > 0 && filteredEmails.every((em) => selectedEmailIds.has(em.id))
                     ? 'Tutte selezionate'
                     : 'Seleziona tutte'}
@@ -1205,65 +1238,60 @@ export default function PostaCondivisaPage() {
               </button>
 
               {selectedEmailIds.size > 0 && (
-                <span className="bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-semibold px-2 py-0.5 rounded-full text-[11px]">
-                  {selectedEmailIds.size} {selectedEmailIds.size === 1 ? 'selezionata' : 'selezionate'}
+                <span
+                  className="bg-[#6366f1]/15 text-[#6366f1] border border-[#6366f1]/25 font-semibold px-1.5 py-0.5 rounded-sm text-[10px]"
+                  style={{ fontFamily: 'var(--font-mono), monospace' }}
+                >
+                  {selectedEmailIds.size}
                 </span>
               )}
             </div>
 
             {selectedEmailIds.size > 0 && (
-              <div className="flex items-center gap-1.5">
-                <Button
-                  size="sm"
-                  variant="outline"
+              <div className="flex flex-wrap items-center gap-1">
+                <button
+                  type="button"
                   onClick={handleMarkAsReadBulk}
                   disabled={isBulkOperating}
-                  className="h-7 text-xs px-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="h-6 px-2 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#18181c] text-[10px] font-semibold text-[#111113] dark:text-[#f4f4f5] hover:border-[#6366f1] inline-flex items-center gap-1 cursor-pointer"
                   title="Segna come lette"
                 >
-                  <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" />
-                  Lette
-                </Button>
+                  <Check className="h-3 w-3 text-[#10b981]" />
+                  <span>Lette</span>
+                </button>
 
                 {currentFilter === 'trash' ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
+                  <button
+                    type="button"
                     onClick={handleRestoreBulk}
                     disabled={isBulkOperating}
-                    className="h-7 text-xs px-2 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300"
-                    title="Ripristina le email selezionate"
+                    className="h-6 px-2 rounded-sm border border-emerald-500/30 bg-emerald-500/10 text-[10px] font-semibold text-emerald-600 dark:text-emerald-300 inline-flex items-center gap-1 cursor-pointer"
                   >
-                    <CornerUpLeft className="h-3.5 w-3.5 mr-1" />
-                    Ripristina
-                  </Button>
+                    <CornerUpLeft className="h-3 w-3" />
+                    <span>Ripristina</span>
+                  </button>
                 ) : currentFilter === 'archived' ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
+                  <button
+                    type="button"
                     onClick={handleUnarchiveBulk}
                     disabled={isBulkOperating}
-                    className="h-7 text-xs px-2 text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300"
-                    title="Ripristina selezionate"
+                    className="h-6 px-2 rounded-sm border border-amber-500/30 bg-amber-500/10 text-[10px] font-semibold text-amber-600 dark:text-amber-300 inline-flex items-center gap-1 cursor-pointer"
                   >
-                    <CornerUpLeft className="h-3.5 w-3.5 mr-1" />
-                    Ripristina
-                  </Button>
+                    <CornerUpLeft className="h-3 w-3" />
+                    <span>Ripristina</span>
+                  </button>
                 ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
+                  <button
+                    type="button"
                     onClick={handleArchiveBulk}
                     disabled={isBulkOperating}
-                    className="h-7 text-xs px-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    title="Archivia selezionate"
+                    className="h-6 px-2 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#18181c] text-[10px] font-semibold text-[#111113] dark:text-[#f4f4f5] hover:border-[#6366f1] inline-flex items-center gap-1 cursor-pointer"
                   >
-                    <Archive className="h-3.5 w-3.5 mr-1 text-slate-500" />
-                    Archivia
-                  </Button>
+                    <Archive className="h-3 w-3 text-zinc-500" />
+                    <span>Archivia</span>
+                  </button>
                 )}
 
-                {/* Sposta in cartella bulk */}
                 <select
                   onChange={(e) => {
                     if (e.target.value) {
@@ -1273,52 +1301,52 @@ export default function PostaCondivisaPage() {
                     }
                   }}
                   defaultValue=""
-                  className="h-7 text-xs px-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
+                  className="h-6 text-[10px] px-1.5 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#18181c] text-[#111113] dark:text-[#f4f4f5]"
                   title="Assegna cartella alle selezionate"
                 >
-                  <option value="" disabled>Sposta in...</option>
+                  <option value="" disabled>
+                    Sposta...
+                  </option>
                   {customFolders.map((f) => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
                   ))}
                   <option value="__none">Rimuovi cartella</option>
                 </select>
 
-                <Button
-                  size="sm"
-                  variant="destructive"
+                <button
+                  type="button"
                   onClick={handleDeleteBulk}
                   disabled={isBulkOperating}
-                  className="h-7 text-xs px-2.5 bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-1 font-semibold"
-                  title={currentFilter === 'trash' ? 'Elimina definitivamente da Aruba' : 'Sposta nel Cestino'}
+                  className="h-6 px-2 rounded-sm bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-semibold inline-flex items-center gap-1 cursor-pointer"
+                  title={currentFilter === 'trash' ? 'Elimina definitivamente' : 'Sposta nel Cestino'}
                 >
                   {isBulkOperating ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-3 w-3" />
                   )}
-                  <span>
-                    {currentFilter === 'trash'
-                      ? `Elimina Definitivamente (${selectedEmailIds.size})`
-                      : `Cestino (${selectedEmailIds.size})`}
-                  </span>
-                </Button>
+                  <span>{selectedEmailIds.size}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={handleClearSelection}
-                  className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                  className="p-0.5 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] cursor-pointer"
                   title="Annulla selezione"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             )}
           </div>
 
-          {/* Email List */}
-          <div className="divide-y divide-slate-100 dark:divide-slate-800/60 flex-1 overflow-y-auto">
+          {/* Email List divide-y */}
+          <div className="divide-y divide-[#e5e3dc] dark:divide-white/[0.06] flex-1 overflow-y-auto">
             {loading ? (
               <div className="h-48 flex items-center justify-center">
-                <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                <Loader2 className="h-5 w-5 text-[#6366f1] animate-spin" />
               </div>
             ) : filteredEmails.length > 0 ? (
               filteredEmails.map((em) => {
@@ -1326,164 +1354,131 @@ export default function PostaCondivisaPage() {
                 const isMarked = selectedEmailIds.has(em.id)
                 const isUnread = em.direction === 'inbound' && em.status === 'received'
                 const toList = getToArray(em.to_address)
-                const toStr = toList.join(' ').toLowerCase()
-                const isMar2 = toStr.includes('mar2.cloud')
-                const isAssistenza = toStr.includes('assistenza@')
-                const isSupport = toStr.includes('support@')
 
                 return (
                   <div
                     key={em.id}
                     onClick={() => handleSelectEmail(em)}
-                    className={`p-3.5 cursor-pointer transition-all relative group border-l-4 ${isSelected
-                        ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-600'
+                    className={`px-3.5 py-3 cursor-pointer transition-colors relative group border-l-2 ${
+                      isSelected
+                        ? 'border-l-[#6366f1] bg-[#f7f6f3] dark:bg-[#18181c]'
                         : isMarked
-                          ? 'bg-blue-50/40 dark:bg-blue-950/30 border-blue-400'
-                          : isUnread
-                            ? 'bg-white dark:bg-slate-900 border-amber-500 font-semibold'
-                            : 'bg-white/60 dark:bg-slate-900/60 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-90'
-                      }`}
+                          ? 'border-l-[#6366f1]/60 bg-[#6366f1]/5'
+                          : 'border-l-transparent bg-white dark:bg-[#111114] hover:bg-[#fafaf8] dark:hover:bg-[#16161b]'
+                    }`}
                   >
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <button
                           type="button"
                           onClick={(e) => handleToggleSelect(em.id, e)}
-                          className="p-0.5 -ml-1 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0"
+                          className="p-0.5 -ml-0.5 text-zinc-400 hover:text-[#6366f1] transition-colors shrink-0 cursor-pointer"
                           title={isMarked ? 'Deseleziona' : 'Seleziona'}
                         >
                           {isMarked ? (
-                            <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            <CheckSquare className="h-3.5 w-3.5 text-[#6366f1]" />
                           ) : (
-                            <Square className="h-4 w-4 text-slate-300 dark:text-slate-600 hover:text-slate-500" />
+                            <Square className="h-3.5 w-3.5 text-zinc-300 dark:text-zinc-600" />
                           )}
                         </button>
                         {isUnread && (
-                          <span className="h-2 w-2 rounded-full bg-amber-500 shrink-0" title="Nuovo messaggio non letto" />
+                          <span
+                            className="h-2 w-2 rounded-full bg-[#6366f1] shrink-0"
+                            title="Non letta"
+                          />
                         )}
                         <span
-                          className={`text-xs truncate ${isUnread
-                              ? 'font-bold text-slate-900 dark:text-white'
-                              : 'font-medium text-slate-700 dark:text-slate-300'
-                            }`}
+                          className={`text-xs truncate ${
+                            isUnread
+                              ? 'font-bold text-[#111113] dark:text-[#f4f4f5]'
+                              : 'font-medium text-zinc-700 dark:text-zinc-300'
+                          }`}
                         >
                           {em.direction === 'inbound' ? em.from_address : `A: ${toList.join(', ')}`}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0">
+                      <span
+                        className="text-[10px] text-zinc-400 dark:text-zinc-500 whitespace-nowrap shrink-0 tabular-nums"
+                        style={{ fontFamily: 'var(--font-mono), monospace' }}
+                      >
                         {em.created_at ? formatDate(em.created_at) : ''}
                       </span>
                     </div>
 
                     <div
-                      className={`text-xs line-clamp-1 mb-1 ${isUnread
-                          ? 'font-bold text-slate-900 dark:text-slate-100'
-                          : 'text-slate-700 dark:text-slate-300 font-normal'
-                        }`}
+                      className={`text-xs line-clamp-1 mb-0.5 ${
+                        isUnread
+                          ? 'font-semibold text-[#111113] dark:text-[#f4f4f5]'
+                          : 'text-zinc-700 dark:text-zinc-300 font-normal'
+                      }`}
                     >
                       {em.subject || '(Nessun oggetto)'}
                     </div>
 
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1 leading-relaxed">
                       {em.body_text?.substring(0, 110) || 'Nessun testo...'}
                     </p>
 
-                    <div className="flex items-center justify-between mt-2.5 pt-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="flex items-center justify-between mt-2 gap-1.5">
+                      <div className="flex items-center gap-1 flex-wrap min-w-0">
                         {em.direction === 'outbound' ? (
-                          <Badge
-                            variant="outline"
-                            className="text-[9px] px-1.5 py-0 text-blue-600 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300 flex items-center gap-1"
-                          >
+                          <span className="inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[#6366f1]">
                             <ArrowUpRight className="h-2.5 w-2.5" />
                             Inviata
-                          </Badge>
+                          </span>
                         ) : (
                           <>
-                            <Badge
-                              variant="outline"
-                              className={`text-[9px] px-1.5 py-0 font-mono flex items-center gap-1 ${isMar2
-                                  ? isSupport
-                                    ? 'border-amber-500/30 text-amber-600 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300'
-                                    : 'border-purple-500/30 text-purple-600 bg-purple-50 dark:bg-purple-950/60 dark:text-purple-300'
-                                  : isAssistenza
-                                    ? 'border-indigo-500/30 text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:text-indigo-300'
-                                    : 'border-blue-500/30 text-blue-600 bg-blue-50 dark:bg-blue-950/60 dark:text-blue-300'
-                                }`}
+                            <span
+                              className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-zinc-600 dark:text-zinc-300 truncate max-w-[165px]"
+                              style={{ fontFamily: 'var(--font-mono), monospace' }}
                             >
-                              <ArrowDownLeft className="h-2.5 w-2.5" />
+                              <ArrowDownLeft className="h-2.5 w-2.5 text-[#6366f1] shrink-0" />
                               {toList[0] || 'info@aiutiamoci.cloud'}
-                            </Badge>
+                            </span>
 
-                            <Badge
-                              variant="secondary"
-                              className={`text-[9px] px-1.5 py-0 flex items-center gap-1 ${isUnread
-                                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
-                                }`}
-                            >
-                              {isUnread ? 'Da Leggere' : 'Letta'}
-                            </Badge>
-
-                            {em.status === 'archived' && (
-                              <Badge
-                                variant="outline"
-                                className="text-[9px] px-1.5 py-0 border-purple-300 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 flex items-center gap-1"
-                              >
-                                <Archive className="h-2.5 w-2.5" />
-                                Archiviata
-                              </Badge>
-                            )}
-
-                            {emailFolderMap[em.id] && (() => {
-                              const assigned = customFolders.find((f) => f.id === emailFolderMap[em.id])
-                              if (!assigned) return null
-                              return (
-                                <Badge
-                                  variant="outline"
-                                  className="text-[9px] px-1.5 py-0 border-blue-200 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 flex items-center gap-1"
-                                >
-                                  <Folder className="h-2.5 w-2.5 text-blue-500" />
-                                  {assigned.name}
-                                </Badge>
-                              )
-                            })()}
+                            {emailFolderMap[em.id] &&
+                              (() => {
+                                const assigned = customFolders.find(
+                                  (f) => f.id === emailFolderMap[em.id]
+                                )
+                                if (!assigned) return null
+                                return (
+                                  <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-sm border border-[#6366f1]/25 bg-[#6366f1]/10 text-[#6366f1]">
+                                    <Folder className="h-2.5 w-2.5" />
+                                    {assigned.name}
+                                  </span>
+                                )
+                              })()}
 
                             {aiAnalysisMap[em.id] && (
-                              <Badge
-                                variant="outline"
-                                className={`text-[9px] px-1.5 py-0 flex items-center gap-1 font-medium ${aiAnalysisMap[em.id].category === 'urgente'
-                                    ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
-                                    : aiAnalysisMap[em.id].category === 'supporto'
-                                      ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
-                                      : aiAnalysisMap[em.id].category === 'commerciale'
-                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
-                                        : aiAnalysisMap[em.id].category === 'informativo'
-                                          ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800'
-                                          : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400'
-                                  }`}
-                              >
+                              <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[#6366f1] capitalize font-medium">
                                 <Sparkles className="h-2 w-2" />
-                                <span className="capitalize">{aiAnalysisMap[em.id].category}</span>
-                              </Badge>
+                                {aiAnalysisMap[em.id].category}
+                              </span>
                             )}
                           </>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         {em.direction === 'inbound' && (
                           <button
+                            type="button"
                             onClick={(e) => handleToggleReadStatus(em, e)}
-                            className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded"
-                            title={em.status === 'read' ? 'Segna come non letta' : 'Segna come già letta'}
+                            className="p-1 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] rounded-sm cursor-pointer"
+                            title={em.status === 'read' ? 'Segna come non letta' : 'Segna come letta'}
                           >
-                            {em.status === 'read' ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            {em.status === 'read' ? (
+                              <EyeOff className="h-3.5 w-3.5" />
+                            ) : (
+                              <Eye className="h-3.5 w-3.5" />
+                            )}
                           </button>
                         )}
                         <button
+                          type="button"
                           onClick={(e) => handleDeleteEmail(em.id, e)}
-                          className="p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded"
+                          className="p-1 text-zinc-400 hover:text-rose-500 rounded-sm cursor-pointer"
                           title="Elimina email"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -1494,31 +1489,37 @@ export default function PostaCondivisaPage() {
                 )
               })
             ) : (
-              <div className="p-12 text-center text-xs text-slate-400 space-y-2">
-                <Inbox className="h-8 w-8 mx-auto text-slate-300 dark:text-slate-600" />
+              <div className="p-12 text-center text-xs text-zinc-400 dark:text-zinc-500 space-y-2">
+                <Inbox className="h-7 w-7 mx-auto opacity-40" />
                 <p>Nessun messaggio trovato in questa cartella.</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Column: Selected Email Viewer & Quick Reply (8 cols) */}
-        <div className={`lg:col-span-8 xl:col-span-8 flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden ${selectedEmail ? 'flex' : 'hidden lg:flex'}`}>
+        {/* Pannello Lettura Destro */}
+        <div
+          className={`flex-1 min-w-0 flex flex-col h-full bg-white dark:bg-[#0d0d0f] overflow-hidden ${
+            selectedEmail ? 'flex' : 'hidden lg:flex'
+          }`}
+        >
           {selectedEmail ? (
             <div className="flex-1 flex flex-col h-full overflow-hidden">
-              {/* Message Header */}
-              <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex-shrink-0 bg-slate-50/40 dark:bg-slate-800/30">
-                {/* Mobile Back to list Button */}
+              {/* Header Email */}
+              <div className="p-4 sm:p-5 border-b border-[#e5e3dc] dark:border-white/[0.08] flex-shrink-0 bg-white dark:bg-[#111114]">
                 <button
+                  type="button"
                   onClick={() => setSelectedEmail(null)}
-                  className="lg:hidden flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-3 hover:underline"
+                  className="lg:hidden flex items-center gap-1 text-xs font-semibold text-[#6366f1] mb-3 hover:underline cursor-pointer"
                 >
                   <ArrowDownLeft className="h-4 w-4 rotate-45" />
-                  <span>← Torna alla lista email</span>
+                  <span>Torna alla lista email</span>
                 </button>
 
-                {/* Subject Title (Full Width to prevent flex squeeze) */}
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug break-words mb-3">
+                <h2
+                  className="text-base sm:text-lg font-bold text-[#111113] dark:text-[#f4f4f5] leading-snug break-words mb-3"
+                  style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                >
                   {selectedEmail.subject || '(Nessun oggetto)'}
                 </h2>
 
@@ -1528,133 +1529,125 @@ export default function PostaCondivisaPage() {
                     <Avatar
                       fallback={
                         selectedEmail.direction === 'inbound'
-                          ? (selectedEmail.from_address ? selectedEmail.from_address.charAt(0).toUpperCase() : 'M')
+                          ? selectedEmail.from_address
+                            ? selectedEmail.from_address.charAt(0).toUpperCase()
+                            : 'M'
                           : 'T'
                       }
-                      className="h-8 w-8 sm:h-9 sm:w-9 bg-blue-600/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800 shrink-0"
+                      className="h-8 w-8 bg-[#f7f6f3] dark:bg-[#18181c] text-[#111113] dark:text-[#f4f4f5] font-semibold border border-[#e5e3dc] dark:border-white/[0.08] shrink-0"
                     />
                     <div className="flex flex-col min-w-0 text-xs">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      <span className="font-semibold text-[#111113] dark:text-[#f4f4f5] truncate">
                         {selectedEmail.direction === 'inbound'
                           ? selectedEmail.from_address
                           : 'Team (@aiutiamoci.cloud)'}
                       </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                      <span className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
                         A: {getToArray(selectedEmail.to_address).join(', ')}
                       </span>
                     </div>
                   </div>
 
                   {/* Actions Bar */}
-                  <div className="flex flex-wrap items-center gap-2 shrink-0 pt-1 sm:pt-0">
-                    <span className="text-[11px] text-slate-400 font-medium mr-1">
+                  <div className="flex flex-wrap items-center gap-1.5 shrink-0 pt-1 sm:pt-0">
+                    <span
+                      className="text-[11px] text-zinc-400 dark:text-zinc-500 mr-1"
+                      style={{ fontFamily: 'var(--font-mono), monospace' }}
+                    >
                       {selectedEmail.created_at ? formatDate(selectedEmail.created_at) : ''}
                     </span>
 
                     {selectedEmail.direction === 'inbound' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => handleAnalyzeEmail(selectedEmail)}
                         disabled={isAnalyzing}
-                        className="h-8 px-2.5 text-xs font-semibold bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:hover:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800 gap-1.5 shadow-xs transition-all"
-                        title="Chiedi all'Agente AI Gemini di analizzare e suggerire una risposta"
+                        className="h-8 px-2.5 rounded-md border border-[#6366f1]/30 bg-[#6366f1]/10 hover:bg-[#6366f1]/20 text-[#6366f1] text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-60"
+                        title="Analizza e genera una bozza di risposta con l'Agente AI"
                       >
                         {isAnalyzing ? (
                           <>
-                            <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-600" />
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             <span>Analisi...</span>
                           </>
                         ) : (
                           <>
-                            <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                            <span>{aiAnalysisMap[selectedEmail.id] ? 'Rianalizza AI' : 'Analizza con AI'}</span>
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span>{aiAnalysisMap[selectedEmail.id] ? 'Rianalizza' : 'Bozza AI'}</span>
                           </>
                         )}
-                      </Button>
+                      </button>
                     )}
 
                     {selectedEmail.body_html && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => setViewMode(viewMode === 'html' ? 'text' : 'html')}
-                        className="h-8 px-2 text-xs text-slate-600 dark:text-slate-300"
+                        className="h-8 px-2.5 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#18181c] text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f5] cursor-pointer"
                         title="Cambia vista HTML/Testo"
                       >
                         {viewMode === 'html' ? 'Testo' : 'HTML'}
-                      </Button>
+                      </button>
                     )}
 
-                    {/* Cestino: Ripristina o Elimina Definitivamente */}
                     {selectedEmail.status === 'trash' ? (
                       <>
-                        <Button
-                          variant="outline"
-                          size="sm"
+                        <button
+                          type="button"
                           onClick={() => handleRestoreFromTrash(selectedEmail.id)}
-                          className="h-8 px-2.5 text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 gap-1.5"
-                          title="Ripristina nella posta in arrivo"
+                          className="h-8 px-2.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                         >
                           <CornerUpLeft className="h-3.5 w-3.5" />
                           <span className="hidden sm:inline">Ripristina</span>
-                        </Button>
+                        </button>
 
-                        <Button
-                          variant="destructive"
-                          size="sm"
+                        <button
+                          type="button"
                           onClick={() => handleDeleteEmail(selectedEmail.id)}
-                          className="h-8 px-2.5 text-xs bg-rose-600 hover:bg-rose-700 text-white gap-1.5 font-semibold"
-                          title="Elimina definitivamente da Aruba"
+                          className="h-8 px-2.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           <span className="hidden sm:inline">Elimina da Aruba</span>
-                        </Button>
+                        </button>
                       </>
                     ) : (
                       <>
-                        {/* Archivia / Ripristina */}
                         {selectedEmail.status === 'archived' ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <button
+                            type="button"
                             onClick={() => handleUnarchiveEmail(selectedEmail.id)}
-                            className="h-8 px-2.5 text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 gap-1.5"
-                            title="Ripristina nella posta in arrivo"
+                            className="h-8 px-2.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-300 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                           >
                             <CornerUpLeft className="h-3.5 w-3.5" />
                             <span className="hidden sm:inline">Ripristina</span>
-                          </Button>
+                          </button>
                         ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <button
+                            type="button"
                             onClick={() => handleArchiveEmail(selectedEmail.id)}
-                            className="h-8 px-2.5 text-xs text-slate-700 hover:text-slate-900 border-slate-200 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 gap-1.5"
+                            className="h-8 px-2.5 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#18181c] text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f5] inline-flex items-center gap-1.5 cursor-pointer"
                             title="Archivia questa email"
                           >
-                            <Archive className="h-3.5 w-3.5 text-slate-500" />
+                            <Archive className="h-3.5 w-3.5 text-zinc-400" />
                             <span className="hidden sm:inline">Archivia</span>
-                          </Button>
+                          </button>
                         )}
 
-                        {/* Assegna Cartella Dropdown */}
                         <div className="relative">
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <button
+                            type="button"
                             onClick={() => setIsMoveMenuOpen(!isMoveMenuOpen)}
-                            className="h-8 px-2.5 text-xs text-slate-700 border-slate-200 dark:border-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 gap-1"
+                            className="h-8 px-2.5 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#18181c] text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f5] inline-flex items-center gap-1 cursor-pointer"
                             title="Sposta o assegna a cartella"
                           >
-                            <Folder className="h-3.5 w-3.5 text-blue-500" />
+                            <Folder className="h-3.5 w-3.5 text-[#6366f1]" />
                             <span className="hidden sm:inline">Cartella</span>
                             <ChevronDown className="h-3 w-3 opacity-60" />
-                          </Button>
+                          </button>
 
                           {isMoveMenuOpen && (
-                            <div className="absolute right-0 top-9 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-1.5 z-50 text-xs">
-                              <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                            <div className="absolute right-0 top-9 w-48 bg-white dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] rounded-lg shadow-xl py-1.5 z-50 text-xs">
+                              <div className="px-3 py-1 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
                                 Assegna a:
                               </div>
                               {customFolders.map((f) => (
@@ -1662,18 +1655,18 @@ export default function PostaCondivisaPage() {
                                   key={f.id}
                                   type="button"
                                   onClick={() => handleAssignFolder([selectedEmail.id], f.id)}
-                                  className={`w-full text-left px-3 py-1.5 flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+                                  className={`w-full text-left px-3 py-1.5 flex items-center justify-between hover:bg-[#f7f6f3] dark:hover:bg-[#1f1f24] transition-colors cursor-pointer ${
                                     emailFolderMap[selectedEmail.id] === f.id
-                                      ? 'font-bold text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/40'
-                                      : 'text-slate-700 dark:text-slate-300'
+                                      ? 'font-bold text-[#6366f1] bg-[#6366f1]/10'
+                                      : 'text-[#111113] dark:text-zinc-300'
                                   }`}
                                 >
                                   <span className="flex items-center gap-2">
-                                    <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                    <span className="h-2 w-2 rounded-full bg-[#6366f1]" />
                                     {f.name}
                                   </span>
                                   {emailFolderMap[selectedEmail.id] === f.id && (
-                                    <Check className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                                    <Check className="h-3 w-3 text-[#6366f1]" />
                                   )}
                                 </button>
                               ))}
@@ -1681,7 +1674,7 @@ export default function PostaCondivisaPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleAssignFolder([selectedEmail.id], null)}
-                                  className="w-full text-left px-3 py-1.5 text-rose-600 dark:text-rose-400 border-t border-slate-100 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors mt-1"
+                                  className="w-full text-left px-3 py-1.5 text-rose-600 dark:text-rose-400 border-t border-[#e5e3dc] dark:border-white/[0.08] hover:bg-rose-500/10 transition-colors mt-1 cursor-pointer"
                                 >
                                   Rimuovi da cartelle
                                 </button>
@@ -1690,15 +1683,14 @@ export default function PostaCondivisaPage() {
                           )}
                         </div>
 
-                        <Button
-                          variant="ghost"
-                          size="icon"
+                        <button
+                          type="button"
                           onClick={() => handleDeleteEmail(selectedEmail.id)}
-                          className="h-8 w-8 text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                          className="h-8 w-8 rounded-md text-zinc-400 hover:text-rose-500 hover:bg-rose-500/10 inline-flex items-center justify-center cursor-pointer"
                           title="Sposta nel Cestino"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </button>
                       </>
                     )}
                   </div>
@@ -1706,26 +1698,28 @@ export default function PostaCondivisaPage() {
               </div>
 
               {/* Message Content */}
-              <div className="p-4 sm:p-6 flex-1 overflow-y-auto bg-white dark:bg-slate-900">
+              <div className="p-4 sm:p-6 flex-1 overflow-y-auto bg-white dark:bg-[#0d0d0f]">
                 {viewMode === 'html' && selectedEmail.body_html ? (
-                  <div className="rounded-xl overflow-hidden bg-slate-900/60 dark:bg-slate-950 p-2 border border-slate-200 dark:border-slate-800">
+                  <div className="rounded-md overflow-hidden bg-[#141417] p-2 border border-[#e5e3dc] dark:border-white/[0.08]">
                     <iframe
-                      srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.6;color:#e2e8f0;background-color:transparent;padding:12px;margin:0;word-break:break-word;}a{color:#60a5fa;}p,div,span,td,th,li{color:inherit!important;}h1,h2,h3,h4,h5,h6{color:#f8fafc!important;}</style></head><body>${selectedEmail.body_html}</body></html>`}
+                      srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.6;color:#e4e4e7;background-color:transparent;padding:12px;margin:0;word-break:break-word;}a{color:#818cf8;}p,div,span,td,th,li{color:inherit!important;}h1,h2,h3,h4,h5,h6{color:#f4f4f5!important;}</style></head><body>${selectedEmail.body_html}</body></html>`}
                       className="w-full min-h-[280px] border-0 bg-transparent"
                       sandbox="allow-popups allow-popups-to-escape-sandbox"
                       title="Email Preview"
                     />
                   </div>
                 ) : (
-                  <div className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-sans">
-                    {selectedEmail.body_text || selectedEmail.body_html?.replace(/<[^>]*>?/gm, '') || 'Nessun contenuto in questo messaggio.'}
+                  <div className="text-sm text-[#111113] dark:text-[#f4f4f5] whitespace-pre-wrap leading-relaxed font-sans">
+                    {selectedEmail.body_text ||
+                      selectedEmail.body_html?.replace(/<[^>]*>?/gm, '') ||
+                      'Nessun contenuto in questo messaggio.'}
                   </div>
                 )}
               </div>
 
               {/* AI Analysis Panel */}
               {aiError && (
-                <div className="mx-4 my-2 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between">
+                <div className="mx-4 my-2 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-md text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
                     <span>{aiError}</span>
@@ -1742,77 +1736,63 @@ export default function PostaCondivisaPage() {
               )}
 
               {aiAnalysisMap[selectedEmail.id] && (
-                <div className="p-4 border-t border-purple-100 dark:border-purple-900/40 bg-gradient-to-b from-purple-50/40 to-slate-50 dark:from-purple-950/20 dark:to-slate-900/40 flex-shrink-0">
-                  <div className="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-purple-200/80 dark:border-purple-800/60 shadow-xs space-y-3">
+                <div className="p-4 border-t border-[#e5e3dc] dark:border-white/[0.08] bg-[#fafaf8] dark:bg-[#111114] flex-shrink-0">
+                  <div className="p-3.5 bg-white dark:bg-[#141417] rounded-md border border-[#e5e3dc] dark:border-white/[0.08] space-y-3">
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-lg bg-purple-600/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                          <Bot className="h-3.5 w-3.5" />
-                        </div>
-                        <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Bot className="h-4 w-4 text-[#6366f1]" />
+                        <span className="text-xs font-bold text-[#111113] dark:text-[#f4f4f5]">
                           Agente Email AI (Gemini)
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] px-2 py-0.5 capitalize font-semibold ${aiAnalysisMap[selectedEmail.id].category === 'urgente'
-                              ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800'
-                              : aiAnalysisMap[selectedEmail.id].category === 'supporto'
-                                ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800'
-                                : aiAnalysisMap[selectedEmail.id].category === 'commerciale'
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800'
-                                  : aiAnalysisMap[selectedEmail.id].category === 'informativo'
-                                    ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800'
-                                    : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300'
-                            }`}
-                        >
-                          🏷️ {aiAnalysisMap[selectedEmail.id].category}
-                        </Badge>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] capitalize font-semibold">
+                          <Tag className="h-2.5 w-2.5 text-[#6366f1]" />
+                          {aiAnalysisMap[selectedEmail.id].category}
+                        </span>
 
-                        <Badge
-                          variant="secondary"
-                          className="text-[10px] px-2 py-0.5 bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-mono"
+                        <span
+                          className="text-[10px] px-2 py-0.5 rounded-sm border border-[#6366f1]/25 bg-[#6366f1]/10 text-[#6366f1] font-semibold"
+                          style={{ fontFamily: 'var(--font-mono), monospace' }}
                         >
                           Priorità {aiAnalysisMap[selectedEmail.id].priority}/5
-                        </Badge>
+                        </span>
 
                         {aiAnalysisMap[selectedEmail.id].autoReplyCandidate && (
-                          <Badge className="text-[10px] px-2 py-0.5 bg-emerald-600 text-white font-medium gap-1">
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-sm bg-[#10b981] text-white font-semibold">
                             <Zap className="h-2.5 w-2.5" />
                             Auto-rispondibile
-                          </Badge>
+                          </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Riassunto */}
-                    <div className="p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800 text-xs">
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">💡 Riassunto: </span>
-                      <span className="text-slate-600 dark:text-slate-400">
+                    <div className="p-2.5 bg-[#f7f6f3] dark:bg-[#0d0d0f] rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] text-xs">
+                      <span className="font-semibold text-[#111113] dark:text-[#f4f4f5]">
+                        Riassunto:{' '}
+                      </span>
+                      <span className="text-zinc-600 dark:text-zinc-300">
                         {aiAnalysisMap[selectedEmail.id].summary}
                       </span>
                     </div>
 
-                    {/* Bozza Risposta */}
                     {aiAnalysisMap[selectedEmail.id].suggestedReply && (
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-                            ✍️ Bozza di risposta suggerita:
+                          <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                            Bozza di risposta suggerita:
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
+                            type="button"
                             onClick={() => setReplyText(aiAnalysisMap[selectedEmail.id].suggestedReply)}
-                            className="h-6 px-2 text-[11px] font-semibold text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-950/50 gap-1"
+                            className="h-6 px-2 rounded-sm text-[11px] font-semibold text-[#6366f1] hover:bg-[#6366f1]/10 inline-flex items-center gap-1 cursor-pointer"
                           >
                             <Copy className="h-3 w-3" />
                             <span>Copia nella Risposta</span>
-                          </Button>
+                          </button>
                         </div>
-                        <div className="p-2.5 bg-purple-50/50 dark:bg-purple-950/20 rounded-lg border border-purple-100 dark:border-purple-900/30 text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans">
+                        <div className="p-2.5 bg-[#f7f6f3] dark:bg-[#0d0d0f] rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] text-xs text-[#111113] dark:text-[#f4f4f5] whitespace-pre-wrap font-sans max-h-36 overflow-y-auto">
                           {aiAnalysisMap[selectedEmail.id].suggestedReply}
                         </div>
                       </div>
@@ -1822,26 +1802,26 @@ export default function PostaCondivisaPage() {
               )}
 
               {/* Reply Box */}
-              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex-shrink-0">
-                <div className="space-y-2 bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <div className="p-3.5 sm:p-4 border-t border-[#e5e3dc] dark:border-white/[0.08] bg-[#fafaf8] dark:bg-[#111114] flex-shrink-0">
+                <div className="space-y-2 bg-white dark:bg-[#141417] p-3 rounded-md border border-[#e5e3dc] dark:border-white/[0.08]">
+                  <div className="flex items-center justify-between text-xs font-semibold text-zinc-700 dark:text-zinc-300 gap-2">
                     <span className="flex items-center gap-1.5 truncate">
-                      <Reply className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <Reply className="h-3.5 w-3.5 text-[#6366f1]" />
                       Rispondi a{' '}
-                      <strong className="text-slate-900 dark:text-white truncate max-w-[220px]">
+                      <strong className="text-[#111113] dark:text-[#f4f4f5] truncate max-w-[220px]">
                         {selectedEmail.direction === 'inbound'
                           ? selectedEmail.from_address
                           : getToArray(selectedEmail.to_address)[0] || 'info@aiutiamoci.cloud'}
                       </strong>
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-slate-400 font-normal hidden sm:inline-block">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] text-zinc-400 font-normal hidden sm:inline-block">
                         Invia come:
                       </span>
                       <select
                         value={replyFrom}
                         onChange={(e) => setReplyFrom(e.target.value)}
-                        className="h-6 px-1.5 text-[10px] rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-mono"
+                        className="h-6 px-1.5 text-[10px] rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] font-mono"
                       >
                         {AVAILABLE_FROM_EMAILS.map((opt) => (
                           <option key={opt.id} value={opt.label}>
@@ -1857,26 +1837,27 @@ export default function PostaCondivisaPage() {
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="Scrivi qui la risposta condivisa dal team..."
-                    className="w-full text-xs p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-colors"
+                    className="w-full text-xs p-2.5 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] focus:outline-none focus:ring-1 focus:ring-[#6366f1] resize-none transition-colors"
                   />
 
-                  {/* Sezione Allegati Risposta */}
                   {replyAttachments.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                    <div className="flex flex-wrap gap-1.5 p-1.5 rounded-sm bg-[#f7f6f3] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08]">
                       {replyAttachments.map((att, idx) => (
                         <span
                           key={idx}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[10px] text-slate-800 dark:text-slate-200"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-white dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] text-[10px] text-[#111113] dark:text-[#f4f4f5]"
                         >
-                          <Paperclip className="h-2.5 w-2.5 text-slate-400" />
+                          <Paperclip className="h-2.5 w-2.5 text-zinc-400" />
                           <span className="truncate max-w-[120px] font-mono">{att.filename}</span>
-                          <span className="text-[9px] text-slate-400">
+                          <span className="text-[9px] text-zinc-400">
                             ({(att.size / 1024).toFixed(0)} KB)
                           </span>
                           <button
                             type="button"
-                            onClick={() => setReplyAttachments(prev => prev.filter((_, i) => i !== idx))}
-                            className="text-slate-400 hover:text-red-500 ml-0.5 cursor-pointer"
+                            onClick={() =>
+                              setReplyAttachments((prev) => prev.filter((_, i) => i !== idx))
+                            }
+                            className="text-zinc-400 hover:text-rose-500 ml-0.5 cursor-pointer"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -1887,20 +1868,19 @@ export default function PostaCondivisaPage() {
 
                   <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() =>
                           setReplyText(
                             `\n\n--- Messaggio Originale ---\nDa: ${selectedEmail.from_address}\nOggetto: ${selectedEmail.subject}\n\n${selectedEmail.body_text || ''}`
                           )
                         }
-                        className="text-[11px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 h-7 px-2"
+                        className="text-[11px] text-zinc-500 hover:text-[#111113] dark:hover:text-[#f4f4f5] h-7 px-2 cursor-pointer"
                       >
                         Cita testo originale
-                      </Button>
+                      </button>
 
-                      <label className="cursor-pointer inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 h-7 px-2 transition-colors">
+                      <label className="cursor-pointer inline-flex items-center gap-1 text-[11px] text-zinc-500 hover:text-[#6366f1] h-7 px-2 transition-colors">
                         <Paperclip className="h-3 w-3" />
                         <span>Allega File</span>
                         <input
@@ -1916,7 +1896,7 @@ export default function PostaCondivisaPage() {
                       size="sm"
                       onClick={handleSendReply}
                       disabled={isSending || (!replyText.trim() && replyAttachments.length === 0)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold h-8 px-4 gap-1.5 shadow-xs cursor-pointer"
+                      className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] text-xs font-semibold h-8 px-4 gap-1.5 cursor-pointer border-0 rounded-md"
                     >
                       <Send className="h-3 w-3" />
                       {isSending ? 'Invio...' : 'Invia Risposta'}
@@ -1926,11 +1906,14 @@ export default function PostaCondivisaPage() {
               </div>
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-3 p-8">
-              <Mail className="h-12 w-12 text-slate-300 dark:text-slate-700" />
-              <p className="text-sm font-medium">Seleziona un messaggio per leggerlo</p>
-              <p className="text-xs text-slate-400 text-center max-w-xs">
-                Tutte le email in arrivo sulle caselle aiutiamoci.cloud e mar2.cloud compariranno automaticamente qui.
+            <div className="h-full flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 space-y-3 p-8">
+              <Mail className="h-10 w-10 opacity-30" />
+              <p className="text-sm font-medium text-[#111113] dark:text-[#f4f4f5]">
+                Seleziona un messaggio per leggerlo
+              </p>
+              <p className="text-xs text-center max-w-xs">
+                Tutte le email in arrivo sulle caselle aiutiamoci.cloud e mark2.cloud compariranno
+                automaticamente qui.
               </p>
             </div>
           )}
@@ -1939,18 +1922,23 @@ export default function PostaCondivisaPage() {
 
       {/* Modal Nuova Email */}
       {isComposeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-[#141417] rounded-lg shadow-2xl w-full max-w-lg border border-[#e5e3dc] dark:border-white/[0.1] overflow-hidden">
+            <div className="p-4 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
               <div className="flex items-center gap-2">
-                <Send className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuova Email di Team</h3>
+                <Send className="h-4 w-4 text-[#6366f1]" />
+                <h3
+                  className="font-bold text-sm text-[#111113] dark:text-[#f4f4f5]"
+                  style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                >
+                  Nuova Email di Team
+                </h3>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsComposeModalOpen(false)}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="h-7 w-7 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -1958,11 +1946,13 @@ export default function PostaCondivisaPage() {
 
             <form onSubmit={handleSendNewEmail} className="p-5 space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Invia da (Mittente Casella) *</label>
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">
+                  Invia da (Mittente Casella) *
+                </label>
                 <select
                   value={composeFrom}
                   onChange={(e) => setComposeFrom(e.target.value)}
-                  className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-mono font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-9 px-3 rounded-md border border-[#e5e3dc] dark:border-white/[0.1] bg-[#f7f6f3] dark:bg-[#0d0d0f] text-xs font-mono font-medium text-[#111113] dark:text-[#f4f4f5] focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
                 >
                   {AVAILABLE_FROM_EMAILS.map((opt) => (
                     <option key={opt.id} value={opt.label}>
@@ -1973,7 +1963,9 @@ export default function PostaCondivisaPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">A (Destinatario) *</label>
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">
+                  A (Destinatario) *
+                </label>
                 <Input
                   autoFocus
                   required
@@ -1981,41 +1973,42 @@ export default function PostaCondivisaPage() {
                   value={composeTo}
                   onChange={(e) => setComposeTo(e.target.value)}
                   placeholder="Es. cliente@azienda.com"
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                  className="text-xs bg-[#f7f6f3] dark:bg-[#0d0d0f] border-[#e5e3dc] dark:border-white/[0.1]"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Oggetto *</label>
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">Oggetto *</label>
                 <Input
                   required
                   value={composeSubject}
                   onChange={(e) => setComposeSubject(e.target.value)}
                   placeholder="Es. Richiesta Informazioni / Preventivo"
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                  className="text-xs bg-[#f7f6f3] dark:bg-[#0d0d0f] border-[#e5e3dc] dark:border-white/[0.1]"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Messaggio *</label>
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">
+                  Messaggio *
+                </label>
                 <textarea
                   required
                   rows={6}
                   value={composeBody}
                   onChange={(e) => setComposeBody(e.target.value)}
                   placeholder="Scrivi qui il messaggio..."
-                  className="w-full text-xs p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full text-xs p-3 rounded-md border border-[#e5e3dc] dark:border-white/[0.1] bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] focus:outline-none focus:ring-1 focus:ring-[#6366f1] resize-none"
                 />
               </div>
 
-              {/* Sezione Allegati Nuova Email */}
-              <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <div className="space-y-2 pt-1 border-t border-[#e5e3dc] dark:border-white/[0.08]">
                 <div className="flex items-center justify-between">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-xs">
-                    <Paperclip className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <label className="font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 text-xs">
+                    <Paperclip className="h-3.5 w-3.5 text-[#6366f1]" />
                     <span>Allegati ({composeAttachments.length})</span>
                   </label>
-                  <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[11px] font-medium border border-blue-200 dark:border-blue-900/50 transition-colors">
+                  <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#6366f1]/10 hover:bg-[#6366f1]/20 text-[#6366f1] text-[11px] font-semibold border border-[#6366f1]/25 transition-colors">
                     <Paperclip className="h-3 w-3" />
                     <span>Carica File</span>
                     <input
@@ -2028,21 +2021,23 @@ export default function PostaCondivisaPage() {
                 </div>
 
                 {composeAttachments.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1.5 rounded-lg bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700">
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1.5 rounded-md bg-[#f7f6f3] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08]">
                     {composeAttachments.map((att, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-800 dark:text-slate-200 shadow-2xs"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-white dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] text-[11px] text-[#111113] dark:text-[#f4f4f5]"
                       >
-                        <Paperclip className="h-2.5 w-2.5 text-slate-400" />
+                        <Paperclip className="h-2.5 w-2.5 text-zinc-400" />
                         <span className="truncate max-w-[140px] font-mono">{att.filename}</span>
-                        <span className="text-[9px] text-slate-400 font-sans">
+                        <span className="text-[9px] text-zinc-400 font-sans">
                           ({(att.size / 1024).toFixed(0)} KB)
                         </span>
                         <button
                           type="button"
-                          onClick={() => setComposeAttachments(prev => prev.filter((_, i) => i !== idx))}
-                          className="text-slate-400 hover:text-red-500 ml-0.5"
+                          onClick={() =>
+                            setComposeAttachments((prev) => prev.filter((_, i) => i !== idx))
+                          }
+                          className="text-zinc-400 hover:text-rose-500 ml-0.5 cursor-pointer"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -2052,17 +2047,23 @@ export default function PostaCondivisaPage() {
                 )}
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-[11px] text-slate-400">Mittente: info@aiutiamoci.cloud</span>
+              <div className="flex items-center justify-between pt-2 border-t border-[#e5e3dc] dark:border-white/[0.08]">
+                <span className="text-[11px] text-zinc-400">Mittente: info@aiutiamoci.cloud</span>
                 <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => setIsComposeModalOpen(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsComposeModalOpen(false)}
+                    className="border-[#e5e3dc] dark:border-white/[0.1]"
+                  >
                     Annulla
                   </Button>
                   <Button
                     type="submit"
                     size="sm"
                     disabled={isComposing}
-                    className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5 cursor-pointer"
+                    className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] gap-1.5 cursor-pointer border-0"
                   >
                     {isComposing ? (
                       <>
@@ -2085,45 +2086,50 @@ export default function PostaCondivisaPage() {
 
       {/* Modal Guida DNS Aruba */}
       {isDnsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-[#141417] rounded-lg shadow-2xl w-full max-w-2xl border border-[#e5e3dc] dark:border-white/[0.1] overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
               <div className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-emerald-500" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                  Guida Configurazione DNS Dominio <span className="text-blue-600 dark:text-blue-400 font-mono">aiutiamoci.cloud</span> (Aruba)
+                <Globe className="h-4 w-4 text-[#10b981]" />
+                <h3 className="font-bold text-sm text-[#111113] dark:text-[#f4f4f5]">
+                  Guida Configurazione DNS Dominio{' '}
+                  <span className="text-[#6366f1] font-mono">aiutiamoci.cloud</span> (Aruba)
                 </h3>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsDnsModalOpen(false)}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="h-7 w-7 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
             <div className="p-5 space-y-5 overflow-y-auto text-xs">
-              <div className="p-3.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl space-y-1">
-                <div className="flex items-center gap-1.5 font-bold text-blue-900 dark:text-blue-300">
-                  <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <div className="p-3.5 bg-[#6366f1]/10 border border-[#6366f1]/25 rounded-md space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-[#111113] dark:text-[#f4f4f5]">
+                  <ShieldCheck className="h-4 w-4 text-[#6366f1]" />
                   Pannello Aruba: Gestione DNS e Record Posta
                 </div>
-                <p className="text-blue-800/80 dark:text-blue-300/80 text-[11px] leading-relaxed">
-                  Per far recapitare la posta di <strong>aiutiamoci.cloud</strong> direttamente in questa piattaforma e abilitare l'invio verificato con SPF/DKIM, inserisci i seguenti record nel pannello di controllo Aruba (sezione <em>Gestione DNS / NameServer</em>):
+                <p className="text-zinc-600 dark:text-zinc-300 text-[11px] leading-relaxed">
+                  Per far recapitare la posta di <strong>aiutiamoci.cloud</strong> direttamente in
+                  questa piattaforma e abilitare l&apos;invio verificato con SPF/DKIM, inserisci i
+                  seguenti record nel pannello di controllo Aruba.
                 </p>
               </div>
 
-              {/* Tabella Record DNS */}
               <div className="space-y-3">
-                <h4 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                  <span>1. Record Posta in Arrivo (MX Inbound)</span>
+                <h4 className="font-bold text-[#111113] dark:text-[#f4f4f5]">
+                  1. Record Posta in Arrivo (MX Inbound)
                 </h4>
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="p-3 bg-[#f7f6f3] dark:bg-[#0d0d0f] rounded-md border border-[#e5e3dc] dark:border-white/[0.08] space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="font-mono font-bold text-slate-900 dark:text-white">Tipo MX:</span> Priorità <span className="font-mono font-bold text-blue-600">10</span>
+                      <span className="font-mono font-bold text-[#111113] dark:text-[#f4f4f5]">
+                        Tipo MX:
+                      </span>{' '}
+                      Priorità <span className="font-mono font-bold text-[#6366f1]">10</span>
                     </div>
                     <Button
                       variant="outline"
@@ -2131,90 +2137,111 @@ export default function PostaCondivisaPage() {
                       onClick={() => copyToClipboard('feedback-smtp.us-east-1.amazonses.com', 'mx')}
                       className="h-7 text-[11px] gap-1"
                     >
-                      {copiedKey === 'mx' ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      {copiedKey === 'mx' ? (
+                        <Check className="h-3 w-3 text-[#10b981]" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
                       Copia Host
                     </Button>
                   </div>
-                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
+                  <div className="font-mono text-[11px] text-zinc-700 dark:text-zinc-300 bg-white dark:bg-[#141417] p-2 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08]">
                     feedback-smtp.us-east-1.amazonses.com
                   </div>
-                  <p className="text-[10px] text-slate-400">
-                    (In alternativa, se usi Resend Inbound Routing dedicato: inserisci il record MX fornito nel pannello Resend Domains per Inbound)
-                  </p>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <h4 className="font-bold text-slate-800 dark:text-slate-200">
+                <h4 className="font-bold text-[#111113] dark:text-[#f4f4f5]">
                   2. Record Autenticazione Invio (SPF, DKIM, DMARC)
                 </h4>
 
-                {/* SPF */}
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                <div className="p-3 bg-[#f7f6f3] dark:bg-[#0d0d0f] rounded-md border border-[#e5e3dc] dark:border-white/[0.08] space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">TXT (SPF): Host @</span>
+                    <span className="font-mono font-bold text-[#111113] dark:text-[#f4f4f5]">
+                      TXT (SPF): Host @
+                    </span>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => copyToClipboard('v=spf1 include:amazonses.com ~all', 'spf')}
                       className="h-7 text-[11px] gap-1"
                     >
-                      {copiedKey === 'spf' ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      {copiedKey === 'spf' ? (
+                        <Check className="h-3 w-3 text-[#10b981]" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
                       Copia Valore
                     </Button>
                   </div>
-                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
+                  <div className="font-mono text-[11px] text-zinc-700 dark:text-zinc-300 bg-white dark:bg-[#141417] p-2 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08]">
                     v=spf1 include:amazonses.com ~all
                   </div>
                 </div>
 
-                {/* DMARC */}
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                <div className="p-3 bg-[#f7f6f3] dark:bg-[#0d0d0f] rounded-md border border-[#e5e3dc] dark:border-white/[0.08] space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">TXT (DMARC): Host _dmarc</span>
+                    <span className="font-mono font-bold text-[#111113] dark:text-[#f4f4f5]">
+                      TXT (DMARC): Host _dmarc
+                    </span>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => copyToClipboard('v=DMARC1; p=none;', 'dmarc')}
                       className="h-7 text-[11px] gap-1"
                     >
-                      {copiedKey === 'dmarc' ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      {copiedKey === 'dmarc' ? (
+                        <Check className="h-3 w-3 text-[#10b981]" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
                       Copia Valore
                     </Button>
                   </div>
-                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
+                  <div className="font-mono text-[11px] text-zinc-700 dark:text-zinc-300 bg-white dark:bg-[#141417] p-2 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08]">
                     v=DMARC1; p=none;
                   </div>
                 </div>
               </div>
 
-              {/* Webhook Endpoint per ricezione automatica */}
               <div className="space-y-2">
-                <h4 className="font-bold text-slate-800 dark:text-slate-200">
-                  3. Endpoint Webhook Inbound (da inserire su Resend Dashboard)
+                <h4 className="font-bold text-[#111113] dark:text-[#f4f4f5]">
+                  3. Endpoint Webhook Inbound (Resend Dashboard)
                 </h4>
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+                <div className="p-3 bg-[#f7f6f3] dark:bg-[#0d0d0f] rounded-md border border-[#e5e3dc] dark:border-white/[0.08] space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">URL Destinazione Webhook Eventi:</span>
+                    <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                      URL Destinazione Webhook Eventi:
+                    </span>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => copyToClipboard('https://aiutiamoci.cloud/api/webhooks/resend', 'webhook')}
+                      onClick={() =>
+                        copyToClipboard('https://aiutiamoci.cloud/api/webhooks/resend', 'webhook')
+                      }
                       className="h-7 text-[11px] gap-1"
                     >
-                      {copiedKey === 'webhook' ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      {copiedKey === 'webhook' ? (
+                        <Check className="h-3 w-3 text-[#10b981]" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
                       Copia URL Webhook
                     </Button>
                   </div>
-                  <div className="font-mono text-[11px] text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800 select-all">
+                  <div className="font-mono text-[11px] text-[#6366f1] bg-white dark:bg-[#141417] p-2 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] select-all">
                     https://aiutiamoci.cloud/api/webhooks/resend
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-end">
-              <Button onClick={() => setIsDnsModalOpen(false)} className="bg-blue-600 hover:bg-blue-700 text-white text-xs">
+            <div className="p-4 border-t border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] flex justify-end">
+              <Button
+                onClick={() => setIsDnsModalOpen(false)}
+                className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] text-xs"
+              >
                 Chiudi Guida
               </Button>
             </div>
@@ -2224,12 +2251,15 @@ export default function PostaCondivisaPage() {
 
       {/* Modal Configurazione Credenziali IMAP Aruba */}
       {isImapModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-[#141417] rounded-lg shadow-2xl w-full max-w-lg border border-[#e5e3dc] dark:border-white/[0.1] overflow-hidden">
+            <div className="p-4 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
               <div className="flex items-center gap-2">
-                <RefreshCw className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                <RefreshCw className="h-4 w-4 text-[#6366f1]" />
+                <h3
+                  className="font-bold text-sm text-[#111113] dark:text-[#f4f4f5]"
+                  style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                >
                   Configurazione Caselle Aruba (IMAP)
                 </h3>
               </div>
@@ -2237,32 +2267,36 @@ export default function PostaCondivisaPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsImapModalOpen(false)}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="h-7 w-7 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
             <form onSubmit={handleSaveImapAccounts} className="p-5 space-y-4 text-xs">
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl space-y-1">
-                <p className="text-[11px] text-blue-800 dark:text-blue-300">
-                  Inserisci le password delle caselle per consentire la sincronizzazione diretta con i server <strong>imaps.aruba.it (porta 993 SSL)</strong>.
+              <div className="p-3 bg-[#6366f1]/10 border border-[#6366f1]/25 rounded-md">
+                <p className="text-[11px] text-[#111113] dark:text-zinc-200">
+                  Inserisci le password delle caselle per consentire la sincronizzazione diretta con
+                  i server <strong>imaps.aruba.it (porta 993 SSL)</strong>.
                 </p>
               </div>
 
               <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
-                {(Array.isArray(imapAccounts) ? imapAccounts : DEFAULT_IMAP_ACCOUNTS).map((acc, idx) => (
-                  <div key={acc.email} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono font-bold text-slate-900 dark:text-white text-xs">
-                        {acc.email}
-                      </span>
-                      <Badge variant="outline" className="text-[9px] font-mono text-slate-500">
-                        imaps.aruba.it:993
-                      </Badge>
-                    </div>
+                {(Array.isArray(imapAccounts) ? imapAccounts : DEFAULT_IMAP_ACCOUNTS).map(
+                  (acc, idx) => (
+                    <div
+                      key={acc.email}
+                      className="p-3 rounded-md bg-[#f7f6f3] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08] space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold text-[#111113] dark:text-[#f4f4f5] text-xs">
+                          {acc.email}
+                        </span>
+                        <span className="text-[9px] font-mono text-zinc-500 border border-[#e5e3dc] dark:border-white/[0.08] px-1.5 py-0.5 rounded-sm">
+                          imaps.aruba.it:993
+                        </span>
+                      </div>
 
-                    <div>
                       <Input
                         type="password"
                         placeholder={`Password per ${acc.email}`}
@@ -2273,16 +2307,22 @@ export default function PostaCondivisaPage() {
                             prev.map((item, i) => (i === idx ? { ...item, password: val } : item))
                           )
                         }}
-                        className="text-xs h-8 dark:bg-slate-900 dark:border-slate-700"
+                        className="text-xs h-8 bg-white dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.1]"
                       />
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between pt-3 border-t border-[#e5e3dc] dark:border-white/[0.08]">
                 <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => setIsImapModalOpen(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsImapModalOpen(false)}
+                    className="border-[#e5e3dc] dark:border-white/[0.1]"
+                  >
                     Annulla
                   </Button>
                   <Button
@@ -2292,7 +2332,7 @@ export default function PostaCondivisaPage() {
                     onClick={() => {
                       setImapAccounts(DEFAULT_IMAP_ACCOUNTS)
                     }}
-                    className="text-[11px] text-slate-500 hover:text-red-500"
+                    className="text-[11px] text-zinc-500 hover:text-rose-500"
                     title="Reimposta l'elenco delle caselle predefinite"
                   >
                     Reimposta Elenco
@@ -2302,7 +2342,7 @@ export default function PostaCondivisaPage() {
                   type="submit"
                   size="sm"
                   disabled={isSyncingImap}
-                  className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+                  className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] gap-1.5 border-0"
                 >
                   {isSyncingImap ? (
                     <>
@@ -2324,18 +2364,23 @@ export default function PostaCondivisaPage() {
 
       {/* Modal Nuova Cartella Personalizzata */}
       {isNewFolderModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-[#141417] rounded-lg shadow-2xl w-full max-w-sm border border-[#e5e3dc] dark:border-white/[0.1] overflow-hidden">
+            <div className="p-4 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
               <div className="flex items-center gap-2">
-                <FolderPlus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Nuova Cartella</h3>
+                <FolderPlus className="h-4 w-4 text-[#6366f1]" />
+                <h3
+                  className="font-bold text-sm text-[#111113] dark:text-[#f4f4f5]"
+                  style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                >
+                  Nuova Cartella
+                </h3>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsNewFolderModalOpen(false)}
-                className="h-7 w-7 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="h-7 w-7 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -2343,23 +2388,27 @@ export default function PostaCondivisaPage() {
 
             <form onSubmit={handleCreateFolder} className="p-4 space-y-3.5 text-xs">
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Nome Cartella *</label>
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">
+                  Nome Cartella *
+                </label>
                 <Input
                   autoFocus
                   required
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
                   placeholder="Es. Fornitori, Contratti, Marketing"
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                  className="text-xs bg-[#f7f6f3] dark:bg-[#0d0d0f] border-[#e5e3dc] dark:border-white/[0.1]"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Colore Etichetta</label>
+                <label className="font-semibold text-zinc-700 dark:text-zinc-300">
+                  Colore Etichetta
+                </label>
                 <div className="flex items-center gap-2 pt-1">
                   {[
-                    { id: 'blue', bg: 'bg-blue-500' },
-                    { id: 'emerald', bg: 'bg-emerald-500' },
+                    { id: 'blue', bg: 'bg-[#6366f1]' },
+                    { id: 'emerald', bg: 'bg-[#10b981]' },
                     { id: 'amber', bg: 'bg-amber-500' },
                     { id: 'purple', bg: 'bg-purple-500' },
                     { id: 'rose', bg: 'bg-rose-500' },
@@ -2369,19 +2418,31 @@ export default function PostaCondivisaPage() {
                       key={col.id}
                       type="button"
                       onClick={() => setNewFolderColor(col.id)}
-                      className={`h-6 w-6 rounded-full ${col.bg} transition-all ${
-                        newFolderColor === col.id ? 'ring-2 ring-offset-2 ring-blue-600 dark:ring-offset-slate-900 scale-110' : 'opacity-70 hover:opacity-100'
+                      className={`h-6 w-6 rounded-full ${col.bg} transition-all cursor-pointer ${
+                        newFolderColor === col.id
+                          ? 'ring-2 ring-offset-2 ring-[#6366f1] dark:ring-offset-[#141417] scale-110'
+                          : 'opacity-70 hover:opacity-100'
                       }`}
                     />
                   ))}
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <Button type="button" variant="outline" size="sm" onClick={() => setIsNewFolderModalOpen(false)}>
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e5e3dc] dark:border-white/[0.08]">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsNewFolderModalOpen(false)}
+                  className="border-[#e5e3dc] dark:border-white/[0.1]"
+                >
                   Annulla
                 </Button>
-                <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] font-semibold border-0"
+                >
                   Crea Cartella
                 </Button>
               </div>

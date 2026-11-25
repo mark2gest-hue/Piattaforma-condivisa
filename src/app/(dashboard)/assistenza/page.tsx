@@ -252,141 +252,140 @@ function AssistenzaInner() {
       : '/chat'
 
   return (
-    <div className="flex h-full w-full min-h-0 overflow-hidden bg-white dark:bg-slate-950">
+    <div className="flex h-full w-full min-h-0 overflow-hidden bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5]">
       {/* Colonna Sinistra: Lista Ticket & Filtri */}
       <div
         className={`${
           mobileShowDetail ? 'hidden md:flex' : 'flex'
-        } w-full md:w-[360px] lg:w-[400px] shrink-0 border-r border-slate-200 dark:border-slate-800 flex-col bg-slate-50/40 dark:bg-slate-900/50 min-h-0`}
+        } w-full md:w-[360px] lg:w-[400px] shrink-0 border-r border-[#e5e3dc] dark:border-white/[0.08] flex-col bg-white dark:bg-[#111114] min-h-0`}
       >
         {/* Header Colonna Sinistra */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3 shrink-0 bg-white dark:bg-slate-900">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-xl bg-indigo-600/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 flex items-center justify-center">
-                <LifeBuoy className="h-5 w-5" />
-              </div>
-              <div>
-                <h1 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <span>Inbox Assistenza</span>
-                  {counts.open > 0 && (
-                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-                      {counts.open} aperti
-                    </Badge>
-                  )}
-                </h1>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Ticket Studenti Academy & Aziende B2B
-                </p>
-              </div>
+        <div className="border-b border-[#e5e3dc] dark:border-white/[0.08] shrink-0 bg-white dark:bg-[#0d0d0f]">
+          <div className="min-h-[52px] px-4 py-2 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <LifeBuoy className="h-4 w-4 text-[#6366f1] shrink-0" />
+              <h1
+                className="text-[15px] font-bold tracking-tight text-[#111113] dark:text-[#f4f4f5] truncate"
+                style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+              >
+                Inbox Assistenza
+              </h1>
+              {counts.open > 0 && (
+                <span
+                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-sm bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25 shrink-0"
+                  style={{ fontFamily: 'var(--font-mono), monospace' }}
+                >
+                  {counts.open} aperti
+                </span>
+              )}
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <Link
                 href="/chat"
-                className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                className="inline-flex items-center gap-1 h-7 px-2 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] text-[11px] font-semibold hover:border-[#6366f1] transition-colors"
                 title="Torna alla Chat Team"
               >
-                <MessageCircle className="h-3.5 w-3.5 text-blue-500" />
+                <MessageCircle className="h-3 w-3 text-[#6366f1]" />
                 <span>Chat</span>
               </Link>
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                size="icon"
                 onClick={() => loadTickets(true)}
                 disabled={refreshing}
-                className="h-8 w-8 rounded-lg"
+                className="h-7 w-7 inline-flex items-center justify-center rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#141417] text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] transition-colors cursor-pointer"
                 title="Aggiorna ticket"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-              </Button>
+              </button>
             </div>
           </div>
 
-          {/* Switch "I miei ticket" vs "Tutti" */}
-          <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-            <button
-              type="button"
-              onClick={() => setScopeFilter('all')}
-              className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                scopeFilter === 'all'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              📋 Tutti ({tickets.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setScopeFilter('mine')}
-              className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                scopeFilter === 'mine'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              👤 I miei ({counts.mine})
-            </button>
-          </div>
-
-          {/* Ricerca */}
-          <div className="relative">
-            <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cerca studente, codice, azienda, oggetto..."
-              className="pl-8 h-8 text-xs dark:bg-slate-800 dark:border-slate-700"
-            />
-          </div>
-
-          {/* Filtri Stato & Categoria */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {(
-              [
-                { id: 'all', label: 'Tutti' },
-                { id: 'open', label: `Aperti (${counts.open})` },
-                { id: 'pending', label: `In attesa (${counts.pending})` },
-                { id: 'resolved', label: `Risolti (${counts.resolved})` },
-              ] as const
-            ).map((st) => (
+          <div className="p-3 space-y-2.5">
+            {/* Switch "I miei ticket" vs "Tutti" */}
+            <div className="grid grid-cols-2 gap-0.5 p-0.5 rounded-md bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08]">
               <button
-                key={st.id}
                 type="button"
-                onClick={() => setStatusFilter(st.id)}
-                className={`px-2 py-1 rounded-md text-[11px] font-semibold border transition-colors cursor-pointer ${
-                  statusFilter === st.id
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                onClick={() => setScopeFilter('all')}
+                className={`py-1 px-2.5 rounded-sm text-[11px] font-semibold transition-colors cursor-pointer ${
+                  scopeFilter === 'all'
+                    ? 'bg-white dark:bg-[#222228] text-[#111113] dark:text-[#f4f4f5] shadow-2xs'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
                 }`}
               >
-                {st.label}
+                Tutti ({tickets.length})
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => setScopeFilter('mine')}
+                className={`py-1 px-2.5 rounded-sm text-[11px] font-semibold transition-colors cursor-pointer ${
+                  scopeFilter === 'mine'
+                    ? 'bg-white dark:bg-[#222228] text-[#6366f1] dark:text-[#f4f4f5] shadow-2xs'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+                }`}
+              >
+                I miei ({counts.mine})
+              </button>
+            </div>
 
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value as any)}
-              className="ml-auto h-6 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] px-1.5 text-slate-700 dark:text-slate-300"
-            >
-              <option value="all">Tutte le categorie</option>
-              <option value="tecnico">🛠️ Tecnico</option>
-              <option value="didattica">🎓 Didattica</option>
-              <option value="commerciale">💼 Commerciale/B2B</option>
-            </select>
+            {/* Ricerca */}
+            <div className="relative">
+              <Search className="h-3.5 w-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cerca studente, codice, azienda, oggetto..."
+                className="pl-8 h-8 text-xs rounded-md bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08]"
+              />
+            </div>
+
+            {/* Filtri Stato & Categoria */}
+            <div className="flex flex-wrap items-center gap-1">
+              {(
+                [
+                  { id: 'all', label: 'Tutti' },
+                  { id: 'open', label: `Aperti (${counts.open})` },
+                  { id: 'pending', label: `Attesa (${counts.pending})` },
+                  { id: 'resolved', label: `Risolti (${counts.resolved})` },
+                ] as const
+              ).map((st) => (
+                <button
+                  key={st.id}
+                  type="button"
+                  onClick={() => setStatusFilter(st.id)}
+                  className={`px-2 py-1 rounded-sm text-[10px] font-semibold border transition-colors cursor-pointer ${
+                    statusFilter === st.id
+                      ? 'bg-[#111113] text-white border-[#111113] dark:bg-[#f4f4f5] dark:text-[#0d0d0f] dark:border-[#f4f4f5]'
+                      : 'bg-white dark:bg-[#141417] text-zinc-600 dark:text-zinc-400 border-[#e5e3dc] dark:border-white/[0.08] hover:border-[#6366f1]/50'
+                  }`}
+                >
+                  {st.label}
+                </button>
+              ))}
+
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value as any)}
+                className="ml-auto h-6 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[10px] px-1.5 text-[#111113] dark:text-[#f4f4f5]"
+              >
+                <option value="all">Tutte</option>
+                <option value="tecnico">Tecnico</option>
+                <option value="didattica">Didattica</option>
+                <option value="commerciale">Commerciale</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* Lista Ticket */}
-        <div className="flex-1 overflow-y-auto p-2.5 space-y-2 min-h-0">
+        {/* Lista Ticket Piatta divide-y */}
+        <div className="flex-1 overflow-y-auto divide-y divide-[#e5e3dc] dark:divide-white/[0.06] min-h-0">
           {loading ? (
             <div className="h-40 flex items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+              <Loader2 className="h-5 w-5 animate-spin text-[#6366f1]" />
             </div>
           ) : filteredTickets.length === 0 ? (
-            <div className="p-8 text-center space-y-2 text-xs text-slate-400">
-              <LifeBuoy className="h-8 w-8 mx-auto opacity-40" />
+            <div className="p-8 text-center space-y-2 text-xs text-zinc-400 dark:text-zinc-500">
+              <LifeBuoy className="h-7 w-7 mx-auto opacity-40" />
               <p>Nessun ticket trovato con i filtri selezionati.</p>
             </div>
           ) : (
@@ -404,52 +403,58 @@ function AssistenzaInner() {
                     setSelectedTicketId(ticket.id)
                     setMobileShowDetail(true)
                   }}
-                  className={`w-full text-left p-3 rounded-xl border transition-all space-y-2 cursor-pointer ${
+                  className={`w-full text-left px-4 py-3.5 transition-colors space-y-1.5 cursor-pointer border-l-2 ${
                     isSelected
-                      ? 'bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-500 shadow-xs'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-400/60'
+                      ? 'bg-[#f7f6f3] dark:bg-[#18181f] border-l-[#6366f1]'
+                      : 'bg-white dark:bg-[#111114] hover:bg-[#fafaf8] dark:hover:bg-[#16161b] border-l-transparent'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${statusInfo.cls}`}
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] font-semibold border ${statusInfo.cls}`}
                     >
                       <span className={`h-1.5 w-1.5 rounded-full ${statusInfo.dot}`} />
                       {statusInfo.label}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">
+                    <span
+                      className="text-[10px] text-zinc-400 dark:text-zinc-500 tabular-nums"
+                      style={{ fontFamily: 'var(--font-mono), monospace' }}
+                    >
                       {formatDate(ticket.last_message_at)}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                    <h3 className="text-xs font-semibold text-[#111113] dark:text-[#f4f4f5] line-clamp-1">
                       {ticket.subject}
                     </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1 mt-0.5">
                       {lastMsg ? `${lastMsg.sender_name}: ${lastMsg.content}` : 'Nessun messaggio'}
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80 text-[10px]">
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                      <User className="h-3 w-3 text-slate-400" />
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px]">
+                    <span className="font-medium text-zinc-700 dark:text-zinc-300 inline-flex items-center gap-1">
+                      <User className="h-2.5 w-2.5 text-zinc-400" />
                       {ticket.requester_name}
                     </span>
 
                     {ticket.company_name && (
-                      <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold flex items-center gap-1">
+                      <span className="px-1.5 py-0.5 rounded-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20 font-medium inline-flex items-center gap-1">
                         <Building2 className="h-2.5 w-2.5" />
                         {ticket.company_name}
                       </span>
                     )}
 
-                    <span className={`px-1.5 py-0.2 rounded border font-semibold ${catInfo.cls}`}>
+                    <span className={`px-1.5 py-0.5 rounded-sm border font-medium ${catInfo.cls}`}>
                       {catInfo.label}
                     </span>
 
                     {ticket.assigned_name && (
-                      <span className="ml-auto text-slate-400 font-mono truncate max-w-[100px]">
+                      <span
+                        className="ml-auto text-zinc-400 dark:text-zinc-500 truncate max-w-[100px]"
+                        style={{ fontFamily: 'var(--font-mono), monospace' }}
+                      >
                         → {ticket.assigned_name.split(' ')[0]}
                       </span>
                     )}
@@ -465,28 +470,31 @@ function AssistenzaInner() {
       <div
         className={`${
           mobileShowDetail ? 'flex' : 'hidden md:flex'
-        } flex-1 flex-col min-w-0 min-h-0 bg-slate-50/20 dark:bg-slate-950`}
+        } flex-1 flex-col min-w-0 min-h-0 bg-[#f7f6f3] dark:bg-[#0d0d0f]`}
       >
         {selectedTicket ? (
           <>
             {/* Header Dettaglio Ticket */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3 shrink-0">
+            <div className="min-h-[52px] px-4 py-3 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#141417] shrink-0">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-start gap-2.5 min-w-0">
                   <button
                     type="button"
                     onClick={() => setMobileShowDetail(false)}
-                    className="md:hidden p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                    className="md:hidden p-1.5 rounded-sm border border-[#e5e3dc] dark:border-white/[0.08] text-zinc-600 dark:text-[#f4f4f5]"
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </button>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-bold text-slate-900 dark:text-white truncate">
+                      <h2
+                        className="text-sm sm:text-[15px] font-bold tracking-tight text-[#111113] dark:text-[#f4f4f5] truncate"
+                        style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                      >
                         {selectedTicket.subject}
                       </h2>
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[10px] font-semibold border ${
                           getStatusBadge(selectedTicket.status).cls
                         }`}
                       >
@@ -494,22 +502,25 @@ function AssistenzaInner() {
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+                      <span className="font-semibold text-[#111113] dark:text-[#f4f4f5]">
                         {selectedTicket.requester_name}
                       </span>
                       <span>• {selectedTicket.requester_email}</span>
-                      <span className="font-mono text-[11px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                      <span
+                        className="text-[10px] px-1.5 py-0.5 rounded-sm bg-[#f7f6f3] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08]"
+                        style={{ fontFamily: 'var(--font-mono), monospace' }}
+                      >
                         {selectedTicket.student_code}
                       </span>
                       {selectedTicket.company_name && (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                          <Building2 className="h-3.5 w-3.5" />
+                        <span className="text-emerald-600 dark:text-emerald-300 font-semibold inline-flex items-center gap-1">
+                          <Building2 className="h-3 w-3" />
                           {selectedTicket.company_name}
                         </span>
                       )}
                       {(selectedTicket.course_id || selectedTicket.lesson_title) && (
-                        <span className="text-indigo-600 dark:text-indigo-400 font-medium">
+                        <span className="text-[#6366f1] font-medium">
                           • {selectedTicket.course_id?.toUpperCase()}
                           {selectedTicket.lesson_id ? ` • Mod. ${selectedTicket.lesson_id}` : ''}
                           {selectedTicket.lesson_title ? ` (${selectedTicket.lesson_title})` : ''}
@@ -520,20 +531,20 @@ function AssistenzaInner() {
                 </div>
 
                 {/* Azioni Rapide Staff */}
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                   <Link
                     href={dmChannelLink}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-blue-300 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
+                    className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-[#6366f1]/30 bg-[#6366f1]/10 text-[#6366f1] dark:text-[#f4f4f5] text-xs font-semibold hover:bg-[#6366f1]/20 transition-colors"
                   >
                     <MessageCircle className="h-3.5 w-3.5" />
-                    <span>Apri DM in Chat</span>
+                    <span>Apri DM</span>
                   </Link>
 
                   <select
                     value={selectedTicket.assigned_to || ''}
                     disabled={isUpdatingMeta}
                     onChange={(e) => handleReassign(e.target.value)}
-                    className="h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs px-2.5 text-slate-700 dark:text-slate-200 font-medium"
+                    className="h-8 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] text-xs px-2 text-[#111113] dark:text-[#f4f4f5] font-medium"
                     title="Riassegna ticket ad un collega"
                   >
                     <option value="" disabled>
@@ -541,20 +552,20 @@ function AssistenzaInner() {
                     </option>
                     {teamMembers.map((m) => (
                       <option key={m.id} value={m.id}>
-                        👤 {m.full_name} ({m.role})
+                        {m.full_name} ({m.role})
                       </option>
                     ))}
                   </select>
 
-                  <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-100 dark:bg-slate-800">
+                  <div className="flex items-center rounded-md border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden bg-[#f7f6f3] dark:bg-[#0d0d0f] divide-x divide-[#e5e3dc] dark:divide-white/[0.08]">
                     <button
                       type="button"
                       disabled={isUpdatingMeta}
                       onClick={() => handleChangeStatus('open')}
-                      className={`px-2.5 py-1.5 text-[11px] font-semibold flex items-center gap-1 cursor-pointer ${
+                      className={`h-8 px-2.5 text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors ${
                         selectedTicket.status === 'open'
                           ? 'bg-rose-600 text-white'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                          : 'text-zinc-600 dark:text-zinc-400 hover:bg-white dark:hover:bg-[#1f1f24]'
                       }`}
                     >
                       <AlertCircle className="h-3 w-3" />
@@ -564,10 +575,10 @@ function AssistenzaInner() {
                       type="button"
                       disabled={isUpdatingMeta}
                       onClick={() => handleChangeStatus('pending')}
-                      className={`px-2.5 py-1.5 text-[11px] font-semibold flex items-center gap-1 cursor-pointer ${
+                      className={`h-8 px-2.5 text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors ${
                         selectedTicket.status === 'pending'
-                          ? 'bg-amber-500 text-slate-950'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                          ? 'bg-amber-500 text-zinc-950'
+                          : 'text-zinc-600 dark:text-zinc-400 hover:bg-white dark:hover:bg-[#1f1f24]'
                       }`}
                     >
                       <Clock className="h-3 w-3" />
@@ -577,10 +588,10 @@ function AssistenzaInner() {
                       type="button"
                       disabled={isUpdatingMeta}
                       onClick={() => handleChangeStatus('resolved')}
-                      className={`px-2.5 py-1.5 text-[11px] font-semibold flex items-center gap-1 cursor-pointer ${
+                      className={`h-8 px-2.5 text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors ${
                         selectedTicket.status === 'resolved'
                           ? 'bg-emerald-600 text-white'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                          : 'text-zinc-600 dark:text-zinc-400 hover:bg-white dark:hover:bg-[#1f1f24]'
                       }`}
                     >
                       <CheckCircle2 className="h-3 w-3" />
@@ -602,8 +613,8 @@ function AssistenzaInner() {
                       isStaff ? 'ml-auto items-end' : 'mr-auto items-start'
                     }`}
                   >
-                    <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500">
+                      <span className="font-semibold text-[#111113] dark:text-[#f4f4f5]">
                         {msg.sender_name}
                       </span>
                       <Badge
@@ -612,14 +623,16 @@ function AssistenzaInner() {
                       >
                         {isStaff ? 'Staff AIutiamoci' : selectedTicket.company_name ? 'B2B' : 'Studente'}
                       </Badge>
-                      <span>{formatDate(msg.created_at)}</span>
+                      <span style={{ fontFamily: 'var(--font-mono), monospace' }}>
+                        {formatDate(msg.created_at)}
+                      </span>
                     </div>
 
                     <div
-                      className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words shadow-xs ${
+                      className={`p-3.5 rounded-lg text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words ${
                         isStaff
-                          ? 'bg-indigo-600 text-white rounded-tr-xs'
-                          : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-xs'
+                          ? 'bg-[#6366f1] text-white rounded-tr-xs'
+                          : 'bg-white dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] text-[#111113] dark:text-[#f4f4f5] rounded-tl-xs'
                       }`}
                     >
                       {renderChatText(msg.content, {
@@ -635,13 +648,13 @@ function AssistenzaInner() {
             </div>
 
             {/* Box Risposta Staff */}
-            <div className="p-3.5 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2 shrink-0">
-              <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
-                <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+            <div className="p-3.5 sm:p-4 border-t border-[#e5e3dc] dark:border-white/[0.08] bg-white dark:bg-[#141417] space-y-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400">
+                <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-[#10b981] font-medium">
                   <BellRing className="h-3 w-3" />
                   Invia Web Push al corsista
                 </span>
-                <span className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-medium">
+                <span className="inline-flex items-center gap-1 text-[#6366f1] font-medium">
                   <Mail className="h-3 w-3" />
                   Inoltro automatico via Email a {selectedTicket.requester_email}
                 </span>
@@ -659,12 +672,12 @@ function AssistenzaInner() {
                     }
                   }}
                   placeholder={`Rispondi a ${selectedTicket.requester_name}... (Invio per spedire, Shift+Invio a capo)`}
-                  className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  className="flex-1 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] px-3.5 py-2.5 text-xs sm:text-sm text-[#111113] dark:text-[#f4f4f5] focus:outline-none focus:ring-1 focus:ring-[#6366f1] resize-none"
                 />
                 <Button
                   type="submit"
                   disabled={!replyText.trim() || isSendingReply}
-                  className="h-11 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl gap-2 shrink-0"
+                  className="h-11 px-4 bg-[#111113] hover:bg-zinc-800 text-white dark:bg-[#f4f4f5] dark:hover:bg-white dark:text-[#0d0d0f] font-semibold text-xs rounded-md gap-2 shrink-0 border-0 cursor-pointer"
                 >
                   {isSendingReply ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -677,11 +690,14 @@ function AssistenzaInner() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3 text-slate-400">
-            <div className="h-14 w-14 rounded-2xl bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 flex items-center justify-center">
-              <LifeBuoy className="h-7 w-7" />
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3 text-zinc-400 dark:text-zinc-500">
+            <div className="h-11 w-11 rounded-md bg-[#6366f1]/10 text-[#6366f1] border border-[#6366f1]/25 flex items-center justify-center">
+              <LifeBuoy className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+            <h3
+              className="text-sm font-bold text-[#111113] dark:text-[#f4f4f5]"
+              style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+            >
               Inbox Assistenza Nativa AIutiamoci
             </h3>
             <p className="text-xs max-w-sm leading-relaxed">
@@ -698,7 +714,7 @@ export default function AssistenzaPage() {
   return (
     <Suspense
       fallback={
-        <div className="h-full flex items-center justify-center text-xs text-slate-400">
+        <div className="h-full flex items-center justify-center text-xs text-zinc-400">
           Caricamento Inbox Assistenza...
         </div>
       }

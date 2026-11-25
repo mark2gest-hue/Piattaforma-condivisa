@@ -10,9 +10,14 @@ import {
   Check,
   ShieldCheck,
   Users,
+  GraduationCap,
+  Handshake,
+  Wrench,
+  MessageCircle,
+  Lock,
+  type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 
 interface MeetRoom {
   id: string
@@ -24,7 +29,7 @@ interface MeetRoom {
   url: string
   shortUrl: string
   target: string
-  icon: string
+  icon: LucideIcon
 }
 
 const MEET_ROOMS: MeetRoom[] = [
@@ -32,49 +37,49 @@ const MEET_ROOMS: MeetRoom[] = [
     id: 'team',
     title: 'Stanza Riservata Soci',
     badge: 'STANZA PROTETTA',
-    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    badgeColor: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25',
     desc: 'Stanza Google Meet fissa per allineamenti rapidi e decisioni operative riservate tra i soci.',
     shortDesc: 'Allineamento interno soci',
     url: 'https://meet.google.com/mth-rqxp-bdf',
     shortUrl: 'meet.google.com/mth-rqxp-bdf',
     target: 'Riservata ai 3 Soci',
-    icon: '👥',
+    icon: Users,
   },
   {
     id: 'masterclass',
     title: 'Masterclass Corsisti',
     badge: 'DIRETTE & Q&A',
-    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
-    desc: 'Stanza d\'aula live per le lezioni del giovedì sera e sessioni di domande e risposte con gli studenti.',
+    badgeColor: 'bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/25',
+    desc: "Stanza d'aula live per le lezioni del giovedì sera e sessioni di domande e risposte con gli studenti.",
     shortDesc: 'Dirette live del giovedì',
     url: 'https://meet.google.com/wsv-bqxm-bvr',
     shortUrl: 'meet.google.com/wsv-bqxm-bvr',
     target: 'Accessibile agli Studenti',
-    icon: '🎓',
+    icon: GraduationCap,
   },
   {
     id: 'clients',
     title: 'Clienti & Briefing B2B',
     badge: 'COMMERCIALE / PMI',
-    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    badgeColor: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25',
     desc: 'Stanza isolata per audit, call conoscitive e consulenze strategiche riservate con aziende.',
     shortDesc: 'Audit e call PMI riservate',
     url: 'https://meet.google.com/yme-pyws-osa',
     shortUrl: 'meet.google.com/yme-pyws-osa',
     target: 'Audit & Clienti PMI',
-    icon: '🤝',
+    icon: Handshake,
   },
   {
     id: 'lab',
     title: 'Lab Agenti AI Pro',
     badge: 'LABORATORIO AVANZATO',
-    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+    badgeColor: 'bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/25',
     desc: 'Laboratorio tecnico per flussi n8n, framework multi-agente e architetture complesse.',
     shortDesc: 'Test tecnici & agenti',
     url: 'https://meet.google.com/dwe-rczj-uxz',
     shortUrl: 'meet.google.com/dwe-rczj-uxz',
     target: 'Sessioni Tecniche Pro',
-    icon: '🛠️',
+    icon: Wrench,
   },
 ]
 
@@ -101,45 +106,47 @@ export default function VideocallPage() {
   }
 
   return (
-    <div className="space-y-6 flex flex-col h-[calc(100vh-8rem)]">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Video className="h-6 w-6 text-sky-500" />
+    <div className="h-full flex flex-col overflow-hidden bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5]">
+      {/* Command Bar */}
+      <div className="min-h-[52px] px-5 py-2 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114] flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <Video className="h-4 w-4 text-[#6366f1] shrink-0" />
+          <h1 className="text-sm font-semibold tracking-tight text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)] truncate">
             Videocall & Riunioni Team
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Seleziona la stanza desiderata o avvia riunioni istantanee in alta definizione.
-          </p>
+          <span className="hidden sm:inline-block text-[11px] font-[family-name:var(--font-mono)] text-zinc-500 dark:text-zinc-400 border-l border-[#e5e3dc] dark:border-white/[0.08] pl-3">
+            {provider === 'google_meet' ? `${MEET_ROOMS.length} stanze` : 'WebRTC Jitsi'}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Selettore Provider: Google Meet Pro (Default) vs Jitsi */}
-          <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex items-center gap-1 border border-slate-200 dark:border-slate-700">
+          {/* Selettore Provider: Google Meet Pro vs WebRTC Free */}
+          <div className="bg-[#f7f6f3] dark:bg-[#141417] p-0.5 rounded-md flex items-center gap-0.5 border border-[#e5e3dc] dark:border-white/[0.08]">
             <button
+              type="button"
               onClick={() => {
                 setProvider('google_meet')
                 setInCall(false)
               }}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 text-xs font-medium rounded transition-colors cursor-pointer flex items-center gap-1.5 ${
                 provider === 'google_meet'
-                  ? 'bg-sky-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-[#111113] text-white dark:bg-[#f4f4f5] dark:text-[#0d0d0f]'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
               }`}
             >
-              <span>📹</span>
+              <Video className="h-3.5 w-3.5" />
               Google Meet Pro
             </button>
             <button
+              type="button"
               onClick={() => {
                 setProvider('jitsi')
                 setInCall(false)
               }}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`px-2.5 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
                 provider === 'jitsi'
-                  ? 'bg-sky-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  ? 'bg-[#111113] text-white dark:bg-[#f4f4f5] dark:text-[#0d0d0f]'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
               }`}
             >
               WebRTC Free
@@ -157,8 +164,8 @@ export default function VideocallPage() {
                 window.open(jitsiRoomUrl, '_blank')
               }
             }}
-            className={`text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 gap-1.5 shadow-xs border-slate-200 dark:border-slate-700 ${
-              provider === 'google_meet' && !currentRoom ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            className={`h-8 text-xs bg-[#ffffff] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] ${
+              provider === 'google_meet' && !currentRoom ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
             }`}
           >
             <ExternalLink className="h-3.5 w-3.5" />
@@ -168,210 +175,224 @@ export default function VideocallPage() {
       </div>
 
       {/* Main Room Viewport */}
-      <div className="flex-1 bg-slate-950 rounded-2xl border border-slate-800 shadow-xl overflow-hidden relative flex flex-col min-h-[500px]">
-        
-        {/* Se Google Meet Pro è selezionato: Hub Google Meet Pro con 4 Stanze */}
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
         {provider === 'google_meet' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-y-auto">
-            <div className="text-center space-y-5 max-w-2xl w-full my-auto">
-              
-              {/* I 4 Tasti Rapidi per Selezionare la Stanza */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
-                {MEET_ROOMS.map((room) => {
-                  const isSelected = selectedRoomId === room.id
-                  return (
-                    <button
-                      key={room.id}
-                      type="button"
-                      onClick={() => setSelectedRoomId(room.id)}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 relative ${
-                        isSelected
-                          ? 'bg-sky-500/15 border-sky-500 shadow-lg shadow-sky-500/15 ring-1 ring-sky-500/50'
-                          : 'bg-slate-900/70 border-slate-800 hover:border-slate-700 hover:bg-slate-900 text-slate-400'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-base">{room.icon}</span>
-                        {isSelected ? (
-                          <span className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
-                        ) : (
-                          <span className="h-1.5 w-1.5 rounded-full bg-slate-700" />
-                        )}
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            {/* Strip delle 4 Stanze — Swiss Hairline */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-[#e5e3dc] dark:divide-white/[0.08] border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114] shrink-0">
+              {MEET_ROOMS.map((room) => {
+                const isSelected = selectedRoomId === room.id
+                const RoomIcon = room.icon
+                return (
+                  <button
+                    key={room.id}
+                    type="button"
+                    onClick={() => setSelectedRoomId(room.id)}
+                    className={`px-4 py-3 text-left transition-colors cursor-pointer flex items-center justify-between gap-3 relative ${
+                      isSelected
+                        ? 'bg-[#6366f1]/[0.06] dark:bg-[#6366f1]/[0.12]'
+                        : 'hover:bg-[#f7f6f3] dark:hover:bg-white/[0.03]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className={`h-8 w-8 rounded-md border flex items-center justify-center shrink-0 ${
+                          isSelected
+                            ? 'border-[#6366f1]/40 bg-[#6366f1]/10 text-[#6366f1]'
+                            : 'border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-zinc-500 dark:text-zinc-400'
+                        }`}
+                      >
+                        <RoomIcon className="h-4 w-4" />
                       </div>
-                      <div>
-                        <div className={`font-bold text-xs truncate ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                      <div className="min-w-0">
+                        <div className="font-medium text-xs truncate text-[#111113] dark:text-[#f4f4f5]">
                           {room.title}
                         </div>
-                        <div className="text-[10px] text-slate-400 truncate">
+                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
                           {room.shortDesc}
                         </div>
                       </div>
-                    </button>
-                  )
-                })}
-              </div>
+                    </div>
+                    <span
+                      className={`h-2 w-2 rounded-full shrink-0 ${
+                        isSelected ? 'bg-[#6366f1]' : 'bg-[#e5e3dc] dark:bg-white/15'
+                      }`}
+                    />
+                  </button>
+                )
+              })}
+            </div>
 
-              {/* Card Dettaglio Stanza Selezionata o Stato di Attesa */}
+            {/* Area Centrale Stanza */}
+            <div className="flex-1 min-h-0 overflow-y-auto flex items-center justify-center p-4 sm:p-8 bg-[#f7f6f3] dark:bg-[#0d0d0f]">
               {currentRoom ? (
-                <div className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-5 sm:p-6 text-center space-y-4 shadow-xl backdrop-blur-xs transition-all duration-300 animate-in fade-in zoom-in-95">
-                  <div className="relative mx-auto w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center shadow-lg shadow-sky-500/10">
-                    <span className="text-2xl">{currentRoom.icon}</span>
-                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
-                    </span>
-                  </div>
+                (() => {
+                  const CurrentIcon = currentRoom.icon
+                  return (
+                    <div className="w-full max-w-2xl bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08] rounded-lg divide-y divide-[#e5e3dc] dark:divide-white/[0.08]">
+                      <div className="p-6 flex items-start gap-4">
+                        <div className="relative h-12 w-12 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] flex items-center justify-center shrink-0 text-[#6366f1]">
+                          <CurrentIcon className="h-5 w-5" />
+                          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-[#ffffff] dark:ring-[#111114]" />
+                        </div>
 
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-center gap-2 flex-wrap">
-                      <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                        {currentRoom.title}
-                      </h3>
-                      <Badge variant="outline" className={`${currentRoom.badgeColor} text-[10px] font-semibold tracking-wide`}>
-                        {currentRoom.badge}
-                      </Badge>
-                    </div>
-                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
-                      {currentRoom.desc}
-                    </p>
-                  </div>
-
-                  {/* Box Info Tecniche */}
-                  <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3 sm:p-3.5 text-left space-y-2.5">
-                    <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-800/80 pb-2">
-                      <span className="flex items-center gap-1.5 font-medium text-slate-300 text-[11px] sm:text-xs">
-                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
-                        Crittografia Google Enterprise
-                      </span>
-                      <span className="font-mono text-sky-400 font-bold text-[11px] sm:text-xs truncate ml-2">
-                        {currentRoom.shortUrl}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-[11px] sm:text-xs">
-                      <div className="flex items-center gap-1.5 text-slate-300">
-                        <Users className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
-                        <span className="truncate">{currentRoom.target}</span>
+                        <div className="space-y-1.5 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="text-lg font-semibold text-[#111113] dark:text-[#f4f4f5] tracking-tight font-[family-name:var(--font-jakarta)]">
+                              {currentRoom.title}
+                            </h2>
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded border text-[10px] font-medium tracking-wide font-[family-name:var(--font-mono)] ${currentRoom.badgeColor}`}
+                            >
+                              {currentRoom.badge}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            {currentRoom.desc}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-slate-300">
-                        <Sparkles className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
-                        <span className="truncate">Link permanente (no scadenza)</span>
+
+                      {/* Specifiche Tecniche */}
+                      <div className="px-6 py-4 bg-[#f7f6f3]/60 dark:bg-[#141417] space-y-2.5">
+                        <div className="flex items-center justify-between gap-3 text-xs pb-2 border-b border-[#e5e3dc] dark:border-white/[0.08]">
+                          <span className="flex items-center gap-1.5 font-medium text-zinc-700 dark:text-zinc-300">
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            Crittografia Google Enterprise
+                          </span>
+                          <span className="font-[family-name:var(--font-mono)] text-[#6366f1] font-medium text-[11px] truncate">
+                            {currentRoom.shortUrl}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+                            <Users className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                            <span className="truncate">{currentRoom.target}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+                            <Sparkles className="h-3.5 w-3.5 text-[#6366f1] shrink-0" />
+                            <span className="truncate">Link permanente (no scadenza)</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Azioni */}
+                      <div className="p-6 flex flex-col sm:flex-row items-center gap-2.5">
+                        <Button
+                          size="lg"
+                          onClick={() => window.open(currentRoom.url, '_blank')}
+                          className="w-full sm:flex-1 bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium h-10 cursor-pointer text-xs sm:text-sm"
+                        >
+                          <Video className="h-4 w-4 mr-2" />
+                          Entra nella Stanza
+                          <ExternalLink className="h-3.5 w-3.5 ml-2 opacity-70" />
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          onClick={() => handleCopyLink(currentRoom.url)}
+                          className="w-full sm:w-auto bg-[#ffffff] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] text-[#111113] dark:text-[#f4f4f5] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] h-10 cursor-pointer text-xs sm:text-sm px-5"
+                        >
+                          {copied ? (
+                            <>
+                              <Check className="h-4 w-4 mr-2 text-emerald-500" />
+                              Link Copiato
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Copia Link
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Footer Link Telegram / Calendario */}
+                      <div className="px-6 py-3 bg-[#f7f6f3]/40 dark:bg-[#111114] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        {currentRoom.id === 'masterclass' ? (
+                          <a
+                            href="https://t.me/+QSql9PpGLlMzYmI0"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-[#6366f1] hover:underline font-medium"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            <span>Gruppo Telegram Corsisti (Aiutiamoci Corsi)</span>
+                            <ExternalLink className="h-3 w-3 opacity-70" />
+                          </a>
+                        ) : (
+                          <span className="text-[11px] font-[family-name:var(--font-mono)] text-zinc-500 dark:text-zinc-400">
+                            ROOM ID: {currentRoom.id.toUpperCase()}
+                          </span>
+                        )}
+
+                        <a
+                          href="/calendario"
+                          className="text-[11px] text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] inline-flex items-center gap-1.5 transition-colors"
+                        >
+                          <Calendar className="h-3 w-3" />
+                          Pianifica con inviti email su /calendario
+                        </a>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Bottoni di Azione ATTIVI */}
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1">
-                    <Button
-                      size="lg"
-                      onClick={() => window.open(currentRoom.url, '_blank')}
-                      className="w-full sm:w-auto bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold shadow-lg shadow-sky-500/25 px-7 h-11 cursor-pointer text-xs sm:text-sm transition-all"
-                    >
-                      <Video className="h-4 w-4 mr-2" />
-                      Entra nella Stanza
-                      <ExternalLink className="h-3.5 w-3.5 ml-2 opacity-70" />
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={() => handleCopyLink(currentRoom.url)}
-                      className="w-full sm:w-auto bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 h-11 cursor-pointer text-xs sm:text-sm"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="h-4 w-4 mr-2 text-emerald-400" />
-                          Link Copiato!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copia Link
-                        </>
-                      )}
-                    </Button>
-                  </div>
-
-                  {/* Link Community Telegram & Tutor AI per Masterclass Corsisti */}
-                  {currentRoom.id === 'masterclass' && (
-                    <div className="pt-2">
-                      <a
-                        href="https://t.me/+QSql9PpGLlMzYmI0"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 hover:text-white text-xs font-semibold transition-all shadow-xs w-full sm:w-auto cursor-pointer"
-                      >
-                        <span className="text-sm">💬</span>
-                        <span>Entra nel Gruppo Telegram Corsisti (Aiutiamoci Corsi)</span>
-                        <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-                      </a>
-                    </div>
-                  )}
-
-                  <div>
-                    <a
-                      href="/calendario"
-                      className="text-[11px] text-sky-400 hover:text-sky-300 inline-flex items-center gap-1 transition-colors"
-                    >
-                      <Calendar className="h-3 w-3" />
-                      Vuoi pianificare una riunione futura con inviti email? Vai su /calendario ➔
-                    </a>
-                  </div>
-                </div>
+                  )
+                })()
               ) : (
-                /* Stato Neutro quando NESSUNA Stanza è Selezionata */
-                <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 sm:p-8 text-center space-y-5 shadow-xl backdrop-blur-xs">
-                  <div className="mx-auto w-16 h-16 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-center shadow-inner text-slate-400">
-                    <Video className="h-8 w-8 text-slate-400" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-center gap-2">
-                      <h3 className="text-xl font-bold text-white tracking-tight">
-                        Scegli una Sala Riunioni
-                      </h3>
-                      <Badge variant="outline" className="bg-slate-800/60 text-slate-400 border-slate-700 text-[10px] font-semibold">
-                        IN ATTESA DI SELEZIONE
-                      </Badge>
+                /* Stato Neutro quando nessuna stanza è selezionata */
+                <div className="w-full max-w-xl bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08] rounded-lg divide-y divide-[#e5e3dc] dark:divide-white/[0.08]">
+                  <div className="p-8 text-center space-y-3">
+                    <div className="mx-auto h-11 w-11 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] flex items-center justify-center text-zinc-500 dark:text-zinc-400">
+                      <Video className="h-5 w-5" />
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
-                      Clicca su una delle 4 sale in alto (Soci, Masterclass, Clienti o Lab) per sbloccare l'accesso e visualizzare il link protetto.
-                    </p>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <h2 className="text-lg font-semibold text-[#111113] dark:text-[#f4f4f5] tracking-tight font-[family-name:var(--font-jakarta)]">
+                          Scegli una Sala Riunioni
+                        </h2>
+                        <span className="px-2 py-0.5 rounded border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-zinc-500 dark:text-zinc-400 text-[10px] font-[family-name:var(--font-mono)]">
+                          IN ATTESA
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-md mx-auto">
+                        Seleziona una delle 4 sale in alto (Soci, Masterclass, Clienti o Lab) per sbloccare l&apos;accesso e visualizzare il link protetto.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="bg-slate-950/40 border border-slate-800/50 rounded-xl p-3.5 text-center text-xs text-slate-500">
-                    🔒 Nessuna stanza attualmente attiva. Seleziona una card sopra per abilitare il collegamento.
+                  <div className="px-6 py-3 bg-[#f7f6f3]/60 dark:bg-[#141417] flex items-center justify-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    <Lock className="h-3.5 w-3.5 shrink-0" />
+                    <span>Nessuna stanza selezionata. Scegli una sala dalla barra superiore.</span>
                   </div>
 
-                  {/* Bottoni Disabilitati */}
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1">
+                  <div className="p-6 flex flex-col sm:flex-row items-center justify-center gap-2.5">
                     <Button
                       size="lg"
-                      disabled={true}
-                      className="w-full sm:w-auto bg-slate-800/70 border border-slate-700/60 text-slate-500 font-semibold px-7 h-11 cursor-not-allowed opacity-60 shadow-none text-xs sm:text-sm"
+                      disabled
+                      className="w-full sm:flex-1 bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] text-zinc-400 dark:text-zinc-500 font-medium h-10 cursor-not-allowed shadow-none text-xs sm:text-sm"
                     >
                       <Video className="h-4 w-4 mr-2" />
                       Seleziona prima una Sala
                     </Button>
-
                     <Button
                       variant="outline"
                       size="lg"
-                      disabled={true}
-                      className="w-full sm:w-auto bg-slate-950/40 border-slate-800 text-slate-600 h-11 cursor-not-allowed opacity-60 text-xs sm:text-sm"
+                      disabled
+                      className="w-full sm:w-auto bg-[#ffffff] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] text-zinc-400 dark:text-zinc-500 h-10 cursor-not-allowed text-xs sm:text-sm px-5"
                     >
                       <Copy className="h-4 w-4 mr-2" />
                       Copia Link
                     </Button>
                   </div>
 
-                  <div>
+                  <div className="px-6 py-3 text-center">
                     <a
                       href="/calendario"
-                      className="text-[11px] text-slate-500 hover:text-slate-400 inline-flex items-center gap-1 transition-colors"
+                      className="text-[11px] text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] inline-flex items-center gap-1.5 transition-colors"
                     >
                       <Calendar className="h-3 w-3" />
-                      Vuoi pianificare una riunione futura con inviti email? Vai su /calendario ➔
+                      Vuoi pianificare una riunione futura con inviti email? Vai su /calendario
                     </a>
                   </div>
                 </div>
@@ -390,24 +411,27 @@ export default function VideocallPage() {
         )}
 
         {provider === 'jitsi' && !inCall && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/95 backdrop-blur-xs p-6">
-            <div className="text-center space-y-4 max-w-md">
-              <div className="h-16 w-16 rounded-2xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center mx-auto shadow-inner">
-                <Video className="h-8 w-8" />
+          <div className="flex-1 min-h-0 flex items-center justify-center p-6 bg-[#f7f6f3] dark:bg-[#0d0d0f]">
+            <div className="w-full max-w-md bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08] rounded-lg divide-y divide-[#e5e3dc] dark:divide-white/[0.08]">
+              <div className="p-6 text-center space-y-3">
+                <div className="h-11 w-11 rounded-md bg-[#6366f1]/10 text-[#6366f1] border border-[#6366f1]/25 flex items-center justify-center mx-auto">
+                  <Video className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <h2 className="text-base font-semibold text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
+                    Stanza WebRTC Integrata (Jitsi)
+                  </h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    Stanza aperta e gratuita direttamente all&apos;interno della pagina senza login.
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold text-white">Stanza WebRTC Integrata (Jitsi)</h3>
-                <p className="text-xs text-slate-400">
-                  Stanza aperta e gratuita direttamente all'interno della pagina senza login.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <div className="p-6 flex flex-col sm:flex-row items-center justify-center gap-2.5">
                 <Button
                   size="lg"
                   onClick={() => setInCall(true)}
-                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-600/30 px-8 h-11 cursor-pointer"
+                  className="w-full sm:flex-1 bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium h-10 cursor-pointer text-xs sm:text-sm"
                 >
                   Entra nella Stanza
                 </Button>
@@ -416,7 +440,7 @@ export default function VideocallPage() {
                   variant="outline"
                   size="lg"
                   onClick={() => window.open(jitsiRoomUrl, '_blank')}
-                  className="w-full sm:w-auto bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 h-11 cursor-pointer"
+                  className="w-full sm:w-auto bg-[#ffffff] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] text-[#111113] dark:text-[#f4f4f5] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] h-10 cursor-pointer text-xs sm:text-sm"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Apri via Browser

@@ -3,13 +3,10 @@
 import React from 'react'
 import {
   AlertCircle,
-  Clock,
   CheckCircle2,
+  Clock,
+  ListTodo,
   Sparkles,
-  Zap,
-  Activity,
-  ArrowRight,
-  ShieldCheck,
 } from 'lucide-react'
 import { Task } from '@/types/index'
 
@@ -31,125 +28,164 @@ export function CockpitOggi({
   const todoCount = tasks.filter((t) => t.status === 'todo').length
   const inProgressCount = tasks.filter((t) => t.status === 'in_progress').length
   const reviewCount = tasks.filter((t) => t.status === 'review').length
+  const doneCount = tasks.filter((t) => t.status === 'done').length
 
   const urgentCount = tasks.filter((t) => {
     const isUrgentPriority = t.priority === 'urgent'
-    const isExpired = t.due_date && new Date(t.due_date) < now && t.status !== 'done'
+    const isExpired =
+      t.due_date && new Date(t.due_date) < now && t.status !== 'done'
     return isUrgentPriority || isExpired
   }).length
 
+  const resolvedName =
+    userName && userName.toLowerCase().includes('gerelmo') ? 'Marco' : userName
+
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-4 md:p-5 shadow-xs space-y-3">
-      {/* Saluto e Domanda Guida */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
-            <Zap className="w-4 h-4" />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              Buongiorno, {userName && userName.toLowerCase().includes('gerelmo') ? 'Marco' : userName}
-              <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
-                • Cockpit Operativo
-              </span>
-            </h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Cosa richiede la tua attenzione oggi:
-            </p>
-          </div>
+    <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-xl p-4 space-y-3.5">
+      {/* Header compatto */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200/80 dark:border-white/10">
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <h2
+            className="text-sm sm:text-base font-bold tracking-tight text-[#0f172a] dark:text-[#f8fafc]"
+            style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+          >
+            Buongiorno, {resolvedName}
+          </h2>
+          <span className="text-xs text-slate-500 dark:text-[#94a3b8]">
+            · Cockpit Operativo
+          </span>
         </div>
 
-        {/* Stato del Sistema Live */}
-        <div className="flex items-center gap-2 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 self-start sm:self-auto bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Sistemi: Supabase & AI Connessi</span>
+        {/* Stato Live Sobrio */}
+        <div
+          className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-wider text-slate-600 dark:text-[#94a3b8] self-start sm:self-auto px-2.5 py-1 rounded-md border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#090d16]/75"
+          style={{ fontFamily: 'var(--font-mono), monospace' }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] shrink-0" />
+          <span>SUPABASE &amp; AI CONNESSI</span>
         </div>
       </div>
 
-      {/* 4 Widget Metriche & Situazioni da Attenzionare */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        {/* Urgenti / Scadute */}
+      {/* 5 Metriche su una sola riga */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
         <button
-          onClick={() => onFilterPriority && onFilterPriority('urgent')}
-          className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-            urgentCount > 0
-              ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/60 hover:border-rose-400'
-              : 'bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800'
-          }`}
+          type="button"
+          onClick={() => onFilterPriority?.('urgent')}
+          className="p-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#090d16]/75 hover:border-[#6366f1]/50 text-left transition-colors cursor-pointer"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400">
-              Urgente / Scaduti
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className={`text-[10px] uppercase tracking-wider font-semibold ${
+                urgentCount > 0
+                  ? 'text-rose-600 dark:text-rose-400'
+                  : 'text-slate-500 dark:text-[#94a3b8]'
+              }`}
+              style={{ fontFamily: 'var(--font-mono), monospace' }}
+            >
+              Urgenti / Scaduti
             </span>
-            <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+            <AlertCircle
+              className={`w-3.5 h-3.5 shrink-0 ${
+                urgentCount > 0
+                  ? 'text-rose-500'
+                  : 'text-slate-400 dark:text-[#94a3b8]'
+              }`}
+            />
           </div>
-          <div className="text-xl font-bold font-mono text-slate-900 dark:text-white mt-1">
+          <div
+            className="text-xl font-bold text-[#0f172a] dark:text-[#f8fafc] mt-1 tabular-nums"
+            style={{ fontFamily: 'var(--font-mono), monospace' }}
+          >
             {urgentCount}
           </div>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
-            {urgentCount > 0 ? 'Richiede azione immediata' : 'Nessuna scadenza critica'}
-          </span>
         </button>
 
-        {/* In Revisione AI / Team */}
         <button
-          onClick={() => onFilterStatus && onFilterStatus('review')}
-          className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-            reviewCount > 0
-              ? 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/60 hover:border-purple-400'
-              : 'bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800'
-          }`}
+          type="button"
+          onClick={() => onFilterStatus?.('todo')}
+          className="p-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#090d16]/75 hover:border-[#6366f1]/50 text-left transition-colors cursor-pointer"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-purple-600 dark:text-purple-400">
-              In Revisione AI
-            </span>
-            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-          </div>
-          <div className="text-xl font-bold font-mono text-slate-900 dark:text-white mt-1">
-            {reviewCount}
-          </div>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
-            {reviewCount > 0 ? 'Pronti per approvazione' : 'Nessun task in attesa'}
-          </span>
-        </button>
-
-        {/* Attività In Corso */}
-        <button
-          onClick={() => onFilterStatus && onFilterStatus('in_progress')}
-          className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 text-left hover:border-indigo-400 transition-all cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400">
-              In Corso
-            </span>
-            <Clock className="w-3.5 h-3.5 text-indigo-500" />
-          </div>
-          <div className="text-xl font-bold font-mono text-slate-900 dark:text-white mt-1">
-            {inProgressCount}
-          </div>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
-            Lavori attivi nel team
-          </span>
-        </button>
-
-        {/* Da Fare */}
-        <button
-          onClick={() => onFilterStatus && onFilterStatus('todo')}
-          className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 text-left hover:border-amber-400 transition-all cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400">
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-[#94a3b8]"
+              style={{ fontFamily: 'var(--font-mono), monospace' }}
+            >
               Da Fare
             </span>
-            <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
+            <ListTodo className="w-3.5 h-3.5 text-amber-500 shrink-0" />
           </div>
-          <div className="text-xl font-bold font-mono text-slate-900 dark:text-white mt-1">
+          <div
+            className="text-xl font-bold text-[#0f172a] dark:text-[#f8fafc] mt-1 tabular-nums"
+            style={{ fontFamily: 'var(--font-mono), monospace' }}
+          >
             {todoCount}
           </div>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
-            In coda di assegnazione
-          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onFilterStatus?.('in_progress')}
+          className="p-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#090d16]/75 hover:border-[#6366f1]/50 text-left transition-colors cursor-pointer"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-[#94a3b8]"
+              style={{ fontFamily: 'var(--font-mono), monospace' }}
+            >
+              In Corso
+            </span>
+            <Clock className="w-3.5 h-3.5 text-[#6366f1] shrink-0" />
+          </div>
+          <div
+            className="text-xl font-bold text-[#0f172a] dark:text-[#f8fafc] mt-1 tabular-nums"
+            style={{ fontFamily: 'var(--font-mono), monospace' }}
+          >
+            {inProgressCount}
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onFilterStatus?.('review')}
+          className="p-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#090d16]/75 hover:border-[#6366f1]/50 text-left transition-colors cursor-pointer"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-[#94a3b8]"
+              style={{ fontFamily: 'var(--font-mono), monospace' }}
+            >
+              In Revisione AI
+            </span>
+            <Sparkles className="w-3.5 h-3.5 text-[#6366f1] shrink-0" />
+          </div>
+          <div
+            className="text-xl font-bold text-[#0f172a] dark:text-[#f8fafc] mt-1 tabular-nums"
+            style={{ fontFamily: 'var(--font-mono), monospace' }}
+          >
+            {reviewCount}
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onFilterStatus?.('done')}
+          className="p-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#090d16]/75 hover:border-[#6366f1]/50 text-left transition-colors cursor-pointer col-span-2 sm:col-span-1"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-[#94a3b8]"
+              style={{ fontFamily: 'var(--font-mono), monospace' }}
+            >
+              Completati
+            </span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#10b981] shrink-0" />
+          </div>
+          <div
+            className="text-xl font-bold text-[#0f172a] dark:text-[#f8fafc] mt-1 tabular-nums"
+            style={{ fontFamily: 'var(--font-mono), monospace' }}
+          >
+            {doneCount}
+          </div>
         </button>
       </div>
     </div>

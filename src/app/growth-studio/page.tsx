@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   Sparkles,
   Video,
@@ -21,6 +22,7 @@ import {
   User,
   Building2,
   Laptop,
+  ArrowLeft,
   ArrowRight,
   ExternalLink,
   MessageSquare,
@@ -89,8 +91,8 @@ const PRESET_REELS: ReelScript[] = [
       },
       {
         time: '00:30 - 00:45',
-        action: 'Lorenzo mostra l\'anteprima della piattaforma Aiutiamoci sullo smartphone / iPad.',
-        audio: 'È esattamente quello che insegniamo nel corso pratico di 16 ore di Aiutiamoci. Scrivi "EXCEL" nei commenti e ti mando il link con il coupon del 50% attivo per oggi.',
+        action: 'Lorenzo mostra l\'anteprima della piattaforma AIutiamoci sullo smartphone / iPad.',
+        audio: 'È esattamente quello che insegniamo nel corso pratico di 16 ore di AIutiamoci. Scrivi "EXCEL" nei commenti e ti mando il link con il coupon del 50% attivo per oggi.',
         caption: 'COMMENTA "EXCEL" PER IL COUPON 50%'
       }
     ],
@@ -143,12 +145,12 @@ const PRESET_REELS: ReelScript[] = [
       },
       {
         time: '00:05 - 00:25',
-        action: 'Generazione in 4 capitoli con illustrazioni acquerello su Aiutiamoci.',
+        action: 'Generazione in 4 capitoli con illustrazioni acquerello su AIutiamoci.',
         audio: 'Basta inserire il nome del bimbo e i suoi sogni: l\'AI crea 4 capitoli illustrati pronti da stampare come libretto.',
         caption: 'FAVOLA & ILLUSTRAZIONI IN 10 SECONDI'
       }
     ],
-    cta: 'Commenta "FIABA" per provarlo gratis su Aiutiamoci',
+    cta: 'Commenta "FIABA" per provarlo gratis su AIutiamoci',
     firstComment: '✨ Crea la fiaba per i tuoi figli o nipoti qui: https://aiutiamoci.cloud/servizi-ai'
   }
 ];
@@ -168,12 +170,12 @@ Al lavoro ti serve solo sapere:
 2. Come trovare errori in una fattura senza perdere la vista.
 3. Come riassumere 40 pagine di documenti prima di una riunione.
 
-Con la scuola di Aiutiamoci abbiamo creato un percorso di 16 ore certificate pensato esattamente per chi lavora ogni giorno in azienda e non ha tempo da perdere in teorie astratte.
+Con la scuola di AIutiamoci abbiamo creato un percorso di 16 ore certificate pensato esattamente per chi lavora ogni giorno in azienda e non ha tempo da perdere in teorie astratte.
 
 Per la nuova edizione abbiamo attivato un coupon del 50% valido per i primi iscritti.
 
 Chi vuole dare un'occhiata al programma completo trova il link diretto nel primo commento qui sotto 👇`,
-    hashtags: ['#FormazioneAI', '#Produttività', '#PiccoleMedieImprese', '#LavoroPratico', '#Aiutiamoci'],
+    hashtags: ['#FormazioneAI', '#Produttività', '#PiccoleMedieImprese', '#LavoroPratico', '#AIutiamoci'],
     firstComment: '🔗 Ecco il link al programma e all\'offerta con coupon SCONTO50: https://aiutiamoci.cloud/corso-base (Posti con live tutoraggio limitati)'
   },
   {
@@ -185,7 +187,7 @@ Chi vuole dare un'occhiata al programma completo trova il link diretto nel primo
 
 Leggere bandi regionali da 80 pagine, ricopiare fatture su fogli di calcolo, inseguire clienti con solleciti via email.
 
-Nel 2026 tutto questo non ha più senso economico. Con i tool pratici di Aiutiamoci abbiamo integrato motori AI che:
+Nel 2026 tutto questo non ha più senso economico. Con i tool pratici di AIutiamoci abbiamo integrato motori AI che:
 • Estraggono i requisiti di un bando ministeriale in 60 secondi
 • Generano preventivi blindati con clausole anti-fuori-sacco
 • Trasformano messaggi vocali disordinati di WhatsApp in ordini di lavoro precisi
@@ -193,7 +195,7 @@ Nel 2026 tutto questo non ha più senso economico. Con i tool pratici di Aiutiam
 Zero codice. Solo automazione concreta per far lavorare l'azienda a regime pieno.
 
 Scopri i servizi attivi su: aiutiamoci.cloud/servizi-ai`,
-    hashtags: ['#PMI', '#ImpresaDigitale', '#AutomazioneB2B', '#EfficienzaAziendale', '#Aiutiamoci'],
+    hashtags: ['#PMI', '#ImpresaDigitale', '#AutomazioneB2B', '#EfficienzaAziendale', '#AIutiamoci'],
     firstComment: '💼 Per una sessione di audit o dimostrazione per il tuo team: https://aiutiamoci.cloud/servizi-ai'
   }
 ];
@@ -329,7 +331,7 @@ export default function GrowthFactoryStudio() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Errore invio Telegram');
 
-      setTelegramStatus('✅ Inviato con successo al canale Telegram dei Soci!');
+      setTelegramStatus('Inviato con successo al canale Telegram dei Soci.');
       setTimeout(() => setTelegramStatus(null), 5000);
     } catch (err: any) {
       alert(`Errore Telegram: ${err.message}`);
@@ -339,120 +341,136 @@ export default function GrowthFactoryStudio() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090C10] text-slate-100 font-sans antialiased p-4 sm:p-6 lg:p-8">
-      {/* Top Header */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                CABINA DI REGIA SOCIAL & MEDIA AUTOPILOT
+    <div className="min-h-screen flex flex-col bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] antialiased">
+      {/* Top Command Bar — Swiss Hairline */}
+      <div className="min-h-[52px] px-5 py-2.5 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114] flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            href="/lavori"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-[#111113] dark:hover:text-[#f4f4f5] transition-colors shrink-0"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Workspace</span>
+          </Link>
+
+          <div className="h-4 w-px bg-[#e5e3dc] dark:bg-white/[0.08] hidden sm:block" />
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-sm sm:text-base font-semibold tracking-tight text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)] truncate">
+                Growth Studio & Dispatch Social 1-Click
+              </h1>
+              <span className="hidden md:inline-block px-2 py-0.5 rounded border border-[#6366f1]/25 bg-[#6366f1]/10 text-[#6366f1] text-[10px] font-[family-name:var(--font-mono)] uppercase">
+                Autopilot
               </span>
-              <span className="text-xs text-slate-400">Lorenzo & Stefano • Agnes AI + FFmpeg + Telegram</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Growth Studio & Dispatch Social 1-Click
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Genera Reel 9:16, Visual 4K, Copy APEX e inviali direttamente sul gruppo Telegram di Aiutiamoci pronti per essere pubblicati.
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+              Genera Reel 9:16, Visual 4K, Copy APEX e inviali sul gruppo Telegram di AIutiamoci pronti per la pubblicazione.
             </p>
-          </div>
-
-          {/* Selettore Profilo Creatore */}
-          <div className="flex items-center p-1.5 bg-slate-900 border border-slate-700 rounded-2xl gap-1">
-            <button
-              onClick={() => {
-                setCreatorProfile('lorenzo');
-                setCustomTarget('over40');
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                creatorProfile === 'lorenzo'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>🧑‍💻 Profilo Lorenzo (Community/Corsi)</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setCreatorProfile('stefano');
-                setCustomTarget('pmi');
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                creatorProfile === 'stefano'
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>👔 Profilo Stefano (B2B & PMI)</span>
-            </button>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-2 mt-6 border-b border-slate-800/60 pb-1">
+        {/* Selettore Profilo Creatore */}
+        <div className="flex items-center p-0.5 bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md gap-0.5">
           <button
-            onClick={() => setSelectedTab('generator')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-              selectedTab === 'generator'
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+            type="button"
+            onClick={() => {
+              setCreatorProfile('lorenzo');
+              setCustomTarget('over40');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer ${
+              creatorProfile === 'lorenzo'
+                ? 'bg-[#111113] text-white dark:bg-[#f4f4f5] dark:text-[#0d0d0f]'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>Generatore Autopilot (Video + Visual + Copy)</span>
+            <User className="w-3.5 h-3.5" />
+            <span>Profilo Lorenzo (Corsi)</span>
           </button>
 
           <button
-            onClick={() => setSelectedTab('reels')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-              selectedTab === 'reels'
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+            type="button"
+            onClick={() => {
+              setCreatorProfile('stefano');
+              setCustomTarget('pmi');
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer ${
+              creatorProfile === 'stefano'
+                ? 'bg-[#111113] text-white dark:bg-[#f4f4f5] dark:text-[#0d0d0f]'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
             }`}
           >
-            <Video className="w-4 h-4" />
-            <span>Archivio Reel 9:16</span>
-          </button>
-
-          <button
-            onClick={() => setSelectedTab('posts')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-              selectedTab === 'posts'
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            <span>Post Kit APEX</span>
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Profilo Stefano (PMI)</span>
           </button>
         </div>
       </div>
 
+      {/* Tab Navigation — border-b-2 */}
+      <div className="px-5 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114] flex items-center gap-1 overflow-x-auto shrink-0">
+        <button
+          type="button"
+          onClick={() => setSelectedTab('generator')}
+          className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium border-b-2 transition-colors cursor-pointer shrink-0 ${
+            selectedTab === 'generator'
+              ? 'border-[#6366f1] text-[#111113] dark:text-[#f4f4f5]'
+              : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+          }`}
+        >
+          <Sparkles className={`w-3.5 h-3.5 ${selectedTab === 'generator' ? 'text-[#6366f1]' : ''}`} />
+          <span>Generatore Autopilot (Video + Visual + Copy)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedTab('reels')}
+          className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium border-b-2 transition-colors cursor-pointer shrink-0 ${
+            selectedTab === 'reels'
+              ? 'border-[#6366f1] text-[#111113] dark:text-[#f4f4f5]'
+              : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+          }`}
+        >
+          <Video className={`w-3.5 h-3.5 ${selectedTab === 'reels' ? 'text-[#6366f1]' : ''}`} />
+          <span>Archivio Reel 9:16</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedTab('posts')}
+          className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium border-b-2 transition-colors cursor-pointer shrink-0 ${
+            selectedTab === 'posts'
+              ? 'border-[#6366f1] text-[#111113] dark:text-[#f4f4f5]'
+              : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+          }`}
+        >
+          <FileText className={`w-3.5 h-3.5 ${selectedTab === 'posts' ? 'text-[#6366f1]' : ''}`} />
+          <span>Post Kit APEX</span>
+        </button>
+      </div>
+
       {/* Content Area */}
-      <div className="max-w-7xl mx-auto">
+      <div className="flex-1 flex flex-col">
         {selectedTab === 'generator' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#e5e3dc] dark:divide-white/[0.08]">
             {/* Form Sinistra */}
-            <div className="lg:col-span-5 bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-xl flex flex-col justify-between">
+            <div className="lg:col-span-5 bg-[#ffffff] dark:bg-[#111114] p-5 sm:p-6 flex flex-col justify-between gap-6">
               <div>
-                <div className="mb-5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                <div className="mb-5 pb-4 border-b border-[#e5e3dc] dark:border-white/[0.08]">
+                  <span className="text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-[#6366f1]">
                     {creatorProfile === 'stefano' ? 'Target: Imprese & Professionisti' : 'Target: Famiglie, Corsisti & Over-40'}
                   </span>
-                  <h2 className="text-xl font-black text-white mt-1">Crea Contenuto Promozionale</h2>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <h2 className="text-lg font-semibold text-[#111113] dark:text-[#f4f4f5] mt-1 font-[family-name:var(--font-jakarta)]">
+                    Crea Contenuto Promozionale
+                  </h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                     Seleziona un argomento pronto o scrivine uno personalizzato per generare tutti gli asset.
                   </p>
                 </div>
 
                 {/* Quick Preset Buttons */}
                 <div className="mb-5">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                    Suggerimenti Rapidi ad Alta Conversione:
+                  <label className="block text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
+                    Suggerimenti Rapidi ad Alta Conversione
                   </label>
                   <div className="flex flex-wrap gap-1.5">
                     {(creatorProfile === 'stefano'
@@ -473,7 +491,7 @@ export default function GrowthFactoryStudio() {
                         key={idx}
                         type="button"
                         onClick={() => setCustomTopic(idea)}
-                        className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 hover:text-white hover:border-emerald-500/50 transition-colors cursor-pointer"
+                        className="text-xs px-2.5 py-1 rounded-md bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] text-zinc-700 dark:text-zinc-300 hover:border-[#6366f1]/50 hover:text-[#111113] dark:hover:text-[#f4f4f5] transition-colors cursor-pointer"
                       >
                         {idea}
                       </button>
@@ -483,7 +501,7 @@ export default function GrowthFactoryStudio() {
 
                 <div className="space-y-3.5">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">
+                    <label className="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                       1. Titolo Principale del Reel
                     </label>
                     <input
@@ -492,12 +510,12 @@ export default function GrowthFactoryStudio() {
                       value={customTopic}
                       onChange={(e) => setCustomTopic(e.target.value)}
                       placeholder="Es. Archivio Ricordi e Restauro Foto..."
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                      className="w-full bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md px-3 py-2 text-xs text-[#111113] dark:text-[#f4f4f5] placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-1">
+                    <label className="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                       2. Gancio Parlato (Frase d&apos;impatto iniziale)
                     </label>
                     <input
@@ -505,69 +523,69 @@ export default function GrowthFactoryStudio() {
                       value={customHook}
                       onChange={(e) => setCustomHook(e.target.value)}
                       placeholder="Es. Rinnova vecchie foto di famiglia rovinate..."
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                      className="w-full bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md px-3 py-2 text-xs text-[#111113] dark:text-[#f4f4f5] placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
                     />
                   </div>
 
-                  <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-2">
-                    <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <div className="p-3 bg-[#f7f6f3] dark:bg-[#141417] rounded-md border border-[#e5e3dc] dark:border-white/[0.08] space-y-2">
+                    <span className="block text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                       3. I 3 Punti Chiave a Schermo
                     </span>
                     <input
                       type="text"
                       value={customB1}
                       onChange={(e) => setCustomB1(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                      className="w-full bg-[#ffffff] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md px-3 py-1.5 text-xs text-[#111113] dark:text-[#f4f4f5] focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
                       placeholder="Punto 1..."
                     />
                     <input
                       type="text"
                       value={customB2}
                       onChange={(e) => setCustomB2(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                      className="w-full bg-[#ffffff] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md px-3 py-1.5 text-xs text-[#111113] dark:text-[#f4f4f5] focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
                       placeholder="Punto 2..."
                     />
                     <input
                       type="text"
                       value={customB3}
                       onChange={(e) => setCustomB3(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                      className="w-full bg-[#ffffff] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md px-3 py-1.5 text-xs text-[#111113] dark:text-[#f4f4f5] focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
                       placeholder="Punto 3..."
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-1">
+                    <label className="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                       4. Chiamata all&apos;Azione (CTA Banner)
                     </label>
                     <input
                       type="text"
                       value={customCta}
                       onChange={(e) => setCustomCta(e.target.value)}
-                      placeholder='Es. COMMENTA "RICORDO" SOTTO 👇'
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-emerald-300 font-bold placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                      placeholder='Es. COMMENTA "RICORDO" SOTTO'
+                      className="w-full bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md px-3 py-2 text-xs text-[#111113] dark:text-[#f4f4f5] font-medium placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Bottoni Generazione */}
-              <div className="pt-6 space-y-2.5 border-t border-slate-800/80 mt-6">
+              <div className="pt-5 space-y-2 border-t border-[#e5e3dc] dark:border-white/[0.08]">
                 <button
                   type="button"
                   onClick={handleGenerateVideo1Click}
                   disabled={isGeneratingVideo || !customTopic}
-                  className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-transform active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full h-10 rounded-md bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium text-xs transition-colors disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
                 >
                   {isGeneratingVideo ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                       <span>Montaggio Video 9:16 in corso...</span>
                     </>
                   ) : (
                     <>
-                      <Film className="w-4 h-4" />
-                      <span>🎬 1. GENERA REEL 9:16 + COPY COMPLETO</span>
+                      <Film className="w-3.5 h-3.5" />
+                      <span>1. Genera Reel 9:16 + Copy Completo</span>
                     </>
                   )}
                 </button>
@@ -576,17 +594,17 @@ export default function GrowthFactoryStudio() {
                   type="button"
                   onClick={handleGenerateVisualAgnes}
                   disabled={isGeneratingVisual || !customTopic}
-                  className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-indigo-500/40 text-indigo-300 font-bold text-xs uppercase tracking-wider shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full h-10 rounded-md bg-[#ffffff] dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] border border-[#e5e3dc] dark:border-white/[0.08] text-[#111113] dark:text-[#f4f4f5] font-medium text-xs transition-colors disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2"
                 >
                   {isGeneratingVisual ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#6366f1]" />
                       <span>Generazione Immagine Agnes AI (4K)...</span>
                     </>
                   ) : (
                     <>
-                      <ImageIcon className="w-4 h-4 text-indigo-400" />
-                      <span>🖼️ 2. GENERA VISUAL / COPERTINA 4K (AGNES AI)</span>
+                      <ImageIcon className="w-3.5 h-3.5 text-[#6366f1]" />
+                      <span>2. Genera Visual / Copertina 4K (Agnes AI)</span>
                     </>
                   )}
                 </button>
@@ -594,23 +612,26 @@ export default function GrowthFactoryStudio() {
             </div>
 
             {/* Risultato Destra: Player Video, Visual & Dispatch Telegram */}
-            <div className="lg:col-span-7 bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-xl flex flex-col justify-between">
+            <div className="lg:col-span-7 bg-[#f7f6f3] dark:bg-[#0d0d0f] p-5 sm:p-6 flex flex-col justify-between">
               {generatedResult ? (
-                <div className="space-y-6">
+                <div className="space-y-5">
                   {/* Header Risultato con Invio Telegram */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e5e3dc] dark:border-white/[0.08] pb-4">
                     <div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
                         Asset Generati con Successo
                       </span>
-                      <h3 className="text-base font-bold text-white mt-0.5">{generatedResult.title}</h3>
+                      <h3 className="text-base font-semibold text-[#111113] dark:text-[#f4f4f5] mt-0.5 font-[family-name:var(--font-jakarta)]">
+                        {generatedResult.title}
+                      </h3>
                     </div>
 
                     <button
+                      type="button"
                       onClick={handleDispatchToTelegram}
                       disabled={isSendingTelegram}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-blue-600/30 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                      className="inline-flex items-center justify-center gap-2 px-4 h-9 rounded-md bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] text-xs font-medium transition-colors disabled:opacity-40 cursor-pointer"
                     >
                       {isSendingTelegram ? (
                         <>
@@ -620,24 +641,24 @@ export default function GrowthFactoryStudio() {
                       ) : (
                         <>
                           <SendHorizontal className="w-3.5 h-3.5" />
-                          <span>📱 INVIA SUL TELEGRAM DEI SOCI</span>
+                          <span>Invia sul Telegram dei Soci</span>
                         </>
                       )}
                     </button>
                   </div>
 
                   {telegramStatus && (
-                    <div className="p-3 bg-emerald-950/80 border border-emerald-500/50 rounded-xl text-xs font-bold text-emerald-300 text-center animate-fade-in">
-                      {telegramStatus}
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-xs font-medium text-emerald-700 dark:text-emerald-300 text-center flex items-center justify-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <span>{telegramStatus}</span>
                     </div>
                   )}
 
                   {/* Media Grid: Video + Immagine Agnes */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-                    {/* Video Player se presente */}
                     {generatedResult.videoUrl && (
                       <div className="md:col-span-5 flex flex-col items-center">
-                        <div className="w-[190px] aspect-[9/16] rounded-2xl overflow-hidden border-2 border-slate-700 bg-black shadow-2xl relative">
+                        <div className="w-[190px] aspect-[9/16] rounded-lg overflow-hidden border border-[#e5e3dc] dark:border-white/[0.08] bg-black relative">
                           <video
                             src={generatedResult.videoUrl}
                             controls
@@ -649,7 +670,7 @@ export default function GrowthFactoryStudio() {
                         <a
                           href={generatedResult.videoUrl}
                           download={`reel-${Date.now()}.mp4`}
-                          className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 text-xs font-bold hover:text-white transition-colors"
+                          className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08] text-[#111113] dark:text-[#f4f4f5] text-xs font-medium hover:border-[#6366f1]/40 transition-colors"
                         >
                           <Download className="w-3.5 h-3.5" />
                           <span>Scarica Video MP4</span>
@@ -657,13 +678,12 @@ export default function GrowthFactoryStudio() {
                       </div>
                     )}
 
-                    {/* Immagine Agnes AI se presente */}
                     {generatedResult.imageUrl && (
                       <div className={`${generatedResult.videoUrl ? 'md:col-span-7' : 'md:col-span-12'} flex flex-col`}>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 mb-1.5">
+                        <span className="text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-[#6366f1] mb-1.5">
                           Visual 4K Agnes AI (Copertina Post / Banner)
                         </span>
-                        <div className="rounded-xl overflow-hidden border border-slate-700 shadow-xl bg-slate-900 relative">
+                        <div className="rounded-md overflow-hidden border border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114] relative">
                           <img
                             src={generatedResult.imageUrl}
                             alt="Visual Promozionale"
@@ -675,7 +695,7 @@ export default function GrowthFactoryStudio() {
                             href={generatedResult.imageUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-indigo-400 hover:underline flex items-center gap-1 font-semibold"
+                            className="text-xs text-[#6366f1] hover:underline flex items-center gap-1 font-medium"
                           >
                             <span>Visualizza alta risoluzione</span>
                             <ExternalLink className="w-3 h-3" />
@@ -686,47 +706,51 @@ export default function GrowthFactoryStudio() {
                   </div>
 
                   {/* Copy & Commento */}
-                  <div className="space-y-4 pt-2 border-t border-slate-800">
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                  <div className="space-y-3 pt-3 border-t border-[#e5e3dc] dark:border-white/[0.08]">
+                    <div className="p-4 rounded-md bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08]">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                        <span className="text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                           Testo Post (Instagram / Facebook / LinkedIn)
                         </span>
                         <button
+                          type="button"
                           onClick={() => handleCopy(generatedResult.postCopy, 'post-gen')}
-                          className="text-xs text-emerald-400 font-bold hover:underline"
+                          className="text-xs text-[#6366f1] font-medium hover:underline cursor-pointer"
                         >
-                          {copiedId === 'post-gen' ? 'Copiato!' : 'Copia Testo'}
+                          {copiedId === 'post-gen' ? 'Copiato' : 'Copia Testo'}
                         </button>
                       </div>
-                      <p className="text-xs text-slate-300 whitespace-pre-line leading-relaxed font-sans max-h-40 overflow-y-auto">
+                      <p className="text-xs text-zinc-700 dark:text-zinc-300 whitespace-pre-line leading-relaxed max-h-40 overflow-y-auto">
                         {generatedResult.postCopy}
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <div className="p-4 rounded-md bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08]">
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                        <span className="text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider text-[#6366f1]">
                           Primo Commento (con Link e Coupon)
                         </span>
                         <button
+                          type="button"
                           onClick={() => handleCopy(generatedResult.firstComment, 'comm-gen')}
-                          className="text-xs text-slate-400 font-bold hover:text-white"
+                          className="text-xs text-zinc-500 dark:text-zinc-400 font-medium hover:text-[#111113] dark:hover:text-[#f4f4f5] cursor-pointer"
                         >
-                          {copiedId === 'comm-gen' ? 'Copiato!' : 'Copia'}
+                          {copiedId === 'comm-gen' ? 'Copiato' : 'Copia'}
                         </button>
                       </div>
-                      <p className="text-xs font-mono text-slate-300 bg-slate-950 p-2 rounded border border-slate-800">
+                      <p className="text-xs font-[family-name:var(--font-mono)] text-zinc-700 dark:text-zinc-300 bg-[#f7f6f3] dark:bg-[#141417] p-2.5 rounded border border-[#e5e3dc] dark:border-white/[0.08]">
                         {generatedResult.firstComment}
                       </p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-800 rounded-xl">
-                  <Sparkles className="w-12 h-12 text-slate-600 mb-3" />
-                  <h3 className="text-base font-bold text-slate-300">Nessun contenuto ancora generato</h3>
-                  <p className="text-xs text-slate-500 max-w-sm mt-1">
+                <div className="h-full min-h-[360px] flex flex-col items-center justify-center text-center p-8 border border-dashed border-[#e5e3dc] dark:border-white/[0.12] rounded-lg bg-[#ffffff] dark:bg-[#111114]">
+                  <Sparkles className="w-8 h-8 text-[#6366f1]/60 mb-3" />
+                  <h3 className="text-sm font-semibold text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
+                    Nessun contenuto ancora generato
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mt-1">
                     Scegli un profilo (Lorenzo o Stefano), clicca su Genera e troverai qui il video, l&apos;immagine 4K e il post pronto da inviare con 1 clic su Telegram.
                   </p>
                 </div>
@@ -737,32 +761,40 @@ export default function GrowthFactoryStudio() {
 
         {/* TAB: ARCHIVIO REELS */}
         {selectedTab === 'reels' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-4 space-y-3">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#e5e3dc] dark:divide-white/[0.08]">
+            <div className="lg:col-span-4 divide-y divide-[#e5e3dc] dark:divide-white/[0.08] bg-[#ffffff] dark:bg-[#111114]">
               {PRESET_REELS.map((reel) => (
                 <div
                   key={reel.id}
                   onClick={() => setSelectedReel(reel)}
-                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                  className={`px-5 py-4 cursor-pointer transition-colors border-l-2 ${
                     selectedReel.id === reel.id
-                      ? 'bg-slate-900/90 border-emerald-500/50'
-                      : 'bg-slate-950/60 border-slate-800'
+                      ? 'bg-[#6366f1]/[0.06] dark:bg-[#6366f1]/[0.1] border-l-[#6366f1]'
+                      : 'border-l-transparent hover:bg-[#f7f6f3] dark:hover:bg-white/[0.03]'
                   }`}
                 >
-                  <span className="text-xs text-emerald-400 font-bold">{reel.hookAngle}</span>
-                  <h4 className="text-sm font-bold text-white mt-1">{reel.title}</h4>
+                  <span className="text-[10px] font-[family-name:var(--font-mono)] text-[#6366f1] font-medium uppercase tracking-wider">
+                    {reel.hookAngle}
+                  </span>
+                  <h4 className="text-sm font-semibold text-[#111113] dark:text-[#f4f4f5] mt-1 font-[family-name:var(--font-jakarta)]">
+                    {reel.title}
+                  </h4>
                 </div>
               ))}
             </div>
 
-            <div className="lg:col-span-8 bg-slate-950 rounded-2xl border border-slate-800 p-6">
-              <h2 className="text-xl font-bold text-white mb-4">{selectedReel.title}</h2>
-              <div className="space-y-3">
-                {selectedReel.bodyVisuals.map((v, i) => (
-                  <div key={i} className="p-3 bg-slate-900 rounded-lg border border-slate-800 text-xs">
-                    <span className="font-mono text-emerald-400 font-bold">{v.time}</span> • {v.audio}
-                  </div>
-                ))}
+            <div className="lg:col-span-8 bg-[#f7f6f3] dark:bg-[#0d0d0f] p-6">
+              <div className="bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08] rounded-lg p-6">
+                <h2 className="text-lg font-semibold text-[#111113] dark:text-[#f4f4f5] mb-4 font-[family-name:var(--font-jakarta)]">
+                  {selectedReel.title}
+                </h2>
+                <div className="divide-y divide-[#e5e3dc] dark:divide-white/[0.08] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md">
+                  {selectedReel.bodyVisuals.map((v, i) => (
+                    <div key={i} className="p-3.5 bg-[#ffffff] dark:bg-[#111114] text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                      <span className="font-[family-name:var(--font-mono)] text-[#6366f1] font-medium">{v.time}</span> · {v.audio}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -770,27 +802,34 @@ export default function GrowthFactoryStudio() {
 
         {/* TAB: POSTS */}
         {selectedTab === 'posts' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-px bg-[#e5e3dc] dark:bg-white/[0.08]">
             {PRESET_POSTS.map((post) => (
-              <div key={post.id} className="bg-slate-950 rounded-2xl border border-slate-800 p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
-                    post.channel === 'stefano_pmi' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-indigo-950 text-indigo-400 border border-indigo-800'
-                  }`}>
-                    {post.channel === 'stefano_pmi' ? '👔 Stefano (PMI / B2B)' : '🧑‍💻 Lorenzo (Community)'}
+              <div key={post.id} className="bg-[#ffffff] dark:bg-[#111114] p-6 space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className={`px-2 py-0.5 rounded border text-[10px] font-[family-name:var(--font-mono)] font-medium uppercase tracking-wider ${
+                      post.channel === 'stefano_pmi'
+                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25'
+                        : 'bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/25'
+                    }`}
+                  >
+                    {post.channel === 'stefano_pmi' ? 'Stefano (PMI / B2B)' : 'Lorenzo (Community)'}
                   </span>
                   <button
+                    type="button"
                     onClick={() => handleCopy(post.copy, post.id)}
-                    className="text-xs text-emerald-400 font-bold hover:underline cursor-pointer"
+                    className="text-xs text-[#6366f1] font-medium hover:underline cursor-pointer"
                   >
-                    {copiedId === post.id ? 'Copiato!' : 'Copia Post'}
+                    {copiedId === post.id ? 'Copiato' : 'Copia Post'}
                   </button>
                 </div>
-                <h3 className="text-sm font-bold text-white">{post.hookHeadline}</h3>
-                <div className="p-4 bg-slate-900 rounded-xl text-xs whitespace-pre-line text-slate-300 leading-relaxed max-h-60 overflow-y-auto">
+                <h3 className="text-sm font-semibold text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
+                  {post.hookHeadline}
+                </h3>
+                <div className="p-4 bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md text-xs whitespace-pre-line text-zinc-700 dark:text-zinc-300 leading-relaxed max-h-60 overflow-y-auto">
                   {post.copy}
                 </div>
-                <div className="text-[11px] font-mono text-slate-400 bg-slate-900 p-2.5 rounded border border-slate-800">
+                <div className="text-[11px] font-[family-name:var(--font-mono)] text-zinc-600 dark:text-zinc-400 bg-[#f7f6f3] dark:bg-[#141417] p-2.5 rounded-md border border-[#e5e3dc] dark:border-white/[0.08]">
                   {post.firstComment}
                 </div>
               </div>

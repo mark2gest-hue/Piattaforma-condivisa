@@ -21,7 +21,16 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const pathname = usePathname()
-  const isFullBleedChat = pathname?.startsWith('/chat') || pathname?.startsWith('/assistenza')
+  const isFullBleedView =
+    pathname?.startsWith('/chat') ||
+    pathname?.startsWith('/assistenza') ||
+    pathname?.startsWith('/lavori') ||
+    pathname?.startsWith('/clienti') ||
+    pathname?.startsWith('/calendario') ||
+    pathname?.startsWith('/posta') ||
+    pathname?.startsWith('/cervello') ||
+    pathname?.startsWith('/files') ||
+    pathname?.startsWith('/videocall')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarPinned, setIsSidebarPinned] = useState(false)
 
@@ -46,10 +55,10 @@ export function DashboardShell({
   return (
     <div
       className={`${
-        isFullBleedChat ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
-      } bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors duration-200`}
+        isFullBleedView ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : 'min-h-screen'
+      } bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5] flex transition-colors duration-200`}
     >
-      {/* Sidebar: Desktop fluid neon dock e Mobile drawer */}
+      {/* Sidebar: Dorsale architettonica flush a filo sinistro e Mobile drawer */}
       <Sidebar
         isOpenMobile={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
@@ -57,11 +66,11 @@ export function DashboardShell({
         onTogglePin={togglePin}
       />
 
-      {/* Main Content Area: guadagna ~180px di spazio orizzontale in modalità dock (pl-20) */}
+      {/* Main Content Area: allineata alla sidebar flush */}
       <div
         className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-out ${
-          isSidebarPinned ? 'md:pl-68' : 'md:pl-[84px]'
-        } ${isFullBleedChat ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : ''}`}
+          isSidebarPinned ? 'md:pl-64' : 'md:pl-[68px]'
+        } ${isFullBleedView ? 'h-[100dvh] max-h-[100dvh] overflow-hidden' : ''}`}
       >
         <Navbar
           userName={userName}
@@ -72,7 +81,7 @@ export function DashboardShell({
         />
         <main
           className={
-            isFullBleedChat
+            isFullBleedView
               ? 'flex-1 min-h-0 p-0 overflow-hidden w-full'
               : 'flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto'
           }

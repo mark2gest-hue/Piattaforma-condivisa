@@ -29,9 +29,7 @@ import {
   Network,
   FileText,
 } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { playNotificationSound } from '@/lib/notifications'
@@ -46,13 +44,13 @@ import {
 } from '@/app/actions/knowledge'
 
 const CATEGORIES = [
-  { id: 'all', label: 'Tutte le Risorse', icon: Layers, color: 'text-indigo-400' },
-  { id: 'course_notes', label: '📁 Documenti & File AI', icon: FileText, color: 'text-cyan-400' },
-  { id: 'agents_workflows', label: '🤖 Agenti & Automazioni', icon: Bot, color: 'text-pink-400' },
-  { id: 'prompting', label: '🎯 Prompting & RCCF', icon: Terminal, color: 'text-amber-400' },
-  { id: 'copywriting', label: '✉️ Copy & Email B2B', icon: BookOpen, color: 'text-blue-400' },
-  { id: 'excel_data', label: '📊 Excel & Analisi Dati', icon: FileSpreadsheet, color: 'text-emerald-400' },
-  { id: 'visual_media', label: '🎨 Immagini & Slide', icon: Palette, color: 'text-purple-400' },
+  { id: 'all', label: 'Tutte le Risorse', icon: Layers, color: 'text-[#6366f1]' },
+  { id: 'course_notes', label: 'Documenti & File AI', icon: FileText, color: 'text-cyan-600 dark:text-cyan-400' },
+  { id: 'agents_workflows', label: 'Agenti & Automazioni', icon: Bot, color: 'text-pink-600 dark:text-pink-400' },
+  { id: 'prompting', label: 'Prompting & RCCF', icon: Terminal, color: 'text-amber-600 dark:text-amber-400' },
+  { id: 'copywriting', label: 'Copy & Email B2B', icon: BookOpen, color: 'text-blue-600 dark:text-blue-400' },
+  { id: 'excel_data', label: 'Excel & Analisi Dati', icon: FileSpreadsheet, color: 'text-emerald-600 dark:text-emerald-400' },
+  { id: 'visual_media', label: 'Immagini & Slide', icon: Palette, color: 'text-purple-600 dark:text-purple-400' },
 ]
 
 export default function CervelloKnowledgePage() {
@@ -240,27 +238,71 @@ export default function CervelloKnowledgePage() {
   }
 
   return (
-    <div className="space-y-6 flex flex-col min-h-[calc(100vh-8rem)]">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 p-6 sm:p-8 rounded-3xl border border-indigo-500/20 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="space-y-2 relative z-10">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 text-white flex items-center justify-center shadow-md">
-              <Sparkles className="h-4 w-4" />
-            </div>
-            <h1 className="text-2xl font-black text-white tracking-tight">
-              Secondo Cervello & Prompt Library
-            </h1>
-            <Badge variant="purple" className="text-[10px] font-mono uppercase">
-              Obsidian & Proton Ready
-            </Badge>
-          </div>
-          <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-            L'archivio centrale di conoscenza condivisa: copia formule di prompting verificate, consulta le dispense delle 20 lezioni ed esporta tutto il Vault in formato Markdown per Obsidian o Proton Drive.
-          </p>
+    <div className="h-full flex flex-col overflow-hidden bg-[#f7f6f3] dark:bg-[#0d0d0f] text-[#111113] dark:text-[#f4f4f5]">
+      {/* Command Bar */}
+      <div className="min-h-[52px] px-5 py-2 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114] flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <Sparkles className="h-4 w-4 text-[#6366f1] shrink-0" />
+          <h1 className="text-sm font-semibold tracking-tight text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)] truncate">
+            Secondo Cervello & Prompt Library
+          </h1>
+          <span className="hidden sm:inline-block text-[11px] font-[family-name:var(--font-mono)] text-zinc-500 dark:text-zinc-400 border-l border-[#e5e3dc] dark:border-white/[0.08] pl-3">
+            {displayedItems.length} / {items.length} note
+          </span>
         </div>
 
-        <div className="flex items-center gap-3 relative z-10 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Search Input */}
+          <div className="relative w-48 sm:w-64">
+            <Search className="h-3.5 w-3.5 text-zinc-400 absolute left-2.5 top-2.5 pointer-events-none" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cerca prompt, formula o tag..."
+              className="pl-8 pr-7 h-8 text-xs bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] rounded-md text-[#111113] dark:text-[#f4f4f5] placeholder:text-zinc-400"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-2 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* View Mode Toggle: Schede vs Grafo */}
+          <div className="flex items-center gap-0.5 p-0.5 bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] rounded-md">
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer',
+                viewMode === 'grid'
+                  ? 'bg-[#111113] text-white dark:bg-[#f4f4f5] dark:text-[#0d0d0f]'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>Schede</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode('graph')}
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer',
+                viewMode === 'graph'
+                  ? 'bg-[#111113] text-white dark:bg-[#f4f4f5] dark:text-[#0d0d0f]'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+              )}
+            >
+              <Network className="h-3.5 w-3.5" />
+              <span>Grafo</span>
+            </button>
+          </div>
+
           <a
             href="https://drive.proton.me/urls/XF6PZNAD84#yrottI5pvplQ"
             target="_blank"
@@ -268,10 +310,11 @@ export default function CervelloKnowledgePage() {
           >
             <Button
               variant="outline"
-              className="h-10 px-4 text-xs font-bold rounded-xl border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/50 text-amber-200 gap-2"
+              size="sm"
+              className="h-8 px-2.5 text-xs font-medium rounded-md border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] text-[#111113] dark:text-[#f4f4f5] gap-1.5 cursor-pointer"
             >
-              <Sparkles className="h-4 w-4 text-amber-400" />
-              <span>Skills Hub (Proton Drive)</span>
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <span className="hidden xl:inline">Skills Hub</span>
             </Button>
           </a>
 
@@ -282,422 +325,392 @@ export default function CervelloKnowledgePage() {
           >
             <Button
               variant="outline"
-              className="h-10 px-4 text-xs font-bold rounded-xl border-purple-500/30 bg-purple-950/30 hover:bg-purple-900/50 text-purple-200 gap-2"
+              size="sm"
+              className="h-8 px-2.5 text-xs font-medium rounded-md border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] text-[#111113] dark:text-[#f4f4f5] gap-1.5 cursor-pointer"
             >
-              <ExternalLink className="h-4 w-4 text-purple-400" />
-              <span>20 PDF Corsi (Proton Drive)</span>
+              <ExternalLink className="h-3.5 w-3.5 text-[#6366f1]" />
+              <span className="hidden xl:inline">20 PDF Corsi</span>
             </Button>
           </a>
 
-                    <Button
+          <Button
             onClick={handleSyncLocalObsidian}
             disabled={isSyncingLocal}
             variant="outline"
-            className="h-10 px-4 text-xs font-bold rounded-xl border-emerald-500/30 bg-emerald-950/30 hover:bg-emerald-900/50 text-emerald-200 gap-2 shadow-sm"
+            size="sm"
+            className="h-8 px-2.5 text-xs font-medium rounded-md border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] text-[#111113] dark:text-[#f4f4f5] gap-1.5 cursor-pointer"
             title="Sincronizza direttamente nel Vault Obsidian locale su Mac e iCloud"
           >
-            {isSyncingLocal ? <Loader2 className="h-4 w-4 animate-spin text-emerald-400" /> : <RefreshCw className="h-4 w-4 text-emerald-400" />}
-            <span>Sincronizza su Obsidian</span>
+            {isSyncingLocal ? <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-500" /> : <RefreshCw className="h-3.5 w-3.5 text-emerald-500" />}
+            <span className="hidden lg:inline">Sincronizza Obsidian</span>
           </Button>
 
           <Button
             onClick={handleDownloadObsidianVault}
             disabled={isExporting}
             variant="outline"
-            className="h-10 px-4 text-xs font-bold rounded-xl border-indigo-500/30 bg-indigo-950/30 hover:bg-indigo-900/50 text-indigo-200 gap-2"
+            size="sm"
+            className="h-8 px-2.5 text-xs font-medium rounded-md border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] text-[#111113] dark:text-[#f4f4f5] gap-1.5 cursor-pointer"
+            title="Scarica Vault Obsidian (.md)"
           >
-            {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderDown className="h-4 w-4 text-indigo-400" />}
-            <span>Scarica Vault Obsidian (.md)</span>
+            {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FolderDown className="h-3.5 w-3.5 text-[#6366f1]" />}
+            <span className="hidden lg:inline">Esporta .md</span>
           </Button>
 
           <Button
+            size="sm"
             onClick={() => setIsModalOpen(true)}
-            className="h-10 px-5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white gap-2 shadow-lg shadow-indigo-600/30"
+            className="h-8 px-3 text-xs font-medium rounded-md bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] gap-1.5 cursor-pointer"
           >
-            <Plus className="h-4 w-4" />
-            <span>Nuovo Prompt / Nota</span>
+            <Plus className="h-3.5 w-3.5" />
+            <span>Nuovo Prompt</span>
           </Button>
         </div>
       </div>
 
-      {/* Search, Category Filter Pills & View Switcher */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          {/* Search Bar */}
-          <div className="relative max-w-md w-full">
-            <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-3" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cerca prompt per titolo, formula o tag (es. RCCF, Excel, Midjourney)..."
-              className="pl-10 h-10 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-3 text-slate-400 hover:text-slate-200"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          {/* View Mode Toggle: Schede vs Grafo */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs self-start sm:self-auto">
+      {/* Category Tab Strip — Swiss Hairline */}
+      <div className="px-5 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114] flex items-center gap-1 overflow-x-auto shrink-0">
+        {CATEGORIES.map((cat) => {
+          const isSelected = selectedCategory === cat.id
+          const Icon = cat.icon
+          return (
             <button
+              key={cat.id}
               type="button"
-              onClick={() => setViewMode('grid')}
-              className={cn(
-                'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
-                viewMode === 'grid'
-                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              )}
-            >
-              <LayoutGrid className="h-4 w-4" />
-              <span>Vista Schede</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setViewMode('graph')}
-              className={cn(
-                'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
-                viewMode === 'graph'
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/30'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              )}
-            >
-              <Network className="h-4 w-4 text-indigo-300" />
-              <span>Vista Grafo Neurale</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          {CATEGORIES.map((cat) => {
-            const isSelected = selectedCategory === cat.id
-            const Icon = cat.icon
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0 border ${
-                  isSelected
-                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
-                }`}
-              >
-                <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-white' : cat.color}`} />
-                <span>{cat.label}</span>
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Quick Tag Pills */}
-        {availableTags.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 pl-1 shrink-0">
-              <Tag className="h-3 w-3 text-indigo-400" />
-              Tag:
-            </span>
-            <button
-              onClick={() => setSelectedTag(null)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all shrink-0 ${
-                !selectedTag
-                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white font-bold'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors shrink-0 border-b-2 cursor-pointer ${
+                isSelected
+                  ? 'border-[#6366f1] text-[#111113] dark:text-[#f4f4f5]'
+                  : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
               }`}
             >
-              Tutti i tag
+              <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-[#6366f1]' : cat.color}`} />
+              <span>{cat.label}</span>
             </button>
-            {availableTags.map(({ tag, count }) => {
-              const isTagActive = selectedTag === tag
-              return (
-                <button
-                  key={tag}
-                  onClick={() => setSelectedTag(isTagActive ? null : tag)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all shrink-0 flex items-center gap-1 ${
-                    isTagActive
-                      ? 'bg-indigo-600 text-white font-bold shadow-xs'
-                      : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800/80'
-                  }`}
-                >
-                  <span>#{tag}</span>
-                  <span
-                    className={`text-[9px] px-1 py-0.2 rounded-full ${
-                      isTagActive ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+          )
+        })}
+      </div>
+
+      {/* Quick Tag Strip + Active Filters */}
+      {(availableTags.length > 0 || selectedCategory !== 'all' || selectedTag || searchQuery) && (
+        <div className="px-5 py-2 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#0d0d0f] flex flex-col gap-2 shrink-0">
+          {availableTags.length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+              <span className="text-[10px] font-[family-name:var(--font-mono)] font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1">
+                <Tag className="h-3 w-3 text-[#6366f1]" />
+                Tag
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedTag(null)}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors shrink-0 cursor-pointer border ${
+                  !selectedTag
+                    ? 'bg-[#111113] text-white border-[#111113] dark:bg-[#f4f4f5] dark:text-[#0d0d0f] dark:border-[#f4f4f5]'
+                    : 'bg-[#ffffff] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] text-zinc-600 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
+                }`}
+              >
+                Tutti
+              </button>
+              {availableTags.map(({ tag, count }) => {
+                const isTagActive = selectedTag === tag
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setSelectedTag(isTagActive ? null : tag)}
+                    className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors shrink-0 flex items-center gap-1 cursor-pointer border ${
+                      isTagActive
+                        ? 'bg-[#6366f1] text-white border-[#6366f1]'
+                        : 'bg-[#ffffff] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] text-zinc-600 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]'
                     }`}
                   >
-                    {count}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        )}
-
-        {/* Active Filters Summary Bar */}
-        {(selectedCategory !== 'all' || selectedTag || searchQuery) && (
-          <div className="flex items-center justify-between px-3 py-2 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 rounded-xl text-xs text-indigo-900 dark:text-indigo-200">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-slate-700 dark:text-slate-300">Filtri attivi:</span>
-              {selectedCategory !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 text-[11px]">
-                  Categoria: <b>{CATEGORIES.find((c) => c.id === selectedCategory)?.label || selectedCategory}</b>
-                  <button onClick={() => setSelectedCategory('all')} className="hover:text-red-500">
-                    <X className="h-3 w-3" />
+                    <span>#{tag}</span>
+                    <span
+                      className={`text-[10px] font-[family-name:var(--font-mono)] ${
+                        isTagActive ? 'text-white/80' : 'text-zinc-400 dark:text-zinc-500'
+                      }`}
+                    >
+                      {count}
+                    </span>
                   </button>
-                </span>
-              )}
-              {selectedTag && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 text-[11px]">
-                  Tag: <b>#{selectedTag}</b>
-                  <button onClick={() => setSelectedTag(null)} className="hover:text-red-500">
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              )}
-              {searchQuery && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 text-[11px]">
-                  Ricerca: &ldquo;{searchQuery}&rdquo;
-                  <button onClick={() => setSearchQuery('')} className="hover:text-red-500">
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              )}
-              <span className="text-slate-500 text-[11px]">({displayedItems.length} risultati)</span>
+                )
+              })}
             </div>
+          )}
 
-            <button
+          {(selectedCategory !== 'all' || selectedTag || searchQuery) && (
+            <div className="flex items-center justify-between pt-1.5 border-t border-[#e5e3dc] dark:border-white/[0.08] text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">Filtri attivi:</span>
+                {selectedCategory !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-[#6366f1]/30 bg-[#6366f1]/10 text-[#6366f1] text-[11px]">
+                    {CATEGORIES.find((c) => c.id === selectedCategory)?.label || selectedCategory}
+                    <button type="button" onClick={() => setSelectedCategory('all')} className="hover:text-red-500 cursor-pointer">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {selectedTag && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-[#6366f1]/30 bg-[#6366f1]/10 text-[#6366f1] text-[11px]">
+                    #{selectedTag}
+                    <button type="button" onClick={() => setSelectedTag(null)} className="hover:text-red-500 cursor-pointer">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                {searchQuery && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-[#6366f1]/30 bg-[#6366f1]/10 text-[#6366f1] text-[11px]">
+                    &ldquo;{searchQuery}&rdquo;
+                    <button type="button" onClick={() => setSearchQuery('')} className="hover:text-red-500 cursor-pointer">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+                <span className="text-zinc-500 dark:text-zinc-400 text-[11px] font-[family-name:var(--font-mono)]">
+                  ({displayedItems.length})
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory('all')
+                  setSelectedTag(null)
+                  setSearchQuery('')
+                }}
+                className="text-[11px] font-medium text-[#6366f1] hover:underline shrink-0 cursor-pointer"
+              >
+                Azzera filtri
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Main Content Area: Grafo Neurale oppure Griglia Hairline */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {viewMode === 'graph' ? (
+          <div className="p-4 sm:p-5 h-full">
+            <KnowledgeGraphView
+              items={displayedItems}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              onCopyPrompt={handleCopy}
+              copiedId={copiedId}
+            />
+          </div>
+        ) : displayedItems.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-3">
+            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              Nessun prompt o risorsa trovata per questa categoria/ricerca.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => {
                 setSelectedCategory('all')
                 setSelectedTag(null)
                 setSearchQuery('')
               }}
-              className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0"
+              className="h-8 text-xs bg-[#ffffff] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08]"
             >
-              Azzera filtri
-            </button>
+              Reimposta Filtri
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[#e5e3dc] dark:bg-white/[0.08] border-b border-[#e5e3dc] dark:border-white/[0.08]">
+            {displayedItems.map((item: KnowledgeItem) => {
+              const isCopied = copiedId === item.id
+
+              return (
+                <div
+                  key={item.id}
+                  className="bg-[#ffffff] dark:bg-[#111114] hover:bg-[#f7f6f3]/70 dark:hover:bg-[#141417] transition-colors p-5 flex flex-col justify-between gap-4 group"
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-[10px] font-[family-name:var(--font-mono)] uppercase font-medium tracking-wider text-[#6366f1] bg-[#6366f1]/10 px-2 py-0.5 rounded border border-[#6366f1]/25">
+                        {(item.category || 'prompting').replace('_', ' ')}
+                      </span>
+
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item.id, item.title || 'elemento')}
+                          className="p-1 text-zinc-400 hover:text-red-500 rounded cursor-pointer"
+                          title="Elimina"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <h2 className="text-sm font-semibold text-[#111113] dark:text-[#f4f4f5] leading-snug line-clamp-2 font-[family-name:var(--font-jakarta)]">
+                      {item.title || 'Prompt Risorsa'}
+                    </h2>
+
+                    {item.description && (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Content Code Preview */}
+                    <pre className="p-3 rounded-md bg-[#f7f6f3] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08] text-[11px] font-[family-name:var(--font-mono)] text-[#111113] dark:text-zinc-300 overflow-hidden line-clamp-6 leading-relaxed whitespace-pre-wrap select-all">
+                      {item.content || ''}
+                    </pre>
+
+                    {/* Tags */}
+                    {Array.isArray(item.tags) && item.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {item.tags.map((t: string, idx: number) => {
+                          const clean = typeof t === 'string' ? t.trim().toLowerCase() : ''
+                          if (!clean) return null
+                          const isThisTagActive = selectedTag === clean
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedTag(isThisTagActive ? null : clean)
+                              }}
+                              className={`text-[10px] font-[family-name:var(--font-mono)] px-1.5 py-0.5 rounded transition-colors cursor-pointer border ${
+                                isThisTagActive
+                                  ? 'bg-[#6366f1] text-white border-[#6366f1]'
+                                  : 'text-zinc-500 dark:text-zinc-400 bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] hover:border-[#6366f1]/40 hover:text-[#6366f1]'
+                              }`}
+                              title={`Filtra per #${clean}`}
+                            >
+                              #{clean}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {/* Actions Bar */}
+                    <div className="pt-2.5 border-t border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between">
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-[family-name:var(--font-mono)]">
+                        {item.lesson_id ? `Modulo ${item.lesson_id}` : 'Generale'}
+                      </span>
+
+                      <Button
+                        size="sm"
+                        onClick={() => handleCopy(item.id, item.content || '')}
+                        className={`text-xs h-7 px-2.5 rounded-md gap-1.5 font-medium transition-colors cursor-pointer ${
+                          isCopied
+                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                            : 'bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f]'
+                        }`}
+                      >
+                        {isCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                        <span>{isCopied ? 'Copiato' : 'Copia Prompt'}</span>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
 
-      {/* Main Content Area: Grafo Neurale oppure Griglia Schede */}
-      {viewMode === 'graph' ? (
-        <KnowledgeGraphView
-          items={displayedItems}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-          onCopyPrompt={handleCopy}
-          copiedId={copiedId}
-        />
-      ) : displayedItems.length === 0 ? (
-        <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
-          <p className="text-sm font-semibold text-slate-400">Nessun prompt o risorsa trovata per questa categoria/ricerca.</p>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              setSelectedCategory('all')
-              setSelectedTag(null)
-              setSearchQuery('')
-            }}
-          >
-            Reimposta Filtri
-          </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayedItems.map((item: KnowledgeItem) => {
-            const isCopied = copiedId === item.id
-
-            return (
-              <Card
-                key={item.id}
-                className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs hover:shadow-md hover:border-indigo-400 dark:hover:border-indigo-500/50 transition-all flex flex-col justify-between overflow-hidden group"
-              >
-                <CardHeader className="p-5 pb-3 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800/50">
-                      {(item.category || 'prompting').replace('_', ' ')}
-                    </span>
-
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleDelete(item.id, item.title || 'elemento')}
-                        className="p-1 text-slate-400 hover:text-red-500 rounded-md"
-                        title="Elimina"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <CardTitle className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2">
-                    {item.title || 'Prompt Risorsa'}
-                  </CardTitle>
-
-                  {item.description && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
-                      {item.description}
-                    </p>
-                  )}
-                </CardHeader>
-
-                <CardContent className="p-5 pt-0 space-y-3">
-                  {/* Content Code Preview */}
-                  <div className="relative">
-                    <pre className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 text-[11px] font-mono text-slate-800 dark:text-slate-300 overflow-hidden line-clamp-6 leading-relaxed whitespace-pre-wrap select-all">
-                      {item.content || ''}
-                    </pre>
-                  </div>
-
-                  {/* Tags */}
-                  {Array.isArray(item.tags) && item.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {item.tags.map((t: string, idx: number) => {
-                        const clean = typeof t === 'string' ? t.trim().toLowerCase() : ''
-                        if (!clean) return null
-                        const isThisTagActive = selectedTag === clean
-                        return (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedTag(isThisTagActive ? null : clean)
-                            }}
-                            className={`text-[10px] font-mono px-1.5 py-0.5 rounded transition-all cursor-pointer ${
-                              isThisTagActive
-                                ? 'bg-indigo-600 text-white font-bold'
-                                : 'text-slate-400 bg-slate-100 dark:bg-slate-800/60 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 dark:hover:text-indigo-300'
-                            }`}
-                            title={`Filtra per #${clean}`}
-                          >
-                            #{clean}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-
-                  {/* Actions Bar */}
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {item.lesson_id ? `Modulo ${item.lesson_id}` : 'Generale'}
-                    </span>
-
-                    <Button
-                      size="sm"
-                      onClick={() => handleCopy(item.id, item.content || '')}
-                      className={`text-xs h-8 px-3 rounded-lg gap-1.5 font-bold transition-all ${
-                        isCopied
-                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                          : 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                      }`}
-                    >
-                      {isCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                      <span>{isCopied ? 'Copiato!' : 'Copia Prompt'}</span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
-
       {/* MODAL: Nuovo Prompt / Risorsa */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+          <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg w-full max-w-lg border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-[#e5e3dc] dark:border-white/[0.08] flex items-center justify-between bg-[#f7f6f3] dark:bg-[#141417]">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-indigo-600" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                <Sparkles className="h-4 w-4 text-[#6366f1]" />
+                <h3 className="font-semibold text-sm text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
                   Aggiungi al Secondo Cervello
                 </h3>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
-                <X className="h-5 w-5" />
+              <button type="button" onClick={() => setIsModalOpen(false)} className="p-1 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] cursor-pointer">
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCreatePrompt} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleCreatePrompt} className="p-5 space-y-4 text-xs">
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Titolo del Prompt / Risorsa *</label>
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">Titolo del Prompt / Risorsa *</label>
                 <Input
                   autoFocus
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="Es. Formula Prompt per Email di Follow-up B2B"
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                  className="text-xs h-9 bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Categoria</label>
+                  <label className="font-medium text-zinc-700 dark:text-zinc-300">Categoria</label>
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value as any)}
-                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-xs text-slate-900 dark:text-white shadow-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    className="w-full h-9 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] px-3 text-xs text-[#111113] dark:text-[#f4f4f5] focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-[#6366f1]"
                   >
-                    <option value="prompting">🎯 Prompting & RCCF</option>
-                    <option value="copywriting">✉️ Copy & Email B2B</option>
-                    <option value="excel_data">📊 Excel & Analisi Dati</option>
-                    <option value="visual_media">🎨 Immagini & Slide</option>
-                    <option value="agents_workflows">🤖 Agenti & Automazioni</option>
+                    <option value="prompting">Prompting & RCCF</option>
+                    <option value="copywriting">Copy & Email B2B</option>
+                    <option value="excel_data">Excel & Analisi Dati</option>
+                    <option value="visual_media">Immagini & Slide</option>
+                    <option value="agents_workflows">Agenti & Automazioni</option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Tag (Separati da virgola)</label>
+                  <label className="font-medium text-zinc-700 dark:text-zinc-300">Tag (Separati da virgola)</label>
                   <Input
                     value={newTags}
                     onChange={(e) => setNewTags(e.target.value)}
                     placeholder="es. email, b2b, rccf"
-                    className="text-xs dark:bg-slate-800 dark:border-slate-700 h-9"
+                    className="text-xs h-9 bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08]"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Breve Descrizione</label>
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">Breve Descrizione</label>
                 <Input
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   placeholder="Quando usare questo prompt e obiettivo finale..."
-                  className="text-xs dark:bg-slate-800 dark:border-slate-700"
+                  className="text-xs h-9 bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08]"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Testo del Prompt / Markdown *</label>
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">Testo del Prompt / Markdown *</label>
                 <textarea
                   rows={6}
                   required
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
                   placeholder="Incolla il testo completo del prompt con le variabili tra parentesi quadre..."
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-xs text-slate-900 dark:text-white font-mono shadow-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="w-full rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] p-3 text-xs text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-mono)] focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-[#6366f1]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e5e3dc] dark:border-white/[0.08]">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsModalOpen(false)}
+                  className="h-8 text-xs border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417]"
+                >
                   Annulla
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2"
+                  className="h-8 text-xs bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium gap-1.5 cursor-pointer"
                 >
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                   <span>Salva nel Cervello</span>
                 </Button>
               </div>
@@ -707,41 +720,45 @@ export default function CervelloKnowledgePage() {
       )}
 
       {/* MODAL: Guida all'uso di Obsidian & Proton Drive */}
-            {syncModalOpen && (
+      {syncModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 p-6 space-y-4">
+          <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg w-full max-w-md border border-[#e5e3dc] dark:border-white/[0.08] p-5 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
-                <Check className="h-5 w-5" />
+              <div className="h-9 w-9 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 flex items-center justify-center shrink-0">
+                <Check className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Vault Obsidian Sincronizzato!</h3>
-                <span className="text-[10px] text-slate-400 font-mono">{syncedCount} note aggiornate in tempo reale</span>
+                <h3 className="font-semibold text-sm text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
+                  Vault Obsidian Sincronizzato
+                </h3>
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-[family-name:var(--font-mono)]">
+                  {syncedCount} note aggiornate in tempo reale
+                </span>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 space-y-2 leading-relaxed">
-              <p className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <Info className="h-4 w-4 text-emerald-400" />
+            <div className="p-3.5 rounded-md bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] text-xs text-zinc-600 dark:text-zinc-300 space-y-2 leading-relaxed">
+              <p className="font-medium text-[#111113] dark:text-[#f4f4f5] flex items-center gap-1.5">
+                <Info className="h-3.5 w-3.5 text-emerald-500" />
                 Aggiornamento Diretto su Mac & iCloud
               </p>
               <p>
                 Tutte le note del Secondo Cervello sono state scritte nella cartella:
                 <br />
-                <code className="text-[10px] bg-slate-200 dark:bg-slate-950 px-1 py-0.5 rounded font-mono text-emerald-400">
+                <code className="text-[11px] bg-[#ffffff] dark:bg-[#0d0d0f] border border-[#e5e3dc] dark:border-white/[0.08] px-1.5 py-0.5 rounded font-[family-name:var(--font-mono)] text-emerald-600 dark:text-emerald-400 inline-block mt-1">
                   KnowledgeBase/07_Secondo_Cervello_Aiutiamoci/
                 </code>
               </p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                 I file sono visibili e sincronizzati istantaneamente su Obsidian (Mac, iPad e iPhone).
               </p>
             </div>
 
             <Button
               onClick={() => setSyncModalOpen(false)}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 rounded-xl"
+              className="w-full bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium text-xs h-9 rounded-md cursor-pointer"
             >
-              Ottimo, ho capito!
+              Chiudi
             </Button>
           </div>
         </div>
@@ -749,20 +766,24 @@ export default function CervelloKnowledgePage() {
 
       {exportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 p-6 space-y-4">
+          <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg w-full max-w-md border border-[#e5e3dc] dark:border-white/[0.08] p-5 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
-                <Check className="h-5 w-5" />
+              <div className="h-9 w-9 rounded-md bg-[#6366f1]/10 text-[#6366f1] border border-[#6366f1]/25 flex items-center justify-center shrink-0">
+                <Check className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Vault Markdown Scaricato!</h3>
-                <span className="text-[10px] text-slate-400 font-mono">{exportedFilesCount} file interconnessi esportati</span>
+                <h3 className="font-semibold text-sm text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
+                  Vault Markdown Scaricato
+                </h3>
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-[family-name:var(--font-mono)]">
+                  {exportedFilesCount} file interconnessi esportati
+                </span>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 space-y-2 leading-relaxed">
-              <p className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <Info className="h-4 w-4 text-indigo-400" />
+            <div className="p-3.5 rounded-md bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] text-xs text-zinc-600 dark:text-zinc-300 space-y-2 leading-relaxed">
+              <p className="font-medium text-[#111113] dark:text-[#f4f4f5] flex items-center gap-1.5">
+                <Info className="h-3.5 w-3.5 text-[#6366f1]" />
                 <span>Come usare questo file:</span>
               </p>
               <ul className="list-disc pl-4 space-y-1 text-[11px]">
@@ -771,8 +792,11 @@ export default function CervelloKnowledgePage() {
               </ul>
             </div>
 
-            <Button onClick={() => setExportModalOpen(false)} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold">
-              Ho Capito, Perfetto!
+            <Button
+              onClick={() => setExportModalOpen(false)}
+              className="w-full bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium text-xs h-9 rounded-md cursor-pointer"
+            >
+              Chiudi
             </Button>
           </div>
         </div>

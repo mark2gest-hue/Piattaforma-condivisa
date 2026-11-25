@@ -47,6 +47,7 @@ import {
   LifeBuoy,
   Bell,
   BellRing,
+  Building2,
 } from 'lucide-react'
 import { useTheme } from '@/components/theme-provider'
 import { Button } from '@/components/ui/button'
@@ -2330,16 +2331,16 @@ function CorsiInnerContent() {
     <div className="space-y-6">
       {/* Header & Course Switcher */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#e5e3dc] dark:border-white/[0.08] pb-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex flex-wrap items-center gap-2.5">
-              <GraduationCap className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            <h1 className="text-2xl font-bold tracking-tight text-[#111113] dark:text-[#f4f4f5] flex flex-wrap items-center gap-2.5 font-[family-name:var(--font-jakarta)]">
+              <GraduationCap className="h-6 w-6 text-[#6366f1]" />
               <span>Accademia & Formazione AI</span>
-              <span className="text-[11px] font-mono font-semibold py-0.5 px-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
-                v{versionData.version} • Build #{versionData.build}
+              <span className="text-[11px] font-[family-name:var(--font-mono)] font-medium py-0.5 px-2.5 rounded border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-[#6366f1]">
+                v{versionData.version} · Build #{versionData.build}
               </span>
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
               Percorsi formativi guidati: Corso Base AI Start & Corso Avanzato AI Pro (Automazioni & Agenti).
             </p>
           </div>
@@ -2347,7 +2348,7 @@ function CorsiInnerContent() {
           <div className="flex items-center gap-2">
             {isTeamMember ? (
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="purple" className="py-1 px-3 flex items-center gap-1.5 text-xs font-semibold">
+                <Badge variant="purple" className="py-1 px-3 flex items-center gap-1.5 text-xs font-medium">
                   <Award className="h-3.5 w-3.5" />
                   <span>Docente / Team</span>
                 </Badge>
@@ -2359,13 +2360,13 @@ function CorsiInnerContent() {
                     setCommunityInitialView('community')
                     setIsCommunityModalOpen(true)
                   }}
-                  className="text-xs h-9 px-3 rounded-xl gap-1.5 border-indigo-500/40 bg-indigo-950/30 hover:bg-indigo-900/50 text-indigo-300 font-semibold shadow-xs cursor-pointer"
+                  className="text-xs h-9 px-3 rounded-md gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] text-[#111113] dark:text-[#f4f4f5] font-medium cursor-pointer"
                   title="Anteprima Canale Studenti #community-studenti"
                 >
-                  <MessageCircle className="h-3.5 w-3.5 text-indigo-400" />
+                  <MessageCircle className="h-3.5 w-3.5 text-[#6366f1]" />
                   <span>Canale Studenti</span>
                   {unreadCommunityCount > 0 && (
-                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black leading-tight">
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded bg-rose-600 text-white text-[10px] font-[family-name:var(--font-mono)] font-semibold leading-tight">
                       {unreadCommunityCount} nuovi
                     </span>
                   )}
@@ -2379,32 +2380,31 @@ function CorsiInnerContent() {
                     setSupportInitialTicketId(null)
                     setIsSupportModalOpen(true)
                   }}
-                  className="text-xs h-9 px-3 rounded-xl gap-1.5 border-emerald-500/40 bg-emerald-950/30 hover:bg-emerald-900/50 text-emerald-300 font-semibold shadow-xs cursor-pointer"
+                  className="text-xs h-9 px-3 rounded-md gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] text-[#111113] dark:text-[#f4f4f5] font-medium cursor-pointer"
                   title="Anteprima Assistenza 1-a-1 (Studenti & B2B)"
                 >
-                  <LifeBuoy className="h-3.5 w-3.5 text-emerald-400" />
+                  <LifeBuoy className="h-3.5 w-3.5 text-emerald-500" />
                   <span>Assistenza 1-a-1</span>
                   {unreadSupportCount > 0 && (
-                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black leading-tight">
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded bg-rose-600 text-white text-[10px] font-[family-name:var(--font-mono)] font-semibold leading-tight">
                       {unreadSupportCount} nuovi
                     </span>
                   )}
                 </Button>
                 <Button
                   onClick={() => setIsEnrollModalOpen(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 shadow-xs text-xs font-semibold h-10 px-4 rounded-xl"
+                  className="bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] flex items-center gap-2 text-xs font-medium h-9 px-3.5 rounded-md cursor-pointer"
                 >
-                  <PlusCircle className="h-4 w-4" />
+                  <PlusCircle className="h-3.5 w-3.5" />
                   <span>Iscrivi Studente</span>
                 </Button>
               </div>
             ) : activeStudent ? (
               <div className="flex flex-wrap items-center gap-2">
                 {activeCorporateCohort ? (
-                  <Badge className="py-1 px-3 flex items-center gap-1.5 text-xs bg-emerald-600 text-white font-bold border-0 shadow-sm">
-                    <span>🏢</span>
+                  <Badge className="py-1 px-3 flex items-center gap-1.5 text-xs bg-emerald-600 text-white font-medium border-0">
                     <span>Stanza Privata: <strong>{activeCorporateCohort.company_name}</strong></span>
-                    <span className="opacity-75 font-mono text-[10px]">({activeStudent.name})</span>
+                    <span className="opacity-75 font-[family-name:var(--font-mono)] text-[10px]">({activeStudent.name})</span>
                   </Badge>
                 ) : (
                   <Badge variant="success" className="py-1 px-3 flex items-center gap-1 text-xs">
@@ -2422,13 +2422,13 @@ function CorsiInnerContent() {
                     setCommunityInitialView('community')
                     setIsCommunityModalOpen(true)
                   }}
-                  className="text-xs h-8 px-3 rounded-xl gap-1.5 border-indigo-500/40 bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 font-semibold shadow-xs cursor-pointer shrink-0"
+                  className="text-xs h-8 px-3 rounded-md gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] text-[#111113] dark:text-[#f4f4f5] font-medium cursor-pointer shrink-0"
                   title="Apri #community-studenti e i Messaggi Diretti con i Docenti"
                 >
-                  <MessageCircle className="h-3.5 w-3.5 text-indigo-400" />
+                  <MessageCircle className="h-3.5 w-3.5 text-[#6366f1]" />
                   <span>Canale Studenti</span>
                   {unreadCommunityCount > 0 && (
-                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black leading-tight animate-pulse">
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded bg-rose-600 text-white text-[10px] font-[family-name:var(--font-mono)] font-semibold leading-tight">
                       {unreadCommunityCount} nuovi
                     </span>
                   )}
@@ -2443,13 +2443,13 @@ function CorsiInnerContent() {
                     setSupportInitialTicketId(null)
                     setIsSupportModalOpen(true)
                   }}
-                  className="text-xs h-8 px-3 rounded-xl gap-1.5 border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 font-semibold shadow-xs cursor-pointer shrink-0"
+                  className="text-xs h-8 px-3 rounded-md gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] text-[#111113] dark:text-[#f4f4f5] font-medium cursor-pointer shrink-0"
                   title="Apri Assistenza 1-a-1 dedicata con il Team AIutiamoci"
                 >
-                  <LifeBuoy className="h-3.5 w-3.5 text-emerald-400" />
+                  <LifeBuoy className="h-3.5 w-3.5 text-emerald-500" />
                   <span>Assistenza 1-a-1</span>
                   {unreadSupportCount > 0 && (
-                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black leading-tight animate-pulse">
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded bg-rose-600 text-white text-[10px] font-[family-name:var(--font-mono)] font-semibold leading-tight">
                       {unreadSupportCount} nuovi
                     </span>
                   )}
@@ -2458,7 +2458,7 @@ function CorsiInnerContent() {
                 {studentPushStatus === 'subscribed' ? (
                   <Badge
                     variant="success"
-                    className="h-8 px-2.5 text-[11px] flex items-center gap-1.5 rounded-xl shrink-0"
+                    className="h-8 px-2.5 text-[11px] flex items-center gap-1.5 rounded-md shrink-0"
                     title="Notifiche Web Push attive su questo dispositivo"
                   >
                     <BellRing className="h-3.5 w-3.5" />
@@ -2474,10 +2474,10 @@ function CorsiInnerContent() {
                         '🔔 Le notifiche risultano bloccate nel browser.\n\nPer attivarle:\n• Clicca sull’icona del lucchetto/impostazioni accanto all’indirizzo del sito in alto\n• Imposta "Notifiche" su Consenti\n• Ricarica la pagina e premi di nuovo Attiva Notifiche.'
                       )
                     }
-                    className="text-xs h-8 px-2.5 rounded-xl gap-1.5 border-amber-500/40 bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 font-semibold shadow-xs cursor-pointer shrink-0"
+                    className="text-xs h-8 px-2.5 rounded-md gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-amber-600 dark:text-amber-400 font-medium cursor-pointer shrink-0"
                     title="Notifiche bloccate dal browser: clicca per sapere come sbloccarle"
                   >
-                    <Bell className="h-3.5 w-3.5 text-amber-400" />
+                    <Bell className="h-3.5 w-3.5 text-amber-500" />
                     <span>Sblocca Notifiche</span>
                   </Button>
                 ) : studentPushStatus === 'unsupported' ? (
@@ -2490,10 +2490,10 @@ function CorsiInnerContent() {
                         '📱 Come attivare le Notifiche Push su questo dispositivo:\n\n• Su iPhone / iPad (Safari): tocca Condividi (quadrato con freccia in su) → "Aggiungi alla schermata Home", poi apri AIutiamoci dall’icona sulla Home e premi Attiva Notifiche.\n• Su Android / PC / Mac: usa Google Chrome, Edge o Safari aggiornato in modalità standard (non in finestra anonima).'
                       )
                     }
-                    className="text-xs h-8 px-2.5 rounded-xl gap-1.5 border-sky-500/40 bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 font-semibold shadow-xs cursor-pointer shrink-0"
+                    className="text-xs h-8 px-2.5 rounded-md gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] font-medium cursor-pointer shrink-0"
                     title="Istruzioni per attivare le notifiche push"
                   >
-                    <Bell className="h-3.5 w-3.5 text-sky-400" />
+                    <Bell className="h-3.5 w-3.5 text-[#6366f1]" />
                     <span>Notifiche Push</span>
                   </Button>
                 ) : (
@@ -2503,13 +2503,13 @@ function CorsiInnerContent() {
                     size="sm"
                     disabled={isEnablingStudentPush || studentPushStatus === 'loading'}
                     onClick={handleEnableStudentPush}
-                    className="text-xs h-8 px-2.5 rounded-xl gap-1.5 border-sky-500/40 bg-sky-950/40 hover:bg-sky-900/60 text-sky-300 font-semibold shadow-xs cursor-pointer shrink-0"
+                    className="text-xs h-8 px-2.5 rounded-md gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] font-medium cursor-pointer shrink-0"
                     title="Attiva le notifiche push per ricevere risposte e avvisi in tempo reale"
                   >
                     {isEnablingStudentPush ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      <Bell className="h-3.5 w-3.5 text-sky-400" />
+                      <Bell className="h-3.5 w-3.5 text-[#6366f1]" />
                     )}
                     <span>Attiva Notifiche</span>
                   </Button>
@@ -2525,17 +2525,17 @@ function CorsiInnerContent() {
                     playNotificationSound('chat')
                     alert(`🔗 Il tuo Link d'Invito personale è stato copiato negli appunti!\n\n${link}\n\nCondividilo con colleghi o amici: quando si candidano, il sistema registrerà in automatico che sono stati presentati da te senza mostrare il tuo codice di accesso!`)
                   }}
-                  className="text-xs h-8 gap-1.5 border-purple-500/40 text-purple-400 hover:bg-purple-950/30 font-semibold shadow-xs"
+                  className="text-xs h-8 gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-[#6366f1] font-medium"
                   title="Copia il tuo link personale d'invito protetto"
                 >
-                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                  <Sparkles className="h-3.5 w-3.5 text-[#6366f1]" />
                   <span>Copia Link Referral</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsHelpModalOpen(true)}
-                  className="h-8 text-xs font-semibold gap-1.5 border-amber-500/40 text-amber-500 hover:bg-amber-500/10 shadow-xs"
+                  className="h-8 text-xs font-medium gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5]"
                   title="Apri la Guida Rapida e Istruzioni d'Uso della Piattaforma"
                 >
                   <HelpCircle className="h-3.5 w-3.5 text-amber-500" />
@@ -2545,10 +2545,10 @@ function CorsiInnerContent() {
                   variant="outline"
                   size="icon"
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="h-8 w-8 rounded-xl border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="h-8 w-8 rounded-md border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5]"
                   title={theme === 'dark' ? 'Passa al Tema Chiaro (Light Mode)' : 'Passa al Tema Scuro (Dark Mode)'}
                 >
-                  {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-600" />}
+                  {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-[#6366f1]" />}
                 </Button>
                 <Button
                   variant="ghost"
@@ -2559,7 +2559,7 @@ function CorsiInnerContent() {
                       localStorage.removeItem('ti_aiuto_active_student')
                     } catch (e) {}
                   }}
-                  className="text-xs text-slate-400 hover:text-white h-8"
+                  className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5] h-8"
                 >
                   Esci
                 </Button>
@@ -2570,7 +2570,7 @@ function CorsiInnerContent() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsHelpModalOpen(true)}
-                  className="h-9 text-xs font-semibold gap-1.5 border-amber-500/40 text-amber-500 hover:bg-amber-500/10 shadow-xs"
+                  className="h-9 text-xs font-medium gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5]"
                   title="Apri la Guida Rapida e Istruzioni d'Uso"
                 >
                   <HelpCircle className="h-4 w-4 text-amber-500" />
@@ -2580,15 +2580,15 @@ function CorsiInnerContent() {
                   variant="outline"
                   size="icon"
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="h-9 w-9 rounded-xl border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="h-9 w-9 rounded-md border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5]"
                   title={theme === 'dark' ? 'Passa al Tema Chiaro (Light Mode)' : 'Passa al Tema Scuro (Dark Mode)'}
                 >
-                  {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-600" />}
+                  {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-[#6366f1]" />}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setActiveTab('login')}
-                  className="text-xs font-semibold h-10 gap-1.5 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400"
+                  className="text-xs font-medium h-9 gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-[#6366f1]"
                 >
                   <Key className="h-4 w-4" />
                   <span>Accedi con Codice Studente</span>
@@ -2598,61 +2598,75 @@ function CorsiInnerContent() {
           </div>
         </div>
 
-        {/* Course Switcher Pills / Banner */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+        {/* Course Switcher — Swiss Hairline */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#e5e3dc] dark:divide-white/[0.08] bg-[#ffffff] dark:bg-[#111114] rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
           <button
+            type="button"
             onClick={() => setSelectedCourseId('ai-start')}
-            className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer ${selectedCourseId === 'ai-start'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-indigo-500/30'
-                : 'opacity-70 hover:opacity-100 hover:bg-white/50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-transparent'
+            className={`p-4 text-left transition-colors flex items-center justify-between cursor-pointer border-b-2 ${selectedCourseId === 'ai-start'
+                ? 'bg-[#6366f1]/[0.05] dark:bg-[#6366f1]/[0.09] text-[#111113] dark:text-[#f4f4f5] border-b-[#6366f1]'
+                : 'border-b-transparent text-zinc-500 dark:text-zinc-400 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.02]'
               }`}
           >
             <div className="flex items-center gap-3">
-              <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-sm ${selectedCourseId === 'ai-start' ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
+              <div className={`h-8 w-8 rounded-md flex items-center justify-center font-[family-name:var(--font-mono)] font-semibold text-xs border ${selectedCourseId === 'ai-start' ? 'bg-[#6366f1] border-[#6366f1] text-white' : 'bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] text-zinc-500'}`}>
                 01
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-xs sm:text-sm">📘 AI Start (Masterclass 20 Moduli)</h4>
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold">16h Certificate</span>
+                  <h4 className="font-semibold text-xs sm:text-sm font-[family-name:var(--font-jakarta)]">
+                    AI Start (Masterclass 20 Moduli)
+                  </h4>
+                  <span className="text-[10px] font-[family-name:var(--font-mono)] px-1.5 py-0.5 rounded bg-[#6366f1]/10 text-[#6366f1] border border-[#6366f1]/25">
+                    16h Certificate
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">20 Video Full HD • Checkpoint Test & Attestato Ufficiale</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                  20 Video Full HD · Checkpoint Test & Attestato Ufficiale
+                </p>
               </div>
             </div>
-            <Badge variant={selectedCourseId === 'ai-start' ? "success" : "outline"} className="text-[9px]">
+            <Badge variant={selectedCourseId === 'ai-start' ? 'success' : 'outline'} className="text-[9px]">
               {selectedCourseId === 'ai-start' ? 'CORSO ATTIVO' : 'SELEZIONA'}
             </Badge>
           </button>
 
           <button
+            type="button"
             onClick={() => setSelectedCourseId('ai-pro')}
-            className={`p-3.5 rounded-xl text-left transition-all flex items-center justify-between cursor-pointer ${selectedCourseId === 'ai-pro'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-purple-500/30'
-                : 'opacity-70 hover:opacity-100 hover:bg-white/50 dark:hover:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-transparent'
+            className={`p-4 text-left transition-colors flex items-center justify-between cursor-pointer border-b-2 ${selectedCourseId === 'ai-pro'
+                ? 'bg-[#6366f1]/[0.05] dark:bg-[#6366f1]/[0.09] text-[#111113] dark:text-[#f4f4f5] border-b-[#6366f1]'
+                : 'border-b-transparent text-zinc-500 dark:text-zinc-400 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.02]'
               }`}
           >
             <div className="flex items-center gap-3">
-              <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-sm ${selectedCourseId === 'ai-pro' ? 'bg-purple-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
+              <div className={`h-8 w-8 rounded-md flex items-center justify-center font-[family-name:var(--font-mono)] font-semibold text-xs border ${selectedCourseId === 'ai-pro' ? 'bg-[#6366f1] border-[#6366f1] text-white' : 'bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] text-zinc-500'}`}>
                 02
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-xs sm:text-sm">🚀 AI Pro (Automazioni & Agenti)</h4>
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold">20h Certificate</span>
+                  <h4 className="font-semibold text-xs sm:text-sm font-[family-name:var(--font-jakarta)]">
+                    AI Pro (Automazioni & Agenti)
+                  </h4>
+                  <span className="text-[10px] font-[family-name:var(--font-mono)] px-1.5 py-0.5 rounded bg-[#6366f1]/10 text-[#6366f1] border border-[#6366f1]/25">
+                    20h Certificate
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">20 Moduli Pratici • 4 Checkpoint Test & Attestato AI Pro</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                  20 Moduli Pratici · 4 Checkpoint Test & Attestato AI Pro
+                </p>
               </div>
             </div>
-            <Badge variant={selectedCourseId === 'ai-pro' ? "purple" : "outline"} className="text-[9px]">
+            <Badge variant={selectedCourseId === 'ai-pro' ? 'purple' : 'outline'} className="text-[9px]">
               {selectedCourseId === 'ai-pro' ? 'CORSO ATTIVO' : 'SELEZIONA'}
             </Badge>
           </button>
         </div>
       </div>
 
-      {/* Banner Video di Benvenuto Studente (Visibile per tutti gli iscritti) */}
-      <div className="bg-gradient-to-r from-indigo-950/70 via-slate-900/90 to-purple-950/70 border border-indigo-500/30 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row items-center gap-5">
-        <div className="w-full md:w-72 aspect-video rounded-xl overflow-hidden bg-black border border-indigo-500/40 shrink-0 shadow-md">
+      {/* Banner Video di Benvenuto Studente */}
+      <div className="bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08] rounded-lg p-5 flex flex-col md:flex-row items-center gap-5">
+        <div className="w-full md:w-72 aspect-video rounded-md overflow-hidden bg-black border border-[#e5e3dc] dark:border-white/[0.08] shrink-0">
           <video
             controls
             playsInline
@@ -2665,35 +2679,37 @@ function CorsiInnerContent() {
         </div>
         <div className="space-y-2 flex-1 text-center md:text-left">
           <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
-            <Badge variant="purple" className="text-[10px] uppercase font-bold px-2 py-0.5">
-              👋 Prima di Iniziare
+            <Badge variant="purple" className="text-[10px] uppercase font-medium px-2 py-0.5">
+              Prima di Iniziare
             </Badge>
-            <span className="text-xs text-amber-400 font-bold font-mono">Video Introduttivo di Benvenuto</span>
+            <span className="text-xs text-[#6366f1] font-medium font-[family-name:var(--font-mono)]">
+              Video Introduttivo di Benvenuto
+            </span>
           </div>
-          <h3 className="text-base sm:text-lg font-extrabold text-white">
+          <h3 className="text-base sm:text-lg font-semibold text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
             Benvenuto nella Masterclass AIutiamoci!
           </h3>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Guarda questo breve video di benvenuto per scoprire come sfruttare al massimo le 20 lezioni, interagire con il Tutor AI <strong className="text-white">@AI</strong> e completare i compiti pratici.
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            Guarda questo breve video di benvenuto per scoprire come sfruttare al massimo le 20 lezioni, interagire con il Tutor AI <strong className="text-[#111113] dark:text-[#f4f4f5]">@AI</strong> e completare i compiti pratici.
           </p>
         </div>
       </div>
 
       {/* Selector Tabs - Menu a Discesa Compatto & Riga Singola */}
-      <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center justify-between gap-4 relative">
+      <div className="border-b border-[#e5e3dc] dark:border-white/[0.08] pb-3 flex items-center justify-between gap-4 relative">
         {/* Dropdown Menu Compatto */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setIsTabDropdownOpen(prev => !prev)}
-            className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-md transition-all cursor-pointer"
+            className="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium rounded-md bg-[#111113] text-white hover:bg-[#111113]/90 dark:bg-[#f4f4f5] dark:text-[#0d0d0f] dark:hover:bg-[#f4f4f5]/90 transition-colors cursor-pointer"
           >
             {activeTab === 'player' && <PlayCircle className="h-4 w-4" />}
-            {activeTab === 'news-tutorial' && <Sparkles className="h-4 w-4 text-amber-300" />}
-            {activeTab === 'meet' && <VideoIcon className="h-4 w-4 text-emerald-400" />}
+            {activeTab === 'news-tutorial' && <Sparkles className="h-4 w-4 text-[#6366f1]" />}
+            {activeTab === 'meet' && <VideoIcon className="h-4 w-4 text-emerald-500" />}
             {activeTab === 'zoom' && <VideoIcon className="h-4 w-4" />}
             {activeTab === 'bonus' && <Gift className="h-4 w-4" />}
-            {activeTab === 'tasks' && <GraduationCap className="h-4 w-4 text-amber-300" />}
+            {activeTab === 'tasks' && <GraduationCap className="h-4 w-4 text-[#6366f1]" />}
             {activeTab === 'students' && <Users className="h-4 w-4" />}
             {activeTab === 'login' && <Key className="h-4 w-4" />}
 
@@ -2714,7 +2730,7 @@ function CorsiInnerContent() {
           {/* Tendina Aperta */}
           {isTabDropdownOpen && (
             <div
-              className="absolute left-0 top-full mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150"
+              className="absolute left-0 top-full mt-2 w-72 bg-[#ffffff] dark:bg-[#111114] rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] p-1.5 z-50 space-y-0.5"
             >
               {[
                 { id: 'player', label: `Player ${selectedCourseId === 'ai-pro' ? 'AI Pro' : 'AI Start'}`, icon: PlayCircle, badge: 'Video' },
@@ -2739,17 +2755,17 @@ function CorsiInnerContent() {
                         loadStudentCodes();
                       }
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                       isSelected
-                        ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-[#6366f1]/10 text-[#6366f1]'
+                        : 'text-[#111113] dark:text-zinc-300 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04]'
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
-                      <Icon className={`h-4 w-4 ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                      <Icon className={`h-4 w-4 ${isSelected ? 'text-[#6366f1]' : 'text-zinc-400'}`} />
                       <span>{item.label}</span>
                     </span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-500">
+                    <span className="text-[9px] font-[family-name:var(--font-mono)] px-1.5 py-0.5 rounded uppercase tracking-wide bg-[#f7f6f3] dark:bg-[#141417] border border-[#e5e3dc] dark:border-white/[0.08] text-zinc-500 dark:text-zinc-400">
                       {item.badge}
                     </span>
                   </button>
@@ -2762,9 +2778,9 @@ function CorsiInnerContent() {
         {/* Link Servizi AI a Destra */}
         <Link
           href="/servizi-ai"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-800/60 shadow-xs transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md text-[#6366f1] bg-[#ffffff] dark:bg-[#141417] hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04] border border-[#e5e3dc] dark:border-white/[0.08] transition-colors"
         >
-          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+          <Sparkles className="h-3.5 w-3.5" />
           <span>Servizi AI</span>
           <ExternalLink className="h-3 w-3 opacity-60" />
         </Link>
@@ -2772,14 +2788,16 @@ function CorsiInnerContent() {
 
       {/* TAB: LOGIN CON CODICE STUDENTE */}
       {activeTab === 'login' && (
-        <div className="max-w-md mx-auto bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 text-center">
-          <div className="h-16 w-16 bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mx-auto border border-indigo-200 dark:border-indigo-800">
-            <Key className="h-8 w-8" />
+        <div className="max-w-md mx-auto bg-[#ffffff] dark:bg-[#111114] p-8 rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] space-y-6 text-center">
+          <div className="h-14 w-14 bg-[#6366f1]/10 text-[#6366f1] rounded-lg flex items-center justify-center mx-auto border border-[#6366f1]/25">
+            <Key className="h-7 w-7" />
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Accedi come Studente</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <h3 className="text-xl font-semibold text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
+              Accedi come Studente
+            </h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
               Inserisci il tuo Codice Accesso Univoco per sbloccare le 20 lezioni video ed il supporto @AI.
             </p>
           </div>
@@ -2791,16 +2809,16 @@ function CorsiInnerContent() {
               value={studentCodeInput}
               onChange={(e) => setStudentCodeInput(e.target.value)}
               placeholder="Es. AI-START-8F92 oppure DEMO2026"
-              className="text-center font-mono uppercase tracking-widest font-bold text-sm h-11 dark:bg-slate-800 dark:border-slate-700"
+              className="text-center font-[family-name:var(--font-mono)] uppercase tracking-widest font-semibold text-sm h-10 bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08]"
             />
 
             {codeError && (
-              <p className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">
+              <p className="text-red-600 dark:text-red-400 text-xs font-medium text-center">
                 {codeError}
               </p>
             )}
 
-            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 shadow-xs gap-2">
+            <Button type="submit" className="w-full bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium h-10 gap-2 cursor-pointer">
               <Unlock className="h-4 w-4" />
               Sblocca Corso & 20 Video
             </Button>
@@ -4646,12 +4664,14 @@ function CorsiInnerContent() {
 
       {/* TAB 4: REGISTRO STUDENTI & CODICI & LISTA D'ATTESA */}
       {activeTab === 'students' && isTeamMember && (
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-5">
+          <div className="bg-[#ffffff] dark:bg-[#111114] p-5 rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Registro Studenti & Lista d'Attesa</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Gestione codici corsisti accreditati e leads in lista d'attesa per i prossimi corsi.
+              <h3 className="text-base font-semibold text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
+                Registro Studenti & Lista d&apos;Attesa
+              </h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                Gestione codici corsisti accreditati e leads in lista d&apos;attesa per i prossimi corsi.
               </p>
             </div>
 
@@ -4659,56 +4679,56 @@ function CorsiInnerContent() {
               <Button
                 variant="outline"
                 onClick={() => setIsBulkModalOpen(true)}
-                className="text-xs h-10 px-3.5 rounded-xl gap-2 border-slate-200 dark:border-slate-700"
+                className="text-xs h-9 px-3 rounded-md gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5]"
               >
-                <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
                 <span>Importa Massivo (CSV)</span>
               </Button>
               <Button
                 onClick={() => setIsEnrollModalOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-10 px-4 rounded-xl gap-2 shadow-xs"
+                className="bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium text-xs h-9 px-3.5 rounded-md gap-1.5 cursor-pointer"
               >
-                <PlusCircle className="h-4 w-4" />
+                <PlusCircle className="h-3.5 w-3.5" />
                 <span>Iscrivi Singolo Studente</span>
               </Button>
             </div>
           </div>
 
           {/* Sotto-Schede: Dropdown Menu a Discesa Compatto */}
-          <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 relative">
+          <div className="flex items-center justify-between gap-3 border-b border-[#e5e3dc] dark:border-white/[0.08] pb-3 relative">
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsStudentSubTabDropdownOpen(!isStudentSubTabDropdownOpen)}
-                className="flex items-center gap-2.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 shadow-xs hover:bg-amber-500/15 transition-all cursor-pointer"
+                className="flex items-center gap-2.5 px-3.5 py-2 rounded-md text-xs font-medium bg-[#ffffff] dark:bg-[#141417] text-[#111113] dark:text-[#f4f4f5] border border-[#e5e3dc] dark:border-white/[0.08] hover:border-[#6366f1]/40 transition-colors cursor-pointer"
               >
                 {studentSubTab === 'registrations' && <ClipboardList className="h-4 w-4 text-amber-500" />}
                 {studentSubTab === 'active' && <Users className="h-4 w-4 text-emerald-500" />}
-                {studentSubTab === 'pro_students' && <Sparkles className="h-4 w-4 text-indigo-500" />}
-                {studentSubTab === 'waitlist' && <Clock className="h-4 w-4 text-purple-500" />}
-                {studentSubTab === 'b2b_cohorts' && <span className="text-sm">🏢</span>}
+                {studentSubTab === 'pro_students' && <Sparkles className="h-4 w-4 text-[#6366f1]" />}
+                {studentSubTab === 'waitlist' && <Clock className="h-4 w-4 text-[#6366f1]" />}
+                {studentSubTab === 'b2b_cohorts' && <Building2 className="h-4 w-4 text-emerald-500" />}
 
                 <span>
-                  {studentSubTab === 'registrations' && `⏳ In Attesa (${courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length})`}
-                  {studentSubTab === 'active' && `🎓 Studenti Corso 1 - AI Start (${registrations.filter(r => r.accessTier === 'ai-start' || !r.accessTier).length})`}
-                  {studentSubTab === 'pro_students' && `🚀 Iscritti Corso 2 - AI Pro (${registrations.filter(r => r.accessTier === 'ai-pro' || r.accessTier === 'both').length})`}
-                  {studentSubTab === 'waitlist' && `📋 Lista d'Attesa Leads (${waitlistLeads.length})`}
+                  {studentSubTab === 'registrations' && `In Attesa (${courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length})`}
+                  {studentSubTab === 'active' && `Studenti Corso 1 - AI Start (${registrations.filter(r => r.accessTier === 'ai-start' || !r.accessTier).length})`}
+                  {studentSubTab === 'pro_students' && `Iscritti Corso 2 - AI Pro (${registrations.filter(r => r.accessTier === 'ai-pro' || r.accessTier === 'both').length})`}
+                  {studentSubTab === 'waitlist' && `Lista d'Attesa Leads (${waitlistLeads.length})`}
                   {studentSubTab === 'b2b_cohorts' && `Aziende & Corsi Custom (${corporateCohorts.length})`}
                 </span>
 
                 {studentSubTab === 'registrations' && courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length > 0 && (
-                  <span className="px-1.5 py-0.2 bg-amber-500 text-white text-[10px] rounded-full font-black">
+                  <span className="px-1.5 py-0.2 bg-amber-500 text-white text-[10px] rounded font-[family-name:var(--font-mono)] font-semibold">
                     NEW
                   </span>
                 )}
 
-                <ChevronDown className={`h-4 w-4 ml-1 text-slate-400 transition-transform ${isStudentSubTabDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-4 w-4 ml-1 text-zinc-400 transition-transform ${isStudentSubTabDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Tendina Sotto-Schede */}
               {isStudentSubTabDropdownOpen && (
                 <div
-                  className="absolute left-0 top-full mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute left-0 top-full mt-2 w-80 bg-[#ffffff] dark:bg-[#111114] rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] p-1.5 z-50 space-y-0.5"
                 >
                   {[
                     {
@@ -4729,19 +4749,19 @@ function CorsiInnerContent() {
                       id: 'pro_students',
                       label: `Iscritti Corso 2 - AI Pro (${registrations.filter(r => r.accessTier === 'ai-pro' || r.accessTier === 'both').length})`,
                       icon: Sparkles,
-                      color: 'text-indigo-500',
+                      color: 'text-[#6366f1]',
                     },
                     {
                       id: 'waitlist',
                       label: `Lista d'Attesa Leads (${waitlistLeads.length})`,
                       icon: Clock,
-                      color: 'text-purple-500',
+                      color: 'text-[#6366f1]',
                     },
                     {
                       id: 'b2b_cohorts',
                       label: `Aziende & Corsi Custom (${corporateCohorts.length})`,
-                      isEmoji: true,
-                      emoji: '🏢',
+                      icon: Building2,
+                      color: 'text-emerald-500',
                     },
                   ].map((item) => {
                     const isSelected = studentSubTab === item.id;
@@ -4763,23 +4783,19 @@ function CorsiInnerContent() {
                             });
                           }
                         }}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                           isSelected
-                            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold'
-                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            ? 'bg-[#6366f1]/10 text-[#6366f1]'
+                            : 'text-[#111113] dark:text-zinc-300 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04]'
                         }`}
                       >
                         <span className="flex items-center gap-2.5">
-                          {item.isEmoji ? (
-                            <span className="text-sm">{item.emoji}</span>
-                          ) : (
-                            Icon && <Icon className={`h-4 w-4 ${item.color || ''}`} />
-                          )}
+                          <Icon className={`h-4 w-4 ${item.color || ''}`} />
                           <span>{item.label}</span>
                         </span>
 
                         {item.hasBadge && (
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-[family-name:var(--font-mono)] font-semibold uppercase tracking-wider bg-amber-500 text-white">
                             {item.badge}
                           </span>
                         )}
@@ -4796,7 +4812,7 @@ function CorsiInnerContent() {
                 variant="outline"
                 disabled={isCleaningDuplicates}
                 onClick={handleCleanDuplicates}
-                className="text-xs h-8 gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 font-semibold"
+                className="text-xs h-8 gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417] text-amber-600 dark:text-amber-400 font-medium"
                 title="Rimuove automaticamente le registrazioni doppie NON approvate"
               >
                 {isCleaningDuplicates ? (
@@ -4811,7 +4827,7 @@ function CorsiInnerContent() {
                 size="sm"
                 variant="outline"
                 onClick={loadCourseRegistrations}
-                className="text-xs h-8 gap-1.5 border-slate-200 dark:border-slate-700"
+                className="text-xs h-8 gap-1.5 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#141417]"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${loadingRegistrations ? 'animate-spin' : ''}`} />
                 <span>Ricarica</span>
@@ -4823,19 +4839,20 @@ function CorsiInnerContent() {
           {studentSubTab === 'registrations' && (
             <div className="space-y-4">
               {/* Barra Filtri e Ricerca */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#ffffff] dark:bg-[#111114] p-3 rounded-lg border border-[#e5e3dc] dark:border-white/[0.08]">
                 <div className="relative w-full sm:w-80">
-                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                   <Input
                     value={regSearchQuery}
                     onChange={(e) => setRegSearchQuery(e.target.value)}
                     placeholder="Cerca per nome, email o obiettivo..."
-                    className="pl-9 text-xs h-9 bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-xl"
+                    className="pl-8 text-xs h-8 bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] rounded-md"
                   />
                   {regSearchQuery && (
                     <button
+                      type="button"
                       onClick={() => setRegSearchQuery('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -4844,28 +4861,31 @@ function CorsiInnerContent() {
 
                 <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
                   <button
+                    type="button"
                     onClick={() => setRegStatusFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${regStatusFilter === 'all'
-                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${regStatusFilter === 'all'
+                        ? 'bg-[#111113] text-white dark:bg-[#f4f4f5] dark:text-[#0d0d0f]'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04]'
                       }`}
                   >
                     Tutti ({courseRegistrations.length})
                   </button>
                   <button
+                    type="button"
                     onClick={() => setRegStatusFilter('pending')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${regStatusFilter === 'pending'
-                        ? 'bg-amber-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${regStatusFilter === 'pending'
+                        ? 'bg-amber-600 text-white'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04]'
                       }`}
                   >
                     In Attesa ({courseRegistrations.filter(r => !r.approved && r.status !== 'approved').length})
                   </button>
                   <button
+                    type="button"
                     onClick={() => setRegStatusFilter('approved')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${regStatusFilter === 'approved'
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${regStatusFilter === 'approved'
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04]'
                       }`}
                   >
                     Approvati ({courseRegistrations.filter(r => r.approved || r.status === 'approved').length})
@@ -4874,24 +4894,24 @@ function CorsiInnerContent() {
               </div>
 
               {/* Tabella Registrazioni */}
-              <div className="bg-[#0f172a] rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+              <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-[#1e293b]/70 border-b border-slate-800 text-slate-400 font-semibold">
+                    <thead className="bg-[#f7f6f3] dark:bg-[#141417] border-b border-[#e5e3dc] dark:border-white/[0.08] text-zinc-500 dark:text-zinc-400 font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-wider font-medium">
                       <tr>
-                        <th className="py-3 px-4 min-w-[140px]">Nome</th>
-                        <th className="py-3 px-4 min-w-[200px]">Email</th>
-                        <th className="py-3 px-4 min-w-[160px]">Progresso / Lezione</th>
-                        <th className="py-3 px-4 min-w-[160px]">Esperienza AI</th>
-                        <th className="py-3 px-4 min-w-[170px]">Obiettivo</th>
-                        <th className="py-3 px-4 min-w-[160px]">Blocco</th>
-                        <th className="py-3 px-4 min-w-[160px]">Aspettativa</th>
-                        <th className="py-3 px-4 min-w-[180px]">Fonte / Referral</th>
-                        <th className="py-3 px-4 min-w-[130px]">Data</th>
-                        <th className="py-3 px-4 min-w-[140px] text-right">Stato</th>
+                        <th className="py-2.5 px-4 min-w-[140px]">Nome</th>
+                        <th className="py-2.5 px-4 min-w-[200px]">Email</th>
+                        <th className="py-2.5 px-4 min-w-[160px]">Progresso / Lezione</th>
+                        <th className="py-2.5 px-4 min-w-[160px]">Esperienza AI</th>
+                        <th className="py-2.5 px-4 min-w-[170px]">Obiettivo</th>
+                        <th className="py-2.5 px-4 min-w-[160px]">Blocco</th>
+                        <th className="py-2.5 px-4 min-w-[160px]">Aspettativa</th>
+                        <th className="py-2.5 px-4 min-w-[180px]">Fonte / Referral</th>
+                        <th className="py-2.5 px-4 min-w-[130px]">Data</th>
+                        <th className="py-2.5 px-4 min-w-[140px] text-right">Stato</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/80">
+                    <tbody className="divide-y divide-[#e5e3dc] dark:divide-white/[0.08]">
                       {courseRegistrations
                         .filter((reg) => {
                           const isAppr = reg.approved === true || reg.status === 'approved'
@@ -4917,12 +4937,12 @@ function CorsiInnerContent() {
                           const src = raw.referral_source || raw.source
                           const ref = raw.referred_by
                           return (
-                            <tr key={reg.id} className="hover:bg-slate-800/40 transition-colors">
-                              <td className="py-3.5 px-4 font-bold text-slate-100">
+                            <tr key={reg.id} className="hover:bg-[#f7f6f3] dark:hover:bg-white/[0.03] transition-colors text-[#111113] dark:text-zinc-300">
+                              <td className="py-3.5 px-4 font-semibold text-[#111113] dark:text-[#f4f4f5]">
                                 {reg.name}
                               </td>
 
-                              <td className="py-3.5 px-4 font-mono text-blue-400">
+                              <td className="py-3.5 px-4 font-[family-name:var(--font-mono)] text-[#6366f1]">
                                 <div className="flex items-center gap-1.5 group">
                                   <span className="truncate max-w-[180px]">{reg.email}</span>
                                   <button
@@ -5138,19 +5158,20 @@ function CorsiInnerContent() {
           {studentSubTab === 'active' && (
             <div className="space-y-4">
               {/* Barra Filtri Rapidi Corso 1 / Corso 2 e Ricerca */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#ffffff] dark:bg-[#111114] p-3 rounded-lg border border-[#e5e3dc] dark:border-white/[0.08]">
                 <div className="relative w-full sm:w-80">
-                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                   <Input
                     value={activeSearchQuery}
                     onChange={(e) => setActiveSearchQuery(e.target.value)}
                     placeholder="Cerca studente per nome, email o codice..."
-                    className="pl-9 text-xs h-9 bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-xl"
+                    className="pl-8 text-xs h-8 bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] rounded-md"
                   />
                   {activeSearchQuery && (
                     <button
+                      type="button"
                       onClick={() => setActiveSearchQuery('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-[#111113] dark:hover:text-[#f4f4f5]"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -5159,72 +5180,76 @@ function CorsiInnerContent() {
 
                 <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
                   <button
+                    type="button"
                     onClick={() => setActiveTierFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTierFilter === 'all'
-                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${activeTierFilter === 'all'
+                        ? 'bg-[#111113] text-white dark:bg-[#f4f4f5] dark:text-[#0d0d0f]'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04]'
                       }`}
                   >
                     Tutti ({registrations.length})
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => setActiveTierFilter('ai-start')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTierFilter === 'ai-start'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${activeTierFilter === 'ai-start'
+                        ? 'bg-[#6366f1] text-white'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04]'
                       }`}
                   >
-                    <span>📘 Corso 1: AI Start</span>
-                    <span className="px-1.5 py-0.2 bg-blue-500/30 rounded-full text-[10px] font-bold">
+                    <span>Corso 1: AI Start</span>
+                    <span className="px-1.5 py-0.2 bg-white/20 rounded text-[10px] font-[family-name:var(--font-mono)] font-semibold">
                       {registrations.filter(r => !r.accessTier || r.accessTier === 'ai-start' || r.code.startsWith('AI-START-') || (!r.code.startsWith('AI-PRO-') && !r.code.startsWith('AI-ALL-'))).length}
                     </span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => setActiveTierFilter('ai-pro')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTierFilter === 'ai-pro'
-                        ? 'bg-purple-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${activeTierFilter === 'ai-pro'
+                        ? 'bg-[#6366f1] text-white'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04]'
                       }`}
                   >
-                    <span>🚀 Corso 2: AI Pro (Agenti)</span>
-                    <span className="px-1.5 py-0.2 bg-purple-500/30 rounded-full text-[10px] font-bold">
+                    <span>Corso 2: AI Pro (Agenti)</span>
+                    <span className="px-1.5 py-0.2 bg-white/20 rounded text-[10px] font-[family-name:var(--font-mono)] font-semibold">
                       {registrations.filter(r => r.accessTier === 'ai-pro' || r.code.startsWith('AI-PRO-')).length}
                     </span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => setActiveTierFilter('both')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTierFilter === 'both'
-                        ? 'bg-amber-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${activeTierFilter === 'both'
+                        ? 'bg-amber-600 text-white'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-[#f7f6f3] dark:hover:bg-white/[0.04]'
                       }`}
                   >
-                    <span>🌟 Bundle Completo</span>
-                    <span className="px-1.5 py-0.2 bg-amber-500/30 rounded-full text-[10px] font-bold">
+                    <span>Bundle Completo</span>
+                    <span className="px-1.5 py-0.2 bg-white/20 rounded text-[10px] font-[family-name:var(--font-mono)] font-semibold">
                       {registrations.filter(r => r.accessTier === 'both' || r.code.startsWith('AI-ALL-')).length}
                     </span>
                   </button>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+              <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase">
+                    <thead className="bg-[#f7f6f3] dark:bg-[#141417] border-b border-[#e5e3dc] dark:border-white/[0.08] text-zinc-500 dark:text-zinc-400 font-[family-name:var(--font-mono)] text-[10px] font-medium uppercase tracking-wider">
                       <tr>
-                        <th className="py-3 px-4">Codice Accesso</th>
-                        <th className="py-3 px-4">Nome Studente</th>
-                        <th className="py-3 px-4">Email</th>
-                        <th className="py-3 px-4">Corso Formativo</th>
-                        <th className="py-3 px-4">Progresso Ore / Lezioni</th>
-                        <th className="py-3 px-4">Esame Finale</th>
-                        <th className="py-3 px-4">Stato Iscrizione</th>
-                        <th className="py-3 px-4 text-right">Azioni</th>
+                        <th className="py-2.5 px-4">Codice Accesso</th>
+                        <th className="py-2.5 px-4">Nome Studente</th>
+                        <th className="py-2.5 px-4">Email</th>
+                        <th className="py-2.5 px-4">Corso Formativo</th>
+                        <th className="py-2.5 px-4">Progresso Ore / Lezioni</th>
+                        <th className="py-2.5 px-4">Esame Finale</th>
+                        <th className="py-2.5 px-4">Stato Iscrizione</th>
+                        <th className="py-2.5 px-4 text-right">Azioni</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                    <tbody className="divide-y divide-[#e5e3dc] dark:divide-white/[0.08]">
                       {registrations
                         .filter((reg) => {
                           // Filtro di ricerca
@@ -5384,42 +5409,42 @@ function CorsiInnerContent() {
           {/* TABELLA 3: ISCRITTI UFFICIALI CORSO 2 (AI PRO) */}
           {studentSubTab === 'pro_students' && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#ffffff] dark:bg-[#111114] p-3 rounded-lg border border-[#e5e3dc] dark:border-white/[0.08]">
                 <div className="relative w-full sm:w-80">
-                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                   <Input
                     value={activeSearchQuery}
                     onChange={(e) => setActiveSearchQuery(e.target.value)}
                     placeholder="Cerca studente Pro per nome o email..."
-                    className="pl-9 text-xs h-9 bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-xl"
+                    className="pl-8 text-xs h-8 bg-[#f7f6f3] dark:bg-[#141417] border-[#e5e3dc] dark:border-white/[0.08] rounded-md"
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-slate-500">
+                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                     Totale Iscritti Corso 2:{' '}
-                    <strong className="text-indigo-600 dark:text-indigo-400">
+                    <strong className="text-[#6366f1] font-[family-name:var(--font-mono)]">
                       {registrations.filter((r) => r.accessTier === 'ai-pro' || r.accessTier === 'both').length}
                     </strong>
                   </span>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+              <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                    <thead className="bg-[#f7f6f3] dark:bg-[#141417] text-zinc-500 dark:text-zinc-400 font-[family-name:var(--font-mono)] text-[10px] font-medium uppercase tracking-wider border-b border-[#e5e3dc] dark:border-white/[0.08]">
                       <tr>
-                        <th className="py-3 px-4">Codice Univoco</th>
-                        <th className="py-3 px-4">Nome Studente</th>
-                        <th className="py-3 px-4">Email</th>
-                        <th className="py-3 px-4">Livello d'Accesso</th>
-                        <th className="py-3 px-4">Progresso Ore / Moduli</th>
-                        <th className="py-3 px-4">Esame Finale</th>
-                        <th className="py-3 px-4">Stato</th>
-                        <th className="py-3 px-4 text-right">Azioni</th>
+                        <th className="py-2.5 px-4">Codice Univoco</th>
+                        <th className="py-2.5 px-4">Nome Studente</th>
+                        <th className="py-2.5 px-4">Email</th>
+                        <th className="py-2.5 px-4">Livello d&apos;Accesso</th>
+                        <th className="py-2.5 px-4">Progresso Ore / Moduli</th>
+                        <th className="py-2.5 px-4">Esame Finale</th>
+                        <th className="py-2.5 px-4">Stato</th>
+                        <th className="py-2.5 px-4 text-right">Azioni</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    <tbody className="divide-y divide-[#e5e3dc] dark:divide-white/[0.08]">
                       {registrations
                         .filter((r) => r.accessTier === 'ai-pro' || r.accessTier === 'both')
                         .filter((r) => {
@@ -5538,35 +5563,35 @@ function CorsiInnerContent() {
 
           {/* TABELLA 4: LISTA D'ATTESA AI PRO */}
           {studentSubTab === 'waitlist' && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs space-y-4 p-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-purple-600" />
-                  Leads Iscritti alla Lista d'Attesa (Landing Page)
+            <div className="bg-[#ffffff] dark:bg-[#111114] rounded-lg border border-[#e5e3dc] dark:border-white/[0.08] overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417]">
+                <h4 className="font-[family-name:var(--font-mono)] font-medium text-[11px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5 text-[#6366f1]" />
+                  Leads Iscritti alla Lista d&apos;Attesa (Landing Page)
                 </h4>
-                <Button size="sm" variant="outline" onClick={loadWaitlistLeads} className="text-xs h-8">
+                <Button size="sm" variant="outline" onClick={loadWaitlistLeads} className="text-xs h-8 border-[#e5e3dc] dark:border-white/[0.08] bg-[#ffffff] dark:bg-[#111114]">
                   Aggiorna Lista
                 </Button>
               </div>
 
               {waitlistLeads.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 text-xs">
-                  Nessun contatto registrato in lista d'attesa al momento.
+                <div className="p-10 text-center text-zinc-500 dark:text-zinc-400 text-xs">
+                  Nessun contatto registrato in lista d&apos;attesa al momento.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold uppercase">
+                    <thead className="bg-[#f7f6f3] dark:bg-[#141417] border-b border-[#e5e3dc] dark:border-white/[0.08] text-zinc-500 dark:text-zinc-400 font-[family-name:var(--font-mono)] text-[10px] font-medium uppercase tracking-wider">
                       <tr>
-                        <th className="py-3 px-4">Email</th>
-                        <th className="py-3 px-4">Nome</th>
-                        <th className="py-3 px-4">Corso Richiesto</th>
-                        <th className="py-3 px-4">Data Iscrizione</th>
-                        <th className="py-3 px-4">Stato</th>
-                        <th className="py-3 px-4 text-right">Azioni Rapide</th>
+                        <th className="py-2.5 px-4">Email</th>
+                        <th className="py-2.5 px-4">Nome</th>
+                        <th className="py-2.5 px-4">Corso Richiesto</th>
+                        <th className="py-2.5 px-4">Data Iscrizione</th>
+                        <th className="py-2.5 px-4">Stato</th>
+                        <th className="py-2.5 px-4 text-right">Azioni Rapide</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                    <tbody className="divide-y divide-[#e5e3dc] dark:divide-white/[0.08]">
                       {waitlistLeads.map((lead) => (
                         <tr key={lead.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                           <td className="py-3.5 px-4 font-mono font-bold text-slate-900 dark:text-white">
@@ -5624,14 +5649,14 @@ function CorsiInnerContent() {
 
           {/* SUBTAB 5: AZIENDE & STANZE PRIVATE B2B */}
           {studentSubTab === 'b2b_cohorts' && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
+            <div className="space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-lg bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08]">
                 <div>
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>🏢</span>
+                  <h4 className="font-semibold text-sm text-[#111113] dark:text-[#f4f4f5] flex items-center gap-2 font-[family-name:var(--font-jakarta)]">
+                    <Building2 className="h-4 w-4 text-emerald-500" />
                     <span>Stanze Aziendali B2B & Corsi Personalizzati</span>
                   </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                     Crea ambienti privati isolati per aziende clienti, genera codici di accesso riservati e carica video/lezioni su misura.
                   </p>
                 </div>
@@ -5645,26 +5670,28 @@ function CorsiInnerContent() {
                     setCohortContactEmailInput('')
                     setIsCreateCohortModalOpen(true)
                   }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 rounded-xl gap-2 shadow-xs shrink-0"
+                  className="bg-[#111113] hover:bg-[#111113]/90 text-white dark:bg-[#f4f4f5] dark:hover:bg-[#f4f4f5]/90 dark:text-[#0d0d0f] font-medium text-xs h-9 px-3.5 rounded-md gap-1.5 shrink-0 cursor-pointer"
                 >
-                  <PlusCircle className="h-4 w-4" />
+                  <PlusCircle className="h-3.5 w-3.5" />
                   <span>Nuova Stanza Aziendale</span>
                 </Button>
               </div>
 
               {loadingCohorts ? (
-                <div className="p-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                <div className="p-12 text-center text-zinc-500 dark:text-zinc-400 text-xs flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-[#6366f1]" />
                   <span>Caricamento aziende e stanze private...</span>
                 </div>
               ) : corporateCohorts.length === 0 ? (
-                <div className="p-12 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
-                  <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto text-xl">
-                    🏢
+                <div className="p-12 text-center rounded-lg border border-dashed border-[#e5e3dc] dark:border-white/[0.12] bg-[#ffffff] dark:bg-[#111114] space-y-3">
+                  <div className="h-11 w-11 rounded-md border border-[#e5e3dc] dark:border-white/[0.08] bg-[#f7f6f3] dark:bg-[#141417] text-emerald-500 flex items-center justify-center mx-auto">
+                    <Building2 className="h-5 w-5" />
                   </div>
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">Nessuna Azienda Configurata</h4>
-                  <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    Clicca su "Nuova Stanza Aziendale" per creare la prima edizione privata riservata a una PMI cliente.
+                  <h4 className="font-semibold text-sm text-[#111113] dark:text-[#f4f4f5] font-[family-name:var(--font-jakarta)]">
+                    Nessuna Azienda Configurata
+                  </h4>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+                    Clicca su &quot;Nuova Stanza Aziendale&quot; per creare la prima edizione privata riservata a una PMI cliente.
                   </p>
                 </div>
               ) : (
@@ -5672,7 +5699,7 @@ function CorsiInnerContent() {
                   {corporateCohorts.map((cohort) => (
                     <div
                       key={cohort.id}
-                      className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between gap-4"
+                      className="p-5 rounded-lg bg-[#ffffff] dark:bg-[#111114] border border-[#e5e3dc] dark:border-white/[0.08] flex flex-col justify-between gap-4"
                     >
                       <div className="space-y-2.5">
                         <div className="flex items-start justify-between gap-2">
