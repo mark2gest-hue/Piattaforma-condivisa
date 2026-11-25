@@ -1,33 +1,99 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  GraduationCap,
-  Building2,
-  ArrowRight,
-  Key,
-  Lock,
-  ExternalLink,
-  ShieldCheck,
-  CheckCircle2,
-  X,
-  Loader2,
-} from 'lucide-react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Lenis from 'lenis'
+import { ArrowRight, ArrowUpRight, Key, Loader2, Lock, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { TiltCard3D } from '@/components/ui/tilt-card-3d'
 import { LegalModal, CookieBanner } from '@/components/legal/LegalModal'
 import { verifyStudentCodeAction } from '@/app/actions/student'
+import { SplitGateway } from '@/components/home/SplitGateway'
+import { PinnedMethod } from '@/components/home/PinnedMethod'
 
 export default function GatewayPage() {
   const router = useRouter()
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const lenisRef = useRef<Lenis | null>(null)
+
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false)
   const [studentCode, setStudentCode] = useState('')
   const [codeError, setCodeError] = useState('')
   const [isVerifyingCode, setIsVerifyingCode] = useState(false)
-  const [legalModalType, setLegalModalType] = useState<'privacy' | 'cookies' | 'terms' | 'disclaimer' | null>(null)
+  const [legalModalType, setLegalModalType] = useState<
+    'privacy' | 'cookies' | 'terms' | 'disclaimer' | null
+  >(null)
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches
+
+    if (prefersReducedMotion) {
+      return
+    }
+
+    gsap.registerPlugin(ScrollTrigger)
+
+    const lenis = new Lenis({
+      lerp: 0.09,
+      duration: 1.15,
+      smoothWheel: true,
+    })
+    lenisRef.current = lenis
+
+    const handleLenisScroll = () => {
+      ScrollTrigger.update()
+    }
+    lenis.on('scroll', handleLenisScroll)
+
+    const updateLenis = (time: number) => {
+      lenis.raf(time * 1000)
+    }
+    gsap.ticker.add(updateLenis)
+    gsap.ticker.lagSmoothing(0)
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.js-scroll-progress',
+        { scaleX: 0 },
+        {
+          scaleX: 1,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: rootRef.current,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: true,
+          },
+        }
+      )
+    }, rootRef)
+
+    const rafId = requestAnimationFrame(() => {
+      ScrollTrigger.refresh()
+    })
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      ctx.revert()
+      gsap.ticker.remove(updateLenis)
+      lenis.off('scroll', handleLenisScroll)
+      lenis.destroy()
+      lenisRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isStudentModalOpen || legalModalType !== null) {
+      lenisRef.current?.stop()
+    } else {
+      lenisRef.current?.start()
+    }
+  }, [isStudentModalOpen, legalModalType])
 
   const handleStudentAccess = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,7 +102,9 @@ export default function GatewayPage() {
 
     const cleanCode = studentCode.trim().toUpperCase()
     if (cleanCode.startsWith('REF-')) {
-      setCodeError('Questo è un link di invito/referral, non un codice di accesso. Usa il codice univoco personale ricevuto via email.')
+      setCodeError(
+        'Questo è un link di invito/referral, non un codice di accesso. Usa il codice univoco personale ricevuto via email.'
+      )
       return
     }
 
@@ -46,29 +114,42 @@ export default function GatewayPage() {
       if (res.success && res.student) {
         const dbStudent = res.student
         const rawTier = dbStudent.access_tier
-        const tier = rawTier === 'ai-start' || rawTier === 'ai-pro' || rawTier === 'both'
-          ? rawTier
-          : dbStudent.code.startsWith('AI-PRO-')
-            ? 'ai-pro'
-            : dbStudent.code.startsWith('AI-ALL-')
-              ? 'both'
-              : 'ai-start'
+        const tier =
+          rawTier === 'ai-start' || rawTier === 'ai-pro' || rawTier === 'both'
+            ? rawTier
+            : dbStudent.code.startsWith('AI-PRO-')
+              ? 'ai-pro'
+              : dbStudent.code.startsWith('AI-ALL-')
+                ? 'both'
+                : 'ai-start'
         const studentObj = {
           name: dbStudent.student_name,
           code: dbStudent.code,
           accessTier: tier,
           sessionToken: res.sessionToken,
-          cohortId: (dbStudent as any).cohort_id || null,
+          cohortId: (dbStudent as { cohort_id?: string | null }).cohort_id || null,
         }
         try {
-          localStorage.setItem('ti_aiuto_active_student', JSON.stringify(studentObj))
-        } catch (e) {}
+          localStorage.setItem(
+            'ti_aiuto_active_student',
+            JSON.stringify(studentObj)
+          )
+        } catch {
+          // ignore storage quota errors
+        }
         router.push(`/corsi?code=${encodeURIComponent(cleanCode)}`)
       } else {
-        setCodeError(res.error || 'Codice non valido o non trovato. Controlla il codice ricevuto via email.')
+        setCodeError(
+          res.error ||
+            'Codice non valido o non trovato. Controlla il codice ricevuto via email.'
+        )
       }
-    } catch (err: any) {
-      setCodeError(err.message || 'Errore durante la verifica del codice.')
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Errore durante la verifica del codice.'
+      setCodeError(message)
     } finally {
       setIsVerifyingCode(false)
     }
@@ -76,279 +157,215 @@ export default function GatewayPage() {
 
   return (
     <div
-      className="dark min-h-screen text-slate-100 font-sans flex flex-col justify-between selection:bg-blue-600 selection:text-white overflow-x-hidden relative"
-      style={{
-        backgroundColor: '#050811',
-        backgroundImage: 'radial-gradient(110% 90% at 50% 35%, #131c31 0%, #080d1a 50%, #030509 100%)',
-      }}
+      ref={rootRef}
+      className="relative min-h-screen flex flex-col bg-[#090d16] text-[#f8fafc] selection:bg-[#6366f1] selection:text-white overflow-x-clip"
+      style={{ fontFamily: 'var(--font-inter), sans-serif' }}
     >
-      
-      {/* 1. Sfondo con Griglia Ingegneristica a Basso Contrasto */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)',
-            backgroundSize: '4rem 4rem',
-            maskImage: 'radial-gradient(ellipse 70% 60% at 50% 38%, #000 35%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at 50% 38%, #000 35%, transparent 100%)',
-          }}
-        />
+      {/* Barra di progresso 2px pinned top */}
+      <div
+        aria-hidden="true"
+        className="fixed top-0 left-0 right-0 h-[2px] z-50 pointer-events-none"
+      >
+        <div className="js-scroll-progress h-full w-full bg-[#6366f1] origin-left scale-x-0 will-change-transform" />
       </div>
 
-      {/* 2. Header Minimale con Scala Visiva Corretta */}
-      <header className="relative z-30 border-b border-white/5 bg-[#080d18]/70 backdrop-blur-xl sticky top-0">
-        <div className="max-w-6xl mx-auto px-6 h-18 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-3 group">
+      {/* Top Bar Architetturale (56px / h-14) */}
+      <header className="sticky top-0 z-40 h-14 bg-[#090d16] border-b border-white/10">
+        <div className="h-full max-w-[1440px] mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 shrink-0"
+            >
               <img
-                src="/images/logo_full_dark.png"
-                alt="Aiutiamoci Hub"
-                className="h-9 w-auto object-contain transition-transform group-hover:scale-105"
+                src="/images/brand/icon-dark.svg"
+                alt="AIutiamoci"
+                className="h-6 w-6 object-contain"
               />
-              <div className="hidden sm:flex flex-col">
-                <span className="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
-                  aiutiamoci.cloud
+              <span
+                className="font-bold text-sm sm:text-base tracking-tight text-[#f8fafc]"
+                style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+              >
+                <span className="bg-gradient-to-r from-[#6366f1] to-[#38bdf8] bg-clip-text text-transparent">
+                  AI
                 </span>
-                <span className="text-[11px] text-slate-400 font-medium">Gateway Digitale</span>
-              </div>
+                utiamoci
+              </span>
             </Link>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div
+            className="hidden md:block text-[11px] uppercase tracking-widest text-[#94a3b8] select-none"
+            style={{ fontFamily: 'var(--font-mono), monospace' }}
+          >
+            UMANI NEL PENSIERO. SMART NELL&apos;AZIONE.
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
             <button
               type="button"
               onClick={() => {
                 setCodeError('')
                 setIsStudentModalOpen(true)
               }}
-              className="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="rounded-md border border-white/20 hover:bg-white/10 text-[#f8fafc] h-9 px-3.5 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
             >
-              <Key className="h-3.5 w-3.5 text-blue-400" />
-              <span>Ho un codice</span>
+              Ho un codice
             </button>
 
             <Link
               href="/login"
-              className="text-slate-300 hover:text-white px-3.5 py-1.5 transition-colors flex items-center gap-1.5 border border-white/10 rounded-xl bg-slate-900/40 hover:bg-slate-800 text-xs font-medium h-9"
+              className="rounded-md border border-white/15 hover:bg-white/10 text-[#94a3b8] hover:text-[#f8fafc] h-9 px-3 text-xs font-medium inline-flex items-center gap-1.5 transition-colors whitespace-nowrap"
               title="Accesso riservato al team di gestione"
             >
-              <Lock className="h-3.5 w-3.5 text-slate-400" />
+              <Lock className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Accedi</span>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* 3. Hero & Le Due Grandi Card Stile Apple / Bang & Olufsen */}
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-12 sm:py-20 flex-1 flex flex-col justify-center">
-        
-        {/* Titolo Principale in Scala Alta */}
-        <div className="text-center space-y-3.5 max-w-3xl mx-auto mb-12 sm:mb-16">
-          <h1 className="text-3xl sm:text-5xl lg:text-[3.25rem] font-black tracking-tight text-white leading-[1.12]">
-            L'intelligenza artificiale al lavoro per te.
-          </h1>
-          <p className="text-sm sm:text-base text-slate-400 max-w-lg mx-auto leading-relaxed">
-            Due percorsi dedicati. Scegli da dove partire.
-          </p>
-        </div>
+      <main className="flex-1">
+        {/* Atto I: Split-Screen 50/50 Vivo + Ticker Editoriale */}
+        <SplitGateway />
 
-        {/* Le 2 Card ad Alta Profondità Apple con Alone Diffuso */}
-        <div className="relative max-w-5xl mx-auto w-full">
-          {/* Alone Chiaro Zenitale Soft (Backlight Ambientale del Mockup) */}
-          <div
-            className="absolute -inset-4 sm:-inset-8 rounded-[40px] pointer-events-none opacity-70 blur-3xl"
-            style={{
-              background: 'radial-gradient(ellipse at 50% 45%, rgba(65, 105, 180, 0.28) 0%, rgba(30, 58, 110, 0.15) 50%, transparent 75%)',
-            }}
-          />
+        {/* Atto II: Pinned Scroll Storytelling (01 -> 02 -> 03) */}
+        <PinnedMethod />
 
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 w-full">
-          
-          {/* CARD 1: ACADEMY & FORMAZIONE */}
-          <TiltCard3D href="/academy" accentColor="blue">
-            {({ headerRef, logoRef, buttonRef }) => (
-              <>
-                <div className="space-y-6 [transform:translateZ(30px)]">
-                  
-                  {/* Header Card 3D Fluttuante con Logo Pop-Out */}
-                  <div
-                    ref={headerRef}
-                    className="home-3d-header flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-900/85 border border-white/20 shadow-2xl transition-all"
-                  >
-                    <div
-                      ref={logoRef}
-                      className="home-3d-logo h-12 w-12 shrink-0 rounded-xl bg-slate-950 border border-white/25 flex items-center justify-center p-1.5 shadow-lg transition-all"
-                    >
-                      <img
-                        src="/images/logo_icon_dark.png"
-                        alt="Aiutiamoci Logo"
-                        className="h-full w-full object-contain [filter:drop-shadow(0_6px_10px_rgba(0,0,0,0.9))]"
-                      />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl sm:text-[1.75rem] font-bold text-white tracking-tight leading-tight">
-                        Aiutiamoci Academy
-                      </h2>
-                    </div>
-                  </div>
+        {/* Atto III: Closing Architetturale */}
+        <section className="bg-[#090d16] text-[#f8fafc] border-t border-white/10">
+          <div className="max-w-6xl mx-auto px-6 py-20 sm:py-28">
+            <h2
+              className="text-3xl sm:text-5xl xl:text-6xl font-extrabold tracking-[-0.03em] leading-[1.06] text-[#f8fafc]"
+              style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+            >
+              Umani nel pensiero.
+              <br />
+              Smart nell&apos;azione.
+            </h2>
 
-                  {/* Sintesi */}
-                  <div>
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                      Impara a usare l'AI nel lavoro quotidiano, con corsi pratici e certificazione europea.
-                    </p>
-                  </div>
+            <div className="mt-12 pt-8 border-t border-white/15 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+              <div
+                className="flex flex-wrap items-center gap-x-8 gap-y-3 text-xs uppercase tracking-wider text-[#94a3b8]"
+                style={{ fontFamily: 'var(--font-mono), monospace' }}
+              >
+                <span>GDPR &amp; Dati Protetti</span>
+                <span>Zero vincoli contrattuali</span>
+                <span>Assistenza diretta</span>
+              </div>
 
-                  {/* Punti Elenco */}
-                  <div className="space-y-3 pt-5 border-t border-white/5 text-xs sm:text-sm text-slate-300">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4.5 w-4.5 text-blue-400 shrink-0 mt-0.5" />
-                      <span><strong>AI Start (Fondamenta)</strong>: 20 lezioni pratiche da zero</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4.5 w-4.5 text-blue-400 shrink-0 mt-0.5" />
-                      <span><strong>Formazione su Misura</strong>: Percorsi dedicati per team aziendali</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4.5 w-4.5 text-blue-400 shrink-0 mt-0.5" />
-                      <span><strong>Tutor @AI 24/7</strong>: Assistente continuo per esercizi e dubbi</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="flex flex-wrap items-center gap-5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCodeError('')
+                    setIsStudentModalOpen(true)
+                  }}
+                  className="bg-[#f8fafc] text-[#090d16] hover:bg-white rounded-md px-5 h-11 font-semibold text-sm inline-flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  <Key className="h-4 w-4" />
+                  <span>Inserisci codice studente</span>
+                </button>
 
-                {/* Pulsante Navigazione 3D */}
-                <div ref={buttonRef} className="home-3d-btn pt-2 transition-all">
-                  <div className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold h-12.5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-xl shadow-blue-950/70 transition-all pointer-events-none">
-                    <span>Vai a Aiutiamoci Accademy</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </div>
-                </div>
-              </>
-            )}
-          </TiltCard3D>
+                <Link
+                  href="/academy"
+                  className="text-sm font-medium text-[#f8fafc] hover:text-[#94a3b8] inline-flex items-center gap-1.5 transition-colors whitespace-nowrap"
+                >
+                  <span>Academy</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
 
-          {/* CARD 2: AIUTIAMOCI IMPRESA (mark2.cloud) */}
-          <TiltCard3D href="https://www.mark2.cloud" isExternal accentColor="emerald">
-            {({ headerRef, logoRef, buttonRef }) => (
-              <>
-                <div className="space-y-6 [transform:translateZ(30px)]">
-                  
-                  {/* Header Card 3D Fluttuante con Logo Pop-Out */}
-                  <div
-                    ref={headerRef}
-                    className="home-3d-header green flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-900/85 border border-white/20 shadow-2xl transition-all"
-                  >
-                    <div
-                      ref={logoRef}
-                      className="home-3d-logo h-12 w-12 shrink-0 rounded-xl bg-slate-950 border border-white/25 flex items-center justify-center p-1.5 shadow-lg transition-all"
-                    >
-                      <img
-                        src="/images/logo_icon_dark.png"
-                        alt="Aiutiamoci Logo"
-                        className="h-full w-full object-contain [filter:drop-shadow(0_6px_10px_rgba(0,0,0,0.9))]"
-                      />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl sm:text-[1.75rem] font-bold text-white tracking-tight leading-tight">
-                        Aiutiamoci Impresa
-                      </h2>
-                    </div>
-                  </div>
-
-                  {/* Sintesi */}
-                  <div>
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-                      Agenti autonomi, monitoraggio e automazioni su misura per far lavorare la tecnologia al posto tuo.
-                    </p>
-                  </div>
-
-                  {/* Punti Elenco */}
-                  <div className="space-y-3 pt-5 border-t border-white/5 text-xs sm:text-sm text-slate-300">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
-                      <span><strong>Orchestratore di Agenti</strong>: Assistenti vocali, CRM e preventivi</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
-                      <span><strong>NetworkDiag Ops Pro</strong>: Monitoraggio reti, server e DNS h24</span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
-                      <span><strong>Integrazione su Misura</strong>: Connessione con gestionali e WhatsApp</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pulsante Navigazione 3D */}
-                <div ref={buttonRef} className="home-3d-btn pt-2 transition-all">
-                  <div className="w-full bg-slate-800/90 hover:bg-slate-700/90 text-white border border-white/10 font-semibold h-12.5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-xl shadow-black/70 transition-all pointer-events-none">
-                    <span>Vai a Aiutiamoci Impresa</span>
-                    <ExternalLink className="h-4 w-4 text-slate-400" />
-                  </div>
-                </div>
-              </>
-            )}
-          </TiltCard3D>
-
-        </div>
-        </div>
-
-        {/* Micro-banner di Garanzia e Trasparenza in basso */}
-        <div className="mt-14 sm:mt-16 text-center text-xs text-slate-500 flex flex-wrap items-center justify-center gap-6">
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" />
-            <span>Conforme GDPR & Dati Protetti</span>
+                <a
+                  href="https://www.mark2.cloud"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-[#f8fafc] hover:text-[#94a3b8] inline-flex items-center gap-1.5 transition-colors whitespace-nowrap"
+                >
+                  <span>Impresa</span>
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            </div>
           </div>
-          <span className="hidden sm:inline">•</span>
-          <div>Zero vincoli contrattuali</div>
-          <span className="hidden sm:inline">•</span>
-          <div>Assistenza diretta</div>
-        </div>
-
+        </section>
       </main>
 
-      {/* 4. Footer Minimale */}
-      <footer className="relative z-10 border-t border-slate-800/80 bg-[#070b14] py-6 px-6 text-center text-xs text-slate-500">
+      {/* Footer Minimale */}
+      <footer className="border-t border-white/10 bg-[#090d16] py-6 px-6 text-xs text-[#94a3b8]">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-400">aiutiamoci.cloud</span>
-            <span>• Ecosistema Digitale</span>
+            <span className="font-semibold text-[#f8fafc]">aiutiamoci.cloud</span>
+            <span>• Umani nel pensiero. Smart nell&apos;azione.</span>
           </div>
-          <div className="flex items-center gap-4 text-slate-400 text-xs">
-            <button onClick={() => setLegalModalType('privacy')} className="hover:text-slate-200 transition-colors cursor-pointer">Privacy Policy</button>
-            <button onClick={() => setLegalModalType('cookies')} className="hover:text-slate-200 transition-colors cursor-pointer">Cookie Policy</button>
-            <button onClick={() => setLegalModalType('terms')} className="hover:text-slate-200 transition-colors cursor-pointer">Termini di Servizio</button>
+          <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-[#94a3b8]">
+            <button
+              type="button"
+              onClick={() => setLegalModalType('privacy')}
+              className="hover:text-[#f8fafc] transition-colors cursor-pointer"
+            >
+              Privacy Policy
+            </button>
+            <button
+              type="button"
+              onClick={() => setLegalModalType('cookies')}
+              className="hover:text-[#f8fafc] transition-colors cursor-pointer"
+            >
+              Cookie Policy
+            </button>
+            <button
+              type="button"
+              onClick={() => setLegalModalType('terms')}
+              className="hover:text-[#f8fafc] transition-colors cursor-pointer"
+            >
+              Termini di Servizio
+            </button>
           </div>
         </div>
       </footer>
 
       {/* Modal Login Studente Rapido con Codice */}
       {isStudentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-150">
-          <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md border border-slate-800 overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+        <div
+          data-lenis-prevent
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+        >
+          <div className="bg-[#0f172a] rounded-md shadow-2xl w-full max-w-md border border-white/15 overflow-hidden">
+            <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#090d16]">
               <div className="flex items-center gap-2">
-                <Key className="h-5 w-5 text-blue-400" />
-                <h3 className="font-bold text-sm text-white">Area Studenti — Hai già il codice?</h3>
+                <Key className="h-4 w-4 text-[#6366f1]" />
+                <h3
+                  className="font-bold text-sm text-[#f8fafc]"
+                  style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                >
+                  Area Studenti — Hai già il codice?
+                </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsStudentModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1 text-[#94a3b8] hover:text-[#f8fafc] rounded-md hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleStudentAccess} className="p-6 space-y-4 text-xs">
-              <p className="text-slate-400 text-xs leading-relaxed">
-                Inserisci il tuo codice di accesso personale (ricevuto via email o dal corso precedente) per sbloccare subito le 20 video lezioni e i contenuti.
+              <p className="text-[#94a3b8] text-xs leading-relaxed">
+                Inserisci il tuo codice di accesso personale (ricevuto via email o
+                dal corso precedente) per sbloccare subito le 20 video lezioni e i
+                contenuti.
               </p>
 
               <div className="space-y-2">
-                <label className="font-semibold text-slate-300">Codice Univoco di Accesso *</label>
+                <label
+                  htmlFor="student-access-code"
+                  className="block font-semibold text-[#f8fafc]"
+                >
+                  Codice Univoco di Accesso *
+                </label>
                 <Input
+                  id="student-access-code"
+                  name="studentCode"
                   autoFocus
                   required
                   value={studentCode}
@@ -357,12 +374,13 @@ export default function GatewayPage() {
                     if (codeError) setCodeError('')
                   }}
                   placeholder="Es. AI-START-8F92 oppure DEMO2026"
-                  className="text-center font-mono uppercase tracking-widest font-bold text-sm h-12 bg-slate-950 border-slate-800 text-white"
+                  className="rounded-md text-center font-mono uppercase tracking-widest font-bold text-sm h-11 bg-[#090d16] border-white/15 text-[#f8fafc]"
+                  style={{ fontFamily: 'var(--font-mono), monospace' }}
                 />
               </div>
 
               {codeError && (
-                <p className="text-red-400 text-xs font-semibold text-center bg-red-950/40 p-2.5 rounded-xl border border-red-900/40">
+                <p className="text-red-400 text-xs font-semibold text-center bg-red-950/40 p-2.5 rounded-md border border-red-900/40">
                   {codeError}
                 </p>
               )}
@@ -370,7 +388,7 @@ export default function GatewayPage() {
               <Button
                 type="submit"
                 disabled={isVerifyingCode}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full bg-[#f8fafc] hover:bg-white text-[#090d16] font-semibold h-11 rounded-md cursor-pointer flex items-center justify-center gap-2 border-0"
               >
                 {isVerifyingCode ? (
                   <>
@@ -387,11 +405,13 @@ export default function GatewayPage() {
       )}
 
       {/* Modale Legale */}
-      <LegalModal
-        isOpen={legalModalType !== null}
-        type={legalModalType}
-        onClose={() => setLegalModalType(null)}
-      />
+      <div data-lenis-prevent>
+        <LegalModal
+          isOpen={legalModalType !== null}
+          type={legalModalType}
+          onClose={() => setLegalModalType(null)}
+        />
+      </div>
       <CookieBanner onOpenPolicy={() => setLegalModalType('cookies')} />
     </div>
   )

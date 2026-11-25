@@ -1,18 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   Mail,
   Lock,
   Eye,
   EyeOff,
+  ArrowLeft,
   ArrowRight,
-  ShieldCheck,
   AlertCircle,
-  Sparkles,
   Check,
-  CheckCircle2
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -26,8 +26,36 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
 
+  const bgParallaxRef = useRef<HTMLDivElement | null>(null)
+  const formPanelRef = useRef<HTMLDivElement | null>(null)
+
   useEffect(() => {
     setMounted(true)
+
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches
+    const isFinePointer = window.matchMedia(
+      '(min-width: 1024px) and (hover: hover) and (pointer: fine)'
+    ).matches
+
+    if (prefersReducedMotion || !isFinePointer) return
+
+    const handleWindowPointerMove = (e: MouseEvent) => {
+      if (!bgParallaxRef.current) return
+      const nx = (e.clientX / window.innerWidth - 0.5) * 2
+      const ny = (e.clientY / window.innerHeight - 0.5) * 2
+      const tx = (-nx * 7).toFixed(2)
+      const ty = (-ny * 7).toFixed(2)
+      bgParallaxRef.current.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(1.025)`
+    }
+
+    window.addEventListener('mousemove', handleWindowPointerMove, {
+      passive: true,
+    })
+    return () => {
+      window.removeEventListener('mousemove', handleWindowPointerMove)
+    }
   }, [])
 
   const supabase = createClient()
@@ -62,185 +90,341 @@ export default function LoginPage() {
     }, 600)
   }
 
+  const handleFormPointerMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!formPanelRef.current) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const rect = formPanelRef.current.getBoundingClientRect()
+    const mx = e.clientX - rect.left
+    const my = e.clientY - rect.top
+    formPanelRef.current.style.setProperty('--mx', `${mx}px`)
+    formPanelRef.current.style.setProperty('--my', `${my}px`)
+    formPanelRef.current.style.setProperty('--m-opacity', '0.10')
+  }
+
+  const handleFormPointerLeave = () => {
+    if (!formPanelRef.current) return
+    formPanelRef.current.style.setProperty('--m-opacity', '0')
+  }
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#070A12] text-slate-100 font-sans relative overflow-hidden p-4 sm:p-6 selection:bg-blue-500 selection:text-white">
-      
-      {/* 3D Flowing Cyber-Blue & Indigo Fluid Ambient Glowing Background */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute -top-40 -left-20 w-[650px] h-[650px] bg-gradient-to-br from-blue-600/20 via-indigo-600/15 to-transparent rounded-full blur-[140px] animate-pulse" />
-        <div className="absolute -bottom-40 -right-20 w-[700px] h-[700px] bg-gradient-to-tl from-cyan-600/20 via-blue-700/15 to-transparent rounded-full blur-[150px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-radial from-blue-500/10 via-slate-900/40 to-transparent blur-[130px]" />
-        
-        {/* Subtle Tech Grid Overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+    <div
+      className="min-h-screen w-full flex flex-col items-center justify-center bg-[#090d16] text-[#f8fafc] relative overflow-x-clip overflow-y-auto px-4 py-6 sm:p-6 selection:bg-[#6366f1] selection:text-white"
+      style={{ fontFamily: 'var(--font-inter), sans-serif' }}
+    >
+      {/* Sfondo Fotografico in Trasparenza (/images/team_docenti.jpg) */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[#090d16]"
+      >
+        <div
+          ref={bgParallaxRef}
+          className="absolute inset-0 will-change-transform transition-transform duration-300 ease-out"
+          style={{ transform: 'translate3d(0px, 0px, 0) scale(1.025)' }}
+        >
+          <img
+            src="/images/team_docenti.jpg"
+            alt="Team AIutiamoci"
+            className="w-full h-full object-cover object-[center_26%] opacity-[0.44] saturate-[0.88] contrast-[1.06]"
+          />
+        </div>
+
+        {/* Velo Direzionale Obsidian */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#090d16]/90 via-[#090d16]/55 to-[#090d16]/75" />
+
+        {/* Micro-griglia tecnica discreta */}
+        <div
+          className="absolute inset-0 opacity-60"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)',
+            backgroundSize: '4rem 4rem',
+          }}
+        />
       </div>
 
-      {/* Main Glassmorphic Futuristic Container con Animazione di Chiusura al Click */}
+      {/* Contenitore Principale */}
       <div
-        className={`relative z-10 w-full max-w-[460px] transition-all duration-500 ease-in-out transform ${
+        className={`relative z-10 w-full max-w-[940px] transition-all duration-500 ease-out ${
           isClosing
-            ? 'opacity-0 scale-75 -translate-y-12 blur-md rotate-1 pointer-events-none'
+            ? 'opacity-0 scale-[1.02] pointer-events-none'
             : mounted
-            ? 'opacity-100 scale-100 translate-y-0'
-            : 'opacity-0 scale-95 translate-y-6'
+              ? 'opacity-100 translate-y-0 scale-100'
+              : 'opacity-0 translate-y-4 scale-[0.99]'
         }`}
       >
-        
-        {/* Top-Left Futuristic Corner Wing / Flap (Glow Blue) */}
-        <div className={`absolute -top-3.5 -left-3.5 w-16 h-16 border-t-2 border-l-2 border-blue-400 rounded-tl-2xl bg-blue-500/15 backdrop-blur-md pointer-events-none z-20 shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-all duration-300 ${isClosing ? 'scale-0' : 'animate-pulse'}`} />
-        
-        {/* Bottom-Right Futuristic Corner Wing / Flap (Glow Blue) */}
-        <div className={`absolute -bottom-3.5 -right-3.5 w-16 h-16 border-b-2 border-r-2 border-blue-400 rounded-br-2xl bg-blue-500/15 backdrop-blur-md pointer-events-none z-20 shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-all duration-300 ${isClosing ? 'scale-0' : 'animate-pulse'}`} />
+        {/* Top Bar Minimale fuori dalla card */}
+        <div className="flex items-center justify-between gap-4 mb-4 px-0.5">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-medium text-[#f8fafc]/80 hover:text-[#f8fafc] transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Torna alla Home</span>
+          </Link>
 
-        {/* Card Body */}
-        <div className="relative bg-[#0d1424]/85 backdrop-blur-2xl border border-blue-500/30 rounded-3xl p-8 sm:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.85),0_0_50px_rgba(59,130,246,0.15)] overflow-hidden">
-          
-          {/* Top Radial Highlight Beam */}
-          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-32 bg-blue-500/25 rounded-full blur-2xl pointer-events-none" />
+          <span
+            className="text-[10px] sm:text-[11px] uppercase tracking-[0.14em] text-[#94a3b8] border border-white/15 bg-[#090d16]/70 px-2.5 py-1 rounded-md backdrop-blur-sm"
+            style={{ fontFamily: 'var(--font-mono), monospace' }}
+          >
+            AIUTIAMOCI.CLOUD // PORTALE RISERVATO
+          </span>
+        </div>
 
-          {/* Header */}
-          <div className="mb-8 text-left relative z-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-400/40 text-blue-300 text-[11px] font-bold tracking-wider uppercase mb-3 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>AIUTIAMOCI • WORKSPACE</span>
-            </div>
+        {/* Monolite Split-Glass Asimmetrico */}
+        <div className="relative border border-white/15 rounded-xl overflow-hidden shadow-2xl shadow-black/70">
+          {/* 4 micro-tacche architetturali 1px agli angoli */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-2 left-2 h-2.5 w-2.5 border-t border-l border-white/40 z-20"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-2 right-2 h-2.5 w-2.5 border-t border-r border-white/40 z-20"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-2 left-2 h-2.5 w-2.5 border-b border-l border-white/40 z-20"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-2 right-2 h-2.5 w-2.5 border-b border-r border-white/40 z-20"
+          />
 
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              Welcome <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 drop-shadow-[0_0_20px_rgba(59,130,246,0.4)]">Back</span>
-            </h1>
-            <p className="text-xs text-slate-400 mt-1.5 font-normal">
-              Enter your credentials to access your secure workspace
-            </p>
-          </div>
-
-          {/* Error Message */}
-          {errorMessage && (
-            <div className="mb-6 p-3.5 rounded-xl bg-red-950/70 border border-red-500/50 text-red-300 text-xs flex items-center gap-2.5 animate-bounce shadow-lg shadow-red-950/50">
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
-              <span className="font-medium">{errorMessage}</span>
-            </div>
-          )}
-
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-5 relative z-10">
-            
-            {/* Email Field */}
-            <div className="space-y-1.5 text-left">
-              <label className="block text-xs font-bold text-slate-300 tracking-wide">
-                Email Address
-              </label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-400 transition-colors duration-200" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@domain.com"
-                  className="w-full bg-[#11192e]/90 border border-slate-700/80 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/25 shadow-inner transition-all duration-200"
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-1.5 text-left">
-              <label className="block text-xs font-bold text-slate-300 tracking-wide">
-                Password
-              </label>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-400 transition-colors duration-200" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full bg-[#11192e]/90 border border-slate-700/80 rounded-xl pl-11 pr-11 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/25 shadow-inner transition-all duration-200 font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-300 transition-colors cursor-pointer p-1"
+          <div className="grid grid-cols-1 lg:grid-cols-12">
+            {/* Colonna Sinistra — Finestra Vetro Fumé Trasparente */}
+            <div className="lg:col-span-5 bg-[#090d16]/32 backdrop-blur-[2px] border-b lg:border-b-0 lg:border-r border-white/12 p-5 sm:p-7 lg:p-9 flex flex-col justify-between gap-6 lg:min-h-[540px]">
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/images/brand/icon-dark.svg"
+                    alt="AIutiamoci"
+                    className="h-7 w-7 sm:h-8 sm:w-8 object-contain shrink-0"
+                  />
+                  <span
+                    className="text-lg sm:text-xl font-extrabold tracking-tight text-[#f8fafc]"
+                    style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                  >
+                    <span className="text-[#6366f1]">AI</span>utiamoci
+                  </span>
+                </div>
+                <div
+                  className="text-[10px] uppercase tracking-[0.16em] text-[#f8fafc]/75"
+                  style={{ fontFamily: 'var(--font-mono), monospace' }}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-blue-400" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
+                  WORKSPACE &amp; ACADEMY
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4 lg:pt-8 border-t border-white/12">
+                <p
+                  className="text-xs sm:text-sm font-semibold text-[#f8fafc] leading-snug"
+                  style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                >
+                  &ldquo;Umani nel pensiero. Smart nell&apos;azione.&rdquo;
+                </p>
+
+                <div
+                  className="flex items-center gap-2 text-[10px] uppercase tracking-[0.12em] text-[#f8fafc]/80"
+                  style={{ fontFamily: 'var(--font-mono), monospace' }}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#10b981] shrink-0" />
+                  <span className="leading-relaxed">
+                    SESSIONE CRITTOGRAFATA · SUPABASE AUTH GUARD · MFA READY
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between text-xs pt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none text-slate-300 hover:text-white transition-colors">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="hidden"
-                />
-                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all duration-200 ${
-                  rememberMe
-                    ? 'bg-blue-500 border-blue-400 text-white font-black shadow-[0_0_10px_rgba(59,130,246,0.5)]'
-                    : 'border-slate-700 bg-slate-800/80'
-                }`}>
-                  {rememberMe && <Check className="w-3 h-3 stroke-[3]" />}
-                </div>
-                <span>Remember me</span>
-              </label>
-
-              <Link
-                href="/corso-base"
-                className="text-xs text-slate-400 hover:text-blue-400 transition-colors underline-offset-2 hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            {/* Main Blue Glowing Submit CTA Button */}
-            <button
-              type="submit"
-              disabled={loading || isClosing}
-              className="group relative w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-sm tracking-wide uppercase shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:shadow-[0_0_40px_rgba(59,130,246,0.65)] hover:scale-[1.01] transition-all duration-200 active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 mt-4 overflow-hidden"
+            {/* Colonna Destra — Pannello Form Vetro Satinato Ossidiana */}
+            <div
+              ref={formPanelRef}
+              onMouseMove={handleFormPointerMove}
+              onMouseLeave={handleFormPointerLeave}
+              className="lg:col-span-7 relative bg-[#090d16]/82 backdrop-blur-xl p-6 sm:p-9 lg:p-11 overflow-hidden"
             >
-              {/* Button Shimmer / Reflection Animation */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform ease-out pointer-events-none" />
+              {/* Luce speculare radiale sottilissima al passaggio cursore */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+                style={{
+                  opacity: 'var(--m-opacity, 0)',
+                  background:
+                    'radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), #6366f1, transparent 70%)',
+                }}
+              />
 
-              {isClosing ? (
-                <div className="flex items-center gap-2 text-white font-bold animate-pulse">
-                  <CheckCircle2 className="w-5 h-5 text-cyan-300" />
-                  <span>Accesso Eseguito...</span>
+              <div className="relative z-10">
+                <div className="mb-7 space-y-2">
+                  <div
+                    className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#6366f1]"
+                    style={{ fontFamily: 'var(--font-mono), monospace' }}
+                  >
+                    ACCESSO RISERVATO · AREA WORKSPACE
+                  </div>
+                  <h1
+                    className="text-3xl sm:text-4xl font-extrabold tracking-[-0.03em] text-[#f8fafc]"
+                    style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
+                  >
+                    Bentornato.
+                  </h1>
+                  <p className="text-xs sm:text-sm text-[#94a3b8] leading-relaxed">
+                    Inserisci le tue credenziali per entrare nello spazio
+                    operativo AIutiamoci.
+                  </p>
                 </div>
-              ) : loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2.5] group-hover:translate-x-1 transition-transform duration-200" />
-                </>
-              )}
-            </button>
-          </form>
 
-          {/* Footer Direct Assistance & Security Badge */}
-          <div className="mt-8 pt-5 border-t border-slate-800/80 flex flex-col items-center gap-3">
-            <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 font-medium">
-              <ShieldCheck className="h-3.5 w-3.5 text-blue-400/80" />
-              <span>Encrypted Session • Supabase Auth Guard</span>
-            </div>
+                {errorMessage && (
+                  <div
+                    role="alert"
+                    className="mb-6 p-3.5 rounded-md bg-red-950/75 border border-red-500/40 text-red-200 text-xs flex items-center gap-2.5"
+                  >
+                    <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+                    <span className="font-medium">{errorMessage}</span>
+                  </div>
+                )}
 
-            <div className="text-center text-xs text-slate-400">
-              Hai problemi con il tuo account?{' '}
-              <Link
-                href="/servizi-ai"
-                className="font-bold text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                Assistenza AIutiamoci
-              </Link>
+                <form onSubmit={handleLogin} className="space-y-5">
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="login-email"
+                      className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#94a3b8]"
+                      style={{ fontFamily: 'var(--font-mono), monospace' }}
+                    >
+                      INDIRIZZO EMAIL
+                    </label>
+                    <div className="relative group">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94a3b8] group-focus-within:text-[#6366f1] transition-colors" />
+                      <input
+                        id="login-email"
+                        name="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="nome@aiutiamoci.cloud"
+                        className="w-full h-12 bg-[#0f172a]/75 border border-white/12 rounded-md pl-10 pr-4 text-sm text-[#f8fafc] placeholder-[#94a3b8]/50 focus:outline-none focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="login-password"
+                      className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#94a3b8]"
+                      style={{ fontFamily: 'var(--font-mono), monospace' }}
+                    >
+                      PASSWORD
+                    </label>
+                    <div className="relative group">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94a3b8] group-focus-within:text-[#6366f1] transition-colors" />
+                      <input
+                        id="login-password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        autoComplete="current-password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="w-full h-12 bg-[#0f172a]/75 border border-white/12 rounded-md pl-10 pr-11 text-sm text-[#f8fafc] placeholder-[#94a3b8]/50 focus:outline-none focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] transition-colors"
+                        style={{ fontFamily: 'var(--font-mono), monospace' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={
+                          showPassword
+                            ? 'Nascondi password'
+                            : 'Mostra password'
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#f8fafc] transition-colors cursor-pointer p-1"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-[#6366f1]" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Opzioni */}
+                  <div className="flex items-center justify-between gap-4 text-xs pt-0.5">
+                    <label
+                      htmlFor="login-remember"
+                      className="flex items-center gap-2.5 cursor-pointer select-none text-[#94a3b8] hover:text-[#f8fafc] transition-colors"
+                    >
+                      <input
+                        id="login-remember"
+                        name="rememberMe"
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <span
+                        className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-colors ${
+                          rememberMe
+                            ? 'bg-[#6366f1] border-[#6366f1] text-white'
+                            : 'border-white/20 bg-[#0f172a]'
+                        }`}
+                      >
+                        {rememberMe && <Check className="w-3 h-3 stroke-[3]" />}
+                      </span>
+                      <span>Ricordami</span>
+                    </label>
+
+                    <Link
+                      href="/corso-base"
+                      className="text-xs text-[#94a3b8] hover:text-[#f8fafc] transition-colors underline-offset-4 hover:underline"
+                    >
+                      Password dimenticata?
+                    </Link>
+                  </div>
+
+                  {/* CTA Primaria Paper White */}
+                  <button
+                    type="submit"
+                    disabled={loading || isClosing}
+                    className="w-full h-12 rounded-md bg-[#f8fafc] hover:bg-white text-[#090d16] font-semibold text-sm transition-colors disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2 mt-2"
+                  >
+                    {isClosing ? (
+                      <span className="inline-flex items-center gap-2 text-[#10b981] font-semibold">
+                        <CheckCircle2 className="h-4 w-4 text-[#10b981]" />
+                        <span className="text-[#090d16]">
+                          Accesso verificato...
+                        </span>
+                      </span>
+                    ) : loading ? (
+                      <span className="inline-flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin text-[#090d16]" />
+                        <span>Verifica in corso...</span>
+                      </span>
+                    ) : (
+                      <>
+                        <span>Accedi al Workspace</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Footer sobrio */}
+                <div className="mt-7 pt-5 border-t border-white/10 text-xs text-[#94a3b8]">
+                  Hai problemi con il tuo account?{' '}
+                  <Link
+                    href="/servizi-ai"
+                    className="font-semibold text-[#f8fafc] hover:text-[#6366f1] transition-colors underline underline-offset-4"
+                  >
+                    Assistenza AIutiamoci
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
