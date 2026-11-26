@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import gsap from 'gsap'
 import { ArrowRight } from 'lucide-react'
 
 interface ExpandableTracksProps {
@@ -72,46 +71,53 @@ export function ExpandableTracks({
   onOpenWaitlist,
   onOpenDirectPayment,
 }: ExpandableTracksProps) {
-  const sectionRef = useRef<HTMLElement | null>(null)
-  const panelRefs = useRef<Array<HTMLDivElement | null>>([])
-  const hasMountedRef = useRef(false)
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lockedUntilRef = useRef<number>(0)
   const [activeIndex, setActiveIndex] = useState(0)
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia()
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
+    }
+  }, [])
 
-      mm.add('(min-width: 1024px)', () => {
-        const reduced = window.matchMedia(
-          '(prefers-reduced-motion: reduce)'
-        ).matches
-        const duration = !hasMountedRef.current || reduced ? 0 : 0.65
+  const selectTrackImmediate = (idx: number) => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current)
+      hoverTimerRef.current = null
+    }
+    if (idx !== activeIndex) {
+      lockedUntilRef.current = Date.now() + 420
+      setActiveIndex(idx)
+    }
+  }
 
-        panelRefs.current.forEach((panel, idx) => {
-          if (!panel) return
-          gsap.to(panel, {
-            flexGrow: idx === activeIndex ? 2.3 : 0.85,
-            duration,
-            ease: 'power3.out',
-            overwrite: 'auto',
-          })
-        })
+  const handlePanelMouseEnter = (idx: number) => {
+    if (idx === activeIndex) return
+    if (
+      typeof window === 'undefined' ||
+      !window.matchMedia(
+        '(min-width: 1024px) and (hover: hover) and (pointer: fine)'
+      ).matches
+    ) {
+      return
+    }
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current)
+      hoverTimerRef.current = null
+    }
+    if (Date.now() < lockedUntilRef.current) return
+    hoverTimerRef.current = setTimeout(() => {
+      selectTrackImmediate(idx)
+    }, 180)
+  }
 
-        hasMountedRef.current = true
-      })
-
-      mm.add('(max-width: 1023px)', () => {
-        const els = panelRefs.current.filter(Boolean)
-        if (els.length > 0) {
-          gsap.set(els, { clearProps: 'flexGrow' })
-        }
-      })
-
-      return () => mm.revert()
-    }, sectionRef)
-
-    return () => ctx.revert()
-  }, [activeIndex])
+  const handlePanelMouseLeave = () => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current)
+      hoverTimerRef.current = null
+    }
+  }
 
   const handleAction = (action: 'enroll' | 'waitlist' | 'none') => {
     if (action === 'enroll') onOpenEnroll()
@@ -119,10 +125,7 @@ export function ExpandableTracks({
   }
 
   return (
-    <section
-      ref={sectionRef}
-      className="bg-[#090d16] text-[#f8fafc] border-b border-white/10"
-    >
+    <section className="bg-[#090d16] text-[#f8fafc] border-b border-white/10">
       <div className="max-w-6xl mx-auto px-6 py-16 sm:py-24 space-y-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="max-w-2xl space-y-3">
@@ -148,7 +151,7 @@ export function ExpandableTracks({
             className="hidden lg:block text-[11px] uppercase tracking-widest text-[#94a3b8]"
             style={{ fontFamily: 'var(--font-mono), monospace' }}
           >
-            PASSA IL CURSORE O CLICCA PER ESPLORARE
+            CLICCA O SOSTA SU UN PERCORSO PER ESPLORARE
           </p>
         </div>
 
@@ -159,14 +162,11 @@ export function ExpandableTracks({
             return (
               <div
                 key={track.num}
-                ref={(el) => {
-                  panelRefs.current[idx] = el
-                }}
-                onMouseEnter={() => setActiveIndex(idx)}
-                onClick={() => {
-                  if (!isActive) setActiveIndex(idx)
-                }}
-                className={`lg:basis-0 min-w-0 overflow-hidden transition-colors duration-300 ${
+                style={{ '--panel-grow': isActive ? 2.3 : 0.85 } as React.CSSProperties}
+                onMouseEnter={() => handlePanelMouseEnter(idx)}
+                onMouseLeave={handlePanelMouseLeave}
+                onClick={() => selectTrackImmediate(idx)}
+                className={`lg:basis-0 lg:[flex-grow:var(--panel-grow)] lg:transition-[flex-grow,background-color,border-color] lg:duration-[420ms] lg:ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none min-w-0 overflow-hidden transition-colors duration-300 ${
                   isActive
                     ? 'bg-[#0f172a]/55 lg:cursor-default'
                     : 'bg-[#090d16] hover:bg-[#0f172a]/30 lg:cursor-pointer'
@@ -247,7 +247,7 @@ export function ExpandableTracks({
 
                 {/* Vista Desktop (>= 1024px): Espansa quando attiva, Compatta altrimenti */}
                 {isActive ? (
-                  <div className="hidden lg:flex flex-col justify-between h-full p-8 xl:p-10 gap-8">
+                  <div className="hidden lg:flex flex-col justify-between h-full p-8 xl:p-10 gap-8 lg:min-w-[400px] xl:min-w-[500px]">
                     <div className="space-y-6">
                       <div className="flex items-center justify-between gap-3">
                         <span
@@ -351,7 +351,7 @@ export function ExpandableTracks({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
-                        setActiveIndex(idx)
+                        selectTrackImmediate(idx)
                       }}
                       className="inline-flex items-center gap-2 text-xs font-semibold text-[#94a3b8] hover:text-[#f8fafc] transition-colors cursor-pointer self-start pt-4 border-t border-white/10 w-full justify-between"
                       style={{ fontFamily: 'var(--font-mono), monospace' }}
