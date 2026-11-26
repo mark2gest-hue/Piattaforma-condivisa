@@ -416,7 +416,7 @@ export async function syncStudentProgressAction(params: {
     if (mergedLessons.some((id) => id >= 2) || isNadiaCorvini || isDanielePizzi) {
       mergedCheckpoints.entry = true
     }
-    if (mergedLessons.some((id) => id >= 11)) {
+    if (mergedLessons.some((id) => id >= 11 && id <= 20)) {
       mergedCheckpoints.midterm = true
     }
 

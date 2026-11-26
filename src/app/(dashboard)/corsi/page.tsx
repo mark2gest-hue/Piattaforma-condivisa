@@ -492,6 +492,9 @@ const AI_PRO_LESSONS: Lesson[] = [
   { id: 2, title: '2. La Costituzione dell\'Agente: Regole, Memoria e AGENTS.md', duration: '14:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_02.pdf?v=20261115_pro_v1' },
   { id: 3, title: '3. Come Pensa un Agente: Thinking, File ed Error-Correction', duration: '16:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_03.pdf?v=20261115_pro_v1' },
   { id: 4, title: '4. Compiti Autonomi & Tool Isolati: Esecuzione Sicura', duration: '12:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_04.pdf?v=20261115_pro_v1' },
+  { id: 101, title: '4A. Skills & Automazioni Ripetibili in Antigravity (SKILL.md)', duration: '18:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_4A.pdf?v=20261126_pro_v1' },
+  { id: 102, title: '4B. Subagenti, Lavoro Parallelo & MCP Server nell\'IDE', duration: '20:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_4B.pdf?v=20261126_pro_v1' },
+  { id: 103, title: '4C. Da Antigravity a n8n: Creare Agenti, Mini-App & Workflow JSON', duration: '19:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_4C.pdf?v=20261126_pro_v1' },
   { id: 5, title: '5. Cosa sono le API: Il Cameriere Digitale & Chat vs Backend', duration: '15:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_05.pdf?v=20261115_pro_v1' },
   { id: 6, title: '6. Google AI Studio: Generare la Prima Chiave Gratuita (Gemini 2.5 Flash)', duration: '18:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_06.pdf?v=20261115_pro_v1' },
   { id: 7, title: '7. OpenAI Platform: Limiti di Spesa (5€ Cap), Modelli & Playground', duration: '17:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_07.pdf?v=20261115_pro_v1' },
@@ -2714,7 +2717,7 @@ function CorsiInnerContent() {
             {activeTab === 'login' && <Key className="h-4 w-4" />}
 
             <span>
-              {activeTab === 'player' && `Player ${selectedCourseId === 'ai-pro' ? 'AI Pro (20 Moduli)' : 'AI Start (20 Lezioni)'}`}
+              {activeTab === 'player' && `Player ${selectedCourseId === 'ai-pro' ? 'AI Pro (23 Moduli)' : 'AI Start (20 Lezioni)'}`}
               {activeTab === 'news-tutorial' && `News & Tutorial (${bonusVideos.length})`}
               {activeTab === 'meet' && `Registrazioni Meet (${meetRecordings.length})`}
               {activeTab === 'zoom' && `Registrazioni Zoom (${zoomRecordings.length})`}
@@ -3640,7 +3643,7 @@ function CorsiInnerContent() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
-                                title={`Scarica Dispensa PDF (Modulo ${lesson.id})`}
+                                title={`Scarica Dispensa PDF (${lesson.title.split('.')[0]})`}
                                 className="p-1 rounded-md text-slate-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/50 transition-colors"
                               >
                                 <FileText className="h-3.5 w-3.5" />

@@ -714,6 +714,36 @@ export const LESSON_SUMMARIES_PRO: Record<number, { title: string; summary: stri
     ],
     exercise: 'Chiedi all\'agente di analizzare la dimensione di tutti i file in una cartella e creare un file README riassuntivo.'
   },
+  101: {
+    title: '4A. Skills & Automazioni Ripetibili (SKILL.md)',
+    summary: 'Come trasformare qualsiasi procedura aziendale ripetitiva (report settimanali, analisi preventivi, controllo qualità) in una Skill permanente dentro Google Antigravity IDE.',
+    takeaways: [
+      'Differenza tra prompt usa-e-getta e Skill riutilizzabile salvata in `.gemini/skills/` (`SKILL.md`).',
+      'Struttura di una Skill efficace: trigger di attivazione, istruzioni passo-passo e template di output.',
+      'Condivisione delle Skill nel team per garantire che tutti gli agenti lavorino con lo stesso standard.'
+    ],
+    exercise: 'Crea una cartella `.gemini/skills/riepilogo-settimanale/SKILL.md` e chiedi ad Antigravity di generare un report standardizzato da 2 file di note.'
+  },
+  102: {
+    title: '4B. Subagenti, Lavoro Parallelo & MCP Server',
+    summary: 'Orchestrazione multi-agente dentro Antigravity: delegare ricerca, scrittura e verifica a subagenti specializzati e collegare tool esterni reali tramite MCP e Browser.',
+    takeaways: [
+      'Pattern Direttore → Subagente → Controllo: perché separare chi esegue da chi revisiona riduce gli errori.',
+      'Collegare Antigravity a database, fogli e servizi aziendali tramite MCP Server configurati nell\'IDE.',
+      'Uso del subagente Browser per testare applicazioni web, verificare interfacce e raccogliere dati dal vivo.'
+    ],
+    exercise: 'Definisci un flusso con 2 subagenti: uno che raccoglie i punti chiave da un documento e un revisore che verifica assenza di omissioni.'
+  },
+  103: {
+    title: '4C. Da Antigravity a n8n: Generare Agenti, Script & Workflow JSON',
+    summary: 'Usare Antigravity IDE come fabbrica di automazioni: far generare e testare script locali, mini-app web e interi workflow JSON pronti da incollare in n8n.',
+    takeaways: [
+      'Come far scrivere ad Antigravity script Python/Node e interfacce web operative in pochi minuti.',
+      'Generare workflow n8n completi in formato JSON dall\'IDE e importarli con Copia/Incolla su n8n.',
+      'Debug assistito: incollare errori o payload reali in Antigravity per ottenere subito la correzione.'
+    ],
+    exercise: 'Chiedi ad Antigravity di generare il JSON di un workflow n8n (Webhook POST + nodo Set) e incollalo nella canvas di n8n per verificarlo.'
+  },
   5: {
     title: '5. Cosa sono le API: Il Cameriere Digitale',
     summary: 'Concetto chiave dell\'automazione: cosa sono le API, come funzionano le chiamate HTTP, i metodi GET/POST e la differenza tra interfaccia utente e scambio dati.',

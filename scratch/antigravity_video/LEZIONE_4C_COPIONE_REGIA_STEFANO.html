@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><title>Lezione 4C — Guida Regia Stefano</title><style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.45;
+    font-size: 9.2pt;
+    margin: 0;
+    padding: 0;
+  }
+  .header {
+    border-bottom: 2.5px solid #6366f1;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand-title { font-size: 14pt; font-weight: 800; color: #0f172a; margin: 0; }
+  .brand-subtitle { font-size: 8.5pt; color: #475569; margin: 2px 0 0 0; }
+  .badge {
+    display: inline-block;
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 8pt;
+    font-weight: 700;
+  }
+  .goal-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #6366f1;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .goal-box h3 { margin: 0 0 4px 0; font-size: 9.5pt; color: #312e81; }
+  .prep-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .prep-box h3 { margin: 0 0 4px 0; font-size: 9pt; color: #92400e; }
+  .prep-box ul { margin: 0; padding-left: 18px; }
+  .module-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .module-header {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .module-title { font-weight: 700; font-size: 9.5pt; }
+  .module-time { font-size: 8pt; color: #38bdf8; font-weight: 600; }
+  .module-body { padding: 10px 12px; background: #ffffff; }
+  .step-label { font-size: 8pt; font-weight: 700; color: #0284c7; margin-bottom: 3px; text-transform: uppercase; }
+  .action-text { font-size: 8.8pt; color: #1e293b; margin-bottom: 8px; }
+  .speech-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 8.8pt;
+    color: #0f172a;
+  }
+  .tip-box {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 8.8pt;
+    color: #065f46;
+    margin-top: 10px;
+  }
+  code {
+    background: #e2e8f0;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 8.2pt;
+  }
+</style></head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="brand-title">Lezione 4C — DA ANTIGRAVITY A N8N: CREARE AGENTI, SCRIPT & WORKFLOW JSON</h1>
+      <p class="brand-subtitle">AIutiamoci • Masterclass AI Pro • Guida alla Regia per Stefano</p>
+    </div>
+    <div class="badge">Lezione 4C • Ponte IDE -> n8n</div>
+  </div>
+  <div class="goal-box"><h3>Obiettivo della Lezione</h3><div>Usare Antigravity IDE come fabbrica per generare e testare script locali, mini-tool web e workflow JSON completi pronti da incollare direttamente sulla canvas di n8n.</div></div>
+  <div class="prep-box"><h3>Prima di iniziare a registrare</h3><ul><li>Antigravity IDE aperto</li><li>Una finestra browser aperta su n8n con un workflow vuoto</li><li>Mostrare Copia/Incolla di un JSON generato da Antigravity dentro n8n</li></ul></div>
+  
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-title">FASE 1: Antigravity come Fabbrica di Agenti e Automazioni</div>
+            <div class="module-time">Minuti 00:00 - 04:00</div>
+          </div>
+          <div class="module-body">
+            <div class="step-label">Cosa mostrare a schermo</div>
+            <div class="action-text">Webcam frontale di Stefano, poi schermata divisa: Antigravity a sinistra, n8n vuoto a destra.</div>
+            <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+            <div class="speech-box">"Benvenuti nella lezione 4C, il ponte finale del blocco Antigravity! Finora abbiamo visto cosa fa l'IDE sui vostri file. Da dalla prossima lezione entreremo nelle API e in n8n.<br><br>Ma prima vi mostro il superpotere più sottovalutato: potete usare <strong>Antigravity per progettare, generare e testare gli script e gli stessi workflow di n8n</strong> in pochi secondi!"</div>
+          </div>
+        </div>
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-title">FASE 2: Generare uno Script / Mini-Agente Locale in 60 Secondi</div>
+            <div class="module-time">Minuti 04:00 - 09:30</div>
+          </div>
+          <div class="module-body">
+            <div class="step-label">Cosa mostrare a schermo</div>
+            <div class="action-text">Chiedi ad Antigravity: 'Crea uno script Python che legge tutti i CSV nella cartella e calcola il totale fatturato per cliente'. Esegui nel terminale integrato.</div>
+            <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+            <div class="speech-box">"Chiediamo all'agente di scriverci uno script Python su misura per un'esigenza reale d'ufficio. Lui crea il file, lo lancia nel terminale e verifica che il risultato sia esatto — zero codice scritto a mano da noi."</div>
+          </div>
+        </div>
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-title">FASE 3: Generare un Workflow n8n Completo in JSON e Incollarlo</div>
+            <div class="module-time">Minuti 09:30 - 15:30</div>
+          </div>
+          <div class="module-body">
+            <div class="step-label">Cosa mostrare a schermo</div>
+            <div class="action-text">1. Chiedi ad Antigravity: 'Generami il JSON per n8n con Webhook POST + nodo Set che estrae cliente ed email'.<br>2. Copia il JSON.<br>3. Vai su n8n vuoto e premi Cmd+V / Ctrl+V: i nodi compaiono subito.</div>
+            <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+            <div class="speech-box">"Adesso guardate questa magia: chiedo ad Antigravity il JSON di un flusso n8n. Lo copio, clicco nello spazio vuoto di n8n e premo Incolla... <strong>ecco i nodi già montati e collegati!</strong><br><br>E quando in futuro avrete un errore su n8n, vi basterà incollarlo in Antigravity per avere subito la soluzione."</div>
+          </div>
+        </div>
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-title">FASE 4: Esercizio & Lancio Blocco API / n8n (Lezione 5)</div>
+            <div class="module-time">Minuti 15:30 - 19:00</div>
+          </div>
+          <div class="module-body">
+            <div class="step-label">Cosa mostrare a schermo</div>
+            <div class="action-text">Webcam frontale.</div>
+            <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+            <div class="speech-box">"<strong>Esercizio:</strong> fate generare ad Antigravity il JSON di un piccolo workflow n8n (Trigger + Set) e tenetelo pronto.<br><br>Dalla <strong>Lezione 5</strong> scopriremo cosa sono le <strong>API</strong> e cominceremo a costruire le automazioni cloud h24!"</div>
+          </div>
+        </div>
+  <div class="tip-box"><strong>Consiglio di Regia:</strong> Mostra chiaramente ogni click dentro Antigravity IDE (file creati a sinistra, chat dell'agente a destra).</div>
+</body>
+</html>
