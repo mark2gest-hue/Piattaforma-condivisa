@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><title>Lezione 8A — Guida Regia Stefano</title><style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.45;
+    font-size: 9.2pt;
+    margin: 0;
+    padding: 0;
+  }
+  .header {
+    border-bottom: 2.5px solid #6366f1;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand-title { font-size: 14pt; font-weight: 800; color: #0f172a; margin: 0; }
+  .brand-subtitle { font-size: 8.5pt; color: #475569; margin: 2px 0 0 0; }
+  .badge {
+    display: inline-block;
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 8pt;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .goal-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #6366f1;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .goal-box h3 { margin: 0 0 4px 0; font-size: 9.5pt; color: #312e81; }
+  .prep-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .prep-box h3 { margin: 0 0 4px 0; font-size: 9pt; color: #92400e; }
+  .prep-box ul { margin: 0; padding-left: 18px; }
+  .module-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .module-header {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .module-title { font-weight: 700; font-size: 9.5pt; }
+  .module-time { font-size: 8pt; color: #38bdf8; font-weight: 600; white-space: nowrap; }
+  .module-body { padding: 10px 12px; background: #ffffff; }
+  .step-label { font-size: 8pt; font-weight: 700; color: #0284c7; margin-bottom: 3px; text-transform: uppercase; }
+  .action-text { font-size: 8.8pt; color: #1e293b; margin-bottom: 8px; }
+  .speech-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 8.8pt;
+    color: #0f172a;
+  }
+  .tip-box {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 8.8pt;
+    color: #065f46;
+    margin-top: 10px;
+  }
+  code {
+    background: #e2e8f0;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 8.2pt;
+  }
+</style></head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="brand-title">Lezione 8A — SCARICARE LANGFLOW DESKTOP, CHIAVE UNICA &amp; PRIMO FLUSSO VISUALE</h1>
+      <p class="brand-subtitle">AIutiamoci • Masterclass AI Pro • Guida alla Regia per Stefano</p>
+    </div>
+    <div class="badge">Lezione 8A • Langflow Desktop</div>
+  </div>
+
+  <div class="goal-box">
+    <h3>Obiettivo della Lezione (Ponte Moduli 05–08 → Modulo 09 n8n)</h3>
+    <div>Dopo aver capito API e formato JSON nei Moduli 05–08 e prima di entrare nelle automazioni di n8n (Modulo 09), installare <strong>Langflow Desktop</strong> (zero Docker), salvare la chiave Gemini in modo sicuro una volta sola con le <strong>Global Variables</strong> e costruire il primo flusso AI visuale a nodi e frecce senza scrivere una riga di JSON.</div>
+  </div>
+
+  <div class="prep-box">
+    <h3>Prima di iniziare a registrare</h3>
+    <ul>
+      <li>Browser aperto sulla pagina ufficiale <code>https://www.langflow.org</code> (sezione Download Desktop)</li>
+      <li>App <strong>Langflow Desktop</strong> già installata e aperta su Mac/Windows (tenere pronta la chiave API gratuita di Gemini creata al Modulo 06 in un file di appunti fuori inquadratura, per incollarla al volo senza mostrarla in chiaro)</li>
+      <li>Zoom dello schermo leggermente aumentato (110%–125%) per rendere leggibili i nomi dei nodi, il menu <code>Global Variables</code> e l'icona del Globo 🌐</li>
+    </ul>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 1: Perché Langflow prima di n8n &amp; Installazione Desktop</div>
+      <div class="module-time">Minuti 00:00 - 04:30</div>
+    </div>
+    <div class="module-body">
+      <div class="step-label">Cosa mostrare a schermo</div>
+      <div class="action-text">1. Webcam frontale di Stefano, poi condividi il browser su <code>https://www.langflow.org</code>.<br>2. Clicca su <strong>Download</strong> mostrando l'installer nativo Desktop: file <code>.dmg</code> per Mac (Apple Silicon/Intel) o <code>.exe</code> per Windows — sottolinea che non serve Docker né terminale.<br>3. Apri Langflow Desktop sul tuo computer mostrando la schermata di caricamento iniziale.</div>
+      <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+      <div class="speech-box">"Bentornati nella lezione ponte <strong>8A</strong> della Masterclass AI Pro di AIutiamoci! Nei Moduli 05–08 avete visto come funzionano le API e il formato JSON. Prima di lanciarci su <strong>n8n</strong> dal Modulo 09 per collegare email, fogli e notifiche, oggi facciamo un passo fondamentale: impariamo a disegnare il nostro <strong>cervello AI visuale</strong> collegando nodi e frecce, senza scrivere nemmeno una riga di JSON.<br><br>Andate su <code>https://www.langflow.org</code> e scaricate la versione <strong>Langflow Desktop</strong>: <code>.dmg</code> se avete Mac, <code>.exe</code> se avete Windows. Niente Docker, niente installazioni complicate. <strong>Attenzione importante:</strong> al primo avvio assoluto l'app impiega dai 30 ai 60 secondi a preparare l'ambiente Python locale sul vostro computer. È normalissimo: lasciatela caricare con calma senza chiuderla!"</div>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 2: Configurare la Chiave API Una Volta per Sempre (Global Variables)</div>
+      <div class="module-time">Minuti 04:30 - 09:00</div>
+    </div>
+    <div class="module-body">
+      <div class="step-label">Cosa mostrare a schermo</div>
+      <div class="action-text">1. In alto a destra clicca su <strong>Profilo → Settings → Global Variables</strong>.<br>2. Clicca <strong>Add New</strong> e compila: Type = <code>Credential</code> (spiega che resta criptata e nascosta), Name = <code>GEMINI_API_KEY</code>, Value = incolla la chiave gratuita Gemini creata al Modulo 06.<br>3. Mostra l'opzione <strong>Apply To Fields</strong> (oppure mostra dove apparirà sui nodi tramite l'icona del <strong>Globo 🌐</strong>).</div>
+      <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+      <div class="speech-box">"Prima di mettere il primo nodo sulla tela, facciamo una cosa da professionisti: salviamo la nostra chiave gratuita di Gemini (quella creata nel Modulo 06) una volta sola, per sempre. Così non dovrete mai più copiarla e incollarla in ogni progetto.<br><br>Andate su <strong>Profilo → Settings → Global Variables → Add New</strong>. Scegliete Type <code>Credential</code> — mi raccomando <code>Credential</code>, così Langflow la cripta e la nasconde a schermo — chiamatela <code>GEMINI_API_KEY</code> e incollate la chiave. Con <strong>Apply To Fields</strong> o cliccando sull'icona del <strong>Globo 🌐</strong> direttamente dentro i nodi, la richiamerete con un click in totale sicurezza."</div>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 3: Primo Flusso Visuale Zero-JSON (Chat Input → Prompt → Model → Chat Output)</div>
+      <div class="module-time">Minuti 09:00 - 14:30</div>
+    </div>
+    <div class="module-body">
+      <div class="step-label">Cosa mostrare a schermo</div>
+      <div class="action-text">1. Crea un flusso vuoto (o apri il template base <em>Basic Prompting</em>) e trascina/collega in sequenza i 4 blocchi: <code>Chat Input</code> → <code>Prompt</code> → <code>Model (Google Generative AI / Gemini)</code> → <code>Chat Output</code>.<br>2. Nel nodo <strong>Model (Google Generative AI / Gemini)</strong>, clicca sull'icona del <strong>Globo 🌐</strong> nel campo API Key e seleziona <code>GEMINI_API_KEY</code>.<br>3. Apri il campo <strong>Template</strong> del nodo <code>Prompt</code>, scrivi un'istruzione semplice e clicca sul tasto <strong>Playground</strong> laterale per testare la risposta dal vivo, poi modifica il Prompt e rilancia subito il test.</div>
+      <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+      <div class="speech-box">"Adesso costruiamo il nostro primo flusso visuale a prova di errore! Guardate i 4 mattoncini collegati da sinistra a destra: <code>Chat Input</code> dove entra la domanda dell'utente, <code>Prompt</code> dove diamo le istruzioni, <code>Model</code> impostato su <strong>Google Generative AI (Gemini)</strong>, e <code>Chat Output</code> dove esce la risposta.<br><br>Nel nodo del modello non incollo nessuna chiave: clicco sull'icona del <strong>Globo 🌐</strong> e scelgo <code>GEMINI_API_KEY</code>. Fatto! Ora apriamo il <strong>Playground</strong> qui a lato: scrivo una richiesta, premo Invio ed ecco la risposta di Gemini in diretta. E se cambio una frase dentro il nodo <code>Prompt</code>? Riprovo nel Playground e cambia subito comportamento: zero JSON scritto a mano, solo logica visuale!"</div>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 4: Esercizio Pratico &amp; Ponte verso la Lezione 8B</div>
+      <div class="module-time">Minuti 14:30 - 18:00</div>
+    </div>
+    <div class="module-body">
+      <div class="step-label">Cosa mostrare a schermo</div>
+      <div class="action-text">1. Mostra nel nodo <code>Prompt</code> un esempio reale: <em>"Sei l'assistente clienti di un'azienda italiana. Rispondi in modo cordiale, sintetico e professionale alla seguente richiesta: {richiesta}"</em>.<br>2. Testalo nel Playground con una finta email cliente, poi torna in webcam frontale per il lancio della 8B.</div>
+      <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+      <div class="speech-box">"<strong>Esercizio pratico per voi prima della prossima lezione:</strong> trasformate questo flusso in un <em>Assistente Risposte Clienti</em> con il tono di voce della vostra azienda. Scrivete le regole nel nodo <code>Prompt</code>, collegate il vostro testo variabile e fate 3 test nel <strong>Playground</strong> finché la risposta non è perfetta.<br><br>Nella lezione <strong>8B</strong> facciamo il salto successivo: passiamo da una semplice chat a un vero <strong>Agente Visuale</strong> capace di leggere i vostri <strong>PDF aziendali</strong> e collegarsi via API al nostro futuro <strong>n8n</strong>!"</div>
+    </div>
+  </div>
+
+  <div class="tip-box"><strong>Consiglio di Regia per Stefano:</strong> Fai un fermo immagine o zoom chiaro in due momenti chiave: (1) quando clicchi l'icona del <strong>Globo 🌐</strong> sul campo API Key del nodo Gemini per richiamare <code>GEMINI_API_KEY</code> (gli studenti spesso si perdono cercando dove incollare la chiave), e (2) quando clicchi il tasto <strong>Playground</strong> in alto/a lato per mostrare il pannello di test interattivo in tempo reale.</div>
+</body>
+</html>

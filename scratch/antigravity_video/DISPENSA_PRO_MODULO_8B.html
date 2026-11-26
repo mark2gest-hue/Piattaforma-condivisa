@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><title>Dispensa Modulo 8B — AI Pro</title><style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.45;
+    font-size: 9.2pt;
+    margin: 0;
+    padding: 0;
+  }
+  .header {
+    border-bottom: 2.5px solid #6366f1;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand-title { font-size: 14pt; font-weight: 800; color: #0f172a; margin: 0; }
+  .brand-subtitle { font-size: 8.5pt; color: #475569; margin: 2px 0 0 0; }
+  .badge {
+    display: inline-block;
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 8pt;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .goal-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #6366f1;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .goal-box h3 { margin: 0 0 4px 0; font-size: 9.5pt; color: #312e81; }
+  .prep-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .prep-box h3 { margin: 0 0 4px 0; font-size: 9pt; color: #92400e; }
+  .prep-box ul { margin: 0; padding-left: 18px; }
+  .module-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .module-header {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .module-title { font-weight: 700; font-size: 9.5pt; }
+  .module-time { font-size: 8pt; color: #38bdf8; font-weight: 600; white-space: nowrap; }
+  .module-body { padding: 10px 12px; background: #ffffff; }
+  .step-label { font-size: 8pt; font-weight: 700; color: #0284c7; margin-bottom: 3px; text-transform: uppercase; }
+  .action-text { font-size: 8.8pt; color: #1e293b; margin-bottom: 8px; }
+  .speech-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 8.8pt;
+    color: #0f172a;
+  }
+  .tip-box {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 8.8pt;
+    color: #065f46;
+    margin-top: 10px;
+  }
+  code {
+    background: #e2e8f0;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 8.2pt;
+  }
+</style></head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="brand-title">Modulo 8B — PRIMO AGENTE VISUALE SU PDF, TOOL &amp; PONTE VERSO N8N</h1>
+      <p class="brand-subtitle">AIutiamoci Academy • Masterclass AI Pro • Dispensa Operativa</p>
+    </div>
+    <div class="badge">Lezione 8B • Agente RAG &amp; API</div>
+  </div>
+
+  <div class="goal-box">
+    <h3>Cosa imparerai in questo modulo</h3>
+    <div>Trasformerai un semplice flusso chat in un vero <strong>Agente Visuale</strong> capace di leggere documenti PDF aziendali, utilizzare Tool collegati e trasformarsi in un endpoint chiamabile via <strong>API</strong> da n8n (Modulo 09).</div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">Checklist Operativa Passo-Passo</div>
+      <div class="module-time">AI Pro • Pratica</div>
+    </div>
+    <div class="module-body">
+      <div class="step-label">1. Perché passare al nodo Agent</div>
+      <div class="action-text">
+        • Una chat lineare risponde solo con ciò che sa già il modello.<br>
+        • Il nodo <code>Agent</code> invece ragiona, decide quali strumenti attivare e consulta i tuoi documenti prima di rispondere (base dei sistemi <strong>RAG</strong>).
+      </div>
+
+      <div class="step-label">2. Caricare un PDF Aziendale &amp; Collegare un Tool</div>
+      <div class="action-text">
+        • Assicurati di avere già configurato <code>Settings → Global Variables → GEMINI_API_KEY</code> (Type: <code>Credential</code>) dalla Lezione 8A e richiamala sul nodo <code>Agent</code> tramite l'icona del <strong>Globo 🌐</strong>.<br>
+        • Usa un template RAG (o collega il nodo <code>File</code> / <code>Vector Store</code>) e carica il tuo file PDF aziendale.<br>
+        • Collega la conoscenza del documento e un Tool (es. Calcolatrice o Ricerca) alla porta <strong>Tools</strong> dell'<code>Agent</code>, poi interrogalo nel <strong>Playground</strong>.
+      </div>
+
+      <div class="step-label">3. Il Ponte verso n8n (Tab API &amp; Export .json)</div>
+      <div class="action-text">
+        • Clicca sulla tab <strong>API</strong> in alto a destra: ogni flusso Langflow è subito un endpoint pronto per essere chiamato dall'esterno.<br>
+        • Dal menu del flusso puoi fare <strong>Export / Import <code>.json</code></strong> per salvare o condividere i tuoi agenti.<br>
+        • <strong>Regola d'oro:</strong> <em>"Langflow fa il cervello AI visuale, n8n (dalla Lezione 09) fa il postino automatico h24 tra Email, Fogli Google e Telegram."</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="prep-box">
+    <h3>Esercizio Pratico — Agente su Listino o Brochure PDF</h3>
+    <div>Carica un listino prezzi o una brochure aziendale in PDF nel flusso con nodo <code>Agent</code>, apri il <strong>Playground</strong> e fai <strong>3 domande</strong> reali che ti fanno di solito i clienti (prezzi, tempi/condizioni e un dettaglio specifico presente nel testo). Verifica che le risposte citino i dati esatti del documento prima di passare al Modulo 09 su n8n.</div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">Riepilogo Errori Comuni da Evitare</div>
+      <div class="module-time">Troubleshooting</div>
+    </div>
+    <div class="module-body">
+      <ul style="margin:0;padding-left:18px">
+        <li style="margin-bottom:6px"><strong>PDF scansionato come immagine:</strong> se il PDF non contiene testo selezionabile, l'Agente non può leggerlo direttamente; usa un PDF testuale esportato da Word/Docs.</li>
+        <li style="margin-bottom:6px"><strong>Chiave mancante sul nodo Agent/Embeddings:</strong> controlla che tutti i nodi AI del flusso abbiano la variabile <code>GEMINI_API_KEY</code> collegata via icona <strong>Globo 🌐</strong>.</li>
+        <li style="margin-bottom:0"><strong>Tool scollegato:</strong> verifica che il connettore del documento/tool entri nella porta <strong>Tools</strong> del nodo <code>Agent</code>, altrimenti l'Agente risponderà senza consultare il file.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip-box"><strong>AIutiamoci Academy</strong> — Umani nel pensiero. Smart nell'azione. • https://aiutiamoci.cloud</div>
+</body>
+</html>

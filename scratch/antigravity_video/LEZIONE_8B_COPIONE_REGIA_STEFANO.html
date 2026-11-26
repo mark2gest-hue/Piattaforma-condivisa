@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><title>Lezione 8B — Guida Regia Stefano</title><style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.45;
+    font-size: 9.2pt;
+    margin: 0;
+    padding: 0;
+  }
+  .header {
+    border-bottom: 2.5px solid #6366f1;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand-title { font-size: 14pt; font-weight: 800; color: #0f172a; margin: 0; }
+  .brand-subtitle { font-size: 8.5pt; color: #475569; margin: 2px 0 0 0; }
+  .badge {
+    display: inline-block;
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 8pt;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .goal-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #6366f1;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .goal-box h3 { margin: 0 0 4px 0; font-size: 9.5pt; color: #312e81; }
+  .prep-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .prep-box h3 { margin: 0 0 4px 0; font-size: 9pt; color: #92400e; }
+  .prep-box ul { margin: 0; padding-left: 18px; }
+  .module-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .module-header {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .module-title { font-weight: 700; font-size: 9.5pt; }
+  .module-time { font-size: 8pt; color: #38bdf8; font-weight: 600; white-space: nowrap; }
+  .module-body { padding: 10px 12px; background: #ffffff; }
+  .step-label { font-size: 8pt; font-weight: 700; color: #0284c7; margin-bottom: 3px; text-transform: uppercase; }
+  .action-text { font-size: 8.8pt; color: #1e293b; margin-bottom: 8px; }
+  .speech-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 8.8pt;
+    color: #0f172a;
+  }
+  .tip-box {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 8.8pt;
+    color: #065f46;
+    margin-top: 10px;
+  }
+  code {
+    background: #e2e8f0;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 8.2pt;
+  }
+</style></head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="brand-title">Lezione 8B — IL PRIMO AGENTE VISUALE SU PDF &amp; TOOL IN LANGFLOW (PONTE VERSO N8N)</h1>
+      <p class="brand-subtitle">AIutiamoci • Masterclass AI Pro • Guida alla Regia per Stefano</p>
+    </div>
+    <div class="badge">Lezione 8B • Agente RAG &amp; API</div>
+  </div>
+
+  <div class="goal-box">
+    <h3>Obiettivo della Lezione</h3>
+    <div>Passare da una chat lineare al nodo <strong>Agent</strong> con documenti PDF e Tool collegati in Langflow Desktop, mostrando come ogni flusso espone subito un endpoint tramite la tab <strong>API</strong> per essere orchestrato da <strong>n8n</strong> a partire dal Modulo 09.</div>
+  </div>
+
+  <div class="prep-box">
+    <h3>Prima di iniziare a registrare</h3>
+    <ul>
+      <li>Langflow Desktop aperto con la variabile globale <code>GEMINI_API_KEY</code> già configurata nella Lezione 8A</li>
+      <li>Un file PDF aziendale leggero e leggibile pronto sulla Scrivania (es. listino prezzi, brochure servizi o regolamento interno da 2–5 pagine)</li>
+      <li>Pre-verificare che il template RAG / flusso con nodo <code>Agent</code> + <code>File</code> (o Vector Store) + <code>Tool</code> giri pulito prima del ciak</li>
+    </ul>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 1: Da Flusso Lineare a Vero Agente con Documenti e Memoria</div>
+      <div class="module-time">Minuti 00:00 - 04:00</div>
+    </div>
+    <div class="module-body">
+      <div class="step-label">Cosa mostrare a schermo</div>
+      <div class="action-text">1. Webcam frontale di Stefano, poi mostra a schermo il confronto tra il flusso lineare della 8A (<code>Chat Input → Prompt → Model → Chat Output</code>) e un flusso con nodo centrale <code>Agent</code> dotato di porta <strong>Tools</strong> e conoscenza documenti.</div>
+      <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+      <div class="speech-box">"Bentornati nella lezione <strong>8B</strong> di AIutiamoci! Nella 8A abbiamo costruito un flusso lineare: entra una domanda, passa nel Prompt, Gemini risponde. Molto utile, ma ha un limite: conosce solo ciò che gli scrivete nel Prompt, non conosce i vostri documenti aziendali e non sa usare strumenti esterni.<br><br>Oggi sostituiamo la catena rigida con il nodo <strong>Agent</strong>. Un Agente ragiona prima di rispondere, decide da solo se gli serve leggere un vostro PDF o usare un Tool collegato, e ci prepara esattamente la strada per i Moduli su <strong>n8n</strong> e sui sistemi <strong>RAG</strong> (Retrieval-Augmented Generation)!"</div>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 2: Caricare un PDF Aziendale &amp; Collegare un Tool all'Agente</div>
+      <div class="module-time">Minuti 04:00 - 10:00</div>
+    </div>
+    <div class="module-body">
+      <div class="step-label">Cosa mostrare a schermo</div>
+      <div class="action-text">1. Apri un template RAG oppure aggiungi il nodo <code>File</code> / <code>Vector Store</code> caricando il PDF aziendale di esempio.<br>2. Collega l'uscita dati/tool verso la porta <strong>Tools</strong> del nodo <code>Agent</code> (impostando il modello Gemini con il Globo 🌐 <code>GEMINI_API_KEY</code>) e aggiungi anche un secondo Tool pratico (es. <code>Calculator</code> o <code>URL / Web Search</code>).<br>3. Apri il <strong>Playground</strong> e fai una domanda specifica i cui numeri o dettagli esistono solo dentro il PDF caricato, mostrando nei log/pensiero dell'Agente la consultazione del documento.</div>
+      <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+      <div class="speech-box">"Prendiamo un PDF reale della nostra azienda — ad esempio un listino prezzi o una brochure — e carichiamolo nel blocco <code>File</code> / <code>Vector Store</code> (usando il template RAG integrato in Langflow). Poi colleghiamo sia la base conoscenza del PDF sia un Tool pratico direttamente alla porta <strong>Tools</strong> del nostro nodo <strong>Agent</strong>.<br><br>Apriamo il <strong>Playground</strong> e chiediamo: <em>'Qual è il prezzo e la condizione prevista per il servizio X?'</em>. Guardate cosa succede: l'Agente non inventa nulla, consulta il nostro documento, verifica i dati e ci risponde con precisione millimetrica basandosi sui nostri file!"</div>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 3: Il Ponte verso n8n (Tab API in Alto a Destra &amp; Export JSON)</div>
+      <div class="module-time">Minuti 10:00 - 15:00</div>
+    </div>
+    <div class="module-body">
+      <div class="step-label">Cosa mostrare a schermo</div>
+      <div class="action-text">1. Clicca in alto a destra sul pulsante/tab <strong>API</strong> (API Access) per mostrare l'URL endpoint HTTP e lo snippet pronto (cURL/Python/JS).<br>2. Mostra poi il menu del flusso per fare <strong>Export → Download .json</strong> (e accenna a <strong>Import</strong> per condividere flussi nel team).</div>
+      <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+      <div class="speech-box">"E ora la magia che collega tutto il percorso! Guardate in alto a destra questo pulsante: <strong>API</strong>. Ogni singolo flusso che disegnate su Langflow diventa istantaneamente un indirizzo chiamabile dall'esterno! E se volete salvarlo o passarlo a un collega, dal menu potete fare <strong>Export</strong> in un file <code>.json</code> e re-importarlo con un click.<br><br>Tenete sempre a mente questa <strong>regola d'oro</strong>:<br><strong>Langflow fa il cervello AI visuale, mentre n8n (dalla Lezione 09) fa il postino automatico h24 tra Email, Fogli Google e Telegram.</strong><br>Da n8n vi basterà fare una chiamata a questa API di Langflow per avere un'azienda che legge le email in ingresso, consulta il vostro listino PDF e prepara la bozza di risposta da sola!"</div>
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">FASE 4: Esercizio Pratico &amp; Lancio Modulo 09 su n8n</div>
+      <div class="module-time">Minuti 15:00 - 18:00</div>
+    </div>
+    <div class="module-body">
+      <div class="step-label">Cosa mostrare a schermo</div>
+      <div class="action-text">1. Inquadra il flusso completo sul canvas con il PDF caricato e il pannello Playground aperto.<br>2. Torna in webcam frontale per l'invito all'esercizio e il lancio del Modulo 09.</div>
+      <div class="step-label">Cosa dire a voce (Copione Stefano)</div>
+      <div class="speech-box">"<strong>Esercizio pratico finale della parte Langflow:</strong> caricate un vostro listino o una brochure PDF nel flusso Agente, poi aprite il <strong>Playground</strong> e fategli <strong>3 domande</strong> reali che vi fanno di solito i clienti — una sui prezzi, una sulle tempistiche e una su un dettaglio tecnico nascosto nel testo.<br><br>Quando il vostro cervello AI risponde senza errori, siete pronti: dal <strong>Modulo 09</strong> apriamo <strong>n8n</strong> e costruiamo le prime automazioni h24 che collegano il mondo esterno alla vostra AI. Ci vediamo lì!"</div>
+    </div>
+  </div>
+
+  <div class="tip-box"><strong>Consiglio di Regia per Stefano:</strong> Nel momento in cui testi il PDF nel Playground (Fase 2), evidenzia con il cursore il passaggio in cui l'Agente mostra quale documento/tool sta interrogando (così lo studente vede che non sta "tirando a indovinare"). Nella Fase 3 inquadra chiaramente il tasto <strong>API</strong> in alto a destra e pronuncia lentamente la regola d'oro <em>Langflow = cervello AI / n8n = postino h24</em>, perché è il ponte concettuale su cui si regge tutto il Modulo 09.</div>
+</body>
+</html>

@@ -1,7 +1,10 @@
 # SESSION_STATE.md — Piattaforma Team Condivisa & Agenti AI
 
-Ultimo aggiornamento: 2026-11-26 14:42 (`v2.8.0 • Build #145`)
+Ultimo aggiornamento: 2026-11-26 18:05 (`v2.8.0 • Build #146`)
 Stato corrente:
+- **Moduli AI Pro `8A`, `8B` su Langflow Desktop (`v2.8.0 • Build #146`)**:
+  - **Piattaforma `/corsi` ([src/app/(dashboard)/corsi/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/corsi/page.tsx), [src/lib/course-data.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/lib/course-data.ts))**: aggiunti 2 moduli dopo la Lezione 8 (`8A` Langflow Desktop, Chiave Unica & Primo Flusso Visuale, `8B` Agente su PDF & Tool - Ponte verso n8n) con ID interni `104, 105` e titolo `AI Pro (25 Moduli)`.
+  - **PDF Dispense & Guide Regia Stefano (`public/dispense/`)**: esportati `DISPENSA_PRO_MODULO_8A/8B.pdf` e `LEZIONE_8A/8B_GUIDA_REGIA_STEFANO.pdf`.
 - **Moduli AI Pro `4A`, `4B`, `4C` su Antigravity IDE (`v2.8.0 • Build #145`)**:
   - **Piattaforma `/corsi` ([src/app/(dashboard)/corsi/page.tsx](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/(dashboard)/corsi/page.tsx), [src/lib/course-data.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/lib/course-data.ts), [src/app/actions/student.ts](file:///Users/marco/Sviluppo/Progetti/Prgetto%20piattaforma%20lavoro%20condivisa/src/app/actions/student.ts))**: aggiunti 3 moduli dopo la Lezione 4 (`4A` Skills `SKILL.md`, `4B` Subagenti & MCP, `4C` Ponte Antigravity -> n8n JSON) con ID interni `101, 102, 103`, titolo `AI Pro (23 Moduli)` e isolamento `midterm` (`11..20`).
   - **PDF Dispense & Guide Regia Stefano (`public/dispense/`)**: esportati `DISPENSA_PRO_MODULO_4A/4B/4C.pdf` e `LEZIONE_4A/4B/4C_GUIDA_REGIA_STEFANO.pdf` (copiati anche nel Vault Obsidian e sulla Scrivania).

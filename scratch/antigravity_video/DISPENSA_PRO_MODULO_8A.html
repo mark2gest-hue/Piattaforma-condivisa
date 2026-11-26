@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><title>Dispensa Modulo 8A — AI Pro</title><style>
+  @page {
+    size: A4;
+    margin: 12mm 12mm 12mm 12mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a;
+    line-height: 1.45;
+    font-size: 9.2pt;
+    margin: 0;
+    padding: 0;
+  }
+  .header {
+    border-bottom: 2.5px solid #6366f1;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand-title { font-size: 14pt; font-weight: 800; color: #0f172a; margin: 0; }
+  .brand-subtitle { font-size: 8.5pt; color: #475569; margin: 2px 0 0 0; }
+  .badge {
+    display: inline-block;
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 8pt;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .goal-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #6366f1;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+  }
+  .goal-box h3 { margin: 0 0 4px 0; font-size: 9.5pt; color: #312e81; }
+  .prep-box {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+  }
+  .prep-box h3 { margin: 0 0 4px 0; font-size: 9pt; color: #92400e; }
+  .prep-box ul { margin: 0; padding-left: 18px; }
+  .module-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .module-header {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .module-title { font-weight: 700; font-size: 9.5pt; }
+  .module-time { font-size: 8pt; color: #38bdf8; font-weight: 600; white-space: nowrap; }
+  .module-body { padding: 10px 12px; background: #ffffff; }
+  .step-label { font-size: 8pt; font-weight: 700; color: #0284c7; margin-bottom: 3px; text-transform: uppercase; }
+  .action-text { font-size: 8.8pt; color: #1e293b; margin-bottom: 8px; }
+  .speech-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 8.8pt;
+    color: #0f172a;
+  }
+  .tip-box {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 8.8pt;
+    color: #065f46;
+    margin-top: 10px;
+  }
+  code {
+    background: #e2e8f0;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 8.2pt;
+  }
+</style></head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="brand-title">Modulo 8A — LANGFLOW DESKTOP, CHIAVE UNICA &amp; PRIMO FLUSSO VISUALE</h1>
+      <p class="brand-subtitle">AIutiamoci Academy • Masterclass AI Pro • Dispensa Operativa</p>
+    </div>
+    <div class="badge">Lezione 8A • Langflow Desktop</div>
+  </div>
+
+  <div class="goal-box">
+    <h3>Cosa imparerai in questo modulo</h3>
+    <div>Dopo aver studiato API e JSON (Moduli 05–08) e prima di passare alle automazioni su n8n (Modulo 09), imparerai a installare <strong>Langflow Desktop</strong> senza Docker, salvare la chiave API Gemini in modo sicuro e creare il tuo primo flusso AI collegando nodi e frecce senza scrivere una riga di JSON.</div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">Checklist Operativa Passo-Passo</div>
+      <div class="module-time">AI Pro • Pratica</div>
+    </div>
+    <div class="module-body">
+      <div class="step-label">1. Download &amp; Installazione Desktop (Zero Docker)</div>
+      <div class="action-text">
+        • Vai su <code>https://www.langflow.org</code> e clicca su <strong>Download Desktop</strong>.<br>
+        • Scarica <code>.dmg</code> se usi Mac oppure <code>.exe</code> se usi Windows e installa come una normale app.<br>
+        • Apri Langflow Desktop: al primo avvio attendi <strong>30–60 secondi</strong> mentre prepara l'ambiente Python locale.
+      </div>
+
+      <div class="step-label">2. Chiave API Unica e Criptata (Global Variables)</div>
+      <div class="action-text">
+        • Recupera la chiave gratuita Gemini creata nel Modulo 06.<br>
+        • In alto a destra vai su: <strong>Profilo → Settings → Global Variables → Add New</strong>.<br>
+        • Imposta <strong>Type:</strong> <code>Credential</code> (così rimane criptata e nascosta), <strong>Name:</strong> <code>GEMINI_API_KEY</code> e incolla la tua chiave.<br>
+        • Usa <strong>Apply To Fields</strong> oppure selezionala sui nodi cliccando l'icona del <strong>Globo 🌐</strong> nel campo API Key.
+      </div>
+
+      <div class="step-label">3. Costruisci il Primo Flusso Visuale &amp; Testa nel Playground</div>
+      <div class="action-text">
+        • Crea un nuovo flusso (o parti dal template base) e collega in ordine:<br>
+        <code>Chat Input</code> → <code>Prompt</code> → <code>Model (Google Generative AI / Gemini)</code> → <code>Chat Output</code>.<br>
+        • Nel nodo <strong>Model</strong> clicca sul <strong>Globo 🌐</strong> e seleziona <code>GEMINI_API_KEY</code>.<br>
+        • Apri il pannello laterale <strong>Playground</strong>, invia un messaggio e prova a modificare il testo del nodo <code>Prompt</code> per vedere cambiare subito la risposta.
+      </div>
+    </div>
+  </div>
+
+  <div class="prep-box">
+    <h3>Esercizio Pratico — Assistente Risposte Clienti</h3>
+    <div>Nel nodo <code>Prompt</code> scrivi le regole del tono di voce della tua azienda (es. cortese, chiaro, max 5 righe, con saluto finale firmato) e collega una variabile <code>{richiesta}</code>. Apri il <strong>Playground</strong> e testa 3 richieste reali di clienti (preventivo, reclamo, richiesta info) rifinendo il prompt fino a ottenere risposte pronte da inviare.</div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <div class="module-title">Riepilogo Errori Comuni da Evitare</div>
+      <div class="module-time">Troubleshooting</div>
+    </div>
+    <div class="module-body">
+      <ul style="margin:0;padding-left:18px">
+        <li style="margin-bottom:6px"><strong>Primo avvio lento:</strong> se Langflow impiega 30–60 secondi ad aprirsi la prima volta non chiudere l'app: sta inizializzando l'ambiente Python locale.</li>
+        <li style="margin-bottom:6px"><strong>Chiave incollata in chiaro:</strong> usa sempre <code>Settings → Global Variables</code> con Type <code>Credential</code> e richiamala col <strong>Globo 🌐</strong>, mai in chiaro dentro i nodi.</li>
+        <li style="margin-bottom:0"><strong>Frecce non collegate o tipo errato:</strong> verifica che ogni porta di uscita (es. <em>Message</em> del <code>Prompt</code>) entri nella porta compatibile del nodo successivo prima di aprire il Playground.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tip-box"><strong>AIutiamoci Academy</strong> — Umani nel pensiero. Smart nell'azione. • https://aiutiamoci.cloud</div>
+</body>
+</html>

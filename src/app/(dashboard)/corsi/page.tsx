@@ -499,6 +499,8 @@ const AI_PRO_LESSONS: Lesson[] = [
   { id: 6, title: '6. Google AI Studio: Generare la Prima Chiave Gratuita (Gemini 2.5 Flash)', duration: '18:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_06.pdf?v=20261115_pro_v1' },
   { id: 7, title: '7. OpenAI Platform: Limiti di Spesa (5€ Cap), Modelli & Playground', duration: '17:30', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_07.pdf?v=20261115_pro_v1' },
   { id: 8, title: '8. JSON & Risposte Strutturate: Costringere l\'AI a non Divagare', duration: '16:15', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_08.pdf?v=20261115_pro_v1' },
+  { id: 104, title: '8A. Langflow Desktop: Scaricare, Chiave Unica & Primo Flusso Visuale', duration: '18:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_8A.pdf?v=20261126_pro_v1' },
+  { id: 105, title: '8B. Langflow Desktop: Agente su PDF & Tool (Ponte verso n8n)', duration: '18:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_8B.pdf?v=20261126_pro_v1' },
   { id: 9, title: '9. Benvenuti in n8n: L\'Interfaccia Visuale, Trigger & Nodi', duration: '20:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_09.pdf?v=20261115_pro_v1' },
   { id: 10, title: '10. Il Primo Webhook: Ricevere Dati in Tempo Reale', duration: '15:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_10.pdf?v=20261115_pro_v1' },
   { id: 11, title: '11. Collegare l\'AI al Webhook: Elaborazione Dati Automatica', duration: '22:00', completed: false, videoUrl: '', resourcesPdfUrl: '/dispense/DISPENSA_PRO_MODULO_11.pdf?v=20261115_pro_v1' },
@@ -2717,7 +2719,7 @@ function CorsiInnerContent() {
             {activeTab === 'login' && <Key className="h-4 w-4" />}
 
             <span>
-              {activeTab === 'player' && `Player ${selectedCourseId === 'ai-pro' ? 'AI Pro (23 Moduli)' : 'AI Start (20 Lezioni)'}`}
+              {activeTab === 'player' && `Player ${selectedCourseId === 'ai-pro' ? 'AI Pro (25 Moduli)' : 'AI Start (20 Lezioni)'}`}
               {activeTab === 'news-tutorial' && `News & Tutorial (${bonusVideos.length})`}
               {activeTab === 'meet' && `Registrazioni Meet (${meetRecordings.length})`}
               {activeTab === 'zoom' && `Registrazioni Zoom (${zoomRecordings.length})`}

@@ -784,6 +784,26 @@ export const LESSON_SUMMARIES_PRO: Record<number, { title: string; summary: stri
     ],
     exercise: 'Scrivi un prompt che chieda all\'AI di estrarre da un testo libero il nome, la città e il numero di telefono in formato JSON puro.'
   },
+  104: {
+    title: '8A. Langflow Desktop: Scaricare, Chiave Unica & Primo Flusso Visuale',
+    summary: 'Installazione di Langflow Desktop senza Docker, salvataggio sicuro della chiave API Gemini nelle Global Variables e costruzione del primo flusso visuale AI dal vivo.',
+    takeaways: [
+      'Download e avvio di Langflow Desktop (.dmg / .exe) senza configurazioni Docker o da terminale.',
+      'Salvataggio criptato della chiave `GEMINI_API_KEY` in `Settings → Global Variables` (Type `Credential`) richiamabile dal Globo 🌐.',
+      'Collegamento del flusso base `Chat Input → Prompt → Model → Chat Output` e test immediato nel Playground.'
+    ],
+    exercise: 'Installa Langflow Desktop, salva `GEMINI_API_KEY` come `Credential` e costruisci un flusso Assistente Risposte Clienti con variabile `{richiesta}` testandolo su 3 casi reali nel Playground.'
+  },
+  105: {
+    title: '8B. Langflow Desktop: Agente su PDF & Tool (Ponte verso n8n)',
+    summary: 'Passaggio dal flusso lineare al nodo Agent in Langflow Desktop per interrogare documenti PDF aziendali, collegare Tool e pubblicare l\'endpoint API pronto per n8n.',
+    takeaways: [
+      'Differenza tra chat lineare e nodo `Agent` capace di ragionare e decidere quali strumenti o documenti consultare (RAG).',
+      'Caricamento di un PDF testuale aziendale e collegamento di file e tool nella porta `Tools` dell\'Agent con test nel Playground.',
+      'Ponte verso n8n: tab `API` per ottenere l\'endpoint chiamabile dall\'esterno ed `Export / Import .json` del flusso.'
+    ],
+    exercise: 'Carica un listino prezzi o una brochure PDF testuale in un flusso con nodo `Agent`, apri il Playground e verifica 3 domande reali dei clienti controllando che citi i dati esatti del documento.'
+  },
   9: {
     title: '9. Benvenuti in n8n: Nodi & Trigger',
     summary: 'Introduzione all\'ambiente di automazione visiva n8n: interfaccia, navigazione, tipologie di nodi (Trigger vs Action) e filosofia senza codice.',
