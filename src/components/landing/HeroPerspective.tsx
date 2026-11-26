@@ -277,7 +277,7 @@ export function CinematicHeroPerspective() {
                 </Link>
 
                 <a
-                  href="https://www.mark2.cloud"
+                  href="https://impresa.aiutiamoci.cloud"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between p-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 text-xs font-bold text-white transition-all group"

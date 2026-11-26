@@ -276,7 +276,7 @@ export default function GatewayPage() {
                 </Link>
 
                 <a
-                  href="https://www.mark2.cloud"
+                  href="https://impresa.aiutiamoci.cloud"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm font-medium text-[#f8fafc] hover:text-[#94a3b8] inline-flex items-center gap-1.5 transition-colors whitespace-nowrap"

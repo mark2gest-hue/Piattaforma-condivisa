@@ -355,7 +355,7 @@ export function SplitGateway() {
 
               <div className="js-split-row">
                 <a
-                  href="https://www.mark2.cloud"
+                  href="https://impresa.aiutiamoci.cloud"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-[#f8fafc] text-[#090d16] hover:bg-white rounded-md px-5 h-11 inline-flex items-center gap-2.5 text-sm font-semibold whitespace-nowrap transition-colors"
