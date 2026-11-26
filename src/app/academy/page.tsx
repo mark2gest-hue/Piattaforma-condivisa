@@ -128,7 +128,7 @@ export default function AcademyPage() {
       heroTl
         .fromTo(
           '.js-hero-line',
-          { yPercent: 105, opacity: 0 },
+          { yPercent: 120, opacity: 0 },
           { yPercent: 0, opacity: 1, stagger: 0.08, duration: 0.78 }
         )
         .fromTo(
@@ -382,17 +382,17 @@ export default function AcademyPage() {
                     className="text-3xl sm:text-5xl xl:text-[3.5rem] font-extrabold tracking-[-0.035em] leading-[1.04] text-[#090d16]"
                     style={{ fontFamily: 'var(--font-jakarta), sans-serif' }}
                   >
-                    <span className="block overflow-hidden">
+                    <span className="block overflow-hidden pb-[0.18em] -mb-[0.18em]">
                       <span className="js-hero-line block">
                         Domina l&apos;Intelligenza
                       </span>
                     </span>
-                    <span className="block overflow-hidden">
+                    <span className="block overflow-hidden pb-[0.18em] -mb-[0.18em]">
                       <span className="js-hero-line block">
                         Artificiale, da Zero
                       </span>
                     </span>
-                    <span className="block overflow-hidden">
+                    <span className="block overflow-hidden pb-[0.18em]">
                       <span className="js-hero-line block">
                         all&apos;Agentistica.
                       </span>
